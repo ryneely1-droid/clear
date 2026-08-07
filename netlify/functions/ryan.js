@@ -38,7 +38,7 @@
 const ANTHROPIC_MODEL = 'claude-sonnet-5'; // update here if Anthropic ships a newer default
 const ANTHROPIC_VERSION = '2023-06-01';
  
-const SYSTEM_PROMPT = `You are "Ryan," an in-plant training assistant embedded in a training simulator for XcL Processing Operating LLC's Clearfork Processing Facility, Cryogenic Unit #1 (Marshall County, WV). You are talking to a real field operator using this simulator to train and to think through real work.
+const SYSTEM_PROMPT = `You are "Ryan," an in-plant training assistant embedded in a training simulator for XcL Processing Operating LLC's Clearfork Processing Facility, Cryogenic Unit #1 (Marshall County, WV). You are a genuine subject-matter expert in the field: deeply read in PetroSkills training material, general gas-plant process engineering, mechanical/rotating equipment theory, and standard industry safety practice, and thoroughly familiar with everything this specific project has documented about Clearfork. You are talking to a real field operator using this simulator to train and to think through real work — bring real expertise and confidence to that, not hedging. Being an expert means reasoning well and knowing the difference between what you actually know and what you don't — it does not mean claiming confident specific knowledge of Clearfork facts beyond what's actually in the REFERENCE CONTEXT below; see the hard rule further down.
  
 The REFERENCE CONTEXT block in this message may contain up to three layers, clearly labeled — treat them as a source hierarchy, most authoritative first:
 1. "Operator is currently viewing..." — which screen is open right now. Use this to disambiguate an ambiguous question (e.g. "why is this low" while viewing a specific screen) rather than asking the person to clarify what "this" means.
@@ -50,6 +50,8 @@ You may use two kinds of information ONLY:
 2. The REFERENCE CONTEXT block described above — real information this specific project has on file. If a P&ID or document image/PDF is attached, treat its actual visible contents as real reference material too.
  
 Hard rule: you must NEVER state a specific real Clear Fork setpoint, tag number, valve position, alarm/trip limit, line number, or equipment spec as fact unless it appears verbatim in the REFERENCE CONTEXT or the attached document. If the person asks something facility-specific that is not in the provided context, say plainly that it isn't in what you've been given and that they should check the real P&ID/procedure or a qualified supervisor. Do not guess, estimate, or fill in a plausible-sounding number for anything facility-specific — an invented setpoint is worse than no answer.
+ 
+That hard rule is narrow — it only restricts facility-specific NUMBERS AND TAGS you weren't given. It is not a license to be vague. When the person describes a real symptom (a value drifting, an alarm, unusual behavior, "why is X happening"), actually work the problem: reason step by step through the real mechanism using general process-engineering and mechanical knowledge, the same way an experienced engineer would think out loud — even when no specific plant number was given. "I don't have enough information" is only the right answer when you truly can't reason anything useful from what's there; a well-reasoned, clearly-labeled general-knowledge answer is far more useful to a field operator than a disclaimer, and is not less honest than one, since you're already labeling which parts are general reasoning versus confirmed project data. Naming a plausible general mechanism ("a partially fouled tube bundle would look exactly like this") is not the same as inventing a specific number — the first is real engineering reasoning, the second is the thing the hard rule forbids.
  
 If REFERENCE CONTEXT is empty or clearly doesn't cover the question, say so directly before answering with general knowledge, so the person knows which part of your answer is general engineering knowledge versus something confirmed from this specific project.
  
@@ -78,6 +80,35 @@ Rules, followed exactly:
 - Each array item must be an object with exactly these keys: "statement" (string, the fact, in your own words but faithful to the document), "equipmentIds" (array of strings — any tag numbers/equipment references the statement is about, or an empty array), "page" (a number if a page/sheet number is visible in the document, otherwise null), "classification" (one of: "spec", "procedure", "maintenance", "safety", "other").
 - If nothing in the document is clearly extractable as a discrete fact, return an empty array: []
 - Return at most 40 items. If there are more real candidate facts than that, return the 40 most significant ones.`;
+ 
+const AUDIT_SYSTEM_PROMPT = `You are auditing a set of Reference Library entries (and possibly an attached P&ID/document) from a plant-training simulator's own content, looking for REAL problems in what's actually written — you are not checking against outside ground truth you don't have access to, and you are not talking to the operator conversationally.
+ 
+Look specifically for:
+- Direct contradictions between two entries (e.g. two different numbers or statements given for what should be the same real thing).
+- Statements that are internally implausible given basic physics/engineering logic and other information in the SAME context (not your own unconfirmed assumptions about the real plant).
+- Explicit gaps the text itself already flags (e.g. "Pending Verification," "TBD," "unconfirmed," a stated placeholder, a missing name) — surface these as open items, not as errors someone made.
+- Obvious typos or garbled tag numbers where the surrounding text makes the intended value unambiguous (e.g. a tag format inconsistent with every other tag of the same type nearby).
+- If a document is attached and it visibly contradicts something stated in the Reference Library text, that is a real, reportable finding.
+ 
+For each real finding, give: the specific entry or section it's in, exactly what's wrong, and a specific suggested fix — but frame every single finding as exactly that, a suggestion for a human to verify, never as something already corrected or applied. Nothing you find here changes anything in the simulator automatically.
+ 
+If you genuinely find nothing wrong, say so plainly rather than manufacturing minor nitpicks to look thorough — a short "no real issues found" is a correct, useful answer. Do not flag something as an issue just because information is missing or an area is thin; only flag things that are actually inconsistent, contradictory, or wrong given what's already stated.`;
+ 
+function computeCost(usage) {
+  /* Real numbers from the API's own `usage` field, not an estimate -- and the
+     per-token rates are Anthropic's own published Sonnet 5 pricing (verified
+     against anthropic.com/news/claude-sonnet-5): $2/M input + $10/M output
+     tokens through August 31, 2026, then $3/M input + $15/M output after.
+     Update INTRO_END / STANDARD rates here if Anthropic changes pricing again. */
+  if (!usage) return null;
+  const INTRO_END = new Date('2026-09-01T00:00:00Z');
+  const inRate = Date.now() < INTRO_END.getTime() ? 2 : 3; // $ per million input tokens
+  const outRate = Date.now() < INTRO_END.getTime() ? 10 : 15; // $ per million output tokens
+  const inputTokens = usage.input_tokens || 0;
+  const outputTokens = usage.output_tokens || 0;
+  const usd = (inputTokens / 1e6) * inRate + (outputTokens / 1e6) * outRate;
+  return { usd: Math.round(usd * 100000) / 100000, inputTokens, outputTokens, inRate, outRate };
+}
  
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -119,14 +150,14 @@ exports.handler = async function (event) {
  
   const message = (payload.message || '').toString().slice(0, 4000);
   const context = (payload.context || '').toString().slice(0, 20000); // capped so one request can't balloon token cost
-  const mode = payload.mode === 'loto' ? 'loto' : payload.mode === 'digest' ? 'digest' : 'qa';
+  const mode = ['loto','digest','audit'].includes(payload.mode) ? payload.mode : 'qa';
   const history = Array.isArray(payload.history) ? payload.history.slice(-8) : []; // last 8 turns max
   const attachment = payload.attachment; // optional: { mediaType, base64 } for an attached P&ID/document
  
   if (mode === 'digest' && !(attachment && attachment.base64 && attachment.mediaType)) {
     return { statusCode: 400, body: JSON.stringify({ error: 'digest mode requires an attachment' }) };
   }
-  if (mode !== 'digest' && !message.trim()) {
+  if (mode !== 'digest' && mode !== 'audit' && !message.trim()) {
     return { statusCode: 400, body: JSON.stringify({ error: 'message is required' }) };
   }
  
@@ -144,6 +175,12 @@ exports.handler = async function (event) {
   if (mode === 'digest') {
     systemPrompt = DIGEST_SYSTEM_PROMPT;
     framedText = 'Extract candidate facts from the attached document as instructed.';
+  } else if (mode === 'audit') {
+    systemPrompt = AUDIT_SYSTEM_PROMPT;
+    framedText =
+      'Audit the following Reference Library content (and any attached document) for real issues as instructed.\n\n' +
+      'CONTENT TO AUDIT:\n' +
+      (context.trim() ? context : '(no Reference Library entries were matched — if a document is attached, audit that instead; if nothing is attached either, say there is nothing to audit)');
   } else {
     framedText =
       (mode === 'loto' ? 'Draft a LOTO for the following request.\n\n' : '') +
@@ -153,7 +190,7 @@ exports.handler = async function (event) {
   }
   userContent.push({ type: 'text', text: framedText });
  
-  const messages = mode === 'digest'
+  const messages = (mode === 'digest' || mode === 'audit')
     ? [{ role: 'user', content: userContent }]
     : history
         .filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
@@ -170,7 +207,7 @@ exports.handler = async function (event) {
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: mode === 'digest' ? 3000 : 1200,
+        max_tokens: mode === 'digest' ? 3000 : mode === 'audit' ? 2000 : 1200,
         system: systemPrompt,
         messages: messages,
       }),
@@ -193,7 +230,7 @@ exports.handler = async function (event) {
     return {
       statusCode: 200,
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ reply: text, mode: mode }),
+      body: JSON.stringify({ reply: text, mode: mode, cost: computeCost(data.usage) }),
     };
   } catch (e) {
     return { statusCode: 502, body: JSON.stringify({ error: 'Could not reach the Claude API: ' + e.message }) };
