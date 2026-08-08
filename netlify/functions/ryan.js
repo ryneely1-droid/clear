@@ -238,7 +238,7 @@ exports.handler = async function (event) {
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: mode === 'digest' ? 3000 : (mode === 'audit' || mode === 'scan') ? 2000 : 1200,
+        max_tokens: mode === 'digest' ? 2200 : (mode === 'audit' || mode === 'scan') ? 1600 : 1200,
         system: systemPrompt,
         messages: messages,
       }),
