@@ -388,25 +388,57 @@ const RESIDUE_COMPRESSOR_KNOWLEDGE = {
   },
 };
  
+// ===== SIMULATOR UI FEATURE KNOWLEDGE =====
+ 
+const SIMULATOR_UI_KNOWLEDGE = {
+  simulationSpeedControl: {
+    location: 'Toolbar button "⏩ 1x REAL TIME" next to the "▶️ LIVE" button',
+    function: 'Speeds up the whole plant simulation: 1x (real time) → 2x → 5x → 10x → back to 1x, cycling one step each click. Clicking also opens a popup where any of the four speeds can be picked directly.',
+    whatItAffects: 'How fast pressures, temperatures, levels, and weather move toward their targets, and how fast simulated time (ESD trip elapsed clock, weather system) advances. Does not change plant behavior or physics — only the pace at which it plays out.',
+    independence: 'Independent from the separate Outages panel speed selector, which only controls scheduled/PM outage aging speed, and independent from the Live/Pause master switch, which freezes everything at 1x when paused.',
+  },
+};
+ 
 // ===== RYAN AI HANDLER =====
  
 async function handleRyanRequest(mode, userPrompt, plantState, currentScreen) {
+  // Serialize the actual knowledge data into the system prompt so Ryan can
+  // cite real tag numbers, setpoints, and procedures rather than just knowing
+  // these systems exist by name. Previously this function only named the
+  // systems in prose, which meant none of the specific field-verified data
+  // (alarm parameters, valve tags, LOTO steps, nameplate serials) was ever
+  // actually reaching the model — this is the fix for that gap.
+  const knowledgeBlock = JSON.stringify({
+    stabilizer: STABILIZER_KNOWLEDGE,
+    overheadCompressor: OVERHEAD_COMPRESSOR_KNOWLEDGE,
+    controlValves: CONTROL_VALVE_KNOWLEDGE,
+    pumpMaintenance: PUMP_MAINTENANCE_KNOWLEDGE,
+    residueCompressors: RESIDUE_COMPRESSOR_KNOWLEDGE,
+    simulatorUI: SIMULATOR_UI_KNOWLEDGE,
+  });
+ 
   const systemPrompt = `You are Ryan, an AI assistant for Clearfork Cryogenic Processing Unit #1.
  
-You have detailed expertise in:
+You have detailed, field-verified expertise in:
 - Stabilizer System (V-1521, P-5060/5065, AC-5055) with full LOTO procedures
 - Overhead Compressor (C-5700) with alarm parameters and control logic
 - Residue Compressors (C-6100, C-6200, C-6300) with multi-stage configuration
 - Control Valves (PCV-1438, LCV-1241) with proportional pilot-air logic
 - Pump Maintenance (P-1630, P-1635) with oil specifications and change intervals
 - All equipment tag numbers, isolation valves, relief valves, instrumentation
+- Simulator UI features, including the Simulation Speed control (1x/2x/5x/10x, toolbar button beside LIVE)
+ 
+The exact reference data for all of the above is provided below as JSON. Always cite specific values, tag numbers, and steps directly from this data rather than estimating. If something isn't covered in this data, say so plainly rather than inventing a value.
+ 
+REFERENCE DATA:
+${knowledgeBlock}
  
 When asked to:
-- "Build a LOTO for [equipment]": Provide step-by-step isolation procedure with specific tag numbers
-- "What are the alarm setpoints for [compressor]": Give complete LL, L, H, HH parameters
-- "What isolates [equipment]": List all manual isolation valves with functions
-- "What oil goes in [pump]": Cite nameplate data with all three acceptable options
-- "How does [system] work": Explain with equipment tags and control logic
+- "Build a LOTO for [equipment]": Walk through the matching lotoSteps/lotoSteps_C6100 array from the reference data above, in order, with the exact tag numbers shown.
+- "What are the alarm setpoints for [compressor]": Cite the exact LL, L, H, HH values from the reference data.
+- "What isolates [equipment]": List the exact isolation valve tags and their locations from the reference data.
+- "What oil goes in [pump]": Cite the exact oilSpecifications from the reference data (capacity, interval, all acceptable oil brands).
+- "How does [system] work": Explain using the exact equipment tags and control logic from the reference data.
  
 Provide accurate, field-verified information citing specific nameplate data and P&ID references.`;
  
@@ -414,9 +446,7 @@ Provide accurate, field-verified information citing specific nameplate data and 
  
 Current context:
 - Mode: ${mode}
-- Screen: ${currentScreen}
- 
-Available systems: Stabilizer (V-1521), Overhead Compressor (C-5700), Residue Compressors (C-6100/6200/6300), Control Valves (PCV-1438, LCV-1241), Pumps (P-1630, P-1635)`;
+- Screen: ${currentScreen}`;
  
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -471,6 +501,7 @@ module.exports = {
   CONTROL_VALVE_KNOWLEDGE,
   PUMP_MAINTENANCE_KNOWLEDGE,
   RESIDUE_COMPRESSOR_KNOWLEDGE,
+  SIMULATOR_UI_KNOWLEDGE,
   handleRyanRequest,
 };
  
