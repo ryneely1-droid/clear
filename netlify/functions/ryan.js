@@ -4,7 +4,9 @@
  * August 8, 2026
  */
  
-const fetch = require('node-fetch');
+// Netlify Functions run on Node 18+, which has a native global `fetch`.
+// No import/require needed — using node-fetch here caused the build to fail
+// because it wasn't listed in the site's top-level package.json.
  
 // ===== STABILIZER SYSTEM KNOWLEDGE =====
  
@@ -471,3 +473,4 @@ module.exports = {
   RESIDUE_COMPRESSOR_KNOWLEDGE,
   handleRyanRequest,
 };
+ 
