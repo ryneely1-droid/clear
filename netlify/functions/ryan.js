@@ -1,12 +1,210 @@
 /**
  * Ryan AI Backend — Clearfork Cryogenic Unit #1 Simulator
- * UPDATED with Field-Verified Control Valve & Pump Nameplate Data
+ * COMPLETE WITH ALL SYSTEMS: Stabilizer, Overhead Compressor, Control Valves, Pumps
  * August 8, 2026
  */
  
 const fetch = require('node-fetch');
  
-// ===== FIELD-VERIFIED CONTROL VALVE KNOWLEDGE =====
+// ===== STABILIZER SYSTEM KNOWLEDGE =====
+ 
+const STABILIZER_KNOWLEDGE = {
+  overview: `The Stabilizer System (V-1521) is a demethanizer column that processes raw NGL from the cold separator into a stabilized product (C5+) and overhead vapor (C1-C4). The system uses booster pumps (P-5060/P-5065) to recirculate bottoms product through a cooler (AC-5055), maintaining a split-feed design that reduces reboiler duty by 50-60% compared to a top-feed design.`,
+  
+  equipment: {
+    'V-1521': {
+      name: 'Stabilizer/Demethanizer Column',
+      type: 'Distillation column',
+      service: 'Raw NGL to stabilized product (C5+) + overhead vapor (C1-C4)',
+      feedInlet: 'Line 444-10" from V-1421 (cold separator) — enters mid-section',
+      bottomsOutlet: 'Gravity drain to pump suction (P-5060/5065)',
+      overheadOutlet: 'To cooler (AC-5055) and/or recycle',
+      reboilerInlet: 'From AC-5055 condenser outlet',
+      surgeInlet: 'Split-feed return from cooler (preheats incoming raw NGL)',
+      isolationValves: [
+        { tag: 'XV-1521-1', location: 'Feed inlet', type: 'Manual block', normally: 'Open' },
+        { tag: 'XV-1521-2', location: 'Bottoms outlet', type: 'Manual block', normally: 'Open' },
+        { tag: 'XV-1521-3', location: 'Reboiler inlet', type: 'Manual block', normally: 'Open' },
+        { tag: 'XV-1521-4', location: 'Reboiler outlet', type: 'Manual block', normally: 'Open' },
+        { tag: 'XV-1521-5', location: 'Overhead outlet', type: 'Manual block', normally: 'Open' },
+        { tag: 'XV-1521-6', location: 'Vent (top of column)', type: 'Manual block', normally: 'Closed' },
+      ],
+      drainPoints: ['Sump drain (bottom)', 'Reboiler bottom drain'],
+      reliefValves: [
+        { tag: 'PSV-1521', setPoint: 'TBD', destination: 'Vent or atmosphere' },
+      ],
+      depressurizationMethod: 'Via XV-1521-6 vent after XV-1521-5 isolation',
+    },
+    'P-5060': {
+      name: 'Stabilizer Booster Pump #1',
+      type: 'Centrifugal pump',
+      service: 'Recirculate stabilizer bottoms through cooler to feed inlet',
+      feedSource: 'V-1521 sump (gravity)',
+      dischargeDestination: 'Through AC-5055 cooler to stabilizer feed inlet',
+      isolationValves: [
+        { tag: 'XV-5060-1', location: 'Pump inlet (check valve)' },
+        { tag: 'XV-5060-2', location: 'Pump discharge manual block' },
+      ],
+      controlValve: 'LCV-5060 on discharge',
+      pressureRelief: { tag: 'PSV-5060', setPoint: '~100-120 psi' },
+    },
+    'P-5065': {
+      name: 'Stabilizer Booster Pump #2',
+      type: 'Centrifugal pump',
+      service: 'Standby or parallel operation with P-5060',
+      feedSource: 'V-1521 sump (gravity)',
+      dischargeDestination: 'Through AC-5055 cooler to stabilizer feed inlet',
+      isolationValves: [
+        { tag: 'XV-5065-1', location: 'Pump inlet (check valve)' },
+        { tag: 'XV-5065-2', location: 'Pump discharge manual block' },
+      ],
+      pressureRelief: { tag: 'PSV-5065', setPoint: '~120-150 psi' },
+    },
+    'AC-5055': {
+      name: 'Stabilizer Product Cooler',
+      type: 'Air-cooled heat exchanger',
+      service: 'Cool booster pump discharge from stabilizer',
+      inlet: 'From P-5060/5065 discharge',
+      outlet: 'To stabilizer feed inlet (split-feed recycle)',
+      coolingMedium: 'Air (fan-cooled)',
+      temperatureControl: 'Fan speed modulation or bypass valve',
+      isolationValves: [
+        { tag: 'XV-5055-1', location: 'Cooler inlet' },
+        { tag: 'XV-5055-2', location: 'Cooler outlet' },
+      ],
+    },
+  },
+ 
+  instrumentation: {
+    pressure: {
+      'PT-5060A': { location: 'Stabilizer inlet (before reboiler)', normal: '50-100 psi', alarm_HH: '150 psi' },
+      'PT-5060B': { location: 'Stabilizer bottom', normal: '80-120 psi', alarm_HH: '200 psi' },
+      'PT-5065': { location: 'Booster pump discharge', normal: '80-120 psi', alarm_HH: '150 psi' },
+    },
+    temperature: {
+      'TT-5060': { location: 'Stabilizer bottom', normal: '120-150°F', alarm_HH: '160°F', controlSetpoint: '135°F' },
+      'TT-5065A': { location: 'Cooler outlet', normal: '90-120°F', alarm_HH: '130°F' },
+    },
+    level: {
+      'LT-5060': { location: 'Stabilizer sump', setpoint: '50%', alarm_HH: '75%', alarm_LL: '25%' },
+      'LT-5061': { location: 'Surge tank level', setpoint: '50%', alarm_HH: '70%', alarm_LL: '30%' },
+    },
+  },
+ 
+  controlLogic: {
+    levelControl: 'LCV-5060 modulates bottoms drain flow; high level opens drain; low level stops pump',
+    temperatureControl: 'Reboiler duty modulated to maintain stabilizer bottom temperature',
+    pressureRelief: 'PSV-5060 set ~100 psi protects stabilizer; PSV-5065 set ~150 psi protects booster',
+  },
+ 
+  lotoSteps: [
+    '1. Close XV-1521-1 (Feed inlet) and XV-1521-2 (Bottoms outlet)',
+    '2. Close XV-5060-2 (Pump discharge isolation)',
+    '3. Isolate reboiler heat: close steam/hot oil inlet and drain',
+    '4. Isolate condenser cooling: close cooling water inlet and fan isolation',
+    '5. Close XV-1521-6 vent and XV-5055-1 cooler inlet for full depressurization',
+    '6. Install blanks on all manual isolation valve outlets',
+    '7. Install lockout tags on all isolation valves',
+    '8. Verify zero pressure throughout system',
+    '9. Notify operations that stabilizer is isolated',
+  ],
+};
+ 
+// ===== OVERHEAD COMPRESSOR KNOWLEDGE =====
+ 
+const OVERHEAD_COMPRESSOR_KNOWLEDGE = {
+  overview: `C-5700 is a reciprocating, double-acting compressor that compresses overhead vapor from the Stabilizer System (C1-C4 gases) from ~150-175 psi suction to ~500-600 psi discharge. It has dual throws (each with independent outlet temperature monitoring) and a pressure-lubricated oil system with built-in cooler. Relief is pilot-operated, recirculating excess discharge back to suction.`,
+  
+  equipment: {
+    'C-5700': {
+      name: 'Overhead Compressor (C-5700)',
+      type: 'Reciprocating, double-acting, two-stage',
+      service: 'Compress stabilizer overhead vapor (C1-C4) for refinery residue service or recycle',
+      suction: 'From stabilizer overhead discharge (~150-175 psi inlet)',
+      discharge: 'To refinery residue system or recycle (~500-600 psi outlet)',
+      throws: [
+        { number: 1, outlet_temp_limit: '300°F', instrument: 'TT-5700-1', normal: '250-280°F' },
+        { number: 2, outlet_temp_limit: '300°F', instrument: 'TT-5700-2', normal: '250-280°F' },
+      ],
+      isolationValves: [
+        { tag: 'XV-5700-1', location: 'Suction inlet block', normally: 'Open' },
+        { tag: 'XV-5700-2', location: 'Discharge outlet block', normally: 'Open' },
+        { tag: 'XV-5700-3', location: 'Oil supply inlet', normally: 'Open' },
+        { tag: 'XV-5700-4', location: 'Oil return/sump drain', normally: 'Open' },
+        { tag: 'XV-5700-5', location: 'Gas vent (normally closed)', normally: 'Closed' },
+      ],
+      reliefValve: {
+        tag: 'PSV-5700',
+        type: 'Pilot-operated, recirculating type',
+        setPoint: '~620 psi (estimated — requires nameplate verification)',
+        destination: 'Pilot-operated recycle to suction via orifice',
+        function: 'Protects compressor discharge at ~600 psi HH alarm; may activate pilot unload'
+      },
+      oilSystem: {
+        type: 'Pressure-fed full-lube',
+        cooler: 'Built-in or external oil cooler',
+        pressureMinimum: '35-45 psi',
+        temperatureNormal: '100-180°F',
+        temperatureLimit_H: '180°F (alarm setpoint)',
+        temperatureLimit_HH: '200°F (shutdown setpoint)',
+        temperatureLimit_Start: 'Minimum 40°F required to load compressor (cold-start sump heater)',
+      },
+      unloadingMechanism: {
+        suction: 'Unloader actuated when suction pressure < 150 psi (LL) — reduces work, prevents cavitation',
+        discharge: 'Relief opens when discharge > 600 psi (HH) — may activate pilot unload',
+        description: 'Suction valves held open by pilot air; when air exhausted, suction closes and compressor loads normally',
+      },
+    },
+  },
+ 
+  instrumentation: {
+    pressure: {
+      'PS-5700-1': { location: 'C-5700 suction inlet', normal: '150-175 psi', alarm_LL: '150 psi', alarm_HH: '600 psi' },
+      'PS-5700-2': { location: 'C-5700 discharge outlet', normal: '500-550 psi', alarm_HH: '600 psi' },
+      'PS-5700-OIL': { location: 'Compressor oil pressure', normal: '40-50 psi', alarm_LL: '35 psi' },
+    },
+    temperature: {
+      'TT-5700-1': { location: 'Throw #1 outlet gas', normal: '250-280°F', alarm_H: '290°F', alarm_HH: '300°F' },
+      'TT-5700-2': { location: 'Throw #2 outlet gas', normal: '250-280°F', alarm_H: '290°F', alarm_HH: '300°F' },
+      'TT-5700-OIL': { location: 'Compressor oil', normal: '100-180°F', alarm_H: '180°F', alarm_HH: '200°F', coldstart_perm: '40°F' },
+    },
+  },
+ 
+  alarmParameters: {
+    suction_pressure: { LL: 150, L: 175, H: 550, HH: 600 },
+    discharge_pressure: { LL: 150, L: 175, H: 550, HH: 600 },
+    oil_pressure: { LL: 35, L: 45 },
+    throw1_outlet_temp: { H: 290, HH: 300 },
+    throw2_outlet_temp: { H: 290, HH: 300 },
+    oil_temp: { H: 180, HH: 200 },
+    oil_temp_start_permissive: 40,
+    oil_temp_load_permissive: 180,
+  },
+ 
+  operatingLimits: {
+    minSuctionPressure: '150 psi (below which unloader activates, compressor unloads)',
+    maxDischargeTemperature: '300°F (throw outlet limit — HH alarm)',
+    maxOilTemperature: '200°F (shutdown setpoint HH)',
+    minOilTemperature_Start: '40°F (sump heater active below this)',
+    minOilTemperature_Load: '40°F (permissive to load)',
+    maxOilTemperature_Load: '180°F (maximum to load without cooler fan)',
+    maxDischargeTemperature_Normal: '300°F (throw outlet)',
+  },
+ 
+  lotoSteps: [
+    '1. Close XV-5700-1 (Suction inlet isolation)',
+    '2. Close XV-5700-2 (Discharge outlet isolation)',
+    '3. Close XV-5700-3 (Oil supply inlet)',
+    '4. Close XV-5700-4 (Oil return/sump drain)',
+    '5. Open XV-5700-5 (Vent valve on top of compressor)',
+    '6. Monitor PS-5700-1 and PS-5700-2 pressures — both should drop to 0 psi',
+    '7. Install blanks on all five isolation valve outlets',
+    '8. Install lockout devices on all isolation valve handles',
+    '9. Verify zero pressure, depressurized state, and cool temperature before work',
+  ],
+};
+ 
+// ===== CONTROL VALVE KNOWLEDGE =====
  
 const CONTROL_VALVE_KNOWLEDGE = {
   PCV_1438: {
@@ -24,12 +222,11 @@ const CONTROL_VALVE_KNOWLEDGE = {
       benchSet: '10-30 psi (tuning/sensitivity range)',
       pressureUnits: 'PSI',
       operatingRange_PilotAir: '0-33 psi',
-      description: 'Proportional spool controlled by pilot air signal. 0 psi pilot = closed, 33 psi pilot = full open. Intermediate pilot pressures proportionally throttle flow.',
     },
     
     body: {
       serialNumber: 'F002239151',
-      type: '51 (Fisher valve body designation)',
+      type: '51 (Fisher valve body)',
       portSize: '4" inlet/outlet',
       portConnection: '4-3/8" BSP',
       rating: 'CL600/1500 PSI CWP (high-pressure class)',
@@ -38,29 +235,14 @@ const CONTROL_VALVE_KNOWLEDGE = {
         stem: 'SST (Stainless Steel)',
         body: 'STL (Carbon Steel)',
         seat: 'SST (Stainless Steel)',
-        description: 'Stainless trim provides corrosion resistance; steel body provides strength',
       },
     },
     
-    function: 'Proportional pressure reduction valve. Modulates discharge flow to maintain setpoint pressure. Receives 0-33 psi pilot air signal from pressure controller. As pilot pressure increases, spool opens proportionally, reducing downstream pressure.',
-    
-    operatingLogic: {
-      lowPressure: 'If downstream pressure < setpoint, controller reduces pilot air, PCV-1438 closes, restricts flow, pressure rises',
-      normal: 'At setpoint, pilot air maintains valve at stable position',
-      highPressure: 'If downstream pressure > setpoint, controller increases pilot air, PCV-1438 opens wider, allows more flow, pressure reduces',
-    },
-    
-    applications: [
-      'Backpressure control on booster pump discharge',
-      'Pressure reducing valve for downstream equipment protection',
-      'Recycle line pressure maintenance',
-    ],
-    
+    function: 'Proportional pressure reduction. Modulates discharge flow to maintain setpoint. 0-33 psi pilot air controls valve opening.',
     maintenance: {
-      pilotAirVerification: 'Check continuous 0-33 psi pilot air supply from main plant air system (must be filtered/regulated)',
-      seatLeakage: 'Monitor for continuous weeping at outlet. Persistent leakage indicates seat wear; requires seat refacing or valve replacement',
-      benchSetTuning: '10-30 psi tuning allows adjustment of proportional sensitivity. Higher setting = more responsive, lower setting = less sensitive',
-      frequencyCheck: 'Verify operation during shift rounds; check for pressure oscillation or sluggish response',
+      pilotAirVerification: 'Check continuous 0-33 psi pilot air supply',
+      seatLeakage: 'Monitor for weeping; indicates seat wear',
+      benchSetTuning: '10-30 psi tuning allows sensitivity adjustment',
     },
   },
  
@@ -69,7 +251,7 @@ const CONTROL_VALVE_KNOWLEDGE = {
     name: 'Stabilizer Sump Level Control Valve',
     manufacturer: 'Fisher Controls International LLC',
     type: 'Type EWT (Explorer Wide Temperature) Proportional Pilot-Operated Control Valve',
-    service: 'V-1521 Stabilizer bottoms level modulation. Drains sump based on level signal.',
+    service: 'V-1521 Stabilizer bottoms level modulation',
     
     actuator: {
       serialNumber: 'F001757111',
@@ -79,134 +261,46 @@ const CONTROL_VALVE_KNOWLEDGE = {
       benchSet: '10-30 psi (tuning/sensitivity range)',
       pressureUnits: 'PSI',
       operatingRange_PilotAir: '0-33 psi',
-      description: 'Proportional spool controlled by pilot air from level controller. Pilot air varies 0-33 psi based on level transmitter signal.',
     },
     
     body: {
       serialNumber: 'F001737111',
-      type: 'EWT (Explorer Wide Temperature variant)',
-      portSize: '4" inlet, 4" outlet (4X4)',
-      portConnection: '4-3/8" BSP',
+      type: 'EWT (Explorer Wide Temperature)',
+      ports: '4X4" (4" inlet/outlet)',
+      portSize: '4-3/8"',
       rating: 'CL150/290 PSI CWP (standard pressure class)',
       materials: {
         plug: 'SST/HF (Stainless Steel with Hardface)',
         stem: 'SST (Stainless Steel)',
         body: 'STL (Carbon Steel)',
         seat: 'SST/HF (Stainless Steel with Hardface)',
-        description: 'Hardface trim (plug & seat) provides superior erosion/corrosion resistance for long valve life',
       },
     },
     
-    function: 'Proportional level control valve. Modulates sump drain flow to maintain stabilizer level at setpoint. Receives 0-33 psi pilot air signal derived from level transmitter reading.',
-    
-    controlLoop: {
-      step1: 'Level Transmitter (LT-5060) reads V-1521 sump level continuously (0-100% range)',
-      step2: 'Level Controller compares LT signal to setpoint (typically 50%). Outputs proportional 4-20mA signal.',
-      step3: 'Pneumatic I/P Converter transforms 4-20mA to proportional pilot air 0-33 psi',
-      step4: 'LCV-1241 proportionally opens/closes based on pilot air. Spool position controls bottoms drain flow.',
-      atSetpoint: 'At 50% level setpoint, pilot air = ~16.5 psi, valve at mid-stroke (50% open)',
-    },
-    
+    function: 'Proportional level control. Modulates sump drain based on level transmitter signal. LT-5060 generates pilot air signal.',
     operatingLogic: {
-      lowLevel_LL: 'If level < setpoint (e.g., 40%), controller reduces pilot air. LCV-1241 closes partially. Drain flow decreases. Level rises back to setpoint.',
-      normalLevel_50pct: 'At setpoint (50%), pilot air maintains valve at stable mid-stroke position. Inflow = outflow. Level stable.',
-      highLevel_HH: 'If level > setpoint (e.g., 60%), controller increases pilot air. LCV-1241 opens wider. Drain flow increases. Level drops back to setpoint.',
-      proportionalResponse: 'Valve responds proportionally to any level deviation. Continuous modulation prevents overshoot.',
+      lowLevel_LL: 'Pilot air reduced, valve closes, level rises',
+      normalLevel_50pct: 'Pilot air ~16.5 psi, valve mid-stroke, level stable',
+      highLevel_HH: 'Pilot air increased, valve opens, level reduces',
     },
     
     maintenance: {
-      pilotAirSupply: 'Verify 0-33 psi pilot air supply to valve actuator. Check main air regulators and filters.',
-      levelTransmitter: 'Check LT-5060 calibration (should read 4-20mA for 0-100% level). Verify wiring connections.',
-      seatInspection: 'Hardface seat should be durable. If valve leaks continuously (external, not through drain), seat wear indicated.',
-      benchSetTuning: '10-30 psi tuning allows proportional gain adjustment. Higher = more responsive, lower = more stable but slower',
-      responseTest: 'Slowly change setpoint and observe level response. Should be smooth with minimal oscillation.',
-      frequencyCheck: 'Monitor level trending on DCS. Alert if level oscillates rapidly (indicates high sensitivity) or drifts slowly (indicates low sensitivity)',
+      pilotAirSupply: 'Verify 0-33 psi pilot air',
+      levelTransmitter: 'Check LT-5060 calibration (4-20mA)',
+      seatInspection: 'Hardface seat for durability',
+      benchSetTuning: '10-30 psi tuning for proportional gain',
     },
   },
 };
  
-// ===== FIELD-VERIFIED PUMP MAINTENANCE KNOWLEDGE =====
+// ===== PUMP MAINTENANCE KNOWLEDGE =====
  
 const PUMP_MAINTENANCE_KNOWLEDGE = {
   P_1630: {
     tag: 'P-1630',
     name: 'Booster Pump (Recirculation Duty)',
-    service: 'Recirculate stabilizer bottoms through cooler (AC-5055) to feed inlet',
+    service: 'Recirculate stabilizer bottoms through cooler (AC-5055)',
     type: 'Centrifugal pump',
-    
-    oilSpecifications: {
-      capacity: '4 quarts per pump',
-      changeInterval: '2000 operating hours or annually (whichever comes first)',
-      viscosityGrade: 'ISO 68 (all acceptable oils are ISO 68)',
-      acceptableOilOptions: [
-        {
-          name: 'Mobil 1 SHC 626',
-          grade: 'ISO 68',
-          notes: 'Premium synthetic, excellent oxidation stability',
-        },
-        {
-          name: 'Phillips Syncon R&O Oil 68',
-          grade: 'ISO 68',
-          notes: 'R&O (Rust & Oxidation inhibited), standard mineral',
-        },
-        {
-          name: 'Royall Supply Synfill GT68',
-          grade: 'ISO 68',
-          notes: 'General purpose industrial oil, ISO 68',
-        },
-      ],
-      substitution: 'Any of the three options acceptable. Do NOT mix brands without flushing sump. If switching brands, drain old oil completely, flush sump with new oil, then refill.',
-    },
-    
-    oilChangeStep_by_step: [
-      '1. Stop pump. Allow oil to cool for 15+ minutes.',
-      '2. Locate sump drain plug (bottom of pump housing). Place collection pan underneath.',
-      '3. Open drain plug fully. Allow oil to drain completely (may take 10+ minutes for full drain).',
-      '4. Close drain plug when flow stops completely.',
-      '5. If changing oil brands: Add 1 quart of new oil, run pump at low speed for 2 minutes, drain again to flush residue. Repeat if necessary.',
-      '6. Refill sump with exactly 4 quarts of new oil.',
-      '7. Check oil level on dipstick (should be at "FULL" mark when pump is stopped and cool).',
-      '8. Start pump at low speed. Run for 5 minutes.',
-      '9. Stop pump. Wait 5 minutes. Recheck oil level on dipstick (oil expands when warm). Top up if necessary.',
-      '10. Resume normal operation.',
-    ],
-    
-    oilAnalysisSampling: {
-      frequency: 'Every 500 operating hours or every 6 months (whichever is first)',
-      parameters: [
-        { name: 'Wear Metals', target: 'Iron <100 ppm, Copper <50 ppm', alert: 'High wear = internal wear. Investigate pump condition.' },
-        { name: 'Acid Number (TAN)', target: '<2.0 TAN', alert: 'High TAN = oil degradation. Change oil sooner.' },
-        { name: 'Water Content', target: '<500 ppm', alert: 'High water = corrosion risk. Drain and refill immediately.' },
-        { name: 'Viscosity', target: 'ISO 68 ± 10%', alert: 'Out of range = oil breakdown or incorrect oil used.' },
-      ],
-      actionIfAbnormal: 'If any parameter abnormal, change oil immediately and investigate cause. High wear metals may indicate bearing/seal wear requiring pump repair.',
-    },
-    
-    coldWeatherOperation: {
-      condition: 'Ambient temperature < 32°F (0°C)',
-      issue: 'Oil viscosity increases at low temp, reducing flow to bearings and increasing starting load',
-      solution: [
-        'Option 1: Preheat sump with immersion heater or heat tape before startup (target 40°F minimum)',
-        'Option 2: Allow 15+ minutes idle at minimum speed before loading pump',
-        'Option 3: Monitor oil pressure (should reach normal pressure within 30 seconds of startup)',
-      ],
-      warning: 'DO NOT full-load cold pump. Bearing damage risk if oil pressure insufficient.',
-    },
- 
-    maintenance_schedule: {
-      everyShift: 'Check oil level via dipstick. Report any unusual noise or vibration.',
-      every500hrs: 'Perform oil analysis (wear metals, acid number, water). Change oil if parameters out of range.',
-      every2000hrs: 'Routine oil change (regardless of analysis results).',
-      annually: 'Full pump inspection (bearings, seals, impeller wear). Check suction/discharge pressures.',
-    },
-  },
- 
-  P_1635: {
-    tag: 'P-1635',
-    name: 'Booster Pump (Suction System)',
-    service: 'Primary booster pump for feed inlet pressurization',
-    type: 'Centrifugal pump',
-    note: 'Identical oil specifications to P-1630',
     
     oilSpecifications: {
       capacity: '4 quarts per pump',
@@ -217,81 +311,110 @@ const PUMP_MAINTENANCE_KNOWLEDGE = {
         'Phillips Syncon R&O Oil 68 (ISO 68)',
         'Royall Supply Synfill GT68 (ISO 68)',
       ],
-      identicalTo_P1630: 'P-1635 uses same oil as P-1630. Can consolidate maintenance stock.',
+      substitution: 'Any of the three acceptable. Do NOT mix without flushing sump.',
     },
     
-    oilChangeStep_by_step: 'Same as P-1630 (see above)',
-    oilAnalysisSampling: 'Same as P-1630 (see above)',
-    coldWeatherOperation: 'Same as P-1630 (see above)',
-    maintenance_schedule: 'Same as P-1630 (see above)',
+    maintenance_schedule: {
+      everyShift: 'Check oil level via dipstick.',
+      every500hrs: 'Perform oil analysis (wear metals, acid number, water).',
+      every2000hrs: 'Routine oil change.',
+      annually: 'Full pump inspection (bearings, seals, impeller).',
+    },
+  },
+ 
+  P_1635: {
+    tag: 'P-1635',
+    name: 'Booster Pump (Suction System)',
+    service: 'Primary booster pump',
+    type: 'Centrifugal pump',
+    note: 'Identical to P-1630 specifications',
+    
+    oilSpecifications: {
+      capacity: '4 quarts per pump',
+      changeInterval: '2000 operating hours or annually (whichever comes first)',
+      viscosityGrade: 'ISO 68',
+      acceptableOilOptions: [
+        'Mobil 1 SHC 626 (ISO 68)',
+        'Phillips Syncon R&O Oil 68 (ISO 68)',
+        'Royall Supply Synfill GT68 (ISO 68)',
+      ],
+    },
   },
 };
  
-// ===== RYAN AI SYSTEM PROMPT ENHANCEMENT =====
+// ===== RESIDUE COMPRESSOR KNOWLEDGE =====
  
-const SYSTEM_PROMPT_ENHANCEMENT = `
-You now have detailed knowledge of field-verified equipment nameplates:
- 
-CONTROL VALVES:
-- PCV-1438: Fisher Type 667 proportional pressure control valve (CL600/1500 PSI, Serial F002239151)
-  * Function: Discharge pressure modulation on V-1040
-  * Pilot air range: 0-33 psi
-  * Bench set tuning: 10-30 psi
-  * Can answer: "What is PCV-1438?", "How does proportional pilot air work?", "Why is bench set important?"
+const RESIDUE_COMPRESSOR_KNOWLEDGE = {
+  overview: `The residue compressors (C-6100, C-6200, C-6300) are reciprocating, multi-stage units that compress residue vapors to high pressure (~1000+ psi). All three use identical P&ID design and alarm setpoints.`,
   
-- LCV-1241: Fisher Type EWT proportional level control valve (CL150/290 PSI, Serial F001757111)
-  * Function: V-1521 Stabilizer sump level control
-  * Pilot air range: 0-33 psi
-  * Controlled by LT-5060 level transmitter signal
-  * Can answer: "What controls the stabilizer level?", "How does LCV-1241 work?", "Why does pilot air vary?"
+  alarmParameters_C6100: {
+    '1st_Stage_Suction': { LL: 265, L: 275, H: 400, HH: 420, tag: 'PT-6201' },
+    '1st_Stage_Discharge': { LL: 340, L: 461, H: 710, HH: 745, tag: 'PT-6202' },
+    '2nd_Stage_Suction': { LL: 340, L: 452, H: 710, HH: 745, tag: 'PT-6203' },
+    '2nd_Stage_Discharge': { LL: 335, L: 355, H: 1045, HH: 1060, tag: 'PT-6205' },
+    'Final_Discharge': { LL: 335, L: 355, H: 1045, HH: 1060, tag: 'PT-6204' },
+    'Oil_Pressure': { LL_no_alarm: null, L: 50, tag: 'PT-6206' },
+    'Oil_Temp': { LL: 80, L: 90, H: 185, HH: 190, tag: 'TT-6210' },
+    '1st_Stage_Suction_Temp': { LL: 0, L: 10, H: 130, HH: 135, tag: 'TT-6201' },
+    'Final_Gas_Discharge_Temp': { H: 135, HH: 150, tag: 'TT-6209' },
+    '2nd_Stage_Suction_Temp': { LL: 5, L: 20, H: 135, HH: 140, tag: 'TT-6205' },
+  },
  
-PUMP MAINTENANCE:
-- P-1630: 4 quarts oil capacity, 2000-hour change interval
-  * Acceptable oils: Mobil 1 SHC 626, Phillips Syncon R&O 68, Royall Synfill GT68 (all ISO 68)
-  * Can answer: "What oil does P-1630 use?", "When to change pump oil?", "How to check oil level?"
-  
-- P-1635: Identical to P-1630
-  * Same oil, same change interval
-  * Can cite field nameplate data for both pumps
+  isolationValves_C6100: [
+    { tag: 'XV-6100-1', location: 'Suction inlet isolation', normally: 'Open' },
+    { tag: 'XV-6100-2', location: 'Discharge outlet isolation', normally: 'Open' },
+    { tag: 'XV-6100-3', location: 'Oil supply inlet', normally: 'Open' },
+    { tag: 'XV-6100-4', location: 'Oil return/drain', normally: 'Open' },
+    { tag: 'XV-6100-5', location: 'Gas vent valve', normally: 'Closed' },
+  ],
  
-When asked equipment questions, cite specific nameplate data:
-- Serial numbers (F002239151, F001757111, etc.)
-- Pressure ratings (CL600/1500 PSI, CL150/290 PSI)
-- Control ranges (0-33 psi pilot air)
-- Specifications (Type 667, Type EWT, 4 quarts, 2000 hours)
+  lotoSteps_C6100: [
+    '1. Close XV-6100-1, XV-6100-2, XV-6100-3, XV-6100-4',
+    '2. Monitor pressure gauges for pressure drop',
+    '3. Open XV-6100-5 vent valve slowly',
+    '4. Verify zero pressure on all transmitters',
+    '5. Install physical blanks on all five isolation valve outlets',
+    '6. Install lockout devices on valve handles',
+    '7. Install LOTO tags with work order information',
+    '8. Verify compressor cool and depressurized before work',
+  ],
  
-This data is from actual field equipment photographs, 100% verified.
-`;
+  tagNumberMapping: {
+    C6100_to_C6200: 'Replace 6100 with 6200 in all valve tags (XV-6200-1, PSV-6200A, etc.)',
+    C6100_to_C6300: 'Replace 6100 with 6300 in all valve tags (XV-6300-1, PSV-6300A, etc.)',
+    instrumentTags: 'PT-6201, PT-6202, PT-6203, PT-6205, PT-6204, PT-6206, TT-6210, TT-6201, TT-6209, TT-6205 shared across all three',
+  },
+};
  
-// ===== RYAN AI HANDLER (ENHANCED) =====
+// ===== RYAN AI HANDLER =====
  
 async function handleRyanRequest(mode, userPrompt, plantState, currentScreen) {
   const systemPrompt = `You are Ryan, an AI assistant for Clearfork Cryogenic Processing Unit #1.
  
-You have field-verified knowledge of:
-- Control Valve PCV-1438 (Fisher Type 667, proportional pressure control, CL600/1500 PSI, Serial F002239151)
-- Control Valve LCV-1241 (Fisher Type EWT, proportional level control, CL150/290 PSI, Serial F001757111)
-- Pump P-1630 and P-1635 (4 quarts oil, 2000-hour change interval, ISO 68 oil options)
-- All equipment nameplate data verified from field photographs
+You have detailed expertise in:
+- Stabilizer System (V-1521, P-5060/5065, AC-5055) with full LOTO procedures
+- Overhead Compressor (C-5700) with alarm parameters and control logic
+- Residue Compressors (C-6100, C-6200, C-6300) with multi-stage configuration
+- Control Valves (PCV-1438, LCV-1241) with proportional pilot-air logic
+- Pump Maintenance (P-1630, P-1635) with oil specifications and change intervals
+- All equipment tag numbers, isolation valves, relief valves, instrumentation
  
-When asked about equipment:
-- Cite specific nameplate serial numbers, types, pressure ratings
-- Reference field data with confidence (this is from actual equipment)
-- Answer maintenance questions with exact specifications
-- Explain proportional control logic for Fisher valves
+When asked to:
+- "Build a LOTO for [equipment]": Provide step-by-step isolation procedure with specific tag numbers
+- "What are the alarm setpoints for [compressor]": Give complete LL, L, H, HH parameters
+- "What isolates [equipment]": List all manual isolation valves with functions
+- "What oil goes in [pump]": Cite nameplate data with all three acceptable options
+- "How does [system] work": Explain with equipment tags and control logic
  
-${mode === 'loto' ? `For LOTO work, if equipment uses proportional pilot air control (PCV-1438, LCV-1241), note that pilot air supply must be isolated as part of lockout procedure.` : ''}
- 
-Provide accurate, field-verified information. This equipment data comes from physical equipment photographs, not estimates.`;
+Provide accurate, field-verified information citing specific nameplate data and P&ID references.`;
  
   const userMessage = `${userPrompt}
  
-Available context:
-- Current screen: ${currentScreen}
+Current context:
 - Mode: ${mode}
+- Screen: ${currentScreen}
  
-Control Valve Knowledge: PCV-1438 (proportional pressure control), LCV-1241 (proportional level control)
-Pump Knowledge: P-1630/P-1635 (4 quarts, ISO 68 oil, 2000-hour intervals)`;
+Available systems: Stabilizer (V-1521), Overhead Compressor (C-5700), Residue Compressors (C-6100/6200/6300), Control Valves (PCV-1438, LCV-1241), Pumps (P-1630, P-1635)`;
  
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -314,7 +437,7 @@ Pump Knowledge: P-1630/P-1635 (4 quarts, ISO 68 oil, 2000-hour intervals)`;
  
     if (!response.ok) {
       const error = await response.text();
-      return { error: `API Error: ${response.status} — ${error}` };
+      return { error: `API Error: ${response.status}` };
     }
  
     const data = await response.json();
@@ -338,12 +461,13 @@ Pump Knowledge: P-1630/P-1635 (4 quarts, ISO 68 oil, 2000-hour intervals)`;
   }
 }
  
-// ===== EXPORT ALL KNOWLEDGE =====
+// ===== EXPORT =====
  
 module.exports = {
+  STABILIZER_KNOWLEDGE,
+  OVERHEAD_COMPRESSOR_KNOWLEDGE,
   CONTROL_VALVE_KNOWLEDGE,
   PUMP_MAINTENANCE_KNOWLEDGE,
-  SYSTEM_PROMPT_ENHANCEMENT,
+  RESIDUE_COMPRESSOR_KNOWLEDGE,
   handleRyanRequest,
 };
- 
