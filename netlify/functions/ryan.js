@@ -251,232 +251,328 @@ const SIMULATOR_UI_KNOWLEDGE = {
     independence: 'Independent from the Outages panel speed selector (outage aging only) and from the Live/Pause master switch.',
   },
 };
- 
-// ===== SYSTEM PROMPT BUILDER =====
- 
-function buildSystemPrompt(mode) {
-  const knowledgeBlock = JSON.stringify({
-    stabilizer: STABILIZER_KNOWLEDGE,
-    overheadCompressor: OVERHEAD_COMPRESSOR_KNOWLEDGE,
-    controlValves: CONTROL_VALVE_KNOWLEDGE,
-    pumpMaintenance: PUMP_MAINTENANCE_KNOWLEDGE,
-    residueCompressors: RESIDUE_COMPRESSOR_KNOWLEDGE,
-    simulatorUI: SIMULATOR_UI_KNOWLEDGE,
-  });
- 
+
+// ===== RYAN CORE V2 =====
+
+const https = require('https');
+const crypto = require('crypto');
+
+const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
+const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
+const MAX_HISTORY_TURNS = Number(process.env.RYAN_MAX_HISTORY_TURNS || 12);
+const MAX_HISTORY_CHARS = Number(process.env.RYAN_MAX_HISTORY_CHARS || 12000);
+const MAX_MESSAGE_CHARS = Number(process.env.RYAN_MAX_MESSAGE_CHARS || 24000);
+const MAX_CONTEXT_CHARS = Number(process.env.RYAN_MAX_CONTEXT_CHARS || 120000);
+const MAX_ATTACHMENT_BYTES = Number(process.env.RYAN_MAX_ATTACHMENT_BYTES || 24 * 1024 * 1024);
+const REQUEST_TIMEOUT_MS = Number(process.env.RYAN_REQUEST_TIMEOUT_MS || 45000);
+const INPUT_PRICE_PER_MILLION = Number(process.env.RYAN_INPUT_PRICE_PER_MILLION || 2);
+const OUTPUT_PRICE_PER_MILLION = Number(process.env.RYAN_OUTPUT_PRICE_PER_MILLION || 10);
+
+const KNOWLEDGE_REGISTRY = {
+  stabilizer: STABILIZER_KNOWLEDGE,
+  overheadCompressor: OVERHEAD_COMPRESSOR_KNOWLEDGE,
+  controlValves: CONTROL_VALVE_KNOWLEDGE,
+  pumpMaintenance: PUMP_MAINTENANCE_KNOWLEDGE,
+  residueCompressors: RESIDUE_COMPRESSOR_KNOWLEDGE,
+  simulatorUI: SIMULATOR_UI_KNOWLEDGE,
+};
+
+const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'stabilizer', re: /\b(V-1521|P-5060|P-5065|AC-5055|stabilizer|demethanizer|LT-5060|TT-5060|PSV-1521)\b/i },
+  { key: 'overheadCompressor', re: /\b(C-5700|5700|overhead compressor|TT-5700|PS-5700|PSV-5700)\b/i },
+  { key: 'controlValves', re: /\b(PCV-1438|LCV-1241|control valve|Fisher|pilot air|actuator)\b/i },
+  { key: 'pumpMaintenance', re: /\b(P-1630|P-1635|ISO 68|pump oil|booster pump maintenance)\b/i },
+  { key: 'residueCompressors', re: /\b(C-6100|C-6200|C-6300|6100|6200|6300|residue compressor|PT-620[1-6]|TT-62\d\d)\b/i },
+  { key: 'simulatorUI', re: /\b(simulation speed|real time|toolbar|outages panel|live|pause|simulator UI)\b/i },
+];
+
+function safeString(value, maxChars) {
+  const text = value == null ? '' : String(value);
+  return text.length > maxChars ? text.slice(0, maxChars) + '\n[TRUNCATED]' : text;
+}
+
+function selectKnowledge(message, context, mode) {
+  const haystack = `${message || ''}\n${context || ''}`;
+  const keys = new Set();
+  for (const rule of KNOWLEDGE_ROUTING_RULES) if (rule.re.test(haystack)) keys.add(rule.key);
+  if (mode === 'audit' || mode === 'scan') Object.keys(KNOWLEDGE_REGISTRY).forEach(k => keys.add(k));
+  if (!keys.size && /\b(alarm|setpoint|loto|lockout|isolation|psv|pressure relief|maintenance)\b/i.test(haystack)) {
+    Object.keys(KNOWLEDGE_REGISTRY).forEach(k => keys.add(k));
+  }
+  return Object.fromEntries([...keys].map(k => [k, KNOWLEDGE_REGISTRY[k]]));
+}
+
+function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
   let modeInstructions = '';
   if (mode === 'loto') {
-    modeInstructions = `\nMODE: LOTO DRAFTING. Produce a step-by-step lockout/tagout draft using exact tag numbers from the reference data where the equipment is covered there. ALWAYS end the response with the exact line: "NOT APPROVED — FIELD VERIFICATION REQUIRED" on its own line. This is a draft only; it requires human engineering/operations review before use.`;
+    modeInstructions = `MODE: LOTO DRAFTING. Produce only a DRAFT isolation/LOTO plan. Never present an AI-generated isolation as approved. Use exact tags only when present in supplied source data. Mark every unsupported or approximate value PENDING VERIFICATION. End with exactly: NOT APPROVED — FIELD VERIFICATION REQUIRED`;
   } else if (mode === 'audit') {
-    modeInstructions = `\nMODE: AUDIT. You are reviewing the attached search-result context for accuracy, contradictions, or gaps against the reference data. Give specific, actionable findings. Suggestions only — nothing is applied automatically.`;
-  } else if (mode === 'digest') {
-    modeInstructions = `\nMODE: DOCUMENT DIGEST. Read the attached document/image carefully and extract discrete, verifiable facts about plant equipment, instrumentation, setpoints, or procedures. Respond with ONLY a JSON array (no prose, no code fences, no explanation) of objects shaped exactly like:
-[{"statement":"<one factual sentence>","classification":"<setpoint|tag|procedure|spec|other>","equipmentIds":["<tag numbers mentioned, if any>"],"page":<page number if known, else null>}, ...]
-Extract at most 40 of the clearest, most useful facts. If nothing extractable is found, respond with an empty array: []`;
+    modeInstructions = `MODE: AUDIT. Identify contradictions, unsupported values, mismatched tags, unsafe assumptions, and missing source provenance. Suggestions only.`;
   } else if (mode === 'scan') {
-    modeInstructions = `\nMODE: RYAN SCAN. You are auditing a batch of this program's own quiz bank or source code (attached below) for wrong marked answers, comments that contradict the code next to them, mismatched tags, or backwards logic. List specific findings with line/question references where possible. Suggestions only — nothing is applied automatically.`;
+    modeInstructions = `MODE: RYAN SCAN. Audit the supplied code/question bank for wrong answers, contradictory comments, tag mismatches, and backwards logic. Cite line/question references when available.`;
   } else if (mode === 'recommend') {
-    modeInstructions = `\nMODE: RECOMMENDATIONS. The operator wants your best process, maintenance, or troubleshooting recommendation given current plant conditions (see CONTEXT in the user message for live values/state). Structure your answer as: (1) brief assessment of what's happening and why, citing specific tags/values from context, (2) concrete recommended action(s), ranked if there's more than one path, (3) what to watch/verify afterward to confirm the recommendation worked. Be direct and specific — this is for an experienced field operator, not a general audience. If data needed to make a confident recommendation isn't in the context, say what's missing rather than guessing.`;
+    modeInstructions = `MODE: RECOMMENDATIONS. Use live CONTEXT first. Separate verified facts from inference. Rank likely causes, name the tag/value that would confirm each cause, then recommend checks before corrective action.`;
+  } else if (['digest','learn','ingest'].includes(mode)) {
+    modeInstructions = `MODE: DOCUMENT INGESTION. Extract only facts actually visible or stated in the supplied document. Do not merge in general knowledge. Do not silently correct the document. Return strict JSON only as instructed in the user message.`;
   } else {
-    modeInstructions = `\nMODE: Q&A. Answer the operator's question directly and specifically, citing exact tag numbers, setpoints, and values from the reference data below wherever relevant.`;
+    modeInstructions = `MODE: Q&A. Answer directly. Cite exact plant tags and values when supplied. Clearly label anything inferred, operator-observed, live, calculated, or pending verification.`;
   }
- 
-  const recommendationCharter = `
-PROACTIVE RECOMMENDATIONS (applies in every mode, not just MODE: RECOMMENDATIONS above): when the operator's question or the live CONTEXT reveals something worth flagging — a value drifting toward an alarm limit, an inefficient operating point, a maintenance interval coming due, a symptom pattern matching a known failure mode — say so and give a concrete recommendation, even if not explicitly asked. Cover these categories as relevant:
-- PROCESS: operating point adjustments, setpoint tuning, efficiency/yield observations (e.g. C2 recovery/rejection tradeoffs)
-- PLANT: overall health, cross-system interactions, what a change in one area will do downstream
-- MAINTENANCE: oil change intervals, inspection due dates, wear patterns worth watching, PSV test due dates
-- TROUBLESHOOTING: given a symptom, walk through likely causes ordered by probability, cite the specific tag/instrument that would confirm or rule out each one, and recommend the diagnostic check before recommending corrective action
-Stay grounded in the reference data and live context provided — flag a concern or suggest a check even when you don't have enough information to fully diagnose it, rather than staying silent. Never fabricate a specific setpoint or nameplate value you don't have; say "Pending Verification" the same way the reference data does.`;
- 
-  return `You are Ryan, an AI assistant for Clearfork Cryogenic Processing Unit #1.
- 
-You have detailed, field-verified expertise in:
-- Stabilizer System (V-1521, P-5060/5065, AC-5055) with full LOTO procedures
-- Overhead Compressor (C-5700) with alarm parameters and control logic
-- Residue Compressors (C-6100, C-6200, C-6300) with multi-stage configuration
-- Control Valves (PCV-1438, LCV-1241) with proportional pilot-air logic
-- Pump Maintenance (P-1630, P-1635) with oil specifications and change intervals
-- Simulator UI features, including the Simulation Speed control
- 
-The exact reference data for all of the above is provided below as JSON. Always cite specific values, tag numbers, and steps directly from this data rather than estimating. If something isn't covered in this data, say so plainly rather than inventing a value.
- 
-REFERENCE DATA:
-${knowledgeBlock}
-${recommendationCharter}
+
+  const core = `You are Ryan, the AI operator assistant for the Clearfork Cryogenic Unit #1 simulator.
+
+TRUST MODEL:
+- VERIFIED: explicitly supported by a named source supplied to you.
+- DOCUMENT_EXTRACTED_UNVERIFIED: extracted from a document but not yet field/engineering verified.
+- LIVE: current simulator value supplied in CONTEXT.
+- OPERATOR_OBSERVED: operator experience/history, useful for planning but not a design guarantee.
+- INFERRED: your reasoning from supplied facts.
+- PENDING_VERIFICATION: unknown, approximate, estimated, conflicting, or unsourced.
+Never promote a lower-trust fact to VERIFIED without source evidence.
+Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step, or nameplate value.
+For safety-critical work, distinguish drafting/analysis from authorization and require field verification.
+
+PROACTIVE BEHAVIOR:
+Flag meaningful drift toward alarm limits, likely cross-system effects, maintenance concerns, and diagnostic checks when supported by the supplied data. Prefer a diagnostic check before a corrective action when uncertainty remains.
+
 ${modeInstructions}`;
+
+  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(selectedKnowledge)}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-250) : [])}`;
+
+  return [
+    { type: 'text', text: core },
+    { type: 'text', text: reference, cache_control: { type: 'ephemeral', ttl: '1h' } },
+  ];
 }
- 
-// ===== ANTHROPIC CONTENT BLOCK HELPERS =====
- 
+
+function inferDocumentType(attachment, requestedType) {
+  if (requestedType) return String(requestedType).toLowerCase();
+  const label = String((attachment && attachment.label) || '').toLowerCase();
+  if (/p\s*&\s*id|pid|piping.*instrument|drawing/.test(label)) return 'pid';
+  if (/manual|oem|operation|maintenance|iom|instruction/.test(label)) return 'manual';
+  return 'document';
+}
+
+function estimateBase64Bytes(base64) {
+  if (!base64) return 0;
+  const s = String(base64).replace(/\s/g, '');
+  return Math.floor((s.length * 3) / 4) - (s.endsWith('==') ? 2 : s.endsWith('=') ? 1 : 0);
+}
+
 function attachmentToContentBlock(attachment) {
-  // attachment: {mediaType, base64, label} sent by the client.
-  if (!attachment || !attachment.base64) return null;
-  const mediaType = attachment.mediaType || 'application/pdf';
-  if (mediaType === 'application/pdf') {
-    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 } };
+  if (!attachment) return null;
+  const mediaType = String(attachment.mediaType || '').toLowerCase();
+  const label = safeString(attachment.label || 'Ryan source document', 200);
+
+  if (attachment.fileId) {
+    if (mediaType.startsWith('image/')) return { type: 'image', source: { type: 'file', file_id: attachment.fileId } };
+    if (mediaType === 'application/pdf' || mediaType === 'text/plain' || !mediaType) {
+      return { type: 'document', source: { type: 'file', file_id: attachment.fileId }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+    }
   }
-  if (mediaType.indexOf('image/') === 0) {
+
+  if (!attachment.base64 && !attachment.text) return null;
+  if (attachment.base64 && estimateBase64Bytes(attachment.base64) > MAX_ATTACHMENT_BYTES) {
+    const err = new Error(`Attachment is too large for this Ryan request (${Math.round(estimateBase64Bytes(attachment.base64)/1024/1024)} MB). Split the PDF into sections or upload it through an Anthropic Files API flow and send fileId.`);
+    err.statusCode = 413;
+    throw err;
+  }
+
+  if (mediaType === 'application/pdf') {
+    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+  }
+  if (mediaType === 'text/plain' || mediaType === 'text/markdown' || mediaType === 'text/csv' || mediaType === 'application/json' || attachment.text) {
+    const text = attachment.text || Buffer.from(attachment.base64, 'base64').toString('utf8');
+    return { type: 'document', source: { type: 'text', media_type: 'text/plain', data: safeString(text, 500000) }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+  }
+  if (/^image\/(jpeg|png|gif|webp)$/.test(mediaType)) {
     return { type: 'image', source: { type: 'base64', media_type: mediaType, data: attachment.base64 } };
   }
-  // Fallback: treat unknown types as a document block.
-  return { type: 'document', source: { type: 'base64', media_type: mediaType, data: attachment.base64 } };
+
+  const err = new Error(`Unsupported attachment type "${mediaType || 'unknown'}". Ryan can directly ingest PDF, TXT/MD/CSV as plain text, or JPEG/PNG/GIF/WEBP images. Convert DOCX/XLSX and other binary manuals to PDF or text first.`);
+  err.statusCode = 415;
+  throw err;
 }
- 
-// ===== MAIN NETLIFY HANDLER =====
- 
-const https = require('https');
- 
-// Native https-based POST helper — deliberately avoids relying on global
-// `fetch`, since Netlify's actual Node runtime version isn't something this
-// code can verify from here, and a missing/undefined fetch would throw in a
-// way that could surface to the client as a bare, message-less error. This
-// works identically on any Node version Netlify runs.
+
+function buildIngestionInstruction(documentType, label) {
+  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid JSON, no markdown fences. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Never use plant knowledge outside this attachment to fill gaps.`;
+  if (documentType === 'pid') {
+    return `${common}\nThis is a P&ID/drawing ingestion. Read text AND visual relationships. Return an object with keys documentType, sourceLabel, facts, equipment, connections, warnings. facts must contain discrete statements with fields: statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Extract visible equipment tags, instrument tags, valve tags, line numbers/sizes, flow direction, source/destination connections, control loops, relief devices, isolation valves, drains/vents, normal-position markings, and any setpoints actually shown. Do NOT infer a connection merely because it is typical.`;
+  }
+  if (documentType === 'manual') {
+    return `${common}\nThis is an OEM/operations/maintenance manual ingestion. Return an object with keys documentType, sourceLabel, facts, procedures, warnings. facts fields: statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Extract manufacturer/model applicability, operating limits, permissives, alarms/trips, lubrication specs, maintenance intervals, capacities, torque/clearance values, startup/shutdown steps, troubleshooting tables, warnings/cautions, and parts/specifications actually stated. Keep units exactly as written.`;
+  }
+  return `${common}\nReturn an object with keys documentType, sourceLabel, facts, warnings. facts fields: statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Extract at most 120 clear plant-relevant facts.`;
+}
+
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.slice(-MAX_HISTORY_TURNS).filter(h => h && (h.role === 'user' || h.role === 'assistant') && h.content != null).map(h => {
+    if (typeof h.content === 'string') return { role: h.role, content: safeString(h.content, MAX_HISTORY_CHARS) };
+    if (Array.isArray(h.content)) {
+      const text = h.content.filter(x => x && x.type === 'text').map(x => x.text || '').join('\n');
+      return { role: h.role, content: safeString(text, MAX_HISTORY_CHARS) };
+    }
+    return { role: h.role, content: safeString(JSON.stringify(h.content), MAX_HISTORY_CHARS) };
+  });
+}
+
+function secureEqual(a, b) {
+  const aa = Buffer.from(String(a || ''));
+  const bb = Buffer.from(String(b || ''));
+  return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
+}
+
 function postJson(url, headers, payloadObj) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(payloadObj);
     const u = new URL(url);
-    const req = https.request(
-      {
-        hostname: u.hostname,
-        path: u.pathname + u.search,
-        method: 'POST',
-        headers: Object.assign({ 'content-length': Buffer.byteLength(payload) }, headers),
-      },
-      res => {
-        let raw = '';
-        res.on('data', chunk => { raw += chunk; });
-        res.on('end', () => {
-          let parsed;
-          try {
-            parsed = JSON.parse(raw);
-          } catch (e) {
-            resolve({ ok: false, status: res.statusCode, data: { error: { message: 'Non-JSON response from Anthropic (HTTP ' + res.statusCode + '): ' + raw.slice(0, 300) } } });
-            return;
-          }
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: parsed });
-        });
-      }
-    );
-    req.on('error', err => reject(err));
+    const req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method: 'POST', headers: { ...headers, 'content-length': Buffer.byteLength(payload) } }, res => {
+      let raw = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { raw += chunk; if (raw.length > 10_000_000) req.destroy(new Error('Anthropic response exceeded Ryan safety limit.')); });
+      res.on('end', () => {
+        try { resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: JSON.parse(raw || '{}') }); }
+        catch { resolve({ ok: false, status: res.statusCode, data: { error: { message: `Non-JSON response from Anthropic (HTTP ${res.statusCode}): ${raw.slice(0,300)}` } } }); }
+      });
+    });
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error(`Anthropic request timed out after ${REQUEST_TIMEOUT_MS} ms.`)));
+    req.on('error', reject);
     req.write(payload);
     req.end();
   });
 }
- 
-exports.handler = async function (event) {
+
+async function postJsonWithRetry(url, headers, payload, attempts = 3) {
+  let last;
+  for (let i = 0; i < attempts; i++) {
+    try { last = await postJson(url, headers, payload); } catch (e) { if (i === attempts - 1) throw e; await new Promise(r => setTimeout(r, 350 * (i + 1))); continue; }
+    if (last.ok || ![429,500,502,503,504,529].includes(last.status) || i === attempts - 1) return last;
+    await new Promise(r => setTimeout(r, 500 * (i + 1)));
+  }
+  return last;
+}
+
+function parseJsonReply(text) {
+  const cleaned = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  try { return JSON.parse(cleaned); } catch { return null; }
+}
+
+exports.handler = async function(event) {
   try {
-    if (event.httpMethod !== 'POST') {
-      return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
-    }
- 
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: { 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type' }, body: '' };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+
     let body;
     try {
       const rawBody = event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}');
       body = JSON.parse(rawBody);
-    } catch (e) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body: ' + e.message }) };
-    }
- 
-    const { message, context, mode, scanLabel, history, password, attachment } = body;
- 
-    // Password gate — mirrors client expectation of a 403 on bad password.
+    } catch (e) { return { statusCode: 400, body: JSON.stringify({ error: `Invalid JSON body: ${e.message}` }) }; }
+
+    const { message, context, mode, scanLabel, history, password, attachment, learnedKnowledge, documentType } = body || {};
     const expectedPw = process.env.RYAN_AI_PASSWORD;
-    if (expectedPw && password !== expectedPw) {
-      return { statusCode: 403, body: JSON.stringify({ error: 'Incorrect password.' }) };
-    }
- 
+    if (expectedPw && !secureEqual(password, expectedPw)) return { statusCode: 403, body: JSON.stringify({ error: 'Incorrect password.' }) };
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set on the server. See the setup README.' }) };
-    }
- 
-    const effectiveMode = mode || 'qa';
-    const systemPrompt = buildSystemPrompt(effectiveMode);
- 
-    // Build the messages array: prior history (already {role,content} pairs,
-    // Anthropic-compatible) + the new user turn. Context (deterministic search
-    // grounding, or scan batch content) is appended into the new user message
-    // rather than the system prompt, since it changes every call.
-    const messages = Array.isArray(history)
-      ? history
-          .filter(h => h && h.role && h.content)
-          .map(h => ({ role: h.role, content: String(h.content) }))
-      : [];
- 
-    const userText = [
-      message || '',
-      context ? ('\n\n--- CONTEXT ---\n' + context) : '',
-      scanLabel ? ('\n\n--- SCAN BATCH LABEL ---\n' + scanLabel) : '',
-    ].join('');
- 
+    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set on the server.' }) };
+
+    const effectiveMode = String(mode || 'qa').toLowerCase();
+    const msg = safeString(message, MAX_MESSAGE_CHARS);
+    const ctx = safeString(context, MAX_CONTEXT_CHARS);
+    const selectedKnowledge = selectKnowledge(msg, ctx, effectiveMode);
+    const system = buildSystemPrompt(effectiveMode, selectedKnowledge, learnedKnowledge);
+    const messages = sanitizeHistory(history);
     const userContent = [];
+
     if (attachment) {
       const block = attachmentToContentBlock(attachment);
       if (block) userContent.push(block);
     }
+
+    let userText = msg;
+    if (ctx) userText += `\n\n--- LIVE/SEARCH CONTEXT ---\n${ctx}`;
+    if (scanLabel) userText += `\n\n--- SCAN BATCH LABEL ---\n${safeString(scanLabel, 500)}`;
+
+    const isIngest = ['digest','learn','ingest'].includes(effectiveMode);
+    if (isIngest) {
+      if (!attachment) return { statusCode: 400, body: JSON.stringify({ error: 'Document ingestion requires an attachment.' }) };
+      const dtype = inferDocumentType(attachment, documentType);
+      userText = `${buildIngestionInstruction(dtype, attachment.label)}\n\n${userText || 'Ingest this source into Ryan knowledge.'}`;
+    }
+
     userContent.push({ type: 'text', text: userText || '(no message provided)' });
- 
     messages.push({ role: 'user', content: userContent });
- 
-    const maxTokens = (effectiveMode === 'digest' || effectiveMode === 'scan') ? 4096 : 1500;
- 
+
+    const maxTokens = isIngest ? 7000 : (effectiveMode === 'scan' ? 5000 : 1800);
+    const payload = { model: MODEL_V2, max_tokens: maxTokens, system, messages };
+
     let result;
     try {
-      result = await postJson(
-        'https://api.anthropic.com/v1/messages',
-        {
-          'content-type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': ANTHROPIC_VERSION,
-        },
-        { model: MODEL, max_tokens: maxTokens, system: systemPrompt, messages: messages }
-      );
+      result = await postJsonWithRetry('https://api.anthropic.com/v1/messages', {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': ANTHROPIC_VERSION_V2,
+        ...(attachment && attachment.fileId ? { 'anthropic-beta': 'files-api-2025-04-14' } : {}),
+      }, payload);
     } catch (networkErr) {
-      return { statusCode: 502, body: JSON.stringify({ error: 'Could not reach Anthropic API: ' + (networkErr && networkErr.message ? networkErr.message : 'network error') }) };
+      return { statusCode: 502, body: JSON.stringify({ error: `Could not reach Anthropic API: ${networkErr.message || 'network error'}` }) };
     }
- 
+
     if (!result.ok) {
       const d = result.data;
-      const msg = (d && d.error && d.error.message) ? d.error.message : ('Anthropic API error (HTTP ' + result.status + ')');
-      return { statusCode: 502, body: JSON.stringify({ error: msg }) };
+      const apiMessage = d && d.error && d.error.message ? d.error.message : `Anthropic API error (HTTP ${result.status})`;
+      return { statusCode: result.status === 413 ? 413 : 502, body: JSON.stringify({ error: apiMessage }) };
     }
- 
-    const data = result.data;
-    const reply = (data.content || [])
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('\n');
- 
-    const usage = data.usage || { input_tokens: 0, output_tokens: 0 };
-    const costUsd = (usage.input_tokens * 0.003 + usage.output_tokens * 0.015) / 1000;
- 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        reply: reply,
-        cost: {
-          usd: costUsd,
-          inputTokens: usage.input_tokens,
-          outputTokens: usage.output_tokens,
-        },
-      }),
+
+    const data = result.data || {};
+    const reply = (data.content || []).filter(block => block.type === 'text').map(block => block.text).join('\n');
+    const usage = data.usage || {};
+    const inputTokens = Number(usage.input_tokens || 0);
+    const outputTokens = Number(usage.output_tokens || 0);
+    const costUsd = (inputTokens * INPUT_PRICE_PER_MILLION + outputTokens * OUTPUT_PRICE_PER_MILLION) / 1_000_000;
+
+    const response = {
+      reply,
+      cost: {
+        usd: costUsd,
+        inputTokens,
+        outputTokens,
+        cacheCreationInputTokens: Number(usage.cache_creation_input_tokens || 0),
+        cacheReadInputTokens: Number(usage.cache_read_input_tokens || 0),
+        pricingNote: 'Estimate uses RYAN_INPUT_PRICE_PER_MILLION and RYAN_OUTPUT_PRICE_PER_MILLION environment settings.'
+      },
+      meta: { model: MODEL_V2, mode: effectiveMode, knowledgeSections: Object.keys(selectedKnowledge), stopReason: data.stop_reason || null }
     };
+
+    if (isIngest) {
+      const parsed = parseJsonReply(reply);
+      if (!parsed) {
+        response.ingestion = { ok: false, error: 'Claude returned non-JSON ingestion output. Retry the ingestion or use a smaller document section.', rawReply: reply };
+      } else {
+        const facts = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.facts) ? parsed.facts : []);
+        response.ingestion = {
+          ok: true,
+          documentType: inferDocumentType(attachment, documentType),
+          sourceLabel: attachment.label || null,
+          facts,
+          extracted: parsed,
+          persistenceRequired: true,
+          persistenceInstruction: 'Store ingestion.facts/extracted in the simulator knowledge library and send the relevant records back as learnedKnowledge on later Ryan requests.'
+        };
+        response.learnedFacts = facts; // backward-friendly convenience field
+      }
+    }
+
+    return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify(response) };
   } catch (err) {
-    // Last-resort catch: log server-side (visible in Netlify function logs)
-    // and always return a non-empty, JSON-parseable error so the client
-    // never has to fall back to its generic "unknown error" text.
     console.error('Ryan AI handler crashed:', err);
-    return { statusCode: 500, body: JSON.stringify({ error: (err && err.message) ? err.message : ('Unknown server error: ' + String(err)) }) };
+    return { statusCode: err.statusCode || 500, body: JSON.stringify({ error: err.message || `Unknown server error: ${String(err)}` }) };
   }
 };
- 
-// Named exports for the knowledge objects (used internally by
-// buildSystemPrompt() above regardless; exposed here too for debugging/testing).
+
 module.exports.STABILIZER_KNOWLEDGE = STABILIZER_KNOWLEDGE;
 module.exports.OVERHEAD_COMPRESSOR_KNOWLEDGE = OVERHEAD_COMPRESSOR_KNOWLEDGE;
 module.exports.CONTROL_VALVE_KNOWLEDGE = CONTROL_VALVE_KNOWLEDGE;
 module.exports.PUMP_MAINTENANCE_KNOWLEDGE = PUMP_MAINTENANCE_KNOWLEDGE;
 module.exports.RESIDUE_COMPRESSOR_KNOWLEDGE = RESIDUE_COMPRESSOR_KNOWLEDGE;
 module.exports.SIMULATOR_UI_KNOWLEDGE = SIMULATOR_UI_KNOWLEDGE;
- 
+module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, sanitizeHistory, attachmentToContentBlock };
