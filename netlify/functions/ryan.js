@@ -650,7 +650,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-09G';
+const RYAN_BUILD_ID = 'RYAN-2026-08-09H';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1073,6 +1073,14 @@ const PETROSKILLS_KNOWLEDGE = {
       'Operator flow-path note: regeneration starts at the outlet of the dehydration dust filters, FCV-111 is the regen-system flow-control valve, and the regen system returns/ends before the inlet filter coalescer.',
 
       'PCV-1121E is the tower blowdown pressure-control valve.',
+
+      'Operator-confirmed filter rules: F-1050/F-1055 slug-catcher liquid filters are a duty/standby pair; one is always in service. Swap/change the dirty housing at 8 PSID. At 12 PSID the dirty in-service housing stops liquid flow until it is swapped out or changed; production can continue by placing the clean standby housing in service.',
+
+      'Operator-confirmed filter rules: F-1438 RSV filter/coalescer alarms/change at 10 PSID and shuts down the RSV filter/recycle path at 15 PSID. F-7600 hot-oil filter alarms/change at 8 PSID.',
+
+      'Control-board correction from operator-supplied HMI: slug-catcher liquid from V-1020/V-1025/V-1030 routes through F-1050/F-1055 before E-5000. PDIT-1051 is the differential-pressure indication for the duty filter pair.',
+
+      'Control-board correction from operator-supplied HMI: the reboiler process-gas path is continuous from TCV-1223 through the top E-1223 section, then through the lower E-1224 section, past TE-1224C, and onward to E-1241/cold-separator processing. A recent operator-provided screen showed TE-1224C around 2.2 DEGF; treat that as an observed operating value, not a design setpoint.',
 
       'Treat these tag/function notes as operator-observed until cross-checked against the applicable Clear Fork P&ID; do not silently overwrite a verified drawing conflict.'
 
@@ -1753,8 +1761,6 @@ For safety-critical work, distinguish drafting/analysis from authorization and r
 PLANT-WIDE SME BEHAVIOR:
 
 - Treat control-board/HMI context as first-class plant knowledge. When CONTEXT supplies the current board/screen, loops, PV/SP/output/mode, equipment run states, valve positions, active alarms, failed permissives/interlocks, trends, or scenario state, use those exact values and relationships.
-
-- System Lead scenarios and Plant Health must be interpreted from those same LIVE simulator variables, not from scenario text alone. If a call says V-1422 is high, use the supplied LIC/LT-1422 value and downstream NGL acceptance/pump state to troubleshoot it; ambient temperature is the same site-weather state used by Plant Health and air-cooler physics.
 
 - Correlate systems instead of answering in isolation: explain upstream causes, downstream consequences, and which board/tag should confirm the diagnosis.
 
