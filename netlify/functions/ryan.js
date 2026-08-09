@@ -480,7 +480,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-09C';
+const RYAN_BUILD_ID = 'RYAN-2026-08-09D';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1150,6 +1150,116 @@ function buildBatchPasses(documentType, fileId, label, existingContext, mediaTyp
 
 }
 
+ 
+
+async function learnPlantImageDirect(attachment, existingContext, apiKey) {
+
+  if (!attachment) throw new Error('Image learning requires an attachment.');
+
+  let mediaType = String(attachment.mediaType || '').toLowerCase();
+
+  if (mediaType === 'image/jpg') mediaType = 'image/jpeg';
+
+  if (!/^image\/(jpeg|png|gif|webp)$/.test(mediaType)) throw new Error(`image_learn requires JPEG/PNG/GIF/WEBP, received ${mediaType || 'unknown'}.`);
+
+  const sourceLabel = safeString(attachment.label || 'plant image', 200);
+
+  const existing = safeString(existingContext || '', 12000);
+
+  const prompt = `SOURCE: ${sourceLabel}\nDOCUMENT TYPE: PLANT IMAGE / PHOTO.\nInspect the image itself and extract ONLY facts that are actually visible/readable. First classify the source as plant_photo, nameplate, control_board_hmi, pid_drawing_photo, oem_reference, external_reference, or other. For plant/nameplate/control-board content, extract visible manufacturer, model, item/serial/part numbers, equipment tags, pressure/temperature/electrical/mechanical ratings, materials, labels, actuator/valve/instrument markings, instrument ranges, PV/SP/output/mode, alarm/status indicators, switches/selectors/buttons, displayed states, and clearly visible component relationships. If the image is a web/search screenshot or other generic technical reference, you MAY extract the technical statements it explicitly shows, but classify them as external_reference and never present them as Clear Fork-specific or verified plant facts. Do not infer blurred/cropped text or unstated plant facts. Every fact must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Keep facts compact and atomic. Target no more than ${Math.min(FACTS_PER_PASS, 45)} high-value facts so the response finishes cleanly. Existing Reference Library context is only for duplicate/conflict awareness and must not fill in unreadable image content.\nExisting context:\n${existing || '(none supplied)'}`;
+
+  const content = [attachmentToContentBlock(attachment), { type: 'text', text: prompt }].filter(Boolean);
+
+  const payload = {
+
+    model: MODEL_V2,
+
+    max_tokens: IMAGE_MAX_TOKENS,
+
+    output_config: documentExtractionOutputConfig(),
+
+    messages: [{ role: 'user', content }]
+
+  };
+
+  const result = await postJsonWithRetry('https://api.anthropic.com/v1/messages', {
+
+    'content-type': 'application/json',
+
+    'x-api-key': apiKey,
+
+    'anthropic-version': ANTHROPIC_VERSION_V2,
+
+    ...(attachment.fileId ? { 'anthropic-beta': 'files-api-2025-04-14' } : {})
+
+  }, payload);
+
+  if (!result.ok) {
+
+    const d = result.data || {};
+
+    throw new Error(d.error && d.error.message ? d.error.message : `Anthropic image learning failed (HTTP ${result.status}).`);
+
+  }
+
+  const data = result.data || {};
+
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('\n');
+
+  const parsed = parseJsonReply(text);
+
+  const partial = !parsed ? parsePartialFactsFromTruncatedJson(text) : [];
+
+  const facts = parsed && Array.isArray(parsed.facts) ? parsed.facts : (Array.isArray(parsed) ? parsed : partial);
+
+  const warnings = [];
+
+  if (!parsed && partial.length) warnings.push(`Image response reached ${data.stop_reason || 'an incomplete stop'}; Ryan recovered ${partial.length} complete fact(s) from the partial JSON.`);
+
+  if (!parsed && !partial.length) warnings.push(`Image response could not be parsed (stop_reason=${data.stop_reason || 'unknown'}).`);
+
+  const seen = new Set();
+
+  const cleaned = (facts || []).filter(f => {
+
+    const statement = safeString(f && f.statement || '', 1400).trim();
+
+    if (!statement) return false;
+
+    const key = statement.toLowerCase().replace(/\s+/g, ' ');
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+
+    f.statement = statement;
+
+    f.sourceLabel = f.sourceLabel || sourceLabel;
+
+    f.verificationStatus = 'DOCUMENT_EXTRACTED_UNVERIFIED';
+
+    return true;
+
+  }).slice(0, MAX_LEARNED_FACTS);
+
+  const usage = data.usage || {};
+
+  const inputTokens = Number(usage.input_tokens || 0), outputTokens = Number(usage.output_tokens || 0);
+
+  return {
+
+    ingestion: { ok: cleaned.length > 0, documentType: parsed && parsed.documentType || 'image', sourceLabel, facts: cleaned, warnings: [...(parsed && parsed.warnings || []), ...warnings], persistenceRequired: true },
+
+    cost: { usd: (inputTokens * INPUT_PRICE_PER_MILLION + outputTokens * OUTPUT_PRICE_PER_MILLION) / 1_000_000, inputTokens, outputTokens, inRate: INPUT_PRICE_PER_MILLION, outRate: OUTPUT_PRICE_PER_MILLION },
+
+    stopReason: data.stop_reason || null
+
+  };
+
+}
+
+ 
+
 async function startDocumentBatch(attachment, documentType, existingContext, apiKey) {
 
   const fileId = await uploadAttachmentToAnthropic(attachment, apiKey);
@@ -1477,6 +1587,30 @@ exports.handler = async function(event) {
     if (effectiveMode === 'health') {
 
       return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID }) };
+
+    }
+
+ 
+
+    // Plant photos/nameplates/control-board images use a dedicated fast structured path.
+
+    // Do not route them through old PDF/manual batch jobs.
+
+    if (effectiveMode === 'image_learn') {
+
+      if (!attachment) return { statusCode: 400, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Image learning requires an attachment.' }) };
+
+      try {
+
+        const learned = await learnPlantImageDirect(attachment, context, apiKey);
+
+        return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ buildId: RYAN_BUILD_ID, ...learned }) };
+
+      } catch (e) {
+
+        return { statusCode: 502, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: `Could not learn plant image: ${e.message || e}`, buildId: RYAN_BUILD_ID }) };
+
+      }
 
     }
 
