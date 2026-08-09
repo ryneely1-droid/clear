@@ -676,9 +676,17 @@ function inferDocumentType(attachment, requestedType) {
 
   const label = String((attachment && attachment.label) || '').toLowerCase();
 
-  if (/p\s*&\s*id|pid|piping.*instrument|drawing/.test(label)) return 'pid';
+  const mediaType = String((attachment && attachment.mediaType) || '').toLowerCase();
 
-  if (/manual|oem|operation|maintenance|iom|instruction/.test(label)) return 'manual';
+  if (/p\s*&\s*id|pid|piping.*instrument|process.*instrument|drawing|flowsheet/.test(label)) return 'pid';
+
+  if (/manual|oem|operation|maintenance|iom|instruction|handbook|datasheet/.test(label)) return 'manual';
+
+  // A generic PDF name such as "demeth" is common for a saved plant drawing.
+
+  // Do not guess that it is a manual. Let the extraction prompts inspect the source.
+
+  if (mediaType === 'application/pdf' || !mediaType) return 'auto';
 
   return 'document';
 
@@ -988,37 +996,119 @@ function batchDocumentBlock(fileId, label) {
 
  
 
+function documentExtractionOutputConfig() {
+
+  return {
+
+    format: {
+
+      type: 'json_schema',
+
+      schema: {
+
+        type: 'object',
+
+        properties: {
+
+          documentType: { type: 'string' },
+
+          facts: {
+
+            type: 'array',
+
+            items: {
+
+              type: 'object',
+
+              properties: {
+
+                statement: { type: 'string' },
+
+                classification: { type: 'string' },
+
+                equipmentIds: { type: 'array', items: { type: 'string' } },
+
+                page: { type: 'string' },
+
+                sourceLabel: { type: 'string' },
+
+                verificationStatus: { type: 'string' },
+
+                confidence: { type: 'string' }
+
+              },
+
+              required: ['statement','classification','equipmentIds','page','sourceLabel','verificationStatus','confidence'],
+
+              additionalProperties: false
+
+            }
+
+          },
+
+          warnings: { type: 'array', items: { type: 'string' } }
+
+        },
+
+        required: ['documentType','facts','warnings'],
+
+        additionalProperties: false
+
+      }
+
+    }
+
+  };
+
+}
+
+ 
+
 function buildBatchPasses(documentType, fileId, label, existingContext) {
 
   const source = safeString(label || 'unnamed document', 200);
 
   const existing = safeString(existingContext || '', 16000);
 
-  const rules = `SOURCE: ${source}. Return ONLY compact valid JSON with keys facts,warnings. Every facts item must contain statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. verificationStatus must be DOCUMENT_EXTRACTED_UNVERIFIED. Never guess unreadable tags, line numbers, valve positions, set pressures, piping connections, or flow direction. Existing Reference Library context may identify duplicates/conflicts only; it may NEVER fill in unreadable content on this source. Existing context:\n${existing || '(none supplied)'}`;
+  const rules = `SOURCE: ${source}. The API enforces a JSON schema. Extract only facts actually visible/stated in this source. Every facts item must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Never guess unreadable tags, line numbers, valve positions, set pressures, piping connections, or flow direction. Existing Reference Library context may identify duplicates/conflicts only; it may NEVER fill in unreadable content on this source. Keep each fact compact and atomic. Limit each pass to the most useful 70 unique facts; put omissions/ambiguities in warnings. Existing context:\n${existing || '(none supplied)'}`;
 
   if (documentType === 'pid') {
 
     return [
 
-      { id: 'pid_topology', max_tokens: 5200, text: `${rules}\n\nP&ID PASS 1 - PHYSICAL TOPOLOGY. Read the actual drawing carefully. Extract equipment tags/names/services shown, instrument tags, manual/automated valve tags, line numbers, line sizes/specs where legible, explicit flow arrows, continuation/off-page references, upstream/downstream connections actually drawn, drains, vents, bypasses, check valves, normally-open/normally-closed or fail-position markings, and drawing notes that define physical relationships. Preserve drawing/page references. Do not infer connectivity from generic cryogenic-plant knowledge.` },
+      { id: 'pid_topology', max_tokens: 7000, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 1 - PHYSICAL TOPOLOGY. Read the actual drawing carefully. Extract equipment tags/names/services shown, instrument tags, manual/automated valve tags, line numbers, line sizes/specs where legible, explicit flow arrows, continuation/off-page references, upstream/downstream connections actually drawn, drains, vents, bypasses, check valves, normally-open/normally-closed or fail-position markings, and drawing notes that define physical relationships. Preserve drawing/page references. Do not infer connectivity from generic cryogenic-plant knowledge.` },
 
-      { id: 'pid_controls_safety', max_tokens: 5200, text: `${rules}\n\nP&ID PASS 2 - CONTROLS / SAFETY / ISOLATION. Extract control loops and controller-to-valve/instrument relationships actually shown; alarms, shutdowns, permissives/interlocks if shown; PSVs with protected equipment, set pressure/rating only when displayed, inlet/outlet isolation, and relief destination; shutdown valves; isolation boundaries; bleed/vent/drain/depressurization points; energy sources; and LOTO-relevant relationships. Treat this as source extraction, NOT an approved LOTO. Capture ambiguity explicitly instead of resolving it by assumption.` }
+      { id: 'pid_controls_safety', max_tokens: 7000, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 2 - CONTROLS / SAFETY / ISOLATION. Extract control loops and controller-to-valve/instrument relationships actually shown; alarms, shutdowns, permissives/interlocks if shown; PSVs with protected equipment, set pressure/rating only when displayed, inlet/outlet isolation, and relief destination; shutdown valves; isolation boundaries; bleed/vent/drain/depressurization points; energy sources; and LOTO-relevant relationships. Treat this as source extraction, NOT an approved LOTO. Capture ambiguity explicitly instead of resolving it by assumption.` }
 
     ];
 
   }
 
+  if (documentType === 'manual') {
+
+    return [
+
+      { id: 'manual_specs', max_tokens: 7000, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 1 - EQUIPMENT / LIMITS / SPECS. Extract manufacturer/model applicability, operating envelopes and limits, alarms/trips/permissives stated by the manual, capacities, lubrication requirements, temperatures/pressures, clearances, torque values, materials, parts/specifications, warnings/cautions, and units exactly as written.` },
+
+      { id: 'manual_procedures', max_tokens: 7000, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 2 - OPERATIONS / MAINTENANCE / TROUBLESHOOTING. Extract startup/shutdown requirements, maintenance intervals, inspections, troubleshooting cause/action tables, required tests, preservation/storage instructions, safety prerequisites, and procedure steps actually stated. Keep OEM/manual guidance separate from Clear Fork-specific operating practice unless the source explicitly says otherwise.` }
+
+    ];
+
+  }
+
+  // Auto mode is intentional for PDFs with generic filenames such as "demeth".
+
+  // Each pass first determines from the visible source whether it is a P&ID/drawing or a manual.
+
   return [
 
-    { id: 'manual_specs', max_tokens: 5200, text: `${rules}\n\nMANUAL PASS 1 - EQUIPMENT / LIMITS / SPECS. Extract manufacturer/model applicability, operating envelopes and limits, alarms/trips/permissives stated by the manual, capacities, lubrication requirements, temperatures/pressures, clearances, torque values, materials, parts/specifications, warnings/cautions, and units exactly as written.` },
+    { id: 'auto_physical_or_specs', max_tokens: 7000, text: `${rules}\n\nAUTO-DETECT PASS 1. Inspect the actual source before extracting. Set documentType to pid if this is a P&ID/process drawing, manual if it is an OEM/operations/maintenance manual, otherwise document. IF P&ID: extract physical topology, equipment/instrument/valve tags, line numbers/sizes/specs, explicit flow direction, continuations, connections actually drawn, drains, vents, bypasses, check valves, normal/fail positions, and physical notes. IF MANUAL: extract equipment/model applicability, operating limits, capacities, lubrication, temperatures/pressures, clearances, torque/material/parts specifications, warnings and cautions. Do not apply manual-style extraction to a drawing or drawing-style assumptions to a manual.` },
 
-    { id: 'manual_procedures', max_tokens: 5200, text: `${rules}\n\nMANUAL PASS 2 - OPERATIONS / MAINTENANCE / TROUBLESHOOTING. Extract startup/shutdown requirements, maintenance intervals, inspections, troubleshooting cause/action tables, required tests, preservation/storage instructions, safety prerequisites, and procedure steps actually stated. Keep OEM/manual guidance separate from Clear Fork-specific operating practice unless the source explicitly says otherwise.` }
+    { id: 'auto_controls_or_procedures', max_tokens: 7000, text: `${rules}\n\nAUTO-DETECT PASS 2. Inspect the actual source before extracting. Set documentType to pid if this is a P&ID/process drawing, manual if it is a manual, otherwise document. IF P&ID: extract control loops, instrument-to-controller-to-valve relationships, alarms/trips/interlocks actually shown, PSVs/relief paths/set pressures only when displayed, shutdown valves, isolation boundaries, vents/drains/depressurization paths, and LOTO-relevant relationships. IF MANUAL: extract startup/shutdown requirements, inspections, maintenance intervals, troubleshooting cause/action guidance, required tests, preservation/storage, and safety prerequisites. Do not invent missing plant-specific details.` }
 
   ];
 
 }
-
- 
 
 async function startDocumentBatch(attachment, documentType, existingContext, apiKey) {
 
@@ -1035,6 +1125,8 @@ async function startDocumentBatch(attachment, documentType, existingContext, api
       model: MODEL_V2,
 
       max_tokens: p.max_tokens,
+
+      output_config: documentExtractionOutputConfig(),
 
       messages: [{ role: 'user', content: [batchDocumentBlock(fileId, attachment && attachment.label), { type: 'text', text: p.text }] }]
 
@@ -1126,7 +1218,7 @@ async function getDocumentBatchStatus(batchId, apiKey) {
 
     const facts = parsed && Array.isArray(parsed.facts) ? parsed.facts : (Array.isArray(parsed) ? parsed : []);
 
-    if (!parsed) errors.push(`${row.custom_id || 'pass'} returned non-JSON output.`);
+    if (!parsed) errors.push(`${row.custom_id || 'pass'} returned non-JSON output (stop_reason=${msg.stop_reason || 'unknown'}; preview=${safeString(text, 180)}).`);
 
     passes.push({ id: row.custom_id || null, facts: facts.length, warnings: parsed && parsed.warnings || [], stopReason: msg.stop_reason || null });
 
@@ -1188,9 +1280,31 @@ async function getDocumentBatchStatus(batchId, apiKey) {
 
 function parseJsonReply(text) {
 
-  const cleaned = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  const raw = String(text || '').trim();
 
-  try { return JSON.parse(cleaned); } catch { return null; }
+  if (!raw) return null;
+
+  const candidates = [];
+
+  candidates.push(raw);
+
+  candidates.push(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim());
+
+  const firstObj = raw.indexOf('{'), lastObj = raw.lastIndexOf('}');
+
+  if (firstObj >= 0 && lastObj > firstObj) candidates.push(raw.slice(firstObj, lastObj + 1));
+
+  const firstArr = raw.indexOf('['), lastArr = raw.lastIndexOf(']');
+
+  if (firstArr >= 0 && lastArr > firstArr) candidates.push(raw.slice(firstArr, lastArr + 1));
+
+  for (const c of candidates) {
+
+    try { return JSON.parse(c); } catch {}
+
+  }
+
+  return null;
 
 }
 
@@ -1501,3 +1615,5 @@ module.exports.RESIDUE_COMPRESSOR_KNOWLEDGE = RESIDUE_COMPRESSOR_KNOWLEDGE;
 module.exports.SIMULATOR_UI_KNOWLEDGE = SIMULATOR_UI_KNOWLEDGE;
 
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, sanitizeHistory, attachmentToContentBlock };
+
+===== CODE END =====
