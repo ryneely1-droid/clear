@@ -312,13 +312,15 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
     modeInstructions = `MODE: RYAN SCAN. Audit the supplied code/question bank for wrong answers, contradictory comments, tag mismatches, and backwards logic. Cite line/question references when available.`;
   } else if (mode === 'recommend') {
     modeInstructions = `MODE: RECOMMENDATIONS. Use live CONTEXT first. Separate verified facts from inference. Rank likely causes, name the tag/value that would confirm each cause, then recommend checks before corrective action.`;
+  } else if (mode === 'memory_extract') {
+    modeInstructions = `MODE: MEMORY EXTRACTION. Extract only durable plant-specific memory candidates explicitly provided by the operator or clearly supported by supplied context. Do not store temporary live values, generic process theory, secrets, passwords, API keys, speculation, or unsupported safety-critical limits. Return strict JSON only: {"memories":[{"text":"...","title":"...","equipmentIds":[],"tags":[],"confidence":"high|medium|low"}]}. If none, return {"memories":[]}.`;
   } else if (['digest','learn','ingest'].includes(mode)) {
     modeInstructions = `MODE: DOCUMENT INGESTION. Extract only facts actually visible or stated in the supplied document. Do not merge in general knowledge. Do not silently correct the document. Return strict JSON only as instructed in the user message.`;
   } else {
     modeInstructions = `MODE: Q&A. Answer directly. Cite exact plant tags and values when supplied. Clearly label anything inferred, operator-observed, live, calculated, or pending verification.`;
   }
 
-  const core = `You are Ryan, the plant-wide subject matter expert for the Clearfork Cryogenic Unit #1 simulator. You are expected to reason across the entire facility: process flow, control boards/HMIs, control loops, instruments, alarms, trips, permissives, interlocks, equipment states, valve states, operating modes, maintenance references, P&IDs, OEM manuals, procedures, and cross-system cause-and-effect. The simulator-supplied CONTEXT is authoritative for what is happening right now; source-backed Reference Library/document facts are authoritative for static plant knowledge according to their stated verification status.
+  const core = `You are Ryan, the plant-wide subject matter expert for the Clearfork Cryogenic Unit #1 simulator. You are expected to reason across the entire facility: process flow, control boards/HMIs, control loops, instruments, alarms, trips, permissives, interlocks, equipment states, valve states, operating modes, maintenance references, P&IDs, OEM manuals, procedures, and cross-system cause-and-effect. The simulator-supplied CONTEXT is authoritative for what is happening right now; source-backed Reference Library/document facts are authoritative for static plant knowledge according to their stated verification status. When CONTEXT contains a PLANT STATE ENGINE section, use its evaluated failed/healthy interlock and verification-gap results before making troubleshooting claims. When CONTEXT contains a PLANT GRAPH section, use the relationship type, source, and confidence labels exactly: never convert an interlock association into a piping connection, never reverse a directed flow edge without evidence, and prefer P&ID/Reference-Library flow edges over inference.
 
 TRUST MODEL:
 - VERIFIED: explicitly supported by a named source supplied to you.
@@ -500,6 +502,12 @@ exports.handler = async function(event) {
     if (scanLabel) userText += `\n\n--- SCAN BATCH LABEL ---\n${safeString(scanLabel, 500)}`;
 
     const isIngest = ['digest','learn','ingest'].includes(effectiveMode);
+    const isMemoryExtract = effectiveMode === 'memory_extract';
+    if (isMemoryExtract) {
+      const parsedMemory = parseJsonReply(reply);
+      response.memoryExtraction = parsedMemory || { memories: [] };
+    }
+
     if (isIngest) {
       if (!attachment) return { statusCode: 400, body: JSON.stringify({ error: 'Document ingestion requires an attachment.' }) };
       const dtype = inferDocumentType(attachment, documentType);
@@ -509,7 +517,7 @@ exports.handler = async function(event) {
     userContent.push({ type: 'text', text: userText || '(no message provided)' });
     messages.push({ role: 'user', content: userContent });
 
-    const maxTokens = isIngest ? 7000 : (effectiveMode === 'scan' ? 5000 : 1800);
+    const maxTokens = isIngest ? 7000 : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : 1800));
     const payload = { model: MODEL_V2, max_tokens: maxTokens, system, messages };
 
     let result;
