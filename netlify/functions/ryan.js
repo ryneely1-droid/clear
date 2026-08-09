@@ -650,7 +650,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-09H';
+const RYAN_BUILD_ID = 'RYAN-2026-08-09M';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1080,6 +1080,14 @@ const PETROSKILLS_KNOWLEDGE = {
 
       'Control-board correction from operator-supplied HMI: slug-catcher liquid from V-1020/V-1025/V-1030 routes through F-1050/F-1055 before E-5000. PDIT-1051 is the differential-pressure indication for the duty filter pair.',
 
+      'Operator-confirmed reboiler control-board topology: a T-1521 demethanizer gas circuit passes through E-1223 bottom reboiler, then through the process/shell side of E-1225 trim reboiler, then returns to T-1521. A separate cold-section path combines V-1421 cold-separator and T-1521 side flow at the bottom of E-1224 side reboiler and returns from the upper side-reboiler outlet to T-1521. Use the actual Clear Fork P&IDs/HMI for exact nozzle and transmitter placement.',
+
+      'Operator-confirmed expander HMI corrections: FROM E-1221 and FROM V-1421 arrows point INTO the expander/JT system; TO E-1222 reflux condenser points OUT toward E-1222. The PCV-1121A J-T branch is a connected bypass path, not a dead-end graphic.',
+
+      'Operator-confirmed residue recycle: PIC-6050B is the residue suction-pressure controller, SP 280 psig. PV-6050A is its recycle control valve. If suction PV falls below SP, PV-6050A opens progressively to recycle gas and keep C-6100/C-6200/C-6300 running. XV-6060 is the residue recycle ESD/block valve downstream of PV-6050A. The three residue compressors share a common suction header and a common discharge header.',
+
+      'Operator-observed recurring utility service: TK/V-8100 closed-drain tank is normally trucked out around 50-60% level and drained to roughly 15-22%, approximately weekly but always verify current level/trend. Ariel compressor lube-oil makeup storage is normally refilled by truck when around 20-30%, typically to roughly 70-80%; usage is approximately weekly and condition-dependent.',
+
       'Control-board correction from operator-supplied HMI: the reboiler process-gas path is continuous from TCV-1223 through the top E-1223 section, then through the lower E-1224 section, past TE-1224C, and onward to E-1241/cold-separator processing. A recent operator-provided screen showed TE-1224C around 2.2 DEGF; treat that as an observed operating value, not a design setpoint.',
 
       'Treat these tag/function notes as operator-observed until cross-checked against the applicable Clear Fork P&ID; do not silently overwrite a verified drawing conflict.'
@@ -1334,6 +1342,210 @@ const CLEAR_FORK_PID_KNOWLEDGE = {
 
    ========================================================================== */
 
+ 
+
+const OPERATOR_PROCESS_KNOWLEDGE_09J = {
+
+  authority: 'Operator-provided Clear Fork plant-specific control-board/flow-path knowledge, supplied 2026-08-09. Use this for plant-specific process questions, simulator troubleshooting and control-board interpretation. Do not silently substitute generic textbook values.',
+
+  inletAndCoalescer: [
+
+    'Inlet compressor discharge -> PT-1410A about 995.9 psig -> XV-1410 -> upper-half horizontal entry to V-1410 inlet separator. Gas exits V-1410 vertically from top -> PT-1410B about 994 psig -> TIT-1400A about 107.1 F -> horizontal middle entry to F-1412 inlet filter/coalescer -> gas exits top to dehy beds.',
+
+    'F-1412 middle liquid section: LT-1412A, LCV-1412A SP 20%, then XV-1412A to drain. Bottom section: LT-1412B, LCV-1412B SP 15%, then XV-1412B. LCVs slowly dump as level rises above SP. At zero level the applicable drain XV closes. Either LT HIHI 75% causes facility ESD.',
+
+    'F-1412 element DP change alarm 15 PSID and facility ESD 20 PSID.'
+
+  ],
+
+  dehy: [
+
+    'Process valves: V-1413 uses XV-1413A top inlet and XV-1413B bottom outlet; V-1414 uses XV-1414A/B; V-1415 uses XV-1415A/B. Two beds always remain on process.',
+
+    'Regen valves: gas enters bottom through XV-1413C/1414C/1415C and exits top through XV-1413D/1414D/1415D on the active bed. That bed process A/B valves close while regen C/D valves open.',
+
+    'Dry-gas regen branch is 4-inch. HEAT route uses XV-1711A through H-1711; COOL route uses XV-1711B heater bypass. Operator supplied sequence timing as 3:45 heat and 11:45 cool; preserve this wording/timebase if asked rather than converting without confirmation.',
+
+    'Downstream of beds: TE-1417 about 108.60 F -> duty F-1416/F-1417 dust filter (one in service; current example PDT-1416A 5.8 PSID) -> TE-1416 about 107.6 F (HIHI 150 F facility ESD) -> PT-1416 about 967.09 psig (HI 990) -> ME-1416 about -149.33 (HI -100, HIHI shutdown -10). Dust filters swap/change at 15 PSID and facility ESD at 20 PSID.',
+
+    'After active bed regen outlet common header: TE-1413D about 109.4 F during cool-bed example, then PT-1412C about 959.6 psig, then regen gas cooler/system.'
+
+  ],
+
+  cryoSplit: [
+
+    'Dry gas uses a 60/40 split. Majority gas/gas side: through TCV-1221D into the top of E-1221 gas/gas exchanger, exits side horizontally, then TE-1221B about 4.7 F, PDT-1221 about 17.11 PSID, then to chiller. TE-1221D LOW 40 F, LOLO shutdown -15 F; PDT-1221 HI 20 PSID.',
+
+    'Minor bottom/side side: TCV-1223 -> reboilers. TIC-1224B AUTO SP 60 F, PV about 60.2, CV about 13.05%; TDIC-1224B SP 20 F, PV about 37.8, CV 100%. TCV-1221D and TCV-1223 cross-limit: opening either beyond 50% progressively pinches the other, potentially to ~5%.',
+
+    'Bottom/side exchanger inlet: TE-1223A about 98.9 F; PDT-1223A about 4.7 PSID, HI 15, HIHI facility ESD 20; outlet TE-1224C about 2.5 F; then joins gas/gas outlet at common chiller inlet header.'
+
+  ],
+
+  refrigerationColdSepExpander: [
+
+    'Combined header -> TE-1241A about 2.3 F (LOLO -50) -> E-1241 chiller tube side. TE-1241C/TIC-1241C SP -7 F, PV about -7.4, CV 33.79%. PIC-1441C SP 17 psig, PV 16.56, CV 32.39%; PIC-1441A SP 30 psig, PV 16.65, CV 100%. PT-1441C LO 1 psig, HI 30, HIHI 240 and this shutdown is refrigeration-system-only.',
+
+    'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. TCV-1421 cold-spin valve normally stays closed, TIC-1421 SP -30 F, PV about -9.2, CV 0.',
+
+    'Cold-sep vapor splits to JT, reflux condenser, and expander. JT PCV-1121A normally 0, may be 1-7% at maximum loading; if expander is lost JT automatically opens roughly 80-95%. PIC-1521D JT SP 265, PV about 264.8. Expander path XV-1121B -> PDT-1121B ~3.5 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B ~889.49 -> EX-1121 (~24180 rpm / IGV 100%) -> TE-1121D ~-86.8 -> PT-1121D ~277.05 -> common outlet. PIC-1521D EX SP 268, PV ~266.07, CV 100%.'
+
+  ],
+
+  demeth: [
+
+    'T-1521 top-to-bottom process order: overhead methane-rich outlet to reflux; RSV return; GSP/reflux return; expander/JT feed; cold-separator liquid; side-reboiler return then side-reboiler draw; bottom-reboiler outlet toward trim; equalization line to V-1422; trim return; NGL bottoms to V-1422.',
+
+    'PT-1521D about 264.7 psig; PDT-1521 about 2.44 PSID, HI 15; PT-1521A about 267.70, HI 425 and HIHI facility ESD 500. TE-1521F about 165.70 and TE-1521E about 166.20, each LOLO -20, LO 0, HI 200. XV-1521 is on NGL liquid outlet to surge tank.',
+
+    'V-1422 surge tank TE-1422 about 162.2 F, LO 0, HI 200. LT-1422A about 29.3%; changing NGL pump speed or level SP changes drawdown. Around 5% LOLO closes outlet ESD. Top receives stabilizer liquid and NGL-pump recycle on a common header.'
+
+  ],
+
+  capacity: ['Vortex-separator flow meter can physically reach about 235 MMSCFD at max load steps, but 225 MMSCFD is the recommended maximum and >225 should alarm. Because of shrinkage/separation, residue outlet flow normally maxes around 217 MMSCFD.']
+
+};
+
+ 
+
+const OPERATOR_PROCESS_KNOWLEDGE_09K = {
+
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_09',
+
+  instruction: 'Use these plant-specific flow paths, current observations, alarms and interlocks for Clear Fork troubleshooting/control-board questions. Current readings are observations, not immutable design limits. Do not infer 3D geometry from this 09K batch; the operator explicitly restricted it to control boards and Ryan knowledge.',
+
+  gasGasRefluxGSP: [
+
+    'Cold-separator vapor/reflux-GSP path: FT-1222 ~35.77 MMSCFD -> PDCV-1222B controlled by PDIC-1222B (manual, SP 2.2 PSID, PV ~0.61, CV 100%) -> common recovery tie where LCV-1421B liquid joins only in recovery mode -> horizontal side inlet of E-1222 reflux condenser -> vertical bottom outlet -> PDT-1222A ~0.79 PSID (HI 10) -> TE-1222C ~-92.30 F -> FCV-1222 controlled by FFIC-1222 (SP 16%, PV ~16.21%, CV ~34.63%) -> TE-1222D ~-146.30 F -> third return connection on T-1521 labelled E-1222 GSP reflux condenser.',
+
+    'Methane-rich T-1521 overhead path runs bottom-up through E-1222 reflux condenser and then E-1221 gas/gas exchanger. TE-1222A ~-90.70 F before reflux; PDT-1222C spans reflux inlet to gas/gas outlet, current ~18.08 PSID, HI 30 and HIHI 40 PSID facility ESD. After E-1221, TE-1221A and TE-1221D are ~90.10 F; both have LOW 40 F and LOLO -15 F facility ESD.',
+
+    'FCV-1222 is the flow-control valve on the cold GSP/reflux return and creates pressure drop/cooling; operator believes this may be the Ortloff A valve. Preserve that attribution as operator belief pending drawing/control-narrative verification.'
+
+  ],
+
+  expanderBoosterResidueOverhead: [
+
+    'After methane-rich gas leaves E-1221 it passes PT-1121E ~246.54 psig (HI 385). A 6-inch branch feeds PCV-1121E tower blowdown to flare, controlled by PIC-1121E SP 375 psig, PV ~246.1, CV 0; when tower pressure exceeds SP it opens and flare flame/load increases. PIC setpoint is operator-adjustable.',
+
+    'A separate 6-inch branch off that methane-rich header starts the fuel-gas system. The main line continues toward the C-1121 booster side.',
+
+    'Booster suction receives the anti-surge recycle from A-1321 discharge cooler through FCV-1221A, then passes automatic permissive XV-1221A -> PDT-1121A ~6.44 PSID (HI 10, HIHI 15 EX/C-1121-only shutdown) -> TE-1121 ~86.10 F (HIHI 150 EX/C-1121-only shutdown) -> PT-1121A ~238.77 psig -> C-1121 booster.',
+
+    'Booster discharge: TE-1121C ~126.10 F (HI 180, HIHI 195 EX/C-1121-only shutdown) -> PT-1121C ~302.79 psig -> A-1321 compressor discharge cooler with three fans and hour meters. Fan belt failure can remove one fan. Cooler outlet TE-1321 ~88.70 F (HI 130) -> PT-1321 ~290.97 psig (LO 235, HI 475) -> residue compressor page.'
+
+  ],
+
+  residueCompression: [
+
+    'A-1321 outlet combines on the residue-compressor common suction header with filtered-residue recycle from downstream of F-6800. Recycle path: PV-6050A controlled by PIC-6050B (SP 280 psig, current PV about 297.05, CV 0) -> PIT-6050B ~297.55 psig (HI 350) -> XV-6060 -> PIT-6050C ~298.84 psig (HIHI shutdown 375) -> common residue suction.',
+
+    'PIC-6050B is reverse-acting for suction protection: if PV falls below 280 psig, PV-6050A opens progressively; to close recycle again, raise suction pressure above SP, normally by increasing plant throughput/load.',
+
+    'C-6100/C-6200/C-6300 currently boost roughly 297 psig suction to roughly 973 psig discharge. On startup, gas initially bypasses each reciprocating compressor; hitting LOAD closes the bypass and forces gas through the cylinders. Normal remote capacity is commonly about 80%.',
+
+    'The three compressor discharges combine, pass PIT-6050A ~974.4 psig, then F-6800 residue gas filter. Downstream of F-6800: sales/outlet metering; PV-6050A residue recycle back to residue suction; PV-6810A inlet-compressor recycle; RSV loop; a 1-inch seal-gas source; and a manual warm-dry-gas dry-out tie to the inlet side of F-1412 used after major outages.'
+
+  ],
+
+  controlBoardPresentation: [
+
+    'Keep all displayed transmitters live/trendable and all automatic valves tied to permissive/controller logic. Control-board graphics should preserve the real EQT layout style while correcting line direction/topology.',
+
+    'Do not modify the 3D model from this 09K information batch. The operator explicitly requested control-board and Ryan updates only.'
+
+  ]
+
+};
+
+ 
+
+ 
+
+ 
+
+const OPERATOR_PROCESS_KNOWLEDGE_09L = {
+
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_09',
+
+  scope: 'Control boards, live control logic, Ryan knowledge, tests/reference indexes only. NO 3D geometry changes from this batch.',
+
+  plantOutlet: [
+
+    'Residue sales after F-6800: a 6-inch branch first leaves the sales header as SUPPLEMENTAL fuel gas -> ESD-8220A -> PIT-8220D about 124.05 psig (LO 100, HI 200, HIHI 250; HIHI closes ESD-8220A and shuts only supplemental fuel-gas supply). Main residue sales then PIT-8210A about 953.22 psig (HI 1005) -> TIT-8210A about 97.07 F -> FIT-8210A about 207.91 MMSCFD -> ESD-8207 -> PIT-8200 about 953.7 psig (HI 1150, HIHI 1200) -> V-8200 residue pig launcher -> off-site sales line.',
+
+    'Primary fuel gas is NOT this residue branch. Primary fuel gas originates from the 6-inch methane-rich branch downstream of PCV-1121E tower-blowdown takeoff and upstream of the C-1121 booster. Supplemental fuel gas exists to maintain critical users when the plant/primary source is unavailable.'
+
+  ],
+
+  primaryFuelGas: [
+
+    'Primary path: methane-rich header -> XV-1121C -> FIT-1460 about 3294 ACFH -> PCV-1460A controlled by PIC-1460, SP 125 psig, PV about 124.9, CV about 12% -> PT-1460B -> side of V-1460 fuel-gas scrubber -> dry gas out top -> Utilities fuel-gas distribution.',
+
+    'V-1460 should normally have no liquid level because this is very dry methane. Liquid level is abnormal. PT-1460B LO 100, HI 165, HIHI 225; HIHI closes the fuel-gas ESD/XV path only, not the facility.',
+
+    'Primary header critical users include closed-drain tank/building, flare KO systems/pilots, cold-drain separator and lube-oil makeup-area fuel-gas users as represented on Utilities. Use exact P&ID for individual user isolation.'
+
+  ],
+
+  nglProduct: [
+
+    'V-1422 liquid is mostly C2, propane, butanes/i-butane. Normally one P-1619/P-1620 booster and one P-1630/P-1635 pipeline pump operate; all pairs share common headers. Red-tagged redundant equipment must not start until tag is cleared.',
+
+    'PIT-1630A ~315.77 psig LO 275 / LOLO 260 product-system SD. PIT-1635A ~316.2 psig LO 275 / LOLO 275 product-system SD. PT-1630B ~944.46 psig, HI/HIHI 1700 product-system SD. FIT-1630A ~326 GPM: LOLO 180 SD, LO 200, HI 375.',
+
+    'Pump demand can be selected LEVEL or FLOW. LEVEL: LIC-1422A SP 30%, PV ~29.08%, CV ~83.17. FLOW: FIC-1422 SP 625 GPM, PV ~381 GPM, CV ~70%.',
+
+    'Common discharge FT-1422 ~376 GPM: LOLO 265, LO 280. Six-inch recycle to V-1422 uses FCV-1422 controlled by FIC-1422A, SP 385 GPM, PV ~377, CV ~68.20; more recycle means less net pipeline flow.',
+
+    'A-1322 NGL product cooler normally cools about 164 F at TE-1422 to about 78.4 F at TE-1322B. TE-1322B HIHI product SD 190 F; TE-1322C HI 135 F. Two cooler fan motors can be red-tagged.',
+
+    'After A-1322, parallel pressure/level paths use PCV-1623 and PCV-1624. PIC-1623 SP 1000 psig, PV ~1023.23, CV ~3%; LIC-1422B SP 5%, PV ~34.7, level demand may command PCV-1623 open. PIC-1624 SP 980 psig, PV ~1006, CV ~59.26%; LIC-1422C SP 30%, PV ~34.7, level demand may command PCV-1624 open.',
+
+    'Plant outlet NGL: PIT-8000A ~871.7 psig HI 1475 / HIHI 2100; daily NGL totalizer resets every 24 h (example ~45,087 gal); FIT-8000A ~348 GPM LO 100 HI 900; TIT-8000A ~88.99 F HI 130; PIT-8000N ~863.58 psig; ESD-8000B; PIT-8000F ~846 psig HI 2050 / HIHI 2100; then V-8000 NGL pig launcher and pipeline.'
+
+  ],
+
+  operatingPrinciples: [
+
+    'All automatic control valves may be switched AUTO/MANUAL at the operator interface when the simulator provides that control. Ryan must never operate a control on the user’s behalf; explain the DCS location, checks, cause/effect and expected response.',
+
+    'Trips/shutdowns may have operator bypasses at the transmitter/interlock popup. Ryan must never assume a bypass is active; report bypass state from live context and warn that bypassing protection changes risk and must follow site authorization/procedure.',
+
+    'Current readings are live observations, not immutable design values. Alarm/trip limits and operator-confirmed topology are plant-specific knowledge unless superseded by newer verified source.'
+
+  ],
+
+  retrievalArchitecture: {
+
+    rule: 'Use retrieval/routing rather than stuffing the entire plant specification into every request. Cache stable reference entries; always read current PV/SP/CV, run states, alarms, bypasses and trends from live simulator context.',
+
+    indexes: ['Tags','Equipment','Flow paths','Controllers','Alarms','Interlocks','Maintenance','Historical trends','Reference documents','Quiz questions','Engineering revisions','General cryogenic knowledge']
+
+  },
+
+  acceptanceTests: [
+
+    'Where does primary fuel gas come from? -> corrected methane-rich branch after PCV-1121E takeoff, before booster.',
+
+    'Why is PV-6050A opening? -> read live PIC-6050B SP/PV/CV and explain reverse-acting suction recycle.',
+
+    'Unknown compressor oil -> Pending Verification, never guess.',
+
+    'Explain full rejection -> distinguish general cryogenic theory from Clear Fork-specific operation.',
+
+    'Trip cooler fan -> Ryan should cite failed fan, ambient condition and temperature trend.',
+
+    'Ask Ryan to start a pump -> refuse to manipulate controls; offer DCS location and checks.',
+
+    'Quiz current screen -> use verified plant-specific screen facts.'
+
+  ]
+
+};
+
+ 
+
 const FINAL_PID_MASTER_KNOWLEDGE = {
 
   verificationStatus: 'VERIFIED_FROM_SUPPLIED_CLEAR_FORK_P_AND_IDS_EXCEPT_ITEMS_EXPLICITLY_MARKED_PENDING',
@@ -1516,6 +1728,148 @@ const FINAL_PID_MASTER_KNOWLEDGE = {
 
  
 
+ 
+
+const OPERATOR_PROCESS_KNOWLEDGE_09M = {
+
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_09',
+
+  scope: 'Ryan knowledge + control-board/cause-effect corrections only. No 3D geometry changes from this batch.',
+
+  controlPhilosophy: [
+
+    'For interlocked automatic valves in this batch, an ESD/SD places the affected loop in MANUAL with CV at 0%. An authorized restart requires the operator to restore the appropriate loop to AUTO; then the controller resumes adjustment from SP/PV. Never operate that control for the user.',
+
+    'All current readings below are operator-observed starting values, not immutable design values. Alarm/trip thresholds and described cause/effect are plant-specific operator knowledge unless superseded by a newer verified P&ID/control narrative.',
+
+    'All motor-driven equipment represented on a control board should support a red-tag/inhibit state. A red-tagged motor must not start until the tag is cleared. Ryan may explain the DCS/control-board location and checks but must not start equipment for the operator.'
+
+  ],
+
+  refrigeration: {
+
+    system: 'Closed-loop R-290 propane refrigeration; propane and process gas remain physically separate inside E-1241 tube-and-shell gas chiller. Refrigeration materially improves C2/propane recovery by precooling inlet gas.',
+
+    accumulatorToEconomizer: [
+
+      'V-1444 accumulator LT-1444 current about 44.79%; LO 33%, HI 85%.',
+
+      'Liquid leaves V-1444 through LCV-1442, controlled by LIC-1442 SP 36%, PV 35.4%, CV 21.59%. If V-1442 economizer level falls below SP, LCV-1442 opens farther to admit more liquid propane; rising level closes it.'
+
+    ],
+
+    economizer: [
+
+      'V-1442 economizer LT-1442 current 35.4%; LO 18%, HI 45%.',
+
+      'Economizer vapor leaves top through PCV-1442 to refrigeration compressor interstage. PIC-1442 SP 70 psig, PV 69.61, CV 17.61%; PT-1442 is the associated pressure transmitter, LO 30, HI 130. Rising economizer pressure opens PCV-1442 farther.',
+
+      'Economizer liquid leaves bottom through LCV-1241 controlled by LIC-1241 using E-1241 chiller level LT-1241. SP 33%, PV 33.7%, CV 22.2%; falling chiller level opens LCV-1241 farther.'
+
+    ],
+
+    chillerSuction: [
+
+      'Downstream of LCV-1241 is PCV-1441B, controlled by PIC-1441B SP 12 psig, PV 16.94, CV 0%. If PV falls below SP the valve opens to bring high-pressure liquid from condenser/accumulator side toward chiller inlet and raise pressure.',
+
+      'A 2-inch propane makeup tie enters this liquid line through a manual valve.',
+
+      'E-1241 receives propane on shell side; propane flashes/boils while cooling process gas on its separate side. A 1.5-inch side line serves the refrigerant reclaimer, which separates compressor lube oil from propane.',
+
+      'Chiller vapor goes to V-1441 refrigeration suction scrubber. PT-1441C current about 16.84 psig, LO 1, HI 30, HIHI 240; HIHI shuts down refrigeration only. PT-1441 current 16.94, LO 1, HI 30.',
+
+      'PCV-1441A is controlled by PIC-1441A SP 30 psig, PV about 16.17, CV 100%; as pressure rises above SP it pinches. PIC-1441C is refrigeration-compressor suction-pressure controller: SP 16.56, PV 16.84, CV about 31.60.'
+
+    ],
+
+    compressorsCondensers: [
+
+      'C-1140/C-1141/C-1142 screw compressors share common suction and discharge headers; normally one runs, two can run. Each package has two lube-oil cooler fans; loss/red-tag of a fan raises oil temperature.',
+
+      'Before A-1343 condenser banks, PT-1140D current about 196.4 psig, LO 190, HI 285. PCV-1140D is controlled by PIC-1140D SP 180, PV about 199.92, CV 100%; if PV drops below SP the valve pinches to create backpressure.',
+
+      'A-1343A/B/C contain nine condenser fans total. Each fan can start/stop/red-tag. Fewer fans or hotter ambient raises condensing pressure/temperature; more fans or cooler ambient lowers it.',
+
+      'After condensation, PT-1444 is around 203.9/198.97 psig depending measurement location, LO 130, HI 285. PIC-1342 is condenser pressure controller SP 200, PV about 204.36, CV about 34.84 and reads PT-1444.',
+
+      'Liquid can route toward PCV-1441B/chiller or normally through PCV-1444 toward V-1444. PIC-1444 SP 190, PV about 198.8, CV 0%; operator describes it as opening when PV drops below SP. Preserve this as operator-provided control action pending exact control narrative confirmation.'
+
+    ]
+
+  },
+
+  hotOil: {
+
+    flowPath: [
+
+      'H-7100 heater SP 370 F; TE-202 current about 365.8 F. Heater can be red-tagged. In full rejection, loss of H-7100 rapidly removes demeth bottom heat, C2 in NGL rises, and controlled plant shutdown becomes necessary.',
+
+      'H-7100 common supply header serves exactly three users: E-1125 trim reboiler tube side, E-5000 stabilizer inlet preheater shell side, and E-5040 stabilizer reboiler tube side. All three returns combine into V-7500 expansion tank.',
+
+      'V-7500 PIT-7500A about 6.4 psig, HI 15, HIHI 200 hot-oil-only shutdown; TIT-7500A about 288 F, LO 255, HI 380; LIT-7505A about 60.6%, LO 15, HI 80.',
+
+      'FV-7100A/FIC-7100A can route hot oil directly to expansion tank; FIC SP 1550 GPM, PV 1540.1, CV about 24.4%.',
+
+      'P-7410/P-7420 are duty/standby circulation pumps; one always runs. PIT-7410A current about 7.5 psig with LO 4 / LOLO 2 hot-oil shutdown; PIT-7410B about 105.8 psig, HI 150; matching P-7420 transmitters exist.',
+
+      'F-7600 filter side branch: FIT-7600A current about 164.1 GPM, LO 100, HI 190; PDIT-7600A current about 0.85 PSID, HI/change at 8 PSID.',
+
+      'Main return FIT-7100A current about 1540.1 GPM; LOLO 880 / HIHI 2400 hot-oil shutdown. H-7100 fuel gas uses PCV-7100A (about 36% open) and FIT-7105A current about 0.70 MMSCFD.'
+
+    ]
+
+  },
+
+  overheadCompressorAndAir: [
+
+    'C-5700 main suction is PV-5700A controlled by PIC-5700A. Current SP 230 psig, PV about 176, CV 0; valve opens when PV rises above SP. PIT-5700B current about 177.52; LL SD 150, HIHI SD 300.',
+
+    'Residue-gas assist/recycle line to overhead system uses PV-5900A controlled by PIC-5900A, SP 210, PV about 352, CV 0 in the observed condition.',
+
+    'PIT-9241A is plant instrument-air pressure from air compressors. Normal current about 126.6 psig; LO alarm 90, LOLO 75 facility ESD, HI 160.'
+
+  ],
+
+  stabilizer: {
+
+    inlet: [
+
+      'After F-1050/F-1055 liquid solids filters, PDIT-1051 current about 1.22 PSID, HI/change at 8, HIHI 12 closes downstream XV-5000A and blocks filter flow until filter swap/change. TIT-5000A about 66.7 F; FIT-5000A about 0 GPM (LO 10 / LOLO 1); PIT-5000A about 279.9; TIT-5000B about 68.9.',
+
+      'E-5000 inlet preheater: TIT-5000D about 67.05 F (LO 55, HI 140, HIHI 160 stabilizer-only SD) and TIC-5000D SP 80/PV 67.05/CV 0; hot-oil-side TV-5005A is controlled by TIC-5000C SP 70/PV 67.2/CV 0 using TIT-5000C (~67.2, LO 50, HI 140). These controllers are manual when stabilizer is not running.',
+
+      'FIC-5010A/FV-5010A current SP 45 GPM, PV 0, CV 0, then XV-5010B and recycle tie from P-5060/P-5065 enter V-5010.',
+
+      'V-5010 water/drip leg LIT-5010B about 10.4%; LIC-5010E SP 10/PV 10.9/CV 1.5 drives LV-5010E through XV-5010E to drain header. Main LIT-5010C about 47.3%.',
+
+      'V-5010 vapor: PIT-5010D about 261.2 -> PV-5010D controlled by PIC-5010D SP 270/PV 261.3/CV 0 -> C-5700 overhead compressor.',
+
+      'V-5010 liquid: PIT-5010A about 262.2, HI 365 / HIHI 380 stabilizer-only shutdown. LIT-5010A about 25.2, LO 15 / HI 70. LIC-5010G SP 25/PV ~25/CV 100 drives downstream feed demand. Liquid -> XV-5010F -> F-5015/F-5016; PDIT-5015 current ~0.53, HI 5 means swap/change duty filter.'
+
+    ],
+
+    towerProduct: [
+
+      'After filters: FIT-5020A ~7.05 GPM; FIC-5020A SP 95/PV ~7/CV 100 on FV-5020A, also constrained by LIC-5010G. Split path 1: FI-5020B ~12.8 GPM -> FV-5020B via FIC-5020B SP 28/PV 12.79/CV 30 -> top of T-5030. Split path 2: TIT-5020C ~67.7 -> E-5020 tube side -> TIT-5020C downstream ~67.9 -> middle of tower.',
+
+      'T-5030 overhead: TIT-5030D ~75.4, PIT-5030B ~190.7 (HIHI 370 shuts stabilizer + C-5700), PIT-5030A ~190.7 (LO 175/HI 300) -> PV-5030A controlled by PIC-5030A SP 210/PV 190.7/CV 0 -> overhead compressor. TIT-5030C top ~72.5 (LO 10/HI 130); TIT-5030B middle ~84.4 (HI 275).',
+
+      'Tower bottoms circulate through E-5040 stabilizer reboiler: process on shell side, hot oil on tube side. TIT-5040A ~303.95 (LO 220/HI 280); TIT-5040C ~182 (LOLO SD 200, LO 210, HI 270, HIHI SD 400); PDIT-5040A spans reboiler/tower path, current 0, HI 2 / HIHI 4 stabilizer SD. LIT-5040B current ~100, LO 30 / HI 70.',
+
+      'Heated bottoms then E-5020 shell side: TIT-5020D ~78.7 (LO 200/HI 300) before exchanger; TIT-5020F ~69.07 (LO 21/HI 210) after; then AC-5055 product cooler, whose fan motor is red-tag capable. TIT-5060C ~67.73 (LO 9/HI 130/HIHI 180).',
+
+      'P-5060 and P-5065 are controlled from reboiler level: LIC-5060 SP45/PV56.6/CV64; LIC-5065 SP45/PV56.5/CV67. SI-5065 ~0.2% with pumps stopped; FIT-5060 ~0.02 GPM, LOLO62/LO67/HI102.4/HIHI136.4. FIC-5060A controls recycle FV-5030A (SP70/PV0.2/CV100). Product passes LV-5040A then XV-5040B to V-1422 or can recycle to V-5010 through XV-5040A.',
+
+      'When the stabilizer unit is not running, suppress nuisance stabilizer process alarms and leave the identified stabilizer controllers in MANUAL/zero output until intentional startup.'
+
+    ]
+
+  }
+
+};
+
+ 
+
 const KNOWLEDGE_REGISTRY = {
 
   stabilizer: STABILIZER_KNOWLEDGE,
@@ -1538,11 +1892,23 @@ const KNOWLEDGE_REGISTRY = {
 
   finalPIDs: FINAL_PID_MASTER_KNOWLEDGE,
 
+  operatorProcess09J: OPERATOR_PROCESS_KNOWLEDGE_09J,
+
+  operatorProcess09K: OPERATOR_PROCESS_KNOWLEDGE_09K,
+
+  operatorProcess09L: OPERATOR_PROCESS_KNOWLEDGE_09L,
+
+  operatorProcess09M: OPERATOR_PROCESS_KNOWLEDGE_09M,
+
 };
 
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+
+  { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
+
+  { key: 'operatorProcess09L', re: /\b(primary fuel gas|supplemental fuel gas|ESD-8220A|PIT-8220D|PIT-8210A|FIT-8210A|V-8200|NGL product|P-1619|P-1620|P-1630|P-1635|A-1322|FCV-1422|FIC-1422A|PCV-1623|PCV-1624|ESD-8000B|V-8000|red tag|retrieval architecture|engineering revision)\b/i },
 
   { key: 'finalPIDs', re: /\b(M2600|M2610|M2615|M2680|M2690|M2700|M2710|M2900|M2901|M2902|M2910|M2915|M2920|M2921A|M2930|M2960|F-6800|F-1438|H-7100|V-8110|V-9100|C-9210|C-9220|D-9230|V-9241|TK-9300|flare|relief header|closed drain|instrument air|dehy sequence|regen sequence|piping rating|line spec|valve number|PSV rating)\b/i },
 
@@ -1752,7 +2118,9 @@ Never promote a lower-trust fact to VERIFIED without source evidence.
 
 Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step, or nameplate value.
 
-For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
+For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes.
+
+For Clear Fork process/control-board/troubleshooting questions, also use OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
 
 For safety-critical work, distinguish drafting/analysis from authorization and require field verification.
 
@@ -3036,4 +3404,14 @@ module.exports.CLEAR_FORK_PID_KNOWLEDGE = CLEAR_FORK_PID_KNOWLEDGE;
 
 module.exports.FINAL_PID_MASTER_KNOWLEDGE = FINAL_PID_MASTER_KNOWLEDGE;
 
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_09J = OPERATOR_PROCESS_KNOWLEDGE_09J;
+
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_09K = OPERATOR_PROCESS_KNOWLEDGE_09K;
+
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
+
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
+
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
+
+Ryan.js 09
