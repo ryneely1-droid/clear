@@ -808,11 +808,11 @@ function attachmentToContentBlock(attachment) {
 
 function buildIngestionInstruction(documentType, label) {
 
-  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid JSON, no markdown fences. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Never use plant knowledge outside this attachment to fill gaps.`;
+  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid compact JSON, no markdown fences and no prose outside JSON. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Existing P&ID Reference Library context may be supplied only to flag duplicates/conflicts; never use it to fill unreadable or missing facts in the attachment.`;
 
   if (documentType === 'pid') {
 
-    return `${common}\nThis is a P&ID/drawing ingestion. Read text AND visual relationships. Return an object with keys documentType, sourceLabel, facts, equipment, connections, warnings. facts must contain discrete statements with fields: statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Extract visible equipment tags, instrument tags, valve tags, line numbers/sizes, flow direction, source/destination connections, control loops, relief devices, isolation valves, drains/vents, normal-position markings, and any setpoints actually shown. Do NOT infer a connection merely because it is typical.`;
+    return `${common}\nThis is a P&ID/drawing ingestion. Read text AND visual relationships. Return a compact object with keys documentType, sourceLabel, facts, equipment, connections, conflicts, warnings. Extract every legible plant-relevant tag/relationship within the response budget: equipment, instruments, valves, line numbers/sizes/specs, flow direction, continuation drawings, control loops, PSVs/relief destinations/set pressures actually shown, isolation valves, drains/vents, fail/normal positions, and explicit notes. facts items use statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Do not repeat the same fact across arrays. Do NOT infer typical connections. If too dense to finish, include PARTIAL_EXTRACTION_REQUIRES_ADDITIONAL_PASS in warnings.`;
 
   }
 
@@ -1008,15 +1008,17 @@ exports.handler = async function(event) {
 
     const isMemoryExtract = effectiveMode === 'memory_extract';
 
+    let ingestType = null;
+
  
 
     if (isIngest) {
 
       if (!attachment) return { statusCode: 400, body: JSON.stringify({ error: 'Document ingestion requires an attachment.' }) };
 
-      const dtype = inferDocumentType(attachment, documentType);
+      ingestType = inferDocumentType(attachment, documentType);
 
-      userText = `${buildIngestionInstruction(dtype, attachment.label)}\n\n${userText || 'Ingest this source into Ryan knowledge.'}`;
+      userText = `${buildIngestionInstruction(ingestType, attachment.label)}\n\n${userText || 'Ingest this source into Ryan knowledge.'}`;
 
     }
 
@@ -1028,7 +1030,7 @@ exports.handler = async function(event) {
 
  
 
-    const maxTokens = isIngest ? 7000 : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : 1800));
+    const maxTokens = isIngest ? (ingestType === 'pid' ? 3200 : (ingestType === 'manual' ? 4200 : 3200)) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : 1800));
 
     const payload = { model: MODEL_V2, max_tokens: maxTokens, system, messages };
 
@@ -1140,7 +1142,7 @@ exports.handler = async function(event) {
 
           ok: true,
 
-          documentType: inferDocumentType(attachment, documentType),
+          documentType: ingestType || inferDocumentType(attachment, documentType),
 
           sourceLabel: attachment.label || null,
 
