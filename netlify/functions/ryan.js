@@ -1,41 +1,3 @@
-/**
-
- * Ryan AI Backend — Clearfork Cryogenic Unit #1 Simulator
-
- * Netlify Function: netlify/functions/ryan.js
-
- *
-
- * REBUILT this session to fix a broken contract with the client (index.html):
-
- *   1. Netlify Functions require `exports.handler` — a prior rewrite this
-
- *      session only exported plain data + a helper, with no real entry point.
-
- *   2. The Anthropic API call was missing the `x-api-key` and
-
- *      `anthropic-version` headers entirely — every call would have failed
-
- *      authentication regardless of anything else.
-
- *   3. The response shape didn't match what the client reads. Client expects
-
- *      { reply, cost:{usd,inputTokens,outputTokens} } or { error }. A prior
-
- *      rewrite returned { response, cost:{costUSD,...} } instead.
-
- * This version fixes all three and keeps every knowledge object from this
-
- * session (Stabilizer, C-5700, Control Valves, Pump Maintenance, Residue
-
- * Compressors, Simulator UI) actually wired into what gets sent to Claude.
-
- */
-
- 
-
-const ANTHROPIC_VERSION = '2023-06-01';
-
 const MODEL = 'claude-sonnet-5';
 
  
@@ -808,11 +770,11 @@ function attachmentToContentBlock(attachment) {
 
 function buildIngestionInstruction(documentType, label) {
 
-  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid JSON, no markdown fences. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Never use plant knowledge outside this attachment to fill gaps.`;
+  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid compact JSON, no markdown fences and no prose outside JSON. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Existing P&ID Reference Library context may be supplied only to flag duplicates/conflicts; never use it to fill unreadable or missing facts in the attachment.`;
 
   if (documentType === 'pid') {
 
-    return `${common}\nThis is a P&ID/drawing ingestion. Read text AND visual relationships. Return an object with keys documentType, sourceLabel, facts, equipment, connections, warnings. facts must contain discrete statements with fields: statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Extract visible equipment tags, instrument tags, valve tags, line numbers/sizes, flow direction, source/destination connections, control loops, relief devices, isolation valves, drains/vents, normal-position markings, and any setpoints actually shown. Do NOT infer a connection merely because it is typical.`;
+    return `${common}\nThis is a P&ID/drawing ingestion. Read text AND visual relationships. Return a compact object with keys documentType, sourceLabel, facts, equipment, connections, conflicts, warnings. Extract every legible plant-relevant tag/relationship within the response budget: equipment, instruments, valves, line numbers/sizes/specs, flow direction, continuation drawings, control loops, PSVs/relief destinations/set pressures actually shown, isolation valves, drains/vents, fail/normal positions, and explicit notes. facts items use statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. Do not repeat the same fact across arrays. Do NOT infer typical connections. If too dense to finish, include PARTIAL_EXTRACTION_REQUIRES_ADDITIONAL_PASS in warnings.`;
 
   }
 
@@ -924,6 +886,306 @@ async function postJsonWithRetry(url, headers, payload, attempts = 3) {
 
  
 
+function httpRequestRaw(method, url, headers, bodyBuffer) {
+
+  return new Promise((resolve, reject) => {
+
+    const u = new URL(url);
+
+    const opts = { hostname: u.hostname, path: u.pathname + u.search, method, headers: { ...(headers || {}) } };
+
+    if (bodyBuffer) opts.headers['content-length'] = Buffer.byteLength(bodyBuffer);
+
+    const req = https.request(opts, res => {
+
+      const chunks = [];
+
+      let total = 0;
+
+      res.on('data', chunk => {
+
+        chunks.push(chunk); total += chunk.length;
+
+        if (total > 20_000_000) req.destroy(new Error('Anthropic response exceeded Ryan safety limit.'));
+
+      });
+
+      res.on('end', () => resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body: Buffer.concat(chunks).toString('utf8'), headers: res.headers }));
+
+    });
+
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error(`Anthropic request timed out after ${REQUEST_TIMEOUT_MS} ms.`)));
+
+    req.on('error', reject);
+
+    if (bodyBuffer) req.write(bodyBuffer);
+
+    req.end();
+
+  });
+
+}
+
+ 
+
+async function uploadAttachmentToAnthropic(attachment, apiKey) {
+
+  if (!attachment) throw new Error('No attachment supplied.');
+
+  if (attachment.fileId) return attachment.fileId;
+
+  if (!attachment.base64) throw new Error('Document learning requires a PDF/image attachment with base64 data or an Anthropic fileId.');
+
+  const data = Buffer.from(String(attachment.base64), 'base64');
+
+  if (!data.length) throw new Error('Attachment data was empty.');
+
+  const boundary = '----RyanBoundary' + crypto.randomBytes(12).toString('hex');
+
+  const filename = String(attachment.label || 'ryan-source.pdf').replace(/[\r\n"\\]/g, '_').slice(0,180);
+
+  const mediaType = String(attachment.mediaType || 'application/pdf');
+
+  const head = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mediaType}\r\n\r\n`, 'utf8');
+
+  const tail = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf8');
+
+  const body = Buffer.concat([head, data, tail]);
+
+  const res = await httpRequestRaw('POST', 'https://api.anthropic.com/v1/files', {
+
+    'x-api-key': apiKey,
+
+    'anthropic-version': ANTHROPIC_VERSION_V2,
+
+    'anthropic-beta': 'files-api-2025-04-14',
+
+    'content-type': `multipart/form-data; boundary=${boundary}`
+
+  }, body);
+
+  let parsed = null; try { parsed = JSON.parse(res.body || '{}'); } catch {}
+
+  if (!res.ok || !parsed || !parsed.id) {
+
+    const msg = parsed && parsed.error && parsed.error.message ? parsed.error.message : `File upload failed (HTTP ${res.status}): ${(res.body || '').slice(0,300)}`;
+
+    throw new Error(msg);
+
+  }
+
+  return parsed.id;
+
+}
+
+ 
+
+function batchDocumentBlock(fileId, label) {
+
+  return { type: 'document', source: { type: 'file', file_id: fileId }, title: safeString(label || 'Ryan source document', 200), citations: { enabled: true } };
+
+}
+
+ 
+
+function buildBatchPasses(documentType, fileId, label, existingContext) {
+
+  const source = safeString(label || 'unnamed document', 200);
+
+  const existing = safeString(existingContext || '', 16000);
+
+  const rules = `SOURCE: ${source}. Return ONLY compact valid JSON with keys facts,warnings. Every facts item must contain statement, classification, equipmentIds, page, sourceLabel, verificationStatus, confidence. verificationStatus must be DOCUMENT_EXTRACTED_UNVERIFIED. Never guess unreadable tags, line numbers, valve positions, set pressures, piping connections, or flow direction. Existing Reference Library context may identify duplicates/conflicts only; it may NEVER fill in unreadable content on this source. Existing context:\n${existing || '(none supplied)'}`;
+
+  if (documentType === 'pid') {
+
+    return [
+
+      { id: 'pid_topology', max_tokens: 5200, text: `${rules}\n\nP&ID PASS 1 - PHYSICAL TOPOLOGY. Read the actual drawing carefully. Extract equipment tags/names/services shown, instrument tags, manual/automated valve tags, line numbers, line sizes/specs where legible, explicit flow arrows, continuation/off-page references, upstream/downstream connections actually drawn, drains, vents, bypasses, check valves, normally-open/normally-closed or fail-position markings, and drawing notes that define physical relationships. Preserve drawing/page references. Do not infer connectivity from generic cryogenic-plant knowledge.` },
+
+      { id: 'pid_controls_safety', max_tokens: 5200, text: `${rules}\n\nP&ID PASS 2 - CONTROLS / SAFETY / ISOLATION. Extract control loops and controller-to-valve/instrument relationships actually shown; alarms, shutdowns, permissives/interlocks if shown; PSVs with protected equipment, set pressure/rating only when displayed, inlet/outlet isolation, and relief destination; shutdown valves; isolation boundaries; bleed/vent/drain/depressurization points; energy sources; and LOTO-relevant relationships. Treat this as source extraction, NOT an approved LOTO. Capture ambiguity explicitly instead of resolving it by assumption.` }
+
+    ];
+
+  }
+
+  return [
+
+    { id: 'manual_specs', max_tokens: 5200, text: `${rules}\n\nMANUAL PASS 1 - EQUIPMENT / LIMITS / SPECS. Extract manufacturer/model applicability, operating envelopes and limits, alarms/trips/permissives stated by the manual, capacities, lubrication requirements, temperatures/pressures, clearances, torque values, materials, parts/specifications, warnings/cautions, and units exactly as written.` },
+
+    { id: 'manual_procedures', max_tokens: 5200, text: `${rules}\n\nMANUAL PASS 2 - OPERATIONS / MAINTENANCE / TROUBLESHOOTING. Extract startup/shutdown requirements, maintenance intervals, inspections, troubleshooting cause/action tables, required tests, preservation/storage instructions, safety prerequisites, and procedure steps actually stated. Keep OEM/manual guidance separate from Clear Fork-specific operating practice unless the source explicitly says otherwise.` }
+
+  ];
+
+}
+
+ 
+
+async function startDocumentBatch(attachment, documentType, existingContext, apiKey) {
+
+  const fileId = await uploadAttachmentToAnthropic(attachment, apiKey);
+
+  const passes = buildBatchPasses(documentType, fileId, attachment && attachment.label, existingContext);
+
+  const requests = passes.map(p => ({
+
+    custom_id: p.id,
+
+    params: {
+
+      model: MODEL_V2,
+
+      max_tokens: p.max_tokens,
+
+      messages: [{ role: 'user', content: [batchDocumentBlock(fileId, attachment && attachment.label), { type: 'text', text: p.text }] }]
+
+    }
+
+  }));
+
+  const result = await postJson('https://api.anthropic.com/v1/messages/batches', {
+
+    'content-type': 'application/json',
+
+    'x-api-key': apiKey,
+
+    'anthropic-version': ANTHROPIC_VERSION_V2,
+
+    'anthropic-beta': 'files-api-2025-04-14,message-batches-2024-09-24,pdfs-2024-09-25'
+
+  }, { requests });
+
+  if (!result.ok || !result.data || !result.data.id) {
+
+    const d = result.data || {};
+
+    throw new Error(d.error && d.error.message ? d.error.message : `Could not create Anthropic document batch (HTTP ${result.status}).`);
+
+  }
+
+  return { batchId: result.data.id, fileId, processingStatus: result.data.processing_status || 'in_progress', documentType, sourceLabel: attachment && attachment.label || null };
+
+}
+
+ 
+
+async function getDocumentBatchStatus(batchId, apiKey) {
+
+  const headers = {
+
+    'x-api-key': apiKey,
+
+    'anthropic-version': ANTHROPIC_VERSION_V2,
+
+    'anthropic-beta': 'files-api-2025-04-14,message-batches-2024-09-24,pdfs-2024-09-25'
+
+  };
+
+  const statusRes = await httpRequestRaw('GET', `https://api.anthropic.com/v1/messages/batches/${encodeURIComponent(batchId)}`, headers);
+
+  let batch = null; try { batch = JSON.parse(statusRes.body || '{}'); } catch {}
+
+  if (!statusRes.ok || !batch) throw new Error(batch && batch.error && batch.error.message ? batch.error.message : `Could not retrieve document batch (HTTP ${statusRes.status}).`);
+
+  if (batch.processing_status !== 'ended') {
+
+    return { complete: false, processingStatus: batch.processing_status || 'in_progress', requestCounts: batch.request_counts || null, endedAt: batch.ended_at || null };
+
+  }
+
+  const resultRes = await httpRequestRaw('GET', `https://api.anthropic.com/v1/messages/batches/${encodeURIComponent(batchId)}/results`, headers);
+
+  if (!resultRes.ok) throw new Error(`Could not retrieve document batch results (HTTP ${resultRes.status}): ${(resultRes.body || '').slice(0,300)}`);
+
+  const lines = String(resultRes.body || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+
+  const passes = [];
+
+  const allFacts = [];
+
+  let inputTokens = 0, outputTokens = 0;
+
+  const errors = [];
+
+  for (const line of lines) {
+
+    let row; try { row = JSON.parse(line); } catch { errors.push('Unparseable batch result line.'); continue; }
+
+    if (!row || !row.result) continue;
+
+    if (row.result.type !== 'succeeded' || !row.result.message) {
+
+      errors.push(`${row.custom_id || 'pass'}: ${row.result.type || 'unknown result'}`); continue;
+
+    }
+
+    const msg = row.result.message;
+
+    const text = (msg.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('\n');
+
+    const parsed = parseJsonReply(text);
+
+    const facts = parsed && Array.isArray(parsed.facts) ? parsed.facts : (Array.isArray(parsed) ? parsed : []);
+
+    if (!parsed) errors.push(`${row.custom_id || 'pass'} returned non-JSON output.`);
+
+    passes.push({ id: row.custom_id || null, facts: facts.length, warnings: parsed && parsed.warnings || [], stopReason: msg.stop_reason || null });
+
+    for (const f of facts) allFacts.push(f);
+
+    inputTokens += Number(msg.usage && msg.usage.input_tokens || 0);
+
+    outputTokens += Number(msg.usage && msg.usage.output_tokens || 0);
+
+  }
+
+  const seen = new Set();
+
+  const facts = allFacts.filter(f => {
+
+    const statement = safeString(f && f.statement || '', 1400).trim();
+
+    if (!statement) return false;
+
+    const key = statement.toLowerCase().replace(/\s+/g, ' ');
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+
+    f.statement = statement;
+
+    if (!f.verificationStatus) f.verificationStatus = 'DOCUMENT_EXTRACTED_UNVERIFIED';
+
+    return true;
+
+  }).slice(0, 240);
+
+  return {
+
+    complete: true,
+
+    processingStatus: batch.processing_status,
+
+    requestCounts: batch.request_counts || null,
+
+    ingestion: { ok: true, facts, passes, persistenceRequired: true, errors },
+
+    cost: {
+
+      usd: (inputTokens * INPUT_PRICE_PER_MILLION + outputTokens * OUTPUT_PRICE_PER_MILLION) / 1_000_000,
+
+      inputTokens, outputTokens, inRate: INPUT_PRICE_PER_MILLION, outRate: OUTPUT_PRICE_PER_MILLION,
+
+      pricingNote: 'Estimate uses Ryan environment pricing settings; Message Batch pricing may differ from standard Messages API pricing.'
+
+    }
+
+  };
+
+}
+
+ 
+
 function parseJsonReply(text) {
 
   const cleaned = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
@@ -972,6 +1234,54 @@ exports.handler = async function(event) {
 
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
+ 
+
+    // Long document learning is asynchronous on Anthropic's Message Batches API.
+
+    // This avoids Netlify synchronous-function 504s without requiring extra Netlify function files.
+
+    if (effectiveMode === 'digest_batch_start') {
+
+      if (!attachment) return { statusCode: 400, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Document learning requires an attachment.' }) };
+
+      const docType = inferDocumentType(attachment, documentType);
+
+      try {
+
+        const job = await startDocumentBatch(attachment, docType, context, apiKey);
+
+        return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ job }) };
+
+      } catch (e) {
+
+        return { statusCode: 502, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: `Could not start document learning: ${e.message || e}` }) };
+
+      }
+
+    }
+
+    if (effectiveMode === 'digest_batch_status') {
+
+      const batchId = safeString(body && body.batchId, 160);
+
+      if (!batchId) return { statusCode: 400, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Missing batchId.' }) };
+
+      try {
+
+        const status = await getDocumentBatchStatus(batchId, apiKey);
+
+        return { statusCode: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify(status) };
+
+      } catch (e) {
+
+        return { statusCode: 502, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: `Could not check document learning: ${e.message || e}` }) };
+
+      }
+
+    }
+
+ 
+
     const msg = safeString(message, MAX_MESSAGE_CHARS);
 
     const ctx = safeString(context, MAX_CONTEXT_CHARS);
@@ -1008,15 +1318,17 @@ exports.handler = async function(event) {
 
     const isMemoryExtract = effectiveMode === 'memory_extract';
 
+    let ingestType = null;
+
  
 
     if (isIngest) {
 
       if (!attachment) return { statusCode: 400, body: JSON.stringify({ error: 'Document ingestion requires an attachment.' }) };
 
-      const dtype = inferDocumentType(attachment, documentType);
+      ingestType = inferDocumentType(attachment, documentType);
 
-      userText = `${buildIngestionInstruction(dtype, attachment.label)}\n\n${userText || 'Ingest this source into Ryan knowledge.'}`;
+      userText = `${buildIngestionInstruction(ingestType, attachment.label)}\n\n${userText || 'Ingest this source into Ryan knowledge.'}`;
 
     }
 
@@ -1028,7 +1340,7 @@ exports.handler = async function(event) {
 
  
 
-    const maxTokens = isIngest ? 7000 : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : 1800));
+    const maxTokens = isIngest ? (ingestType === 'pid' ? 3200 : (ingestType === 'manual' ? 4200 : 3200)) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : 1800));
 
     const payload = { model: MODEL_V2, max_tokens: maxTokens, system, messages };
 
@@ -1140,7 +1452,7 @@ exports.handler = async function(event) {
 
           ok: true,
 
-          documentType: inferDocumentType(attachment, documentType),
+          documentType: ingestType || inferDocumentType(attachment, documentType),
 
           sourceLabel: attachment.label || null,
 
