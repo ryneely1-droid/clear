@@ -650,7 +650,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-09M';
+const RYAN_BUILD_ID = 'RYAN-2026-08-11A';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1870,7 +1870,76 @@ const OPERATOR_PROCESS_KNOWLEDGE_09M = {
 
  
 
+
+// ===== OPERATOR PROCESS KNOWLEDGE — 2026-08-11 INLET / INLET COMPRESSION =====
+// Current control-board corrections supplied directly by the operator. Current readings are
+// observed snapshots, not immutable design values. Topology/control relationships below are
+// operator-provided plant knowledge unless a newer verified P&ID/control narrative supersedes them.
+const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_11',
+  scope: 'Ryan knowledge + control-board/cause-effect corrections. No 3D geometry authority from this knowledge block.',
+  inlet: {
+    flowPath: [
+      'Raw natural gas pipeline -> V-1000 inlet gas pig receiver -> PIT-1000 -> PIT-1000A -> ESD-1000D -> PIT-1010B -> PV-1010A -> PIT-1010A -> three parallel slug catcher legs V-1020/V-1025/V-1030 -> common slug-catcher vapor header -> PIT-1040B -> XV-1040A -> V-1040 vortex separator.',
+      'V-1040 gas outlet feeds the inlet-compressor suction side only. V-1040 does NOT receive inlet-compressor discharge.',
+      'Slug-catcher liquid routes toward the stabilizer liquid-transfer system; vapor combines before V-1040.'
+    ],
+    observedSnapshot: {
+      PIT1000_psig: 487,
+      PIT1010B_psig: 490,
+      PIC1010A: { sp_psig: 445, pv_psig: 446, cv_pct_open: 40.6 },
+      PIT1010A_psig: 445.04,
+      LIC1020: { sp_pct: 29, pv_pct: 29, cv_pct_open: 85.0 },
+      LIC1025: { sp_pct: 35, pv_pct: 35, cv_pct_open: 50.7 },
+      LIC1030: { sp_pct: 33, pv_pct: 33, cv_pct_open: 63.8 },
+      PIT1040B_psig: 446,
+      LIC1040A: { sp_pct: 35, pv_pct: 8, cv_pct_open: 0 }
+    },
+    controls: [
+      'ESD-1000D is discrete: CLOSED, OPENING, OPEN, CLOSING, FAILED, TRIPPED. Commands are OPEN, CLOSE, ESD TRIP, RESET; no percentage command.',
+      'ESD-1000D differential pressure is calculated as PIT-1000A minus PIT-1010B.',
+      'PV-1010A modulates to maintain downstream PIT-1010A near its pressure setpoint. If PIT-1010A is below SP, PV-1010A opens; if PIT-1010A is above SP, PV-1010A closes.',
+      'Available pressure across PV-1010A is PIT-1010B minus PIT-1010A.',
+      'Slug-catcher level controllers are independent and must preserve their different normal valve outputs/hydraulic behavior; stabilizer-transfer availability limits liquid discharge.',
+      'V-1040 level controller LIC-1040A retains liquid when PV is below SP and opens progressively as level approaches/rises above SP, subject to downstream liquid-path availability.'
+    ]
+  },
+  inletCompression: {
+    flowPath: [
+      'V-1040 gas -> PIT-1045A -> TIT-1045A -> FIT-1045A/FQI-1045A -> common inlet-compressor suction header.',
+      'C-4100 and C-4200 take separate suction branches in parallel from the common suction header. Suction and discharge piping are physically separate.',
+      'C-4100 and C-4200 each have their own discharge line; the two discharge lines combine into the C-4100/C-4200 common discharge header.',
+      'Common inlet-compressor discharge then splits: normal process flow continues to V-1410 inlet gas separator; recycle returns discharge gas to inlet-compressor suction through the 4250 recycle path.',
+      '4250 recycle path: common discharge header -> PV-4250A -> PIT-4250B -> XXY-4250B/XV-4250B -> PIT-4250C -> common compressor suction header.',
+      'Dry-out/regen branch from C-1111 regen compressor is shown on the inlet-compression HMI through PIC-6805A controlling PV-6805A into the inlet-compressor suction system.',
+      'Filtered-residue recycle from downstream/outlet of F-6800 is shown on the inlet-compression HMI through PIC-6810A/PV-6810A and XV-6810A/XXY-6810A into inlet-compressor suction.'
+    ],
+    observedSnapshot: {
+      PIT1045A_psig: 441,
+      TIT1045A_degF: 79.5,
+      FIT1045A_MMSCFD: 212.6,
+      PIT4250A_psig: 974,
+      PIC4250A: { sp_psig: 1000, pv_psig: 929, cv_pct_open: 0 },
+      PIC4250B: { sp_psig: 358, pv_psig: 442, cv_pct_open: 0 },
+      PIT4250B_psig: 440.1,
+      PIT4250C_status: 'Use current live simulator value when available; older initialized/observed values around 440-442 psig are snapshots, not a fixed design value.'
+    },
+    controls: [
+      'PV-4250A is normally 0% open at normal suction conditions and is controlled in tandem/override by PIC-4250A and PIC-4250B.',
+      'PIC-4250A is the discharge-pressure controller with SP 1000 psig; its PV is common inlet-compressor discharge pressure (PIT-4250A domain), not compressor suction pressure.',
+      'PIC-4250B is the suction-protection controller with SP 358 psig. If inlet-compressor suction pressure falls below 358 psig, its demand opens PV-4250A progressively to recycle discharge gas back to suction and keep C-4100/C-4200 operating.',
+      'For the shared PV-4250A, the control demand requiring more recycle should dominate; under normal conditions both demands can be 0% and the valve remains closed.',
+      'Current HMI values are observations and must be superseded by LIVE simulator context whenever Ryan is asked what is happening now.'
+    ],
+    presentationRules: [
+      'On the inlet-compression control board, preserve the real HMI-style relationships: left-side feeds point toward the compressor suction header; suction and discharge do not share a pipe; compressor data popups and GC DATA remain available.',
+      'Do not simplify away established transmitters/controllers/valves merely to make the board cleaner. Improve/correct in place.'
+    ]
+  }
+};
+
 const KNOWLEDGE_REGISTRY = {
+  operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
   stabilizer: STABILIZER_KNOWLEDGE,
 
@@ -1905,6 +1974,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
   { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
 
@@ -2120,7 +2190,7 @@ Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step,
 
 For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes.
 
-For Clear Fork process/control-board/troubleshooting questions, also use OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
+For Clear Fork process/control-board/troubleshooting questions, also use OPERATOR_PROCESS_KNOWLEDGE_0811 plus OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
 
 For safety-critical work, distinguish drafting/analysis from authorization and require field verification.
 
@@ -3411,7 +3481,6 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09K = OPERATOR_PROCESS_KNOWLEDGE_09K;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
 
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
-
-Ryan.js 09
