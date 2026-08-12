@@ -650,16 +650,18 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AI';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AI-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AJ';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AJ-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AI-CRYO-EXPERT-20260812';
-const RYAN_CHANGESET_12AI = Object.freeze([
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AJ-OPERATOR-DECISION-LOTO-20260812';
+const RYAN_CHANGESET_12AJ = Object.freeze([
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
+  '12AJ adds operator decision support: What Changed chronology, current-vs-normal comparison, bad-instrument-vs-bad-process discrimination, startup/shutdown readiness checks, concise operator-first answers, and explicit diagnostic confidence.',
+  '12AJ hardens P&ID-derived LOTO drafting with source-evidence matrices, continuation-drawing holds, energy-path completeness, execution blocking when boundaries are incomplete, and explicit zero-energy verification criteria.',
   'Generic process questions now use Ryan built-in process knowledge by default; internet search is invoked only when the operator explicitly asks to research, look up, verify, cite, source, web-search, or get latest/current external information.',
   'Backend rebuilt from the operator-supplied 11A Ryan source and carried forward through 12Y.',
   'Active troubleshooting policy is injected into Q&A/recommendation requests and ranks causes with proof tags/trends.',
@@ -2019,7 +2021,7 @@ function buildActiveTroubleshootingGuide(message, context){
   ].join('\n');
 }
 
-const CRYO_EXPERT_ENGINE_12AI = {
+const CRYO_EXPERT_ENGINE_12AJ = {
   purpose: 'Make Ryan behave like a plant-wide cryogenic operator/troubleshooter, not a disconnected FAQ bot.',
   sourcePriority: ['LIVE simulator context','Verified Clear Fork P&IDs/procedures','Applicable OEM/manual/nameplate data','Operator-provided Clear Fork corrections','PetroSkills/process fundamentals','Web/general industry research','Engineering inference'],
   dependencyMethod: [
@@ -2068,6 +2070,73 @@ const CRYO_EXPERT_ENGINE_12AI = {
     'Manual learning must separately cover applicability/specs, controls/safety, operations, maintenance/troubleshooting and symptom-to-cause diagnostic tables.',
     'If a source is too large for browser-to-Netlify payload limits, use the supported fileId/server-side source path rather than truncating it.'
   ]
+
+};
+
+const CRYO_OPERATOR_DECISION_ENGINE_12AJ = {
+  operatorFirstResponse: [
+    'For operator/troubleshooting requests, answer in two layers: first an OPERATOR BRIEF of no more than 6 concise bullets, then ENGINEERING DETAIL only when useful.',
+    'The OPERATOR BRIEF should state: what changed/what matters now, top likely cause(s), the single best confirming tag/trend, immediate safe checks, and confidence.',
+    'Do not bury the actionable diagnosis under a long process-theory introduction.'
+  ],
+  currentVsNormal: [
+    'Compare the current state against the most relevant normal reference: configured setpoint/normal state, recent stable baseline, peer equipment, verified operating range, or operator-provided normal behavior.',
+    'Name the reference used. Never call something abnormal without stating what baseline or source makes it abnormal.',
+    'If the simulator does not provide a valid baseline, say BASELINE NOT AVAILABLE and use peer/correlated-tag evidence instead of inventing one.'
+  ],
+  whatChangedEngine: [
+    'When asked what changed, reconstruct chronology from trend windows and event/alarm history. Prioritize the first meaningful movement, not the largest final deviation.',
+    'Use 10-minute data for control/valve sequencing, 3-hour data for developing process upsets, 24-hour data for shift drift, and 72-hour data for fouling/wear/ambient-cycle patterns.',
+    'Return FIRST MOVERS, FOLLOWERS, and LIKELY CONSEQUENCE. Correlation is evidence, not proof of causation.'
+  ],
+  instrumentVsProcess: [
+    'Actively test BAD INDICATION vs REAL PROCESS CHANGE. A suspect indication is more likely when one tag moves without physically consistent movement in upstream/downstream/peer tags, is flat-lined, jumps unrealistically, disagrees with redundant indication, or produces no expected controller/final-element response.',
+    'A real process change is more likely when multiple independent tags move in physically consistent sequence and the controller/final element responds plausibly.',
+    'Never declare a transmitter failed solely because its value looks unusual; identify the corroborating or contradicting measurements needed.'
+  ],
+  readinessChecks: [
+    'For STARTUP READINESS, verify required utilities, permissives/interlocks, source/destination availability, suction inventory/pressure, discharge path, lube/cooling/seal systems, recycle/minimum-flow protection, valves/modes, red tags/maintenance holds, and downstream capacity before recommending a start.',
+    'For SHUTDOWN READINESS, verify downstream consequence, recycle/unload/minimum-flow needs, alternate equipment or flow path, inventory/pressure control, utility implications, isolation/blowdown needs, and restart risks.',
+    'Readiness answers are advisory. Any missing site procedure, field status, permissive, valve lineup, or energy-control requirement must be called out explicitly.'
+  ],
+  confidenceMethod: [
+    'Give diagnostic confidence as HIGH, MEDIUM, or LOW with one short reason.',
+    'HIGH requires source-backed topology plus correlated live/trend evidence; MEDIUM has a plausible mechanism but incomplete confirmation; LOW means important data/source gaps or competing causes remain.',
+    'Confidence describes the diagnosis, not safety authorization. Never use confidence to waive field verification or procedures.'
+  ],
+  fastestProof: [
+    'For each diagnosis identify the single highest-value next observation, tag, trend, or field check that most efficiently separates the leading cause from its strongest alternative.',
+    'Prefer non-intrusive read-only checks before recommending manipulation of equipment or controls.'
+  ],
+  learnedKnowledgeIndexing: [
+    'When learned P&ID/manual facts are available, retrieve by equipment tag, instrument/valve tag, system, drawing/source label, alarm/interlock, maintenance topic, energy/isolation relationship, and upstream/downstream flow path.',
+    'Do not flood a response with the entire learned document. Pull only source-backed facts relevant to the question and preserve source/page provenance.'
+  ]
+};
+
+const LOTO_PID_AUDIT_ENGINE_12AJ = {
+  doctrine: 'Ryan may draft and audit a LOTO/work plan from P&ID evidence, but cannot approve, authorize, or field-verify it.',
+  requiredSequence: [
+    '1. Define the exact work boundary and equipment/nozzle/line segment involved.',
+    '2. Identify every energy source that can cross the boundary: process pressure/flow, electrical, rotating/mechanical, thermal/cryogenic/hot oil, pneumatic/instrument air, hydraulic, chemical, gravity/liquid head, trapped pressure, and stored energy.',
+    '3. Trace each energy path upstream and downstream on the detailed P&ID, including bypasses, recycles, drains, vents, check-valve bypass risk, common headers, utilities, and off-page continuations.',
+    '4. For each proposed isolation, require source-backed tag/service/drawing and identify what it isolates. Never infer a valve tag or physical isolation point from a generic process description.',
+    '5. Identify pressure-release/depressurization/bleed paths and their destination. A drain or vent is not proof of zero energy.',
+    '6. Identify PSV/relief protection and destination. Never casually isolate or defeat a PSV; approved site procedure governs any required PSV isolation arrangement.',
+    '7. Determine whether any continuation drawing, electrical one-line/MCC source, OEM stored-energy requirement, or field-only detail is missing. Missing boundary evidence blocks execution.',
+    '8. Define zero-energy verification criteria: zero pressure where applicable, drained/depressured state, electrical absence-of-voltage by authorized method, mechanical/rotational stop, temperature/chemical hazard controls, and field valve/blank verification as required by site procedure.',
+    '9. Build restoration in reverse with independent verification of blinds/locks/valves, relief protection, drains/vents, controls/permissives, utilities, and affected downstream/upstream equipment before return to service.'
+  ],
+  sourceRules: [
+    'Detailed Clear Fork P&IDs govern plant-specific piping and valve topology. PFD/BFD/HMI graphics may orient the draft but cannot establish an exact isolation boundary by themselves.',
+    'OEM manuals may add stored-energy, electrical, mechanical, lubrication, or package-specific hazards but do not replace plant energy-control procedure.',
+    'Operator observations may identify likely field configuration but must be marked OPERATOR_OBSERVED until drawing/field verification.',
+    'Every isolation/blowdown/PSV marker must carry a source drawing/reference and a verification statement.'
+  ],
+  executionBlockers: [
+    'Any invented/unreadable tag, unknown continuation, ambiguous shared header, missing source drawing, unknown pressure-release destination, unresolved PSV arrangement, or unverified electrical/mechanical energy source is an EXECUTION BLOCKER.',
+    'When an execution blocker exists, status must be DRAFT - INCOMPLETE and executionBlocked must be true.'
+  ]
 };
 
 function hasClearForkTag(text) {
@@ -2075,7 +2144,9 @@ function hasClearForkTag(text) {
 }
 
 const KNOWLEDGE_REGISTRY = {
-  cryoExpert12AI: CRYO_EXPERT_ENGINE_12AI,
+  cryoExpert12AJ: CRYO_EXPERT_ENGINE_12AJ,
+  operatorDecision12AJ: CRYO_OPERATOR_DECISION_ENGINE_12AJ,
+  lotoPidAudit12AJ: LOTO_PID_AUDIT_ENGINE_12AJ,
   operatorProcess0812Y: OPERATOR_PROCESS_KNOWLEDGE_0812Y,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
@@ -2112,6 +2183,8 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'operatorDecision12AJ', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
+  { key: 'lotoPidAudit12AJ', re: /\b(LOTO|lockout|work plan|workplan|isolation boundary|zero energy|depressure|blowdown|bleed|energy source|off-page continuation|field verification)\b/i },
   { key: 'operatorProcess0812Y', re: /\b(troubleshoot|diagnos|residue|C-6100|C-6200|C-6300|PV-6050A|XV-6060|EX\/C-1121|demeth|RSV|GSP|TE-1222K|TE-1222D|refrigeration|PIC-1441C|V-1418|LIC-1418|stabilizer|P-5060|P-5065|V-1040|F-1412|fuel gas|V-1460|hot oil|V-7500|P&ID|manual|large file)\b/i },
   { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
@@ -2155,7 +2228,7 @@ function safeString(value, maxChars) {
 
 function isPlantSpecificQuery(message, context, mode) {
   const text = `${message || ''}\n${context || ''}`;
-  if (['audit','scan','loto','loto_workplan','digest','learn','ingest','image_learn','digest_batch_start','digest_batch_status','memory_extract'].includes(String(mode || '').toLowerCase())) return true;
+  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_batch_start','digest_batch_status','memory_extract'].includes(String(mode || '').toLowerCase())) return true;
   return hasClearForkTag(text) || /\b(Clear\s*Fork|HMI|control board|current PV|current SP|current CV|live plant|this plant|our plant|plant inlet|residue compressor|demethanizer|stabilizer tower|Ryan scan|LOTO|P&ID|PID)\b/i.test(text);
 }
 
@@ -2193,7 +2266,7 @@ function selectKnowledge(message, context, mode) {
   }
 
   const keys = new Set();
-  if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AI');
+  if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AJ');
 
   for (const rule of KNOWLEDGE_ROUTING_RULES) if (rule.re.test(haystack)) keys.add(rule.key);
 
@@ -2201,9 +2274,11 @@ function selectKnowledge(message, context, mode) {
 
   if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) { keys.add('petroSkills'); keys.add('operatorProcess0812Y'); }
 
-  if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) keys.add('clearForkPIDs');
+  if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) { keys.add('clearForkPIDs'); keys.add('lotoPidAudit12AJ'); }
 
   if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|piping|line number|line spec|rating|valve|PSV|relief|flare|closed drain|instrument air|dehy|regen)\b/i.test(haystack)) keys.add('finalPIDs');
+
+  if (['recommend','forecast','health_profile','maintenance','what_changed','readiness','operator_brief'].includes(String(mode || '').toLowerCase()) || /\b(troubleshoot|diagnos|what changed|abnormal|bad indication|ready to start|ready to stop)\b/i.test(haystack)) keys.add('operatorDecision12AJ');
 
   if (!keys.size && /\b(alarm|setpoint|loto|lockout|isolation|psv|pressure relief|maintenance)\b/i.test(haystack)) {
 
@@ -2235,11 +2310,16 @@ function lotoWorkplanOutputConfig() {
 
       sourceDrawing: { type: 'string' },
 
-      verification: { type: 'string' }
+      verification: { type: 'string' },
+      sourceType: { type: 'string' },
+      serviceOrEnergy: { type: 'string' },
+      upstreamBoundary: { type: 'string' },
+      downstreamBoundary: { type: 'string' },
+      confidence: { type: 'string' }
 
     },
 
-    required: ['tag','action','purpose','sourceDrawing','verification'],
+    required: ['tag','action','purpose','sourceDrawing','verification','sourceType','serviceOrEnergy','upstreamBoundary','downstreamBoundary','confidence'],
 
     additionalProperties: false
 
@@ -2267,6 +2347,14 @@ function lotoWorkplanOutputConfig() {
 
           sourceDrawings: { type: 'array', items: { type: 'string' } },
 
+          workBoundary: { type: 'string' },
+
+          sourceEvidence: { type: 'array', items: { type: 'string' } },
+
+          continuationDrawings: { type: 'array', items: { type: 'string' } },
+
+          energyPathTrace: { type: 'array', items: { type: 'string' } },
+
           workPlanSteps: { type: 'array', items: { type: 'string' } },
 
           energySources: { type: 'array', items: { type: 'string' } },
@@ -2281,6 +2369,14 @@ function lotoWorkplanOutputConfig() {
 
           verificationChecklist: { type: 'array', items: { type: 'string' } },
 
+          zeroEnergyCriteria: { type: 'array', items: { type: 'string' } },
+
+          conflictsAndAmbiguities: { type: 'array', items: { type: 'string' } },
+
+          approvalRequirements: { type: 'array', items: { type: 'string' } },
+
+          executionBlocked: { type: 'boolean' },
+
           restorationSteps: { type: 'array', items: { type: 'string' } },
 
           missingInformation: { type: 'array', items: { type: 'string' } },
@@ -2291,7 +2387,7 @@ function lotoWorkplanOutputConfig() {
 
         },
 
-        required: ['title','status','scope','equipment','sourceDrawings','workPlanSteps','energySources','hazards','isolationPoints','blowdownPoints','psvMarkers','verificationChecklist','restorationSteps','missingInformation','fieldVerificationRequired','finalWarning'],
+        required: ['title','status','scope','equipment','sourceDrawings','workBoundary','sourceEvidence','continuationDrawings','energyPathTrace','workPlanSteps','energySources','hazards','isolationPoints','blowdownPoints','psvMarkers','verificationChecklist','zeroEnergyCriteria','conflictsAndAmbiguities','approvalRequirements','executionBlocked','restorationSteps','missingInformation','fieldVerificationRequired','finalWarning'],
 
         additionalProperties: false
 
@@ -2311,7 +2407,7 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
   if (mode === 'loto' || mode === 'loto_workplan') {
 
-    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT work plan from Clear Fork P&ID knowledge and supplied context. Never present an AI-generated isolation as approved or ready to execute. Determine the requested work boundary first, then trace every process, pressure, thermal, electrical, mechanical, pneumatic, hydraulic, chemical, and stored-energy path that can enter the boundary. Use exact valve/ESD/bleed/blowdown/PSV tags ONLY when explicitly present in supplied source data. If the exact isolation or blowdown tag is not supported, put PENDING VERIFICATION in the tag/action and identify the drawing/field check needed; do not invent a tag. Include off-page continuation drawings and explicitly list any missing drawings that prevent a complete boundary. PSVs are protection devices: identify them and their relief destination when source-backed, but do not instruct the user to isolate a PSV unless an approved site procedure/source specifically requires it. Provide verification checks for zero-energy/zero-pressure and a restoration plan. The finalWarning must be exactly: NOT APPROVED — FIELD VERIFICATION REQUIRED. fieldVerificationRequired must be true.`;
+    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AJ in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
 
   } else if (mode === 'audit') {
 
@@ -2336,6 +2432,15 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
   } else if (mode === 'instructor') {
     modeInstructions = `MODE: INSTRUCTOR SCENARIO. Create a controlled training scenario with hidden root cause, symptoms, expected correlations, diagnostic objectives and scoring. Do not operate the live simulator or reveal the root cause unless the instructor requests it.`;
+
+  } else if (mode === 'what_changed') {
+    modeInstructions = `MODE: WHAT CHANGED. Reconstruct chronology from available live state, alarms/events and 10m/3h/24h/72h trend context. Return FIRST MOVERS, FOLLOWERS, likely consequence, competing explanation, the single fastest proof check, and diagnostic confidence. Do not confuse correlation with proof.`;
+
+  } else if (mode === 'readiness') {
+    modeInstructions = `MODE: STARTUP/SHUTDOWN READINESS. Determine whether the requested equipment/system appears ready based on utilities, permissives/interlocks, source/destination, inventories/pressures, lubrication/cooling/seal systems, recycle/minimum-flow protection, valves/modes, red tags/maintenance holds and downstream/upstream capacity. List READY, NOT READY and PENDING VERIFICATION items. Advisory only; never substitute for the approved operating procedure.`;
+
+  } else if (mode === 'operator_brief') {
+    modeInstructions = `MODE: OPERATOR BRIEF. Answer in no more than six concise bullets first: current concern, top cause(s), fastest proof tag/trend, immediate safe check, downstream/upstream consequence and confidence. Add deeper engineering detail only if it materially helps.`;
 
   } else if (mode === 'memory_extract') {
 
@@ -2387,7 +2492,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AI.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AJ.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -2411,7 +2516,7 @@ PLANT-WIDE SME BEHAVIOR:
 
 - If a requested simulator detail is absent from CONTEXT/reference data, say what Ryan needs exposed by the simulator rather than inventing it.
 
-- Apply CRYO_EXPERT_ENGINE_12AI when routed: use dependency relationships, 10m/3h/24h/72h trend windows, ranked proof tests, cause/effect time horizons, equipment health and maintenance prediction.
+- Apply CRYO_EXPERT_ENGINE_12AJ when routed: use dependency relationships, 10m/3h/24h/72h trend windows, ranked proof tests, cause/effect time horizons, equipment health and maintenance prediction.
 
 - For GENERAL INDUSTRY questions, you may use web-search results when provided by the API. Clearly separate web/general knowledge from Clear Fork-specific facts. Never let a web result overwrite a verified Clear Fork P&ID, procedure, OEM fact, or LIVE simulator value.
 
@@ -3372,7 +3477,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AI, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AJ, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3603,9 +3708,17 @@ exports.handler = async function(event) {
       }
 
       parsedWorkplan.fieldVerificationRequired = true;
-
-      parsedWorkplan.status = 'DRAFT - NOT APPROVED';
-
+      const lotoBlockers = [];
+      const missing = Array.isArray(parsedWorkplan.missingInformation) ? parsedWorkplan.missingInformation : [];
+      const conflicts = Array.isArray(parsedWorkplan.conflictsAndAmbiguities) ? parsedWorkplan.conflictsAndAmbiguities : [];
+      const continuations = Array.isArray(parsedWorkplan.continuationDrawings) ? parsedWorkplan.continuationDrawings : [];
+      const markers = [].concat(parsedWorkplan.isolationPoints || [], parsedWorkplan.blowdownPoints || [], parsedWorkplan.psvMarkers || []);
+      if (missing.length) lotoBlockers.push('missing information');
+      if (conflicts.length) lotoBlockers.push('unresolved conflicts/ambiguities');
+      if (markers.some(m => /PENDING VERIFICATION|UNKNOWN|UNREADABLE/i.test(`${m && m.tag || ''} ${m && m.sourceDrawing || ''} ${m && m.verification || ''}`))) lotoBlockers.push('unverified marker/tag/source');
+      if (continuations.some(x => /MISSING|PENDING|UNKNOWN|UNAVAILABLE/i.test(String(x)))) lotoBlockers.push('missing continuation drawing');
+      parsedWorkplan.executionBlocked = Boolean(parsedWorkplan.executionBlocked || lotoBlockers.length);
+      parsedWorkplan.status = parsedWorkplan.executionBlocked ? 'DRAFT - INCOMPLETE' : 'DRAFT - NOT APPROVED';
       parsedWorkplan.finalWarning = 'NOT APPROVED — FIELD VERIFICATION REQUIRED';
 
     }
@@ -3735,7 +3848,7 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812Y = OPERATOR_PROCESS_KNOWLEDGE_0812Y;
-module.exports.CRYO_EXPERT_ENGINE_12AI = CRYO_EXPERT_ENGINE_12AI;
+module.exports.CRYO_EXPERT_ENGINE_12AJ = CRYO_EXPERT_ENGINE_12AJ;
 module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide;
 
 module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
@@ -3743,4 +3856,4 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AI = RYAN_CHANGESET_12AI;
+module.exports.RYAN_CHANGESET_12AJ = RYAN_CHANGESET_12AJ;
