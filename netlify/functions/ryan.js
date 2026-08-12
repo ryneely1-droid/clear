@@ -505,7 +505,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-11E';
+const RYAN_BUILD_ID = 'RYAN-2026-08-11F';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1789,6 +1789,30 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
     presentationRules: [
       'On the inlet-compression control board, preserve the real HMI-style relationships: left-side feeds point toward the compressor suction header; suction and discharge do not share a pipe; compressor data popups and GC DATA remain available.',
       'Do not simplify away established transmitters/controllers/valves merely to make the board cleaner. Improve/correct in place.'
+    ]
+  },
+  latestFineTune0811: {
+    sourceStatus: 'OPERATOR_VERIFIED_SCREEN_FINE_TUNE_2026_08_11',
+    pumpsAndOverhead: [
+      'On Pmps/OH Comp, P-5060 and P-5065 combine into a common discharge header before downstream splits. FIC-5060A/FV-5030A belongs on the lower return line back to T-5030.',
+      'The LIC-5040A-driven LV-5040A branch comes off the common P-5060/P-5065 discharge header, then splits through separate XVs to V-1422 demeth surge tank or V-5010 flash tank.',
+      'Residue-gas discharge to C-5700 suction passes PV-5900A controlled by PIC-5900A before joining the common C-5700 suction header. Operator snapshot PIC-5900A SP 210 psig, PV 191.9 psig, CV 0 percent open. PIT-5900A and PIT-5900B belong with this residue-discharge branch.'
+    ],
+    reboilers: [
+      'The E-1224 process-gas outlet to E-1241 chiller is a completely separate pass from the cold-separator + demeth side-draw + lift-gas side-reboiler circulation header; do not join those lines.',
+      'Lift gas from the F-1416/F-1417 dry-gas area ties into the E-1224 side-reboiler inlet header. Generic thermosiphon practice: lift gas lowers return-line mixture density and can establish/maintain circulation when natural vaporization and driving head are weak. Exact Clear Fork lift-gas rate is Pending Verification.',
+      'Remove stale/dead-end piping that has no real HMI counterpart. Keep the E-1241 line left/separate and the cold-sep/demeth/lift-gas combined header grouped to the right.'
+    ],
+    gasGasExchanger: [
+      'Current operator-observed TCV-1223 position is about 29 percent open; it should not drift to 0 percent during normal AUTO operation. TCV-1221D is currently 100 percent open.',
+      'TDIC-1224B is the TCV-1221D controller and must remain clearly visible, not hidden behind E-1221 or obscured by piping. The E-1221 outlet goes to E-1241 chiller on its own clearly defined line.',
+      'Audit and remove dead-ended/duplicate piping while preserving the real HMI three-way dry-gas split and the separate reflux/RSV services.'
+    ],
+    stabilizer: [
+      'On the Stabilizer screen, keep the hot-oil supply and return as a clean separate E-5040 heat-exchange circuit: supply enters the reboiler bell-end/head through the control/isolation train, heat is exchanged, and hot oil exits to the Hot Oil return. Avoid extra loops or dead-end hot-oil lines.'
+    ],
+    gcPopup: [
+      'Use one GC DATA popup rather than redundant duplicate GC controls. Put additional demeth temperature, pressure, expander loading and analyzer-age context in the same popup.'
     ]
   },
   fivePartControlBoardAudit: {
