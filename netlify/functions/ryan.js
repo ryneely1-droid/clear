@@ -1,4 +1,4 @@
-const MODEL = 'claude-sonnet-5';
+cconst MODEL = 'claude-sonnet-5';
 
  
 
@@ -650,7 +650,8 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-11A';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12V';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12V-20260812';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1938,7 +1939,120 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
   }
 };
 
+
+
+// ===== LATEST CLEAR FORK CORRECTIONS / TROUBLESHOOTING — 2026-08-12 =====
+// This block intentionally outranks older operator-observed simulator notes when they conflict.
+// Current values are snapshots unless explicitly identified as a setpoint/alarm/interlock.
+const OPERATOR_PROCESS_KNOWLEDGE_0812 = {
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_12',
+  precedence: 'Use this block ahead of older simulator notes when the same tag/topology conflicts, unless a newer verified P&ID/control narrative supersedes it.',
+  residueCompression: {
+    topology: [
+      'EX/C-1121 booster discharge/A-1321 outlet is the MAIN source to the common residue-compressor suction header for C-6100, C-6200, and C-6300.',
+      'C-6100, C-6200, and C-6300 each take their own suction branch from that common suction header. There is no special direct recycle-to-C-6200 suction line.',
+      'The residue recycle originates downstream of F-6800 and returns through PV-6050A -> PIT-6050B -> XV-6060 -> PIT-6050C, then joins the common EX/C-1121 residue-compressor suction header UPSTREAM of all three compressor suction branches.',
+      'The three residue compressor discharges remain separate from suction piping and combine on a common discharge header before F-6800.'
+    ],
+    controls: [
+      'PIC-6050B protects residue-compressor suction pressure with SP 280 psig and modulates PV-6050A. When suction falls below SP, recycle demand increases; when suction recovers above SP, recycle demand decreases.',
+      'Opening PV-6050A increases internal recycle flow and compressor circulation but does not create additional net plant throughput. Expect common-suction pressure support, higher internal compressor flow/load, and downstream sales flow to reflect the recycle penalty.'
+    ],
+    troubleshooting: [
+      'For low residue suction, first compare EX/C-1121/A-1321 supply, common suction pressure, PIC-6050B SP/PV/CV, PV-6050A/XV-6060 state, and F-6800 downstream conditions before blaming one compressor.',
+      'If only one compressor shows abnormal suction while the common header is healthy, suspect that unit branch/package instrumentation or restriction rather than the common recycle header.',
+      'If recycle is commanded open but common suction does not respond, check valve travel/feedback, XV-6060 state, available F-6800 downstream pressure, PIT-6050B/PIT-6050C agreement, and possible restriction/leakage.'
+    ]
+  },
+  demethanizer: {
+    returnTemperatures: [
+      'RSV return temperature transmitter TE-1222K is on the RSV return line to T-1521; current operator-observed value is about -146.90 F.',
+      'GSP/reflux return temperature transmitter TE-1222D is on the GSP return line to T-1521; current operator-observed value is about -146.20 F.',
+      'Use live simulator values when available; these values are current observations, not permanent design targets.'
+    ]
+  },
+  inletSeparation: {
+    facts: [
+      'V-1040 inlet line through XV-1040A physically connects to the side of V-1040. Do not show or describe a dead-ended inlet line.',
+      'V-1040 liquid level is normally very low in the current observed condition, around 1%, and the vessel level indication should represent bottom-up liquid inventory.',
+      'F-1412 is the inlet filter/coalescer on the inlet-system/dehydration-feed path; it does not belong on the V-1040 Inlet Separation control page.'
+    ]
+  },
+  dehydrationRegen: {
+    facts: [
+      'V-1418 regeneration scrubber current observed level is about 6%. Its liquid inventory accumulates from the bottom upward.',
+      'LIC-1418 has an operator-provided SP of 18%. At/near that SP the dump path opens and the scrubber can drain back toward 0%, after which the level begins accumulating again according to incoming liquid load.',
+      'When troubleshooting V-1418, correlate level slope, dump-valve command/feedback, downstream drain availability, regen-gas temperature/cooling, and upstream carryover rather than treating level as an isolated animation.'
+    ]
+  },
+  refrigeration: {
+    facts: [
+      'With one refrigeration compressor running, the current plant suction-pressure setpoint reference supplied by the operator is 17 psig.',
+      'Normally one of C-1140/C-1141/C-1142 runs; a second may be used when needed, and three-running is not a normal operating assumption. All three can be red-tagged/inhibited.',
+      'Refrigeration condenser fan availability affects condensing pressure/temperature, liquid inventory to V-1444, chiller duty, cold-separator temperature, and ultimately demethanizer/recovery performance.'
+    ]
+  },
+  stabilizerPumps: {
+    facts: [
+      'P-5060 and P-5065 are duty/standby stabilizer pumps; normally only one runs at a time and either can be red-tagged.',
+      'On simulator startup both P-5060 and P-5065 should be stopped unless intentionally started. With both stopped, pump-driven GPM is zero and the simulator must not create pump discharge pressure/temperature rise from nonexistent liquid circulation.',
+      'A controller output or open downstream valve cannot create actual transfer flow through stopped pumps. Vessel levels must respond to the real available hydraulic path.'
+    ]
+  },
+  utilitiesHotOil: {
+    facts: [
+      'Hot-oil return piping physically returns to V-7500; do not leave the return line dead-ended before the vessel.',
+      'V-1460 fuel-gas scrubber dry-gas outlet continues to the plant fuel-gas header; troubleshooting should follow that continuation to downstream users.',
+      'For utilities troubleshooting, distinguish common-header failures from local equipment failures. Instrument-air or fuel-gas common-header problems can affect many otherwise unrelated control valves/users simultaneously.'
+    ]
+  },
+  historianAndRuntime: {
+    facts: [
+      'All numerical transmitter-style HMI indications should be trendable when exposed by the simulator.',
+      'Historian target is 72 hours at 1-minute storage resolution, with 3-hour navigation increments and a subtle 10-minute view so a 1 psi, 1 F, or 1 GPM move does not visually look like a major upset.',
+      'On Netlify/static hosting the plant simulation should continue advancing while the browser page remains alive. Browser timer throttling may require elapsed-wall-clock catch-up; closing the browser stops the client-side simulation because there is no persistent server-side process engine.'
+    ]
+  },
+  troubleshootingPolicy: [
+    'Start every troubleshooting answer with the symptom and current abnormal evidence from LIVE context.',
+    'Trace the actual Clear Fork flow path upstream -> through equipment/control element -> downstream before naming causes.',
+    'Separate command from response: compare controller mode, SP, PV, CV/output, valve/equipment command, actual feedback, and resulting process response.',
+    'Use pressure/temperature/flow/level differentials and peer-equipment comparison to separate process, instrumentation, control, hydraulic, thermal, and mechanical causes.',
+    'Rank likely causes. For every cause, name the exact tag/trend/state that would confirm or reject it.',
+    'Account for process lag and inventory. A controller move can precede the pressure/temperature/level/composition response by seconds or minutes; GC/analyzer response may lag longer.',
+    'Do not confuse internal recycle with net throughput. Recycle can protect suction/surge/loading while increasing internal machine flow and power with little or no increase in sales flow.',
+    'If evidence conflicts, say what is conflicting and what measurement/source should be trusted or verified next instead of averaging the values.',
+    'Never invent Clear Fork valve tags, setpoints, trips, lineups, or maintenance limits. Generic/OEM/PetroSkills knowledge explains mechanisms; verified plant sources govern plant-specific facts.'
+  ]
+};
+
+const ACTIVE_TROUBLESHOOTING_ENGINE_12V = {
+  revision: RYAN_DIAGNOSTIC_REVISION,
+  method: [
+    '1. Define the symptom and timestamp; use LIVE context first.',
+    '2. Trace the actual Clear Fork process path upstream to downstream before diagnosing.',
+    '3. Compare controller SP/PV/CV, mode, command, feedback, and resulting process response.',
+    '4. Compare inlet/outlet pressure, temperature, flow, level, DP, load, and peer equipment.',
+    '5. Separate common-header causes from single-equipment causes.',
+    '6. Rank likely causes by process/control/instrument/mechanical mechanism.',
+    '7. For every cause, name the exact tag or trend that would confirm or reject it.',
+    '8. Check response delay and process inventory before calling a control move ineffective.',
+    '9. State upstream consequences and downstream consequences for each credible fault.',
+    '10. If plant-specific evidence is missing or conflicting, say PENDING VERIFICATION and do not guess.'
+  ],
+  clearForkGuards: [
+    'Residue recycle joins the common EX/C-1121 suction header upstream of C-6100/C-6200/C-6300; it does not feed C-6200 directly.',
+    'RSV return TE-1222K observed about -146.90 F and GSP return TE-1222D observed about -146.20 F; use LIVE values when supplied.',
+    'With one refrigeration compressor running, use the operator-provided current suction-pressure SP reference of 17 psig.',
+    'P-5060/P-5065 are duty/standby; stopped pumps create no pump-driven GPM or discharge-pressure rise.',
+    'V-1418 observed level starts around 6 percent and LIC-1418 dump action occurs around the operator-provided 18 percent SP.',
+    'F-1412 belongs on the inlet-system/dehydration-feed path, not the V-1040 separation page.'
+  ]
+};
+
 const KNOWLEDGE_REGISTRY = {
+  activeTroubleshooting12V: ACTIVE_TROUBLESHOOTING_ENGINE_12V,
+  operatorProcess0812: OPERATOR_PROCESS_KNOWLEDGE_0812,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
   stabilizer: STABILIZER_KNOWLEDGE,
@@ -1974,6 +2088,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'operatorProcess0812', re: /\b(residue comp|residue compressor|C-6100|C-6200|C-6300|EX\/?C-1121|A-1321|F-6800|PV-6050A|PIC-6050B|PIT-6050B|PIT-6050C|XV-6060|TE-1222K|TE-1222D|RSV return|GSP return|V-1418|LIC-1418|refrig|refrigeration|17 psig|P-5060|P-5065|V-1040|F-1412|V-7500|V-1460|fuel gas header|historian|trend|troubleshoot|diagnos)\b/i },
   { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
   { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
@@ -2024,7 +2139,7 @@ function selectKnowledge(message, context, mode) {
 
   if (mode === 'audit' || mode === 'scan') Object.keys(KNOWLEDGE_REGISTRY).forEach(k => keys.add(k));
 
-  if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) keys.add('petroSkills');
+  if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) { keys.add('petroSkills'); keys.add('operatorProcess0812'); }
 
   if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) keys.add('clearForkPIDs');
 
@@ -2190,11 +2305,13 @@ Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step,
 
 For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes.
 
-For Clear Fork process/control-board/troubleshooting questions, also use OPERATOR_PROCESS_KNOWLEDGE_0811 plus OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
+For Clear Fork process/control-board/troubleshooting questions, use OPERATOR_PROCESS_KNOWLEDGE_0812 FIRST, then OPERATOR_PROCESS_KNOWLEDGE_0811 plus OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
 
 For safety-critical work, distinguish drafting/analysis from authorization and require field verification.
 
  
+
+ACTIVE DIAGNOSTIC REVISION: ${RYAN_DIAGNOSTIC_REVISION}. When troubleshooting, follow ACTIVE_TROUBLESHOOTING_ENGINE_12V when selected and show the evidence chain, not just a list of guesses.
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -3146,7 +3263,7 @@ exports.handler = async function(event) {
 
     if (effectiveMode === 'health') {
 
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION }) };
 
     }
 
@@ -3386,7 +3503,7 @@ exports.handler = async function(event) {
 
       },
 
-      meta: { model: MODEL_V2, mode: effectiveMode, knowledgeSections: Object.keys(selectedKnowledge), stopReason: data.stop_reason || null }
+      meta: { model: MODEL_V2, mode: effectiveMode, knowledgeSections: Object.keys(selectedKnowledge), stopReason: data.stop_reason || null, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION }
 
     };
 
@@ -3482,5 +3599,7 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812 = OPERATOR_PROCESS_KNOWLEDGE_0812;
+module.exports.ACTIVE_TROUBLESHOOTING_ENGINE_12V = ACTIVE_TROUBLESHOOTING_ENGINE_12V;
 
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
