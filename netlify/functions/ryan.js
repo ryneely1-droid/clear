@@ -650,14 +650,15 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AA';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AA-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AB';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AB-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AA-FAST-WEB-20260812';
-const RYAN_CHANGESET_12AA = Object.freeze([
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AB-FIXED-20260812';
+const RYAN_CHANGESET_12AB = Object.freeze([
+  '12AB fixes the 12AA runtime ReferenceError caused by the stale RYAN_CHANGESET_12Z prompt reference.',
   'Backend rebuilt from the operator-supplied 11A Ryan source and carried forward through 12Y.',
   'Active troubleshooting policy is injected into Q&A/recommendation requests and ranks causes with proof tags/trends.',
   'Residue compressor topology guard: EX/C-1121 is the common suction source; F-6800 recycle returns through PV-6050A/PIT-6050B/XV-6060/PIT-6050C to that common suction header, not directly to C-6200.',
@@ -2307,7 +2308,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12Z.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AB.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -3274,7 +3275,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AA, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AB, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3627,9 +3628,9 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812Y = OPERATOR_PROCESS_KNOWLEDGE_0812Y;
 module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide;
 
-module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
+module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
 
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AA = RYAN_CHANGESET_12AA;
+module.exports.RYAN_CHANGESET_12AB = RYAN_CHANGESET_12AB;
