@@ -7,166 +7,21 @@ const MODEL = 'claude-sonnet-5';
  
 
 const STABILIZER_KNOWLEDGE = {
-
-  overview: `The Stabilizer System (V-1521) is a demethanizer column that processes raw NGL from the cold separator into a stabilized product (C5+) and overhead vapor (C1-C4). The system uses booster pumps (P-5060/P-5065) to recirculate bottoms product through a cooler (AC-5055), maintaining a split-feed design that reduces reboiler duty by 50-60% compared to a top-feed design.`,
-
-  equipment: {
-
-    'V-1521': {
-
-      name: 'Stabilizer/Demethanizer Column',
-
-      type: 'Distillation column',
-
-      service: 'Raw NGL to stabilized product (C5+) + overhead vapor (C1-C4)',
-
-      feedInlet: 'Line 444-10" from V-1421 (cold separator) — enters mid-section',
-
-      bottomsOutlet: 'Gravity drain to pump suction (P-5060/5065)',
-
-      overheadOutlet: 'To cooler (AC-5055) and/or recycle',
-
-      reboilerInlet: 'From AC-5055 condenser outlet',
-
-      surgeInlet: 'Split-feed return from cooler (preheats incoming raw NGL)',
-
-      isolationValves: [
-
-        { tag: 'XV-1521-1', location: 'Feed inlet', type: 'Manual block', normally: 'Open' },
-
-        { tag: 'XV-1521-2', location: 'Bottoms outlet', type: 'Manual block', normally: 'Open' },
-
-        { tag: 'XV-1521-3', location: 'Reboiler inlet', type: 'Manual block', normally: 'Open' },
-
-        { tag: 'XV-1521-4', location: 'Reboiler outlet', type: 'Manual block', normally: 'Open' },
-
-        { tag: 'XV-1521-5', location: 'Overhead outlet', type: 'Manual block', normally: 'Open' },
-
-        { tag: 'XV-1521-6', location: 'Vent (top of column)', type: 'Manual block', normally: 'Closed' },
-
-      ],
-
-      drainPoints: ['Sump drain (bottom)', 'Reboiler bottom drain'],
-
-      reliefValves: [{ tag: 'PSV-1521', setPoint: 'TBD', destination: 'Vent or atmosphere' }],
-
-      depressurizationMethod: 'Via XV-1521-6 vent after XV-1521-5 isolation',
-
-    },
-
-    'P-5060': {
-
-      name: 'Stabilizer Booster Pump #1', type: 'Centrifugal pump',
-
-      service: 'Recirculate stabilizer bottoms through cooler to feed inlet',
-
-      feedSource: 'V-1521 sump (gravity)', dischargeDestination: 'Through AC-5055 cooler to stabilizer feed inlet',
-
-      isolationValves: [{ tag: 'XV-5060-1', location: 'Pump inlet (check valve)' }, { tag: 'XV-5060-2', location: 'Pump discharge manual block' }],
-
-      controlValve: 'LCV-5060 on discharge', pressureRelief: { tag: 'PSV-5060', setPoint: '~100-120 psi' },
-
-    },
-
-    'P-5065': {
-
-      name: 'Stabilizer Booster Pump #2', type: 'Centrifugal pump',
-
-      service: 'Standby or parallel operation with P-5060',
-
-      feedSource: 'V-1521 sump (gravity)', dischargeDestination: 'Through AC-5055 cooler to stabilizer feed inlet',
-
-      isolationValves: [{ tag: 'XV-5065-1', location: 'Pump inlet (check valve)' }, { tag: 'XV-5065-2', location: 'Pump discharge manual block' }],
-
-      pressureRelief: { tag: 'PSV-5065', setPoint: '~120-150 psi' },
-
-    },
-
-    'AC-5055': {
-
-      name: 'Stabilizer Product Cooler', type: 'Air-cooled heat exchanger',
-
-      service: 'Cool booster pump discharge from stabilizer', inlet: 'From P-5060/5065 discharge',
-
-      outlet: 'To stabilizer feed inlet (split-feed recycle)', coolingMedium: 'Air (fan-cooled)',
-
-      temperatureControl: 'Fan speed modulation or bypass valve',
-
-      isolationValves: [{ tag: 'XV-5055-1', location: 'Cooler inlet' }, { tag: 'XV-5055-2', location: 'Cooler outlet' }],
-
-    },
-
-  },
-
-  instrumentation: {
-
-    pressure: {
-
-      'PT-5060A': { location: 'Stabilizer inlet (before reboiler)', normal: '50-100 psi', alarm_HH: '150 psi' },
-
-      'PT-5060B': { location: 'Stabilizer bottom', normal: '80-120 psi', alarm_HH: '200 psi' },
-
-      'PT-5065': { location: 'Booster pump discharge', normal: '80-120 psi', alarm_HH: '150 psi' },
-
-    },
-
-    temperature: {
-
-      'TT-5060': { location: 'Stabilizer bottom', normal: '120-150°F', alarm_HH: '160°F', controlSetpoint: '135°F' },
-
-      'TT-5065A': { location: 'Cooler outlet', normal: '90-120°F', alarm_HH: '130°F' },
-
-    },
-
-    level: {
-
-      'LT-5060': { location: 'Stabilizer sump', setpoint: '50%', alarm_HH: '75%', alarm_LL: '25%' },
-
-      'LT-5061': { location: 'Surge tank level', setpoint: '50%', alarm_HH: '70%', alarm_LL: '30%' },
-
-    },
-
-  },
-
-  controlLogic: {
-
-    levelControl: 'LCV-5060 modulates bottoms drain flow; high level opens drain; low level stops pump',
-
-    temperatureControl: 'Reboiler duty modulated to maintain stabilizer bottom temperature',
-
-    pressureRelief: 'PSV-5060 set ~100 psi protects stabilizer; PSV-5065 set ~150 psi protects booster',
-
-  },
-
-  lotoSteps: [
-
-    '1. Close XV-1521-1 (Feed inlet) and XV-1521-2 (Bottoms outlet)',
-
-    '2. Close XV-5060-2 (Pump discharge isolation)',
-
-    '3. Isolate reboiler heat: close steam/hot oil inlet and drain',
-
-    '4. Isolate condenser cooling: close cooling water inlet and fan isolation',
-
-    '5. Close XV-1521-6 vent and XV-5055-1 cooler inlet for full depressurization',
-
-    '6. Install blanks on all manual isolation valve outlets',
-
-    '7. Install lockout tags on all isolation valves',
-
-    '8. Verify zero pressure throughout system',
-
-    '9. Notify operations that stabilizer is isolated',
-
+  verificationStatus: 'OPERATOR_VERIFIED_2026_08_11_PLUS_INDEXED_PIDS',
+  overview: 'Clear Fork inlet stabilizer is T-5030, not T-1521. T-1521 is the demethanizer. The stabilizer train is V-5010 -> F-5015/F-5016 -> E-5020 -> T-5030 with E-5040 reboiler; stabilized liquid continues through E-5020 shell side and AC-5055 before the downstream booster/product routing.',
+  flowPath: [
+    'V-5010 flash-tank liquid routes through F-5015/F-5016 and the E-5020 feed/bottoms exchanger to T-5030.',
+    'Filtered feed enters T-5030 horizontally in the upper section; E-5040 reboiler vapor returns to the middle of T-5030.',
+    'Stabilized liquid leaving E-5040 continues through the shell side of E-5020 and then AC-5055.',
+    'After LV-5040A, separate XV branches can route liquid to V-1422 or V-5010; receiving-vessel level responds only to an open LV plus an open destination XV.',
+    'T-5030 overhead, V-5010 overhead, and residue-gas discharge combine on one C-5700 suction header upstream of XV-5700A and PV-5700A.'
   ],
-
+  controls: [
+    'AC-5055 is start/stop and red-tag capable; outlet temperature responds with thermal lag to fan availability and flow.',
+    'PIC-5700A controls PV-5700A. Operator snapshot: SP 230 psig, PV about 0.55 psig, CV 100% open; low header PV drives the valve open.'
+  ],
+  caution: 'Use newer operator-verified HMI information and indexed P&IDs over any older generic V-1521 stabilizer text.'
 };
-
- 
-
-// ===== OVERHEAD COMPRESSOR KNOWLEDGE =====
-
- 
 
 const OVERHEAD_COMPRESSOR_KNOWLEDGE = {
 
@@ -650,7 +505,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-11A';
+const RYAN_BUILD_ID = 'RYAN-2026-08-11E';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1822,7 +1677,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09M = {
 
   overheadCompressorAndAir: [
 
-    'C-5700 main suction is PV-5700A controlled by PIC-5700A. Current SP 230 psig, PV about 176, CV 0; valve opens when PV rises above SP. PIT-5700B current about 177.52; LL SD 150, HIHI SD 300.',
+    'C-5700 suction is one common header: V-5010 flash-tank overhead, T-5030 stabilizer overhead, and residue-gas discharge tee together upstream of XV-5700A and PV-5700A. PIC-5700A controls PV-5700A. Operator snapshot: SP 230 psig, PV about 0.55 psig, CV 100% open; low header PV drives the valve open. PIT-5700B remains a downstream suction indication with its own shutdown limits.',
 
     'Residue-gas assist/recycle line to overhead system uses PV-5900A controlled by PIC-5900A, SP 210, PV about 352, CV 0 in the observed condition.',
 
@@ -1935,6 +1790,44 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
       'On the inlet-compression control board, preserve the real HMI-style relationships: left-side feeds point toward the compressor suction header; suction and discharge do not share a pipe; compressor data popups and GC DATA remain available.',
       'Do not simplify away established transmitters/controllers/valves merely to make the board cleaner. Improve/correct in place.'
     ]
+  },
+  fivePartControlBoardAudit: {
+    sourceStatus: 'OPERATOR_VERIFIED_HMI_SCREENSHOTS_AND_DIRECT_OPERATING_DESCRIPTION_2026_08_11',
+    compressorControls: [
+      'C-4100/C-4200 inlet compressor and C-6100/C-6200/C-6300 residue compressor Remote Capacity Load is an operator-adjustable capacity target, not a cosmetic number. Changing it changes compressor throughput/load, horsepower, suction/discharge behavior and downstream plant flow over time.',
+      'Red tags on inlet/residue compressors are functional start inhibits. Applying a tag while a machine is running does not magically stop it; once stopped, restart is blocked until the tag is removed.',
+      'C-4100/C-4200 DATA buttons must open their established compressor data popup. GC DATA on the inlet-compression board must open the live GC analyzer popup.'
+    ],
+    stabilizer: [
+      'Clear Fork stabilizer tower is T-5030; T-1521 is the demethanizer and must never be mislabeled as the stabilizer.',
+      'Filtered stabilizer feed from F-5015/F-5016 enters T-5030 horizontally in the upper approximately one-eighth of the tower; it does not dump vertically into the tower top.',
+      'T-5030 overhead is a distinct line through PIC-5030A/PV-5030A to C-5700 overhead compression.',
+      'T-5030 bottoms circulate through E-5040. The vaporized/reboiled return from E-5040 returns to the middle of T-5030.',
+      'Stabilized liquid leaving E-5040 continues through the shell side of E-5020 feed/bottoms exchanger and then to AC-5055 condensate/product cooler.'
+    ],
+    pumpsAndOverheadCompressor: [
+      'AC-5055 is operator start/stop capable and red-tag capable on the Pmps/OH Comp board. When running, its outlet temperature should move below inlet temperature with thermal lag; stopped/tagged removes fan cooling duty and the outlet temperature approaches inlet temperature.',
+      'After LV-5040A the liquid path splits to V-1422 demethanizer surge tank and V-5010 flash tank through separate XV valves. LV-5040A must be open and the selected downstream XV must be open for that receiving-vessel level to rise. If both destination XVs are open, flow splits; if both are shut, neither receiving vessel gains level.',
+      'C-5700 suction is ONE common header. V-5010 flash-tank overhead, T-5030 stabilizer overhead, and residue-gas discharge all tee into that same header upstream of XV-5700A and PV-5700A.',
+      'PIC-5700A controls PV-5700A. Operator snapshot: SP 230 psig, PV about 0.55 psig, CV 100 percent open. Treat these as current observed values, not design limits.'
+    ],
+    gasGasExchanger: [
+      'From the F-1416/F-1417 dust-filter outlet, one common dry-gas header splits into THREE process paths: (1) direct branch to V-1421 cold separator; (2) branch through TCV-1223 to the E-1223/E-1224 bottom/side-reboiler path; (3) branch through TCV-1221D into the TOP of E-1221 gas/gas exchanger, exiting horizontally toward E-1241 chiller.',
+      'TIC-1224B controls TCV-1223. TDIC-1224B controls TCV-1221D. These are important interacting/cross-limited split controls and must be shown as real controllers, not decorative/manual-only valves.',
+      'Do not call TCV-1223 a reflux valve in Clear Fork answers; in this HMI context it is the bottom/side-reboiler inlet split from the common dry-gas header.'
+    ],
+    reboilers: [
+      'On the Reboilers board, the E-1241 chiller outlet line is separate from the V-1421/T-1521 side-reboiler inlet circuit. Do not draw those as one joined pipe.',
+      'V-1421 cold-separator liquid and the T-1521 demethanizer side draw combine before entering the lower/bottom side of E-1224. Lift gas ties vertically into that same common inlet header before E-1224.',
+      'The E-1224 side-reboiler outlet returns to the demethanizer. The inlet-gas heat-recovery stream from TCV-1223 exits the bottom-left of E-1224 toward E-1241 chiller as its own distinct path.',
+      'TCV-1225A belongs on the FROM HOT OIL SUPPLY line serving E-1125 trim reboiler. TIC-1225 should be placed so it does not obscure the process/hot-oil flow path.',
+      'Stale/random arrows or piping that do not exist on the real HMI are to be removed rather than rationalized.'
+    ],
+    gasChromatograph: [
+      'GC values are delayed analyzer results, not instantaneous numbers.',
+      'For the current strong ethane-rejection operating condition around a 175 F demethanizer bottoms temperature, the operator expects NGL-product C2 to be roughly 0.2 LV%, not the previous approximately 3.82 LV% display. Model C2 dynamically from tower conditions; do not hard-code 3.82.',
+      'If the tower cools/moves toward ethane recovery, NGL C2 should rise after analyzer dead time. Pressure, flow, expander/JT and reboiler conditions can influence the result; 0.2 LV% is an observed/calibration point, not a universal thermodynamic constant.'
+    ]
   }
 };
 
@@ -1974,7 +1867,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
-  { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
+  { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|C-6100|C-6200|C-6300|Remote Capacity|red tag|GC DATA|gas chromatograph|C2 in NGL|ethane rejection|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet|T-5030|E-5040|E-5020|AC-5055|LV-5040A|V-5010|V-1422|C-5700|PIC-5700A|PV-5700A|XV-5700A|E-1221|E-1222|E-1223|E-1224|TCV-1221D|TCV-1223|TIC-1224B|TDIC-1224B|TCV-1225A|TIC-1225|reboiler|gas gas exchanger)\b/i },
 
   { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
 
@@ -2190,7 +2083,7 @@ Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step,
 
 For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes.
 
-For Clear Fork process/control-board/troubleshooting questions, also use OPERATOR_PROCESS_KNOWLEDGE_0811 plus OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
+For Clear Fork process/control-board/troubleshooting questions, never use the legacy generic V-1521 stabilizer topology block as Clear Fork truth. Clear Fork stabilizer is T-5030; T-1521 is the demethanizer. Also use OPERATOR_PROCESS_KNOWLEDGE_0811 (including fivePartControlBoardAudit) plus OPERATOR_PROCESS_KNOWLEDGE_09J, OPERATOR_PROCESS_KNOWLEDGE_09K, OPERATOR_PROCESS_KNOWLEDGE_09L, and OPERATOR_PROCESS_KNOWLEDGE_09M as plant-specific operating knowledge. The 2026-08-11 fivePartControlBoardAudit supersedes conflicting older control-board topology or GC calibration statements. Treat its current values as observed examples/starting conditions, not immutable limits; treat its stated alarm/trip setpoints and flow topology as authoritative operator-provided plant knowledge unless a newer verified P&ID/control narrative conflicts. Preserve unresolved timebase wording (for example dehy 3:45/11:45) rather than silently converting it. If an older entry conflicts (for example an obsolete/mislabeled drawing description), explicitly discard the older entry rather than averaging or blending them.
 
 For safety-critical work, distinguish drafting/analysis from authorization and require field verification.
 
