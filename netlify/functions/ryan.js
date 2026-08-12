@@ -650,15 +650,16 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AB';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AB-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AC';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AC-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AB-FIXED-20260812';
-const RYAN_CHANGESET_12AB = Object.freeze([
-  '12AB fixes the 12AA runtime ReferenceError caused by the stale RYAN_CHANGESET_12Z prompt reference.',
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AC-OVERLOAD-RESILIENT-20260812';
+const RYAN_CHANGESET_12AC = Object.freeze([
+  '12AC keeps the 12AB ReferenceError fix and adds overload-resilient Anthropic retries plus clearer frontend/backend error classification.',
+  'Generic process questions now use Ryan built-in process knowledge by default; internet search is invoked only when the operator explicitly asks to research, look up, verify, cite, source, web-search, or get latest/current external information.',
   'Backend rebuilt from the operator-supplied 11A Ryan source and carried forward through 12Y.',
   'Active troubleshooting policy is injected into Q&A/recommendation requests and ranks causes with proof tags/trends.',
   'Residue compressor topology guard: EX/C-1121 is the common suction source; F-6800 recycle returns through PV-6050A/PIT-6050B/XV-6060/PIT-6050C to that common suction header, not directly to C-6200.',
@@ -2103,7 +2104,11 @@ function wantsWebResearch(message, mode) {
   const text = String(message || '');
   if (!text.trim()) return false;
   if (!['qa','recommend'].includes(String(mode || 'qa').toLowerCase())) return false;
-  return /\b(research|look up|lookup|internet|web|source|latest|how does|how do|how is|what is|explain|principle|fundamental|typical|industry|compressor|control valve|valve cv|gas composition|NGL stabilization|reboiler|heat exchanger|molecular sieve|dehydration|refrigeration|turboexpander|JT valve|phase behavior)\b/i.test(text);
+  // Keep ordinary process questions fast and reliable. Ryan already has PetroSkills/OEM/process
+  // fundamentals for explanations. Invoke internet research only when the operator explicitly asks
+  // for external research/sources/current verification. This avoids unnecessary web-tool latency
+  // and reduces upstream overload risk.
+  return /\b(research(?: the)? (?:internet|web|online)|search (?:the )?(?:internet|web|online)|look up|lookup|web search|internet search|online source|cite sources?|provide sources?|verify online|verify on the web|latest|current external|current industry|find sources?)\b/i.test(text);
 }
 
 function genericProcessKnowledge(message) {
@@ -2308,7 +2313,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AB.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AC.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -2565,17 +2570,31 @@ function postJson(url, headers, payloadObj) {
 
  
 
-async function postJsonWithRetry(url, headers, payload, attempts = 3) {
+async function postJsonWithRetry(url, headers, payload, attempts = 5) {
 
   let last;
+  const retryable = new Set([429,500,502,503,504,529]);
 
   for (let i = 0; i < attempts; i++) {
 
-    try { last = await postJson(url, headers, payload); } catch (e) { if (i === attempts - 1) throw e; await new Promise(r => setTimeout(r, 350 * (i + 1))); continue; }
+    try {
+      last = await postJson(url, headers, payload);
+    } catch (e) {
+      if (i === attempts - 1) throw e;
+      const waitMs = Math.min(6500, 700 * Math.pow(2, i)) + Math.floor(Math.random() * 250);
+      await new Promise(r => setTimeout(r, waitMs));
+      continue;
+    }
 
-    if (last.ok || ![429,500,502,503,504,529].includes(last.status) || i === attempts - 1) return last;
+    if (last.ok || !retryable.has(last.status) || i === attempts - 1) return last;
 
-    await new Promise(r => setTimeout(r, 500 * (i + 1)));
+    // Anthropic 529/5xx overloads are normally transient. Give the service meaningful recovery
+    // time instead of retrying three times in roughly one second. Respect Retry-After when the
+    // response object exposes it; otherwise use bounded exponential backoff with jitter.
+    const retryAfterRaw = last && last.headers && (last.headers['retry-after'] || last.headers['Retry-After']);
+    const retryAfterMs = retryAfterRaw && !Number.isNaN(Number(retryAfterRaw)) ? Number(retryAfterRaw) * 1000 : 0;
+    const waitMs = Math.max(retryAfterMs, Math.min(6500, 700 * Math.pow(2, i))) + Math.floor(Math.random() * 250);
+    await new Promise(r => setTimeout(r, waitMs));
 
   }
 
@@ -3275,7 +3294,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AB, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AC, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3460,8 +3479,20 @@ exports.handler = async function(event) {
       const d = result.data;
 
       const apiMessage = d && d.error && d.error.message ? d.error.message : `Anthropic API error (HTTP ${result.status})`;
+      const overloaded = result.status === 529 || /overload|overloaded|capacity/i.test(String(apiMessage));
 
-      return { statusCode: result.status === 413 ? 413 : 502, body: JSON.stringify({ error: apiMessage }) };
+      return {
+        statusCode: result.status === 413 ? 413 : (overloaded ? 503 : 502),
+        headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, ...(overloaded ? { 'retry-after': '10' } : {}) },
+        body: JSON.stringify({
+          error: overloaded ? 'Anthropic is temporarily overloaded. Ryan retried automatically but the upstream service is still busy. Wait about 10 seconds and retry; this is not a Ryan deployment/version problem.' : apiMessage,
+          upstreamError: apiMessage,
+          upstreamStatus: result.status,
+          retryable: overloaded,
+          buildId: RYAN_BUILD_ID,
+          diagnosticRevision: RYAN_DIAGNOSTIC_REVISION
+        })
+      };
 
     }
 
@@ -3633,4 +3664,4 @@ module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, par
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AB = RYAN_CHANGESET_12AB;
+module.exports.RYAN_CHANGESET_12AC = RYAN_CHANGESET_12AC;
