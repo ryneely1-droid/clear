@@ -650,18 +650,18 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AJ';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AJ-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AM';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AM-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AJ-OPERATOR-DECISION-LOTO-20260812';
-const RYAN_CHANGESET_12AJ = Object.freeze([
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AM-EXCHANGER-FLOW-PRESERVED-20260812';
+const RYAN_CHANGESET_12AM = Object.freeze([
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
-  '12AJ adds operator decision support: What Changed chronology, current-vs-normal comparison, bad-instrument-vs-bad-process discrimination, startup/shutdown readiness checks, concise operator-first answers, and explicit diagnostic confidence.',
-  '12AJ hardens P&ID-derived LOTO drafting with source-evidence matrices, continuation-drawing holds, energy-path completeness, execution blocking when boundaries are incomplete, and explicit zero-energy verification criteria.',
+  '12AM retains operator decision support: What Changed chronology, current-vs-normal comparison, bad-instrument-vs-bad-process discrimination, startup/shutdown readiness checks, concise operator-first answers, and explicit diagnostic confidence.',
+  '12AM keeps the verified Ryan exchanger/reboiler expertise while preserving the older HMI flow-through lines for real exchanger passes; the false duplicate upper GSP/C2 return is removed, PDCV-1222B is physically connected, and FFIC-1222/FCV-1222 stay on the single lower GSP + LCV-1421B return to T-1521.',
   'Generic process questions now use Ryan built-in process knowledge by default; internet search is invoked only when the operator explicitly asks to research, look up, verify, cite, source, web-search, or get latest/current external information.',
   'Backend rebuilt from the operator-supplied 11A Ryan source and carried forward through 12Y.',
   'Active troubleshooting policy is injected into Q&A/recommendation requests and ranks causes with proof tags/trends.',
@@ -1439,7 +1439,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09K = {
 
   gasGasRefluxGSP: [
 
-    'Cold-separator vapor/reflux-GSP path: FT-1222 ~35.77 MMSCFD -> PDCV-1222B controlled by PDIC-1222B (manual, SP 2.2 PSID, PV ~0.61, CV 100%) -> common recovery tie where LCV-1421B liquid joins only in recovery mode -> horizontal side inlet of E-1222 reflux condenser -> vertical bottom outlet -> PDT-1222A ~0.79 PSID (HI 10) -> TE-1222C ~-92.30 F -> FCV-1222 controlled by FFIC-1222 (SP 16%, PV ~16.21%, CV ~34.63%) -> TE-1222D ~-146.30 F -> third return connection on T-1521 labelled E-1222 GSP reflux condenser.',
+    'Corrected 12AM GSP/reflux path: the pre-expander C/EX-1121 branch carries FT-1222-COMP (~35.70 MMSCFD) through PDCV-1222B under PDIC-1222B (MANUAL snapshot SP 2.20 PSID, PV 0.62 PSID, CV 100%). The V-1421 cold-separator-bottoms line downstream of LCV-1421B joins this same lower common return header. That single lower path enters the E-1222 reflux service and continues to T-1521; do not invent a second parallel upper C2-recovery line. FFIC-1222 / FCV-1222 and the associated return temperature indication belong on this real lower return path.',
 
     'Methane-rich T-1521 overhead path runs bottom-up through E-1222 reflux condenser and then E-1221 gas/gas exchanger. TE-1222A ~-90.70 F before reflux; PDT-1222C spans reflux inlet to gas/gas outlet, current ~18.08 PSID, HI 30 and HIHI 40 PSID facility ESD. After E-1221, TE-1221A and TE-1221D are ~90.10 F; both have LOW 40 F and LOLO -15 F facility ESD.',
 
@@ -2021,7 +2021,7 @@ function buildActiveTroubleshootingGuide(message, context){
   ].join('\n');
 }
 
-const CRYO_EXPERT_ENGINE_12AJ = {
+const CRYO_EXPERT_ENGINE_12AM = {
   purpose: 'Make Ryan behave like a plant-wide cryogenic operator/troubleshooter, not a disconnected FAQ bot.',
   sourcePriority: ['LIVE simulator context','Verified Clear Fork P&IDs/procedures','Applicable OEM/manual/nameplate data','Operator-provided Clear Fork corrections','PetroSkills/process fundamentals','Web/general industry research','Engineering inference'],
   dependencyMethod: [
@@ -2073,7 +2073,7 @@ const CRYO_EXPERT_ENGINE_12AJ = {
 
 };
 
-const CRYO_OPERATOR_DECISION_ENGINE_12AJ = {
+const CRYO_OPERATOR_DECISION_ENGINE_12AM = {
   operatorFirstResponse: [
     'For operator/troubleshooting requests, answer in two layers: first an OPERATOR BRIEF of no more than 6 concise bullets, then ENGINEERING DETAIL only when useful.',
     'The OPERATOR BRIEF should state: what changed/what matters now, top likely cause(s), the single best confirming tag/trend, immediate safe checks, and confidence.',
@@ -2114,7 +2114,7 @@ const CRYO_OPERATOR_DECISION_ENGINE_12AJ = {
   ]
 };
 
-const LOTO_PID_AUDIT_ENGINE_12AJ = {
+const LOTO_PID_AUDIT_ENGINE_12AM = {
   doctrine: 'Ryan may draft and audit a LOTO/work plan from P&ID evidence, but cannot approve, authorize, or field-verify it.',
   requiredSequence: [
     '1. Define the exact work boundary and equipment/nozzle/line segment involved.',
@@ -2139,14 +2139,62 @@ const LOTO_PID_AUDIT_ENGINE_12AJ = {
   ]
 };
 
+
+const EXCHANGER_REBOILER_EXPERT_12AM = {
+  clearForkTopology: [
+    'VERIFIED/OPERATOR-CORRECTED: E-1221 is the upper gas/gas service and E-1222 is the lower reflux-condenser service within the same brazed-aluminum exchanger assembly. They are separate internal passes and do not mix process streams.',
+    'After F-1416/F-1417 dust filters the dry-gas header splits: one branch can continue directly toward V-1421, one branch passes TCV-1223 toward E-1223/E-1224 reboiler heat recovery, and the TCV-1221 branch enters the TOP of E-1221 vertically and exits horizontally from the lower part of the E-1221 service toward the expander train.',
+    'RSV pass: gas from F-1438 enters the top of the gas/gas service, passes through the shared BAHX passages, leaves vertically from the bottom of the E-1222 reflux section, passes TE-1222J (operator snapshot -89.80 F) and FCV-1438. FIC-1438 snapshot SP 33.00 MMSCFD, PV 32.98 MMSCFD, CV 58.5% open; when PV rises above SP the controller pinches FCV-1438, and when PV falls below SP it opens.',
+    'Methane-rich T-1521 overhead enters from the bottom of the E-1222 reflux service, traverses the reflux/gas-gas heat-recovery passes, exits at the top of E-1221, then turns toward the booster side of C/EX-1121. Keep its outlet temperature/DP indications on that physical line.',
+    'GSP/recovery feed correction: the C/EX-1121 pre-expander branch includes FT-1222-COMP (operator snapshot 35.70 MMSCFD) and PDCV-1222B. PDIC-1222B is currently MANUAL with SP 2.20 PSID, PV 0.62 PSID and CV 100% open. Cold-separator bottoms downstream of LCV-1421B joins this same LOWER common header. The combined path enters the E-1222 reflux service and then continues on the one lower return to T-1521. There is no separate upper duplicate return line.'
+  ],
+  hmi_drawing_rules: [
+    'Do not draw process pipe through the interior of E-1221/E-1222 merely to imply an internal exchanger pass. Show the inlet connection at the exchanger boundary and the outlet connection at its own boundary; the BAHX core represents the internal passage.',
+    'E-1221 and E-1222 are separate services in the same brazed-aluminum exchanger body; the on-screen horizontal divider is a red equipment/service divider, not a process pipe.',
+    'Do not duplicate the GSP/C2 return: PDCV-1222B preflow and LCV-1421B cold-separator bottoms join one lower common E-1222 return path to T-1521.'
+  ],
+  thermal_operation: [
+    'BAHX performance depends on balanced stream flow and temperature approach. More warm-side flow at unchanged cold-side capacity tends to raise warm-side outlet temperature / increase downstream refrigeration load; more cold-side flow or colder return can increase heat pickup and cool the warm stream more, subject to exchanger UA and pressure-drop limits.',
+    'Increasing flow generally increases exchanger pressure drop and can change approach temperature. Treat rising DP together with falling heat-transfer performance as possible restriction/fouling/maldistribution evidence rather than assuming more flow always means more duty.',
+    'Avoid abrupt flow/temperature changes across brazed-aluminum exchangers. Excessive thermal gradients and rapid temperature-rate changes can create thermal stress and reduce exchanger life; operator changes should be evaluated against stream temperature trends, DP and downstream response.',
+    'For reboiler service, more circulating/heating flow normally increases available boil-up until constrained by approach, two-phase hydraulics, heat-source temperature or circulation resistance; less flow/duty reduces boil-up and changes tower separation. Always trace the effect into tower temperatures, overhead/bottom composition and downstream compressor/refrigeration load.'
+  ],
+  heatExchangerReasoning: [
+    'BAHX duty is a coupled heat balance: changing flow on one pass changes heat-transfer duty, outlet temperatures, approach temperatures and pressure drop on that pass and can shift temperatures on neighboring passes sharing the core.',
+    'At fixed opposing-stream capacity, increasing warm-side flow generally increases total heat load but gives each unit of warm gas less residence/available duty, so its outlet may be warmer; decreasing flow can produce a colder outlet until control limits, minimum-flow limits or maldistribution dominate. Always confirm with actual inlet/outlet temperatures and flow rather than assuming a fixed temperature response.',
+    'Pressure drop rises strongly with flow. A rising PDT at similar flow can indicate fouling/restriction, while rising PDT with rising flow may be expected hydraulic response. Use normalized DP-vs-flow trend before diagnosing fouling.',
+    'Brazed-aluminum exchangers are sensitive to rapid temperature change and uneven thermal gradients. Large step changes in valve position/flow should be treated as a thermal-stress concern; use controlled changes and watch temperature rate-of-change and cross-pass temperature differences.',
+    'Heat recovered in E-1221 reduces the refrigeration duty required downstream. Sending more feed around/away from E-1221 can increase downstream mechanical refrigeration/chiller load; sending more through E-1221 can increase exchanger DP and change cold-end approach, so the optimum is not simply maximum flow through one pass.'
+  ],
+  reboilerReasoning: [
+    'Reboilers convert heat duty into tower boil-up. More reboiler duty generally increases vapor traffic and strips more light components upward from tower liquid; less duty does the reverse. The exact C2/C1 product response depends on recovery/rejection mode and reflux conditions.',
+    'In cryogenic plants where inlet/feed gas supplies reboiler heat, changing the dry-gas split changes both feed cooling and tower reboil duty, so it propagates into cold-separator phase split, demethanizer temperatures, residue flow, NGL composition and refrigeration load.',
+    'Thermosiphon/reboiler circulation depends on density head overcoming piping/exchanger pressure drop. Too little heat/flow can make circulation unstable or stall; fouling/restriction raises resistance and can reduce circulation even when tower inventory is available.',
+    'When troubleshooting a reboiler, correlate draw/return temperatures, DP, tower level/profile, feed flow, valve positions, lift-gas status where applicable and downstream product composition. Never diagnose from one temperature alone.'
+  ],
+  proofChecks: [
+    'For E-1221 performance: compare TCV-1221 position, dry-gas flow, TE-1221 inlet/outlet temperatures, PDT-1221 and downstream chiller/cold-separator temperature over the same trend window.',
+    'For RSV control: compare FIC-1438 SP/PV/CV, TE-1222J, upstream F-1438 flow/pressure and T-1521 response.',
+    'For GSP/recovery path: compare FT-1222-COMP, PDIC-1222B/PDCV-1222B mode/output, LCV-1421B flow availability, common-header DP and T-1521 top temperature/composition response.',
+    'For suspected BAHX restriction/fouling: normalize DP against flow and compare approach temperatures. Rising DP at unchanged flow plus degrading approach is stronger evidence than either symptom alone.'
+  ],
+  researchBasis: [
+    'OEM_GUIDANCE: Chart Industries BAHX operations guidance emphasizes controlled temperature rates of change and monitoring overlapping-header temperature differences; use these as general mechanical-integrity guidance, not Clear Fork alarm setpoints.',
+    'INDUSTRY_REFERENCE: Gas Processing & LNG dynamic NGL-plant studies describe thermosiphon circulation as density-head driven against piping/exchanger resistance; low heat/flow or increased exchanger resistance can destabilize or stall circulation.',
+    'INDUSTRY_REFERENCE: Gas Processing & LNG notes that inlet-flow splits between reboiler and gas/gas passes materially affect heat/material balance, refrigeration load and plant limits; model the actual valve Cv/pressure-drop path rather than a fixed split.'
+  ],
+  sourceClass: 'Clear Fork topology from operator/real HMI; general BAHX/reboiler physics from Chart Industries and Gas Processing & LNG references. General research must not overwrite verified Clear Fork piping or current operator snapshots.'
+};
+
 function hasClearForkTag(text) {
   return /\b(?:C|V|P|E|F|T|A|H)-\d{3,4}[A-Z]?\b|\bEX\/?C?-?\d{3,4}[A-Z]?\b|\b(?:PIC|PIT|PT|TIT|TE|FIT|FT|FIC|LIC|LIT|PDIT|PDIC|PV|PCV|FCV|LCV|TCV|XV|ESD|PSV|FQI|FFIC)-?\d{3,4}[A-Z]?\b/i.test(String(text || ''));
 }
 
 const KNOWLEDGE_REGISTRY = {
-  cryoExpert12AJ: CRYO_EXPERT_ENGINE_12AJ,
-  operatorDecision12AJ: CRYO_OPERATOR_DECISION_ENGINE_12AJ,
-  lotoPidAudit12AJ: LOTO_PID_AUDIT_ENGINE_12AJ,
+  cryoExpert12AM: CRYO_EXPERT_ENGINE_12AM,
+  operatorDecision12AM: CRYO_OPERATOR_DECISION_ENGINE_12AM,
+  lotoPidAudit12AM: LOTO_PID_AUDIT_ENGINE_12AM,
+  exchangerReboiler12AM: EXCHANGER_REBOILER_EXPERT_12AM,
   operatorProcess0812Y: OPERATOR_PROCESS_KNOWLEDGE_0812Y,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
@@ -2183,8 +2231,9 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
-  { key: 'operatorDecision12AJ', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
-  { key: 'lotoPidAudit12AJ', re: /\b(LOTO|lockout|work plan|workplan|isolation boundary|zero energy|depressure|blowdown|bleed|energy source|off-page continuation|field verification)\b/i },
+  { key: 'exchangerReboiler12AM', re: /\b(E-1221|E-1222|E-1223|E-1224|gas\/?gas exchanger|reflux condenser|BAHX|brazed aluminum|TCV-1221|TCV-1223|TE-1222J|FCV-1438|FIC-1438|FT-1222-COMP|PDIC-1222B|PDCV-1222B|reboiler|thermosiphon|heat integration|approach temperature|exchanger DP)\b/i },
+  { key: 'operatorDecision12AM', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
+  { key: 'lotoPidAudit12AM', re: /\b(LOTO|lockout|work plan|workplan|isolation boundary|zero energy|depressure|blowdown|bleed|energy source|off-page continuation|field verification)\b/i },
   { key: 'operatorProcess0812Y', re: /\b(troubleshoot|diagnos|residue|C-6100|C-6200|C-6300|PV-6050A|XV-6060|EX\/C-1121|demeth|RSV|GSP|TE-1222K|TE-1222D|refrigeration|PIC-1441C|V-1418|LIC-1418|stabilizer|P-5060|P-5065|V-1040|F-1412|fuel gas|V-1460|hot oil|V-7500|P&ID|manual|large file)\b/i },
   { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
@@ -2266,7 +2315,7 @@ function selectKnowledge(message, context, mode) {
   }
 
   const keys = new Set();
-  if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AJ');
+  if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AM');
 
   for (const rule of KNOWLEDGE_ROUTING_RULES) if (rule.re.test(haystack)) keys.add(rule.key);
 
@@ -2274,11 +2323,11 @@ function selectKnowledge(message, context, mode) {
 
   if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) { keys.add('petroSkills'); keys.add('operatorProcess0812Y'); }
 
-  if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) { keys.add('clearForkPIDs'); keys.add('lotoPidAudit12AJ'); }
+  if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) { keys.add('clearForkPIDs'); keys.add('lotoPidAudit12AM'); }
 
   if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|piping|line number|line spec|rating|valve|PSV|relief|flare|closed drain|instrument air|dehy|regen)\b/i.test(haystack)) keys.add('finalPIDs');
 
-  if (['recommend','forecast','health_profile','maintenance','what_changed','readiness','operator_brief'].includes(String(mode || '').toLowerCase()) || /\b(troubleshoot|diagnos|what changed|abnormal|bad indication|ready to start|ready to stop)\b/i.test(haystack)) keys.add('operatorDecision12AJ');
+  if (['recommend','forecast','health_profile','maintenance','what_changed','readiness','operator_brief'].includes(String(mode || '').toLowerCase()) || /\b(troubleshoot|diagnos|what changed|abnormal|bad indication|ready to start|ready to stop)\b/i.test(haystack)) keys.add('operatorDecision12AM');
 
   if (!keys.size && /\b(alarm|setpoint|loto|lockout|isolation|psv|pressure relief|maintenance)\b/i.test(haystack)) {
 
@@ -2407,7 +2456,7 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
   if (mode === 'loto' || mode === 'loto_workplan') {
 
-    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AJ in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
+    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AM in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
 
   } else if (mode === 'audit') {
 
@@ -2492,7 +2541,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AJ.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AM.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -2516,7 +2565,8 @@ PLANT-WIDE SME BEHAVIOR:
 
 - If a requested simulator detail is absent from CONTEXT/reference data, say what Ryan needs exposed by the simulator rather than inventing it.
 
-- Apply CRYO_EXPERT_ENGINE_12AJ when routed: use dependency relationships, 10m/3h/24h/72h trend windows, ranked proof tests, cause/effect time horizons, equipment health and maintenance prediction.
+- Apply CRYO_EXPERT_ENGINE_12AM when routed: use dependency relationships, 10m/3h/24h/72h trend windows, ranked proof tests, cause/effect time horizons, equipment health and maintenance prediction.
+- Apply EXCHANGER_REBOILER_EXPERT_12AM for E-1221/E-1222/E-1223/E-1224 questions: preserve the verified individual passes, explain heat-integration/DP/approach effects, and trace downstream refrigeration/tower/composition consequences.
 
 - For GENERAL INDUSTRY questions, you may use web-search results when provided by the API. Clearly separate web/general knowledge from Clear Fork-specific facts. Never let a web result overwrite a verified Clear Fork P&ID, procedure, OEM fact, or LIVE simulator value.
 
@@ -3477,7 +3527,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AJ, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AM, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3848,7 +3898,8 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812Y = OPERATOR_PROCESS_KNOWLEDGE_0812Y;
-module.exports.CRYO_EXPERT_ENGINE_12AJ = CRYO_EXPERT_ENGINE_12AJ;
+module.exports.CRYO_EXPERT_ENGINE_12AM = CRYO_EXPERT_ENGINE_12AM;
+module.exports.EXCHANGER_REBOILER_EXPERT_12AM = EXCHANGER_REBOILER_EXPERT_12AM;
 module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide;
 
 module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
@@ -3856,4 +3907,4 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AJ = RYAN_CHANGESET_12AJ;
+module.exports.RYAN_CHANGESET_12AM = RYAN_CHANGESET_12AM;
