@@ -650,7 +650,7 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-11A';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12K';
 
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -1938,7 +1938,30 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
   }
 };
 
+
+
+// ===== OPERATOR PROCESS KNOWLEDGE — 2026-08-12 VERIFIED CONTROL-BOARD PASS =====
+const OPERATOR_PROCESS_KNOWLEDGE_0812 = {
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_12',
+  scope: 'Control-board behavior, trend presentation, startup defaults and screen topology. No 3D geometry authority.',
+  corrections: [
+    'On simulator load, P-5060 and P-5065 stabilizer booster pumps start STOPPED. With both stopped, stabilizer liquid circulation/transfer flow must collapse rather than showing pump-driven GPM, pressure rise or temperature rise.',
+    'Only one of P-5060/P-5065 normally runs at a time; either pump may be red-tagged and a red-tagged stopped pump cannot start.',
+    'V-1418 regen scrubber liquid level is operator-observed around 6% for this update. LIC-1418 SP remains 18%; when the dump cycle is called, the modeled level drains toward 0% and then begins accumulating again according to regen condensate load.',
+    'Inlet-separation common slug-catcher vapor flow arrow points toward V-1040. F-1412 inlet filter/coalescer belongs to the inlet-system/downstream context and must not be represented as physically inside V-1040.',
+    'Fuel-gas scrubber V-1460 top outlet continues to the fuel-gas header/Utilities distribution header.',
+    'Trend displays should be visually subtle for small 10-minute changes: a roughly 1 psi, 1 degree F or 1 GPM movement must not be auto-zoomed into a dramatic full-scale swing. Retain up to 72 hours of history with approximately 30-second samples.',
+    'The simulator process model continues running for the lifetime of the open browser tab; ordinary timer jitter must not change process rates.'
+  ],
+  uiAuditRules: [
+    'Do not place duplicate source labels on the same Utilities flow path. Keep annotations out of process piping when open screen space is available.',
+    'Every displayed transmitter intended for operations should remain trendable; do not remove existing controls or popups while cleaning graphics.',
+    'Before deployment, verify requested renderer changes are present in the actual SCR.* functions and verify the matching Ryan build ID in both index.html and ryan.js.'
+  ]
+};
+
 const KNOWLEDGE_REGISTRY = {
+  operatorProcess0812: OPERATOR_PROCESS_KNOWLEDGE_0812,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
   stabilizer: STABILIZER_KNOWLEDGE,
@@ -1974,6 +1997,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'operatorProcess0812', re: /\b(V-1418|LIC-1418|regen scrubber|P-5060|P-5065|stabilizer pump|trend|72 hour|Utilities|fuel gas header|V-1460|inlet sep|V-1040|control board|deployment|build id)\b/i },
   { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
   { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
@@ -3482,5 +3506,6 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812 = OPERATOR_PROCESS_KNOWLEDGE_0812;
 
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
