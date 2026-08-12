@@ -650,8 +650,21 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-11A';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12Z';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12Z-20260812';
+const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
+const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
+const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12Z-ACTIVE-20260812-0935';
+const RYAN_CHANGESET_12Z = Object.freeze([
+  'Backend rebuilt from the operator-supplied 11A Ryan source and carried forward through 12Y.',
+  'Active troubleshooting policy is injected into Q&A/recommendation requests and ranks causes with proof tags/trends.',
+  'Residue compressor topology guard: EX/C-1121 is the common suction source; F-6800 recycle returns through PV-6050A/PIT-6050B/XV-6060/PIT-6050C to that common suction header, not directly to C-6200.',
+  'Demeth return temperatures: RSV return TE-1222K observed -146.90 F and GSP return TE-1222D observed -146.20 F.',
+  'Large-document learning supports asynchronous multi-pass P&ID/manual ingestion through Anthropic fileId or HTTPS sourceUrl to avoid Netlify request-size limits.',
+  'Health response exposes build, diagnostic revision, code signature, and change set so stale Netlify deployments are obvious.'
+]);
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
 const MAX_HISTORY_TURNS = Number(process.env.RYAN_MAX_HISTORY_TURNS || 12);
@@ -662,7 +675,7 @@ const MAX_MESSAGE_CHARS = Number(process.env.RYAN_MAX_MESSAGE_CHARS || 24000);
 
 const MAX_CONTEXT_CHARS = Number(process.env.RYAN_MAX_CONTEXT_CHARS || 120000);
 
-const MAX_ATTACHMENT_BYTES = Number(process.env.RYAN_MAX_ATTACHMENT_BYTES || 24 * 1024 * 1024);
+const MAX_ATTACHMENT_BYTES = Number(process.env.RYAN_MAX_ATTACHMENT_BYTES || 50 * 1024 * 1024);
 
 const REQUEST_TIMEOUT_MS = Number(process.env.RYAN_REQUEST_TIMEOUT_MS || 45000);
 
@@ -1938,7 +1951,68 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
   }
 };
 
+
+// ===== CLEAR FORK 2026-08-12 LIVE CORRECTIONS + ACTIVE TROUBLESHOOTING =====
+const OPERATOR_PROCESS_KNOWLEDGE_0812Y = {
+  sourceStatus: 'OPERATOR_PROVIDED_CLEAR_FORK_CONTROL_BOARD_KNOWLEDGE_2026_08_12',
+  priority: 'LATEST_OPERATOR_CORRECTIONS',
+  residueCompression: [
+    'Main residue-compressor suction is the common header from EX/C-1121. C-6100/C-6200/C-6300 each take separate suction branches from that header.',
+    'Filtered residue recycle returns from downstream of F-6800 through PV-6050A -> PIT-6050B -> XV-6060 -> PIT-6050C and then ties into the common EX/C-1121 suction header upstream of all three compressor suction branches. It does not feed C-6200 directly.',
+    'Residue compressor discharge piping is separate from suction piping. The three compressor discharges combine into a common discharge header before F-6800.'
+  ],
+  demethanizer: [
+    'RSV return temperature transmitter TE-1222K is on the RSV return line and the current observed value is about -146.90 F.',
+    'GSP/reflux return temperature transmitter TE-1222D is on the GSP return line and the current observed value is about -146.20 F.',
+    'Current values are observations and must yield to LIVE simulator context when available.'
+  ],
+  currentOperatorCorrections: [
+    'PIC-1441C refrigeration suction-pressure SP is 17 psig for the current one-compressor operating condition.',
+    'V-1418 regen scrubber liquid level is currently about 6%. LIC-1418 SP is 18%; inventory rises from the bottom and the dump cycle returns level toward 0% when the dump condition is reached.',
+    'P-5060 and P-5065 stabilizer pumps are duty/standby. Normally only one runs. Both may be red-tagged. With both stopped, actual stabilizer transfer flow is zero and pump-generated pressure/temperature rise must collapse.',
+    'V-1040 belongs on the inlet system upstream of inlet compression. F-1412 is the inlet filter/coalescer on the inlet/dehydration path and should not be represented as part of the V-1040 inlet-separation board.',
+    'V-1460 dry fuel-gas scrubber outlet continues to the plant fuel-gas header. Hot-oil return physically enters V-7500 expansion tank.'
+  ],
+  troubleshootingMethod: [
+    'Start with the symptom, then trace the actual process path upstream -> equipment/control -> downstream before naming a failed component.',
+    'For every control loop compare SP, PV, CV/output, AUTO/MANUAL, permissives, red-tag state, valve state and the resulting process response.',
+    'Separate command failure, instrument/indication failure, process limitation and mechanical failure. A valve command with no expected process response is diagnostic evidence, not proof of a bad valve.',
+    'Use peer-unit comparison on parallel compressors, pumps, fans and filters. Compare suction/discharge, differential pressure, temperatures, capacity/load, recycle, current/run state and alarms.',
+    'Use trends and time order. Respect valve travel, vessel holdup, thermal mass, compressor loading, column inventory and analyzer dead time.',
+    'Rank likely causes and name the exact tag/trend/condition that would confirm or reject each cause. Do not parts-swap by guesswork.'
+  ],
+  documentLearning: [
+    'Large P&IDs/manuals are learned through asynchronous multi-pass Anthropic Message Batches so dense documents are not forced into one synchronous answer.',
+    'P&ID passes separately cover physical topology, instruments/controls, relief/isolation/LOTO-relevant detail and notes/specifications.',
+    'Manual passes separately cover applicability/specifications, controls/safety, operations and maintenance/troubleshooting.',
+    'Netlify buffered function requests are limited to about 6 MB; base64 binary uploads effectively need to stay near 4.5 MB. Larger sources must be supplied through an Anthropic Files fileId or another server-side file reference rather than being silently truncated.'
+  ]
+};
+
+function buildActiveTroubleshootingGuide(message, context){
+  const h = `${message || ''}\n${context || ''}`.toLowerCase();
+  const areas = [];
+  if(/residue|6100|6200|6300|6050|6800/.test(h)) areas.push('RESIDUE: verify EX/C-1121 common suction, F-6800 recycle tie-in through PV-6050A/PIT-6050B/XV-6060/PIT-6050C, individual compressor suction branches, and separate common discharge.');
+  if(/refrig|1140|1141|1142|1441|1442|1444|1241/.test(h)) areas.push('REFRIGERATION: correlate compressor count/load, PIC-1441C SP/PV/CV, condenser fan availability, condensing pressure, chiller duty and cold-separator response.');
+  if(/demeth|1521|rsv|gsp|1222/.test(h)) areas.push('DEMETH: correlate tower pressure/DP, RSV/GSP return temperatures, reboiler duty, reflux/recycle flows, temperature profile and product composition.');
+  if(/stabil|5030|5040|5060|5065|5055/.test(h)) areas.push('STABILIZER: verify feed, tower pressure/temperature/levels, reboiler heat, active pump, actual transfer flow and destination valve lineup.');
+  if(/dehy|regen|1413|1414|1415|1418|1711/.test(h)) areas.push('DEHY/REGEN: verify active bed lineup, heat/cool phase, regen scrubber inventory/dump, bed DP and outlet moisture/dewpoint trend.');
+  if(/hot oil|7100|7410|7420|7500|7600/.test(h)) areas.push('HOT OIL: separate heater firing from circulation; verify pump, supply/return temperatures, flow, user duties and V-7500 inventory/pressure.');
+  if(/inlet|1040|4100|4200|4250/.test(h)) areas.push('INLET: verify V-1040 -> PIT/TIT/FIT-1045A -> common compressor suction, separate compressor discharges, and 4250 recycle cause/effect.');
+  return [
+    'ACTIVE CLEAR FORK TROUBLESHOOTING METHOD:',
+    '1) Define the symptom and first time it changed.',
+    '2) Trace the real material/energy path upstream-to-downstream.',
+    '3) Compare SP/PV/CV/mode/permissives with actual process response.',
+    '4) Check peer equipment and common-header effects.',
+    '5) Rank process, control/instrument, mechanical and indication causes.',
+    '6) For each cause name the exact live tag/trend that proves or rejects it.',
+    ...areas
+  ].join('\n');
+}
+
 const KNOWLEDGE_REGISTRY = {
+  operatorProcess0812Y: OPERATOR_PROCESS_KNOWLEDGE_0812Y,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
   stabilizer: STABILIZER_KNOWLEDGE,
@@ -1974,6 +2048,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'operatorProcess0812Y', re: /\b(troubleshoot|diagnos|residue|C-6100|C-6200|C-6300|PV-6050A|XV-6060|EX\/C-1121|demeth|RSV|GSP|TE-1222K|TE-1222D|refrigeration|PIC-1441C|V-1418|LIC-1418|stabilizer|P-5060|P-5065|V-1040|F-1412|fuel gas|V-1460|hot oil|V-7500|P&ID|manual|large file)\b/i },
   { key: 'operatorProcess0811', re: /\b(inlet comp|inlet compressor|C-4100|C-4200|PIT-1045A|TIT-1045A|FIT-1045A|FQI-1045A|PIT-4250A|PIT-4250B|PIT-4250C|PIC-4250A|PIC-4250B|PV-4250A|XV-4250B|XXY-4250B|PIC-6805A|PV-6805A|PIC-6810A|PV-6810A|V-1000|ESD-1000D|PIT-1000|PIT-1010A|PIT-1010B|PV-1010A|V-1020|V-1025|V-1030|PIT-1040B|XV-1040A|V-1040|slug catcher|plant inlet)\b/i },
 
   { key: 'operatorProcess09M', re: /\b(refrigeration|refrig|R-290|V-1444|V-1442|V-1441|E-1241|LCV-1442|LCV-1241|PCV-1441B|PCV-1441A|PCV-1442|PCV-1444|PIC-1342|A-1343|hot oil|H-7100|V-7500|P-7410|P-7420|F-7600|C-5700|PIC-5700A|PIC-5900A|PIT-9241A|instrument air|stabilizer|V-5010|T-5030|E-5040|F-5015|F-5016|PDIT-1051|red tag)\b/i },
@@ -2024,7 +2099,7 @@ function selectKnowledge(message, context, mode) {
 
   if (mode === 'audit' || mode === 'scan') Object.keys(KNOWLEDGE_REGISTRY).forEach(k => keys.add(k));
 
-  if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) keys.add('petroSkills');
+  if (mode === 'recommend' || /\b(process|troubleshoot|diagnos|upset|off-spec|off spec|poor separation|low flow|high pressure|low pressure|high temperature|low temperature|why|cause)\b/i.test(haystack)) { keys.add('petroSkills'); keys.add('operatorProcess0812Y'); }
 
   if ((mode === 'loto' || mode === 'loto_workplan') || /\b(P&ID|PID|flow path|lineup|isolation|LOTO|lockout|relief|PSV|depressure|blowdown|upstream|downstream|continuation)\b/i.test(haystack)) keys.add('clearForkPIDs');
 
@@ -2196,6 +2271,12 @@ For safety-critical work, distinguish drafting/analysis from authorization and r
 
  
 
+CURRENT BACKEND REVISION:
+- Build: ${RYAN_BUILD_ID}
+- Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
+- Code signature: ${RYAN_CODE_SIGNATURE}
+- Active change set: ${RYAN_CHANGESET_12Z.join(' | ')}
+
 PLANT-WIDE SME BEHAVIOR:
 
 - Treat control-board/HMI context as first-class plant knowledge. When CONTEXT supplies the current board/screen, loops, PV/SP/output/mode, equipment run states, valve positions, active alarms, failed permissives/interlocks, trends, or scenario state, use those exact values and relationships.
@@ -2224,7 +2305,8 @@ ${modeInstructions}`;
 
  
 
-  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(selectedKnowledge)}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-250) : [])}`;
+  const activeTroubleshooting = buildActiveTroubleshootingGuide('', '');
+  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(selectedKnowledge)}\n\nACTIVE TROUBLESHOOTING POLICY:\n${activeTroubleshooting}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-250) : [])}`;
 
  
 
@@ -2468,6 +2550,20 @@ async function postJsonWithRetry(url, headers, payload, attempts = 3) {
 
  
 
+function httpRequestBuffer(method, url, headers) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method, headers: { ...(headers || {}) } }, res => {
+      const chunks = []; let total = 0;
+      res.on('data', chunk => { chunks.push(chunk); total += chunk.length; if (total > MAX_ATTACHMENT_BYTES) req.destroy(new Error('Downloaded source exceeds Ryan attachment ceiling.')); });
+      res.on('end', () => resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body: Buffer.concat(chunks), headers: res.headers }));
+    });
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error(`Source download timed out after ${REQUEST_TIMEOUT_MS} ms.`)));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function httpRequestRaw(method, url, headers, bodyBuffer) {
 
   return new Promise((resolve, reject) => {
@@ -2516,7 +2612,20 @@ async function uploadAttachmentToAnthropic(attachment, apiKey) {
 
   if (attachment.fileId) return attachment.fileId;
 
-  if (!attachment.base64) throw new Error('Document learning requires a PDF/image attachment with base64 data or an Anthropic fileId.');
+  // Large browser uploads cannot cross Netlify's ~6 MB buffered request ceiling after base64 overhead.
+  // Ryan therefore supports a server-side HTTPS source URL as an alternate transport when available.
+  if (!attachment.base64 && attachment.sourceUrl) {
+    const u = new URL(String(attachment.sourceUrl));
+    if (u.protocol !== 'https:') throw new Error('Large-document sourceUrl must use HTTPS.');
+    const fetched = await httpRequestBuffer('GET', u.toString(), { 'user-agent': 'ClearFork-Ryan/12Y' });
+    if (!fetched.ok) throw new Error(`Could not download large source file (HTTP ${fetched.status}).`);
+    attachment = { ...attachment, base64: fetched.body.toString('base64') };
+  }
+
+  if (!attachment.base64) throw new Error('Document learning requires base64 data, an Anthropic fileId, or an HTTPS sourceUrl.');
+
+  const estimatedBytes = estimateBase64Bytes(attachment.base64);
+  if (estimatedBytes > MAX_ATTACHMENT_BYTES) throw new Error(`Attachment exceeds Ryan server learning ceiling (${Math.round(estimatedBytes/1024/1024)} MB > ${Math.round(MAX_ATTACHMENT_BYTES/1024/1024)} MB). Use an Anthropic fileId or split the source.`);
 
   const data = Buffer.from(String(attachment.base64), 'base64');
 
@@ -3128,15 +3237,14 @@ exports.handler = async function(event) {
 
  
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set on the server.' }) };
-
- 
-
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
- 
+    if (effectiveMode === 'health') {
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12Z, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return { statusCode: 500, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set on the server.', buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION }) };
 
     if (clientBuild && String(clientBuild) !== RYAN_BUILD_ID) {
 
@@ -3144,13 +3252,7 @@ exports.handler = async function(event) {
 
     }
 
-    if (effectiveMode === 'health') {
 
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID }) };
-
-    }
-
- 
 
     // Plant photos/nameplates/control-board images use a dedicated fast structured path.
 
@@ -3386,7 +3488,7 @@ exports.handler = async function(event) {
 
       },
 
-      meta: { model: MODEL_V2, mode: effectiveMode, knowledgeSections: Object.keys(selectedKnowledge), stopReason: data.stop_reason || null }
+      meta: { model: MODEL_V2, mode: effectiveMode, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, knowledgeSections: Object.keys(selectedKnowledge), stopReason: data.stop_reason || null }
 
     };
 
@@ -3482,5 +3584,12 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09L = OPERATOR_PROCESS_KNOWLEDGE_09L;
 
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
+module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812Y = OPERATOR_PROCESS_KNOWLEDGE_0812Y;
+module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide;
 
 module.exports._test = { selectKnowledge, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses };
+
+module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
+module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
+module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
+module.exports.RYAN_CHANGESET_12Z = RYAN_CHANGESET_12Z
