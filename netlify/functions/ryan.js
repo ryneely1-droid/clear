@@ -650,14 +650,14 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AO';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AO-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AP';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AP-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AO-INTERLOCKS-PID-LOTO-20260812';
-const RYAN_CHANGESET_12AM = Object.freeze([
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AP-V1040-GC-CONSOLIDATED-20260812';
+const RYAN_CHANGESET_12AP = Object.freeze([
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
   '12AM retains operator decision support: What Changed chronology, current-vs-normal comparison, bad-instrument-vs-bad-process discrimination, startup/shutdown readiness checks, concise operator-first answers, and explicit diagnostic confidence.',
@@ -675,7 +675,8 @@ const RYAN_CHANGESET_12AM = Object.freeze([
   'Large P&ID learning uses seven specialized passes; manuals use six passes; Ryan can retain up to 1800 learned facts per active learned-knowledge set with page/tag indexing for retrieval.',
   'Multi-digit Clear Fork tag detection is authoritative before generic fast-path routing so tags such as PV-6050A and PIC-1441C cannot be misclassified as generic questions.',
   '12AO adds operator-photographed DCS interlock knowledge for ESD-1000D, XV-1410, XV-6810A, XV-4250B, XV-1040B, EX-1121 and PCV-1121E; photographed row order is authoritative and unseen numeric trip setpoints remain PENDING_VERIFICATION.',
-  'V-1040 calibration: LIC-1040A SP 35%, PV 8.7%, LV-1040A CV 0% open; above SP the controller opens LV-1040A and below SP closes toward 0%.',
+  '12AP consolidates the GC display to one lower analyzer panel; V-1040 is one shared vessel on Plant Inlet/Inlet Separation with drain path V-1040 -> XV-1040B -> LCV-1040A -> closed-drain header and LIC-1040A controlling LCV-1040A.',
+  'V-1040 calibration: LIC-1040A SP 35%, PV 8.7%, LCV-1040A CV 0% open; above SP the controller opens LCV-1040A and below SP closes toward 0%. The physical liquid drain path is V-1040 -> XV-1040B -> LCV-1040A -> closed-drain header. Plant Inlet and Inlet Separation screens represent the same vessel level and same two drain-valve states.',
   'EX-1121 red tag is a restart inhibit: a running expander may be tagged for maintenance planning, but once stopped it cannot restart until the tag is removed.',
   'P&ID ingestion now builds page/tag/continuation indexes plus a LOTO boundary matrix so large drawing sets can be retained and retrieved without inventing isolation points.'
 ]);
@@ -1917,7 +1918,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
     flowPath: [
       'Raw natural gas pipeline -> V-1000 inlet gas pig receiver -> PIT-1000 -> PIT-1000A -> ESD-1000D -> PIT-1010B -> PV-1010A -> PIT-1010A -> three parallel slug catcher legs V-1020/V-1025/V-1030 -> common slug-catcher vapor header -> PIT-1040B -> XV-1040A -> V-1040 vortex separator.',
       'V-1040 gas outlet feeds the inlet-compressor suction side only. V-1040 does NOT receive inlet-compressor discharge.',
-      'Slug-catcher liquid routes toward the stabilizer liquid-transfer system; vapor combines before V-1040.'
+      'Slug-catcher liquid routes toward the stabilizer liquid-transfer system; vapor combines before V-1040. V-1040 liquid itself drains through XV-1040B then LCV-1040A to the closed-drain header.'
     ],
     observedSnapshot: {
       PIT1000_psig: 487,
@@ -1936,7 +1937,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_0811 = {
       'PV-1010A modulates to maintain downstream PIT-1010A near its pressure setpoint. If PIT-1010A is below SP, PV-1010A opens; if PIT-1010A is above SP, PV-1010A closes.',
       'Available pressure across PV-1010A is PIT-1010B minus PIT-1010A.',
       'Slug-catcher level controllers are independent and must preserve their different normal valve outputs/hydraulic behavior; stabilizer-transfer availability limits liquid discharge.',
-      'V-1040 level controller LIC-1040A retains liquid when PV is below SP and opens progressively as level approaches/rises above SP, subject to downstream liquid-path availability.'
+      'V-1040 level controller LIC-1040A controls LCV-1040A. Current calibration SP 35%, PV 8.7%, CV 0%; as PV rises above SP, LCV-1040A opens progressively, subject to XV-1040B being open and closed-drain-header availability. The V-1040 level and drain states are shared across Plant Inlet and Inlet Separation displays.'
     ]
   },
   inletCompression: {
@@ -2593,7 +2594,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AM.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AP.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -3582,7 +3583,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AM, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AP, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3963,4 +3964,4 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AM = RYAN_CHANGESET_12AM;
+module.exports.RYAN_CHANGESET_12AP = RYAN_CHANGESET_12AP;
