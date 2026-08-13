@@ -650,14 +650,30 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AP';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AP-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AU';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AU-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AP-V1040-GC-CONSOLIDATED-20260812';
-const RYAN_CHANGESET_12AP = Object.freeze([
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AU-NGL-FLOW-PERMITS-20260812';
+
+const OPERATOR_NGL_HYDRAULICS_12AU = [
+  'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
+  'At that same point PCV-1624 is 100% open, PCV-1623 is about 1.5-2% open, and FCV-1422 recycle is 0% open. PIT-8000B is about 918 psig while pumping/exporting and falls toward about 850 psig when not pumping.',
+  'PCV-1623 is governed by the LIC-1422B / PIC-1623 pair. Current LIC-1422B: SP 5%, PV 29.1%, CV 100%. Current PIC-1623: SP 1000 psig, PV 1012 psig, CV about 1.5%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
+  'PCV-1624 is governed by the LIC-1422C / PIC-1624 pair. Current LIC-1422C: SP 30%, PV 29.1%, CV 100%. Current PIC-1624: SP 980 psig, PV 1004 psig, CV 100%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
+  'The four controller readings are operator-observed live values, not universal tuning constants. Ryan must preserve them as a calibration point and distinguish observed behavior from any inferred selector/control action.',
+  'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
+];
+
+const RYAN_CHANGESET_12AU = Object.freeze([
+
+  '12AT VERIFIED NGL PUMP STAGING: one P-1619/P-1620 boost pump supplies the suction of the operating P-1630/P-1635 pipeline pump. A pipeline pump must not run without a boost pump running; loss of the booster stage removes the pipeline-pump run permissive / requires the pipeline stage to stop.',
+  '12AT VERIFIED NGL CIRCULATION: while the boost + pipeline train is running, liquid is always moving. Depending on outlet acceptance, the common discharge is (1) all recycle back to V-1422, (2) split between recycle and the sales pipeline, or (3) all sales-pipeline flow with recycle closed. As sales outlet capacity opens, recycle closes correspondingly.',
+  'General pump-engineering support: centrifugal/high-head pump systems commonly use minimum-flow recycle to keep a running pump above minimum stable flow; series pumps add head and each stage requires adequate suction/NPSH. Treat Clear Fork P&IDs, HMI/interlocks and operator observations as authoritative for the exact permissives and valve logic.',
+  '12AU NGL selective-control calibration: current established export is FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. PCV-1623 is associated with LIC-1422B/PIC-1623 and PCV-1624 with LIC-1422C/PIC-1624; preserve the observed controller values and do not invent unverified selector details.',
+  '12AU verified outlet flow permits: PY-1623 and PY-1624 each require FT-1422 >291.50 GPM for initial opening and each interlock its associated PCV closed below 265.00 GPM; hold prior permit state inside the 265.00-291.50 GPM deadband.',
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
   '12AM retains operator decision support: What Changed chronology, current-vs-normal comparison, bad-instrument-vs-bad-process discrimination, startup/shutdown readiness checks, concise operator-first answers, and explicit diagnostic confidence.',
@@ -676,6 +692,7 @@ const RYAN_CHANGESET_12AP = Object.freeze([
   'Multi-digit Clear Fork tag detection is authoritative before generic fast-path routing so tags such as PV-6050A and PIC-1441C cannot be misclassified as generic questions.',
   '12AO adds operator-photographed DCS interlock knowledge for ESD-1000D, XV-1410, XV-6810A, XV-4250B, XV-1040B, EX-1121 and PCV-1121E; photographed row order is authoritative and unseen numeric trip setpoints remain PENDING_VERIFICATION.',
   '12AP consolidates the GC display to one lower analyzer panel; V-1040 is one shared vessel on Plant Inlet/Inlet Separation with drain path V-1040 -> XV-1040B -> LCV-1040A -> closed-drain header and LIC-1040A controlling LCV-1040A.',
+  '12AQ screen-targeted corrections: FV-5030A is physically on the P-5060/P-5065 return line to T-5030; C-5700 vapor return joins the Plant Inlet header downstream of PV-1010A; E-1125 hot-oil supply reconnects to the trim-reboiler top connection; E-1223 bottom-reboiler process continues to E-1125; E-1241 process gas uses the left bell-end U-pass with TE-1241A upstream of the inlet and outlet returning to V-1421.',
   'V-1040 calibration: LIC-1040A SP 35%, PV 8.7%, LCV-1040A CV 0% open; above SP the controller opens LCV-1040A and below SP closes toward 0%. The physical liquid drain path is V-1040 -> XV-1040B -> LCV-1040A -> closed-drain header. Plant Inlet and Inlet Separation screens represent the same vessel level and same two drain-valve states.',
   'EX-1121 red tag is a restart inhibit: a running expander may be tagged for maintenance planning, but once stopped it cannot restart until the tag is removed.',
   'P&ID ingestion now builds page/tag/continuation indexes plus a LOTO boundary matrix so large drawing sets can be retained and retrieved without inventing isolation points.'
@@ -1110,6 +1127,12 @@ const PETROSKILLS_KNOWLEDGE = {
 
       'Operator-confirmed reboiler control-board topology: a T-1521 demethanizer gas circuit passes through E-1223 bottom reboiler, then through the process/shell side of E-1225 trim reboiler, then returns to T-1521. A separate cold-section path combines V-1421 cold-separator and T-1521 side flow at the bottom of E-1224 side reboiler and returns from the upper side-reboiler outlet to T-1521. Use the actual Clear Fork P&IDs/HMI for exact nozzle and transmitter placement.',
 
+      'Operator-confirmed 2026-08-12 screen correction: FV-5030A/FIC-5060A belongs on the booster-pump liquid return from the P-5060/P-5065 common discharge header back to T-5030 stabilizer tower; do not describe FV-5030A as a floating or unrelated recycle valve.',
+
+      'Operator-confirmed 2026-08-12 Plant Inlet correction: C-5700 overhead-compressor return joins the common inlet header downstream of PV-1010A before distribution to V-1020/V-1025/V-1030.',
+
+      'Operator-confirmed E-1241 control-board orientation: process gas from E-1221/2 reaches TE-1241A before entering the top nozzle on the left bell end of E-1241, makes the process-side U-pass, exits the lower left-side connection, and continues back to V-1421 cold separator. Refrigerant remains a separate shell-side service and must not be drawn as mixing with the process gas.',
+
       'Operator-confirmed expander HMI corrections: FROM E-1221 and FROM V-1421 arrows point INTO the expander/JT system; TO E-1222 reflux condenser points OUT toward E-1222. The PCV-1121A J-T branch is a connected bypass path, not a dead-end graphic.',
 
       'Operator-confirmed residue recycle: PIC-6050B is the residue suction-pressure controller, SP 280 psig. PV-6050A is its recycle control valve. If suction PV falls below SP, PV-6050A opens progressively to recycle gas and keep C-6100/C-6200/C-6300 running. XV-6060 is the residue recycle ESD/block valve downstream of PV-6050A. The three residue compressors share a common suction header and a common discharge header.',
@@ -1528,7 +1551,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09L = {
 
     'V-1422 liquid is mostly C2, propane, butanes/i-butane. Normally one P-1619/P-1620 booster and one P-1630/P-1635 pipeline pump operate; all pairs share common headers. Red-tagged redundant equipment must not start until tag is cleared.',
 
-    'PIT-1630A ~315.77 psig LO 275 / LOLO 260 product-system SD. PIT-1635A ~316.2 psig LO 275 / LOLO 275 product-system SD. PT-1630B ~944.46 psig, HI/HIHI 1700 product-system SD. FIT-1630A ~326 GPM: LOLO 180 SD, LO 200, HI 375.',
+    'PIT-1630A ~315.77 psig LO 275 / LOLO 260 product-system SD. PIT-1635A ~316.2 psig LO 275 / LOLO 275 product-system SD. PT-1630B ~944.46 psig, HI/HIHI 1700 product-system SD. FIT-1630A is the combined/common P-1630/P-1635 discharge-header flow. Operator-confirmed 8/12/26: one pipeline pump commonly gives roughly 300 GPM; latest observed calibration is about 285 GPM and fluctuating. LOLO 180 SD, LO 200, HI 375.',
 
     'Pump demand can be selected LEVEL or FLOW. LEVEL: LIC-1422A SP 30%, PV ~29.08%, CV ~83.17. FLOW: FIC-1422 SP 625 GPM, PV ~381 GPM, CV ~70%.',
 
@@ -1536,9 +1559,11 @@ const OPERATOR_PROCESS_KNOWLEDGE_09L = {
 
     'A-1322 NGL product cooler normally cools about 164 F at TE-1422 to about 78.4 F at TE-1322B. TE-1322B HIHI product SD 190 F; TE-1322C HI 135 F. Two cooler fan motors can be red-tagged.',
 
-    'After A-1322, parallel pressure/level paths use PCV-1623 and PCV-1624. PIC-1623 SP 1000 psig, PV ~1023.23, CV ~3%; LIC-1422B SP 5%, PV ~34.7, level demand may command PCV-1623 open. PIC-1624 SP 980 psig, PV ~1006, CV ~59.26%; LIC-1422C SP 30%, PV ~34.7, level demand may command PCV-1624 open.',
+    'After A-1322, parallel outlet paths use paired level/pressure control. Current observed PCV-1623 pair: LIC-1422B SP 5%, PV 29.1%, CV 100%; PIC-1623 SP 1000 psig, PV 1012 psig, CV 1.5%. Current observed PCV-1624 pair: LIC-1422C SP 30%, PV 29.1%, CV 100%; PIC-1624 SP 980 psig, PV 1004 psig, CV 100%. Ryan must treat the selector/action interpretation as pending verification beyond these observed values.',
 
-    'Plant outlet NGL: PIT-8000A ~871.7 psig HI 1475 / HIHI 2100; daily NGL totalizer resets every 24 h (example ~45,087 gal); FIT-8000A ~348 GPM LO 100 HI 900; TIT-8000A ~88.99 F HI 130; PIT-8000N ~863.58 psig; ESD-8000B; PIT-8000F ~846 psig HI 2050 / HIHI 2100; then V-8000 NGL pig launcher and pipeline.'
+    'VERIFIED DCS FLOW PERMITS (photo 8/12/26): PY-1623 permits PCV-1623 to open initially only when FT-1422 > 291.50 GPM and interlocks PCV-1623 closed when FT-1422 < 265.00 GPM. PY-1624 applies the identical thresholds to PCV-1624. Between 265.00 and 291.50 GPM, retain the existing permit state (hysteresis/deadband) rather than chattering the valves. These thresholds are plant-specific verified control logic and override generic theory.',
+
+    'Plant outlet NGL: PIT-8000A is pressure (psig), while FIT-8000A is flow (GPM). Operator-confirmed 8/12/26: with both NGL outlet PCVs closed, FIT-8000A must be 0 GPM because no product is being sent to the sales pipeline. Later established-export calibration: FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. PIT-8000B falls toward ~850 psig when not pumping. PIT-8000A HI 1475 / HIHI 2100; daily NGL totalizer resets every 24 h; FIT-8000A LO 100 HI 900; TIT-8000A ~88.99 F HI 130; PIT-8000N ~863.58 psig; ESD-8000B; PIT-8000F ~846 psig HI 2050 / HIHI 2100; then V-8000 NGL pig launcher and pipeline.'
 
   ],
 
@@ -1894,7 +1919,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09M = {
 
       'Heated bottoms then E-5020 shell side: TIT-5020D ~78.7 (LO 200/HI 300) before exchanger; TIT-5020F ~69.07 (LO 21/HI 210) after; then AC-5055 product cooler, whose fan motor is red-tag capable. TIT-5060C ~67.73 (LO 9/HI 130/HIHI 180).',
 
-      'P-5060 and P-5065 are controlled from reboiler level: LIC-5060 SP45/PV56.6/CV64; LIC-5065 SP45/PV56.5/CV67. SI-5065 ~0.2% with pumps stopped; FIT-5060 ~0.02 GPM, LOLO62/LO67/HI102.4/HIHI136.4. FIC-5060A controls recycle FV-5030A (SP70/PV0.2/CV100). Product passes LV-5040A then XV-5040B to V-1422 or can recycle to V-5010 through XV-5040A.',
+      'P-5060 and P-5065 are controlled from reboiler level: LIC-5060 SP45/PV56.6/CV64; LIC-5065 SP45/PV56.5/CV67. SI-5065 ~0.2% with pumps stopped; FIT-5060 ~0.02 GPM, LOLO62/LO67/HI102.4/HIHI136.4. FIC-5060A controls FV-5030A on the booster-pump return line back to T-5030 (legacy snapshot SP70/PV0.2/CV100; current live values govern). Product passes LV-5040A then XV-5040B to V-1422 or can recycle to V-5010 through XV-5040A.',
 
       'When the stabilizer unit is not running, suppress nuisance stabilizer process alarms and leave the identified stabilizer controllers in MANUAL/zero output until intentional startup.'
 
@@ -2594,7 +2619,8 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AP.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AU.join(' | ')}
+- Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -3583,7 +3609,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AP, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AU, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3964,4 +3990,5 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AP = RYAN_CHANGESET_12AP;
+module.exports.RYAN_CHANGESET_12AU = RYAN_CHANGESET_12AU;
+module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
