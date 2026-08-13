@@ -650,13 +650,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BA';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BA-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BB';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BB-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BA-PID-STRUCTURED-EXTRACT-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BB-LEARNED-RETRIEVAL-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -667,7 +667,9 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
 ];
 
-const RYAN_CHANGESET_12BA = Object.freeze([
+const RYAN_CHANGESET_12BB = Object.freeze([
+  '12BB LEARNED-DOCUMENT RETRIEVAL: ordinary questions never resend an already-learned P&ID; the browser sends only a small ranked set of retained facts.',
+  '12BB DOCUMENT SUMMARY: what-did-you-learn questions can be answered directly from the local retained-fact index without another Anthropic/Netlify round trip.',
   '12BA P&ID EXTRACTION FIX: structured JSON extraction requests never enable document citations; source/page provenance is stored in extracted fact metadata instead, avoiding Anthropic citations + output_config incompatibility.',
   '12AZ DOCUMENT RELIABILITY: removes Message Batches from the interactive learning path; PDFs/P&IDs are uploaded once then processed one pass per normal Messages API request so the UI cannot sit in batch in_progress indefinitely.',
   '12AZ PARTIAL SUCCESS: each P&ID/manual pass has its own result, timeout/error state and retained facts; one failed pass does not discard successful passes.',
@@ -2637,7 +2639,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12BA.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12BB.join(' | ')}
 - Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
@@ -2677,7 +2679,7 @@ ${modeInstructions}`;
  
 
   const activeTroubleshooting = buildActiveTroubleshootingGuide('', '');
-  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(selectedKnowledge)}\n\nACTIVE TROUBLESHOOTING POLICY:\n${activeTroubleshooting}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-250) : [])}`;
+  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(selectedKnowledge)}\n\nACTIVE TROUBLESHOOTING POLICY:\n${activeTroubleshooting}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-60) : [])}`;
 
  
 
@@ -3704,7 +3706,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BA, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BB, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4143,5 +4145,5 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12BA = RYAN_CHANGESET_12BA;
+module.exports.RYAN_CHANGESET_12BB = RYAN_CHANGESET_12BB;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
