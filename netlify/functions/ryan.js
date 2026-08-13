@@ -650,13 +650,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AX';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AX-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AY';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AY-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AX-CONVERSATION-AUDIT-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AY-FAST-LOCAL-PID-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -667,7 +667,11 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
 ];
 
-const RYAN_CHANGESET_12AX = Object.freeze([
+const RYAN_CHANGESET_12AY = Object.freeze([
+  'Simple chat defaults to a fast, attachment-free route to avoid Netlify inactivity timeouts.',
+  'Selected documents are attached to chat only when the operator explicitly asks about the attachment or invokes a document/LOTO workflow.',
+  'Local PDF/P&ID selection and drag/drop do not require HTTPS.',
+  'P&ID learning explicitly performs visual linework/tag/symbol inspection for scanned drawings.',
 
   '12AX CONVERSATION CONTINUITY: Ask Ryan now preserves recent chat context locally, provides a dedicated follow-up composer, and resolves short follow-ups such as why, what next, or compare that against the immediately preceding subject instead of treating each turn as isolated.',
   '12AX THREAD UX: assistant responses expose quick follow-up prompts and the follow-up composer sends with Enter (Shift+Enter for newline), scrolls to the newest answer, and keeps tool-button results in the same conversation thread.',
@@ -703,6 +707,7 @@ const RYAN_CHANGESET_12AX = Object.freeze([
   'P&ID ingestion now builds page/tag/continuation indexes plus a LOTO boundary matrix so large drawing sets can be retained and retrieved without inventing isolation points.'
 ]);
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
+const FAST_MODEL = process.env.RYAN_FAST_MODEL || 'claude-haiku-4-5-20251001';
 
 const MAX_HISTORY_TURNS = Number(process.env.RYAN_MAX_HISTORY_TURNS || 10);
 
@@ -2393,7 +2398,7 @@ function selectKnowledge(message, context, mode) {
   const modeKey = String(mode || 'qa').toLowerCase();
   const plantSpecific = isPlantSpecificQuery(message, context, mode);
 
-  if (!plantSpecific && ['qa','recommend'].includes(modeKey)) {
+  if (!plantSpecific && ['qa','qa_fast','recommend'].includes(modeKey)) {
     return genericProcessKnowledge(message);
   }
 
@@ -2582,6 +2587,9 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
     modeInstructions = `MODE: DOCUMENT INGESTION. Extract only facts actually visible or stated in the supplied document. Do not merge in general knowledge. Do not silently correct the document. Return strict JSON only as instructed in the user message.`;
 
+  } else if (mode === 'qa_fast') {
+    modeInstructions = `MODE: FAST Q&A. Answer immediately and compactly. Use current supplied plant context and recent conversation only when relevant. Do not ingest documents, run broad audits, or expand into unrelated systems. If a document is needed, tell the operator to use Learn from attached document.`;
+
   } else {
 
     modeInstructions = `MODE: Q&A. Answer directly. Cite exact plant tags and values when supplied. Clearly label anything inferred, operator-observed, live, calculated, or pending verification.`;
@@ -2624,7 +2632,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AX.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AY.join(' | ')}
 - Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
@@ -3192,15 +3200,15 @@ function buildBatchPasses(documentType, fileId, label, existingContext, mediaTyp
 
     { id: 'auto_classify_physical', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 1 - SOURCE TYPE / PHYSICAL CONTENT. Inspect the actual PDF pages first and set documentType to pid, manual, or document from visible content, not filename alone. IF P&ID/DRAWING: extract equipment, valves, piping topology, line numbers/sizes/specs, explicit flow direction, continuations, drains/vents/bypasses and physical notes. IF MANUAL: extract applicability, equipment specs, ratings, limits, lubrication/material/parts information. IF OTHER DOCUMENT: extract only clearly stated plant-specific facts. A dense drawing with sparse prose is still useful; read graphical relationships and tag text.` },
 
-    { id: 'auto_tags_topology', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 2 - TAG / TOPOLOGY RECOVERY. Re-inspect all visible pages. IF P&ID: prioritize equipment tags, instrument tags, automated/manual valve tags, line numbers, arrows, branches, shared headers, off-page connectors and upstream/downstream relationships. Convert each supported relationship into an atomic fact. IF MANUAL: prioritize model/equipment applicability and section/page indexing. Never treat absence of prose as absence of useful information.` },
+    { id: 'auto_tags_topology', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 2 - TAG / TOPOLOGY RECOVERY. Re-inspect all visible pages. IF P&ID: visually inspect the rendered drawing itself, including piping linework, symbols, arrows, tag bubbles, continuation notes and small annotations; do not rely only on embedded/searchable PDF text. For scanned/image-only drawings, treat each page as an engineering image and recover visible topology systematically. THEN: prioritize equipment tags, instrument tags, automated/manual valve tags, line numbers, arrows, branches, shared headers, off-page connectors and upstream/downstream relationships. Convert each supported relationship into an atomic fact. IF MANUAL: prioritize model/equipment applicability and section/page indexing. Never treat absence of prose as absence of useful information.` },
 
-    { id: 'auto_controls_operations', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 3 - CONTROLS / OPERATIONS. IF P&ID: extract instrumentation, sensing points, controller-transmitter-final-element relationships, signal lines, fail/normal positions, analyzers, alarms/trips/interlocks and operating notes actually shown. IF MANUAL: extract controls, alarms/trips, startup/shutdown, operations, inspections and maintenance intervals.` },
+    { id: 'auto_controls_operations', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 3 - CONTROLS / OPERATIONS. IF P&ID: visually inspect the rendered drawing itself, including piping linework, symbols, arrows, tag bubbles, continuation notes and small annotations; do not rely only on embedded/searchable PDF text. For scanned/image-only drawings, treat each page as an engineering image and recover visible topology systematically. THEN: extract instrumentation, sensing points, controller-transmitter-final-element relationships, signal lines, fail/normal positions, analyzers, alarms/trips/interlocks and operating notes actually shown. IF MANUAL: extract controls, alarms/trips, startup/shutdown, operations, inspections and maintenance intervals.` },
 
-    { id: 'auto_safety_loto', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 4 - SAFETY / LOTO. IF P&ID: extract PSVs/relief destinations/set pressures only when visible, shutdown valves, isolation relationships, drains/vents/bleeds/blowdown, stored-pressure paths, utilities and every off-page continuation relevant to a draft LOTO boundary. IF MANUAL: extract warnings/cautions, safety prerequisites, lockout/isolation requirements and required tests. Never approve a LOTO.` },
+    { id: 'auto_safety_loto', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 4 - SAFETY / LOTO. IF P&ID: visually inspect the rendered drawing itself, including piping linework, symbols, arrows, tag bubbles, continuation notes and small annotations; do not rely only on embedded/searchable PDF text. For scanned/image-only drawings, treat each page as an engineering image and recover visible topology systematically. THEN: extract PSVs/relief destinations/set pressures only when visible, shutdown valves, isolation relationships, drains/vents/bleeds/blowdown, stored-pressure paths, utilities and every off-page continuation relevant to a draft LOTO boundary. IF MANUAL: extract warnings/cautions, safety prerequisites, lockout/isolation requirements and required tests. Never approve a LOTO.` },
 
     { id: 'auto_notes_continuations', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 5 - NOTES / CONTINUATIONS / REMAINING DETAIL. Inspect drawing notes, service labels, line specs, continuation drawing numbers, tie-ins, normal-position notes, table/legend text, revision-visible details, figures and remaining readable facts missed by earlier passes. Flag unreadable items instead of returning an empty result merely because the source is graphical or dense.` },
 
-    { id: 'auto_retrieval_diagnostic_index', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 6 - RETRIEVAL / DIAGNOSTIC INDEX. IF P&ID: create atomic facts tying drawing/page to equipment, valves, instruments, upstream/downstream paths, recycles/bypasses, common headers, control loops, proof measurements and LOTO-relevant continuations. IF MANUAL: index section/page by equipment/model, alarm/trip, maintenance interval, troubleshooting symptom and figure/table. This pass should recover useful indexing even when earlier extraction was sparse.` }
+    { id: 'auto_retrieval_diagnostic_index', max_tokens: limit, text: `${rules}\n\nAUTO-DETECT PASS 6 - RETRIEVAL / DIAGNOSTIC INDEX. IF P&ID: visually inspect the rendered drawing itself, including piping linework, symbols, arrows, tag bubbles, continuation notes and small annotations; do not rely only on embedded/searchable PDF text. For scanned/image-only drawings, treat each page as an engineering image and recover visible topology systematically. THEN: create atomic facts tying drawing/page to equipment, valves, instruments, upstream/downstream paths, recycles/bypasses, common headers, control loops, proof measurements and LOTO-relevant continuations. IF MANUAL: index section/page by equipment/model, alarm/trip, maintenance interval, troubleshooting symptom and figure/table. This pass should recover useful indexing even when earlier extraction was sparse.` }
 
   ];
 
@@ -3627,7 +3635,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AX, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AY, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3713,7 +3721,8 @@ exports.handler = async function(event) {
 
     const msg = safeString(message, MAX_MESSAGE_CHARS);
 
-    const ctx = safeString(context, MAX_CONTEXT_CHARS);
+    const fastQa = effectiveMode === 'qa_fast';
+    const ctx = safeString(context, fastQa ? 22000 : MAX_CONTEXT_CHARS);
 
     const plantSpecificQuery = isPlantSpecificQuery(msg, ctx, effectiveMode);
     const webResearchRequested = wantsWebResearch(msg, effectiveMode) && !plantSpecificQuery;
@@ -3722,6 +3731,7 @@ exports.handler = async function(event) {
     const system = buildSystemPrompt(effectiveMode, selectedKnowledge, learnedKnowledge);
 
     const messages = sanitizeHistory(history);
+    if (fastQa && messages.length > 6) messages.splice(0, messages.length - 6);
 
     const userContent = [];
 
@@ -3777,10 +3787,11 @@ exports.handler = async function(event) {
     const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
     const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit']);
-    const maxTokens = isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400)))));
+    const maxTokens = fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400))))));
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
-    const payload = { model: MODEL_V2, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
+    const requestModel = fastQa ? FAST_MODEL : MODEL_V2;
+    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
 
  
 
@@ -3849,7 +3860,7 @@ exports.handler = async function(event) {
       const finalInstruction = { type: 'text', text: 'Return the FINAL OPERATOR-FACING ANSWER now. No hidden analysis, no preamble. Be concise and actionable. Use at most 8 bullets and include confidence / fastest proof check when relevant.' };
       if (recoveryMessages.length && recoveryMessages[recoveryMessages.length - 1].role === 'user' && Array.isArray(recoveryMessages[recoveryMessages.length - 1].content)) recoveryMessages[recoveryMessages.length - 1].content.push(finalInstruction);
       else recoveryMessages.push({ role: 'user', content: [finalInstruction] });
-      const recoveryPayload = { model: MODEL_V2, max_tokens: 2600, system, messages: recoveryMessages };
+      const recoveryPayload = { model: requestModel, max_tokens: fastQa ? 1100 : 2600, system, messages: recoveryMessages };
       const recovery = await postJsonWithRetry('https://api.anthropic.com/v1/messages', {
         'content-type': 'application/json',
         'x-api-key': apiKey,
@@ -3933,7 +3944,7 @@ exports.handler = async function(event) {
 
       },
 
-      meta: { model: MODEL_V2, mode: effectiveMode, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, knowledgeSections: Object.keys(selectedKnowledge), plantSpecificQuery, webResearchRequested, usedWebSearch, stopReason: data.stop_reason || null }
+      meta: { model: requestModel, mode: effectiveMode, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, knowledgeSections: Object.keys(selectedKnowledge), plantSpecificQuery, webResearchRequested, usedWebSearch, stopReason: data.stop_reason || null }
 
     };
 
@@ -4040,5 +4051,5 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AX = RYAN_CHANGESET_12AX;
+module.exports.RYAN_CHANGESET_12AY = RYAN_CHANGESET_12AY;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
