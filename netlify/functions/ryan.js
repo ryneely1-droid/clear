@@ -650,13 +650,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AM';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AM-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AN';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AN-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AM-EXCHANGER-FLOW-PRESERVED-20260812';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AN-SHIFT-CALIBRATION-20260812';
 const RYAN_CHANGESET_12AM = Object.freeze([
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
@@ -1976,6 +1976,44 @@ const OPERATOR_PROCESS_KNOWLEDGE_0812Y = {
     'GSP/reflux return temperature transmitter TE-1222D is on the GSP return line and the current observed value is about -146.20 F.',
     'Current values are observations and must yield to LIVE simulator context when available.'
   ],
+  shiftReportCalibration_2026_08_12: {
+    sourceStatus: 'OPERATOR_SUPPLIED_SHIFT_REPORTS_8AM_THROUGH_8PM_PLUS_CURRENT_OPERATOR_READINGS',
+    interpretation: 'Use as empirical Clear Fork calibration/trend evidence, not design limits. Prefer the newest timestamp for current-state questions and preserve older points as trend history.',
+    current_8PM: {
+      richInlet_MMSCFD: 222, residue_MMSCFD: 209,
+      inletLoadSteps: { C4100:5, C4200:5 }, residueLoadSteps: { C6100:2, C6200:3, C6300:3 },
+      inletSuction_psig_report: 438, inletDischarge_psig_report: 947,
+      operatorCurrentHigherPrecision: { inletSuction_psig:440, inletDischarge_psig:952, residueSuction_psig:294.2, residueDischarge_psig:982.1, FIT8210A_MMSCFD:208.6 },
+      recycleStatus: 'No inlet or residue recycle valves open', JT_pct_open:22,
+      RSV_MMSCFD:36, GSP_MMSCFD:36, demethPressure_psig:264, demethOverhead_degF:-91, demethBottom_degF:168,
+      coldSeparator_GPM:214, coldSeparator_degF:-7, coldSeparator_psig:867,
+      refrigerationSuction_psig:16.3, refrigerationControllerSP_psig:17.0,
+      expanderRPM:23730, expanderCompThrustDifferential:99,
+      NGL_volume:354, NGL_ethane_pct:0.5, NGL_pressure_psig:900, C3_recovery_pct:97,
+      bottomReboiler_TE1223A_degF:95.5, sideReboiler_TE1224B_degF:58.4, sideReboiler_TE1224C_degF:1.8, sideReboiler_TE1224A_degF:-44.8
+    },
+    dayTrend: [
+      '8AM: inlet 223.25, residue 208.72 MMSCFD; inlet steps 5/5; residue 2/3/4; inlet suction/discharge 439.2/960.45 psig; JT 0%; RSV/GSP 32.71/37.24; expander 23980 rpm.',
+      '10AM: inlet 223.17, residue 209.32; steps 5/5 and 2/3/3; inlet suction/discharge 439.88/954.28; JT 0%; RSV/GSP 32.38/33.97; expander 23900 rpm.',
+      '12PM: inlet 222.79, residue 208.89; steps 5/5 and 2/3/4; inlet suction/discharge 438.75/962.39; JT 0%; RSV/GSP 32.29/36.30; expander 23940 rpm.',
+      '2PM: inlet 216.10, residue 204.01; inlet steps 5/4; residue 2/3/3; inlet suction/discharge 439.46/934.46; JT 0%; RSV/GSP 31.79/32.76; expander 23720 rpm.',
+      '4PM: inlet 217.53, residue 202.87; inlet steps 5/4; residue 2/3/3; inlet suction/discharge 439.55/934.94; JT 0%; RSV/GSP 32.87/34.30; expander 23660 rpm.',
+      '6PM: inlet 223.95, residue 209.47; inlet steps 5/5; residue 3/3/3; inlet suction/discharge 440.14/966.24; JT 0%; RSV/GSP 33.16/34.20; expander 24020 rpm.',
+      '8PM: inlet 222, residue 209; inlet steps 5/5; residue 2/3/3; inlet suction/discharge 438/947 reported (operator live precision separately 440/952); JT 22%; RSV/GSP 36/36; expander 23730 rpm.'
+    ],
+    industryResearchReferences: [
+      'Ariel Application Manual — Capacity and Load Control: compressor capacity is adjusted for process-flow demand, suction/discharge pressure management and load management; bypass/recycle from discharge to suction reduces net downstream capacity and generally does not reduce compressor power unless fully bypassed. Source: https://www.arielcorp.com/support/application-manual/capacity_control.html',
+      'Ariel Application Manual — Compressor Theory: reciprocating compression performance depends on suction/discharge conditions, clearance and volumetric behavior; do not infer equal flow from equal numeric load-step increments without machine-specific performance data. Source: https://www.arielcorp.com/support/application-manual/calculations/compressor_theory.html',
+      'Chart Industries — Brazed Aluminum Heat Exchangers: BAHX/plate-fin exchangers are core cryogenic natural-gas/NGL-recovery equipment; Ryan should correlate changing flow with exchanger duty, pressure drop, approach temperatures and downstream separation rather than treating each pass independently. Source: https://www.chartindustries.com/Products/Brazed-Aluminum-Heat-Exchangers'
+    ],
+    modelingRules: [
+      'Do not model reciprocating-compressor load steps as equal linear percentages. Clear Fork field data supports discrete/nonlinear capacity increments; loading is used to manage flow and suction/discharge conditions.',
+      'Recycle returning discharge gas to suction reduces net downstream capacity and should not be treated as additional sales throughput.',
+      'At the current no-recycle 5/5 inlet and 2/3/3 residue condition, calibrate around ~222 MMSCFD rich inlet and ~208.6-209 MMSCFD residue sales flow, ~440/952 psig inlet suction/discharge, and ~294.2/982.1 psig residue suction/discharge.',
+      'JT position is not inherently zero whenever the expander runs. Current verified operation has the JT valve about 22% open with the expander running; treat JT and expander as coordinated parallel pressure/flow-sharing paths and use live data over older normal-range snapshots.',
+      'The 17 psig refrigeration suction value is the controller setpoint for the one-compressor condition; actual PV may operate on either side of SP (8 PM report ~16.3 psig).'
+    ]
+  },
   currentOperatorCorrections: [
     'PIC-1441C refrigeration suction-pressure SP is 17 psig for the current one-compressor operating condition.',
     'V-1418 regen scrubber liquid level is currently about 6%. LIC-1418 SP is 18%; inventory rises from the bottom and the dump cycle returns level toward 0% when the dump condition is reached.',
