@@ -650,13 +650,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AN';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AN-20260812';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AO';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AO-20260812';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AN-SHIFT-CALIBRATION-20260812';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AO-INTERLOCKS-PID-LOTO-20260812';
 const RYAN_CHANGESET_12AM = Object.freeze([
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
@@ -672,8 +672,12 @@ const RYAN_CHANGESET_12AM = Object.freeze([
   'Fast-path routing keeps generic process questions out of the full Clear Fork plant context to reduce latency and token use.',
   'Optional Anthropic web-search tool is enabled for generic technical research requests while Clear Fork plant facts remain source-priority.',
   'Conversation history defaults reduced to six turns and compact history payloads for faster everyday Q&A.',
-  'Large P&ID/manual learning uses five specialized passes and can retain up to 1200 learned facts per active learned-knowledge set.',
-  'Multi-digit Clear Fork tag detection is authoritative before generic fast-path routing so tags such as PV-6050A and PIC-1441C cannot be misclassified as generic questions.'
+  'Large P&ID learning uses seven specialized passes; manuals use six passes; Ryan can retain up to 1800 learned facts per active learned-knowledge set with page/tag indexing for retrieval.',
+  'Multi-digit Clear Fork tag detection is authoritative before generic fast-path routing so tags such as PV-6050A and PIC-1441C cannot be misclassified as generic questions.',
+  '12AO adds operator-photographed DCS interlock knowledge for ESD-1000D, XV-1410, XV-6810A, XV-4250B, XV-1040B, EX-1121 and PCV-1121E; photographed row order is authoritative and unseen numeric trip setpoints remain PENDING_VERIFICATION.',
+  'V-1040 calibration: LIC-1040A SP 35%, PV 8.7%, LV-1040A CV 0% open; above SP the controller opens LV-1040A and below SP closes toward 0%.',
+  'EX-1121 red tag is a restart inhibit: a running expander may be tagged for maintenance planning, but once stopped it cannot restart until the tag is removed.',
+  'P&ID ingestion now builds page/tag/continuation indexes plus a LOTO boundary matrix so large drawing sets can be retained and retrieved without inventing isolation points.'
 ]);
 const MODEL_V2 = process.env.RYAN_MODEL || 'claude-sonnet-5';
 
@@ -699,7 +703,7 @@ const IMAGE_MAX_TOKENS = Math.max(2048, Math.min(12000, Number(process.env.RYAN_
 
 const FACTS_PER_PASS = Math.max(20, Math.min(90, Number(process.env.RYAN_FACTS_PER_PASS || 55)));
 
-const MAX_LEARNED_FACTS = Math.max(200, Math.min(2000, Number(process.env.RYAN_MAX_LEARNED_FACTS || 1200)));
+const MAX_LEARNED_FACTS = Math.max(200, Math.min(3000, Number(process.env.RYAN_MAX_LEARNED_FACTS || 1800)));
 
  
 
@@ -1134,6 +1138,14 @@ const PETROSKILLS_KNOWLEDGE = {
 // Drawing-derived topology outranks generic process theory. Use the source drawing for exact valve/instrument
 
 // details; never invent a tag, PSV set pressure, line size/spec, fail position, or isolation point that is unreadable.
+
+const CLEAR_FORK_INTERLOCK_UPDATE_20260812 = Object.freeze({
+  source: 'Operator photographs of real Clear Fork DCS interlock popups, 2026-08-12 night shift',
+  authority: 'Plant-specific photographed DCS evidence; preserve photographed row order and do not invent unseen numeric setpoints.',
+  v1040: { lic1040a: { sp_pct:35, pv_pct:8.7, cv_pct:0, action:'PV above SP opens LV-1040A; PV below SP closes toward 0%' } },
+  devices: ['ESD-1000D','XV-1040A','XV-1040B','XV-1410','XV-6810A','XV-4250B','EX-1121','PCV-1121E'],
+  lotoRule: 'Interlock popups are control/protection evidence, not isolation lists. Never substitute interlocks for P&ID tracing, energy-source identification, authorized procedure, or field verification.'
+});
 
 const CLEAR_FORK_PID_KNOWLEDGE = {
 
@@ -2256,6 +2268,8 @@ const KNOWLEDGE_REGISTRY = {
 
   finalPIDs: FINAL_PID_MASTER_KNOWLEDGE,
 
+  interlocks0812: CLEAR_FORK_INTERLOCK_UPDATE_20260812,
+
   operatorProcess09J: OPERATOR_PROCESS_KNOWLEDGE_09J,
 
   operatorProcess09K: OPERATOR_PROCESS_KNOWLEDGE_09K,
@@ -3078,7 +3092,7 @@ function buildBatchPasses(documentType, fileId, label, existingContext, mediaTyp
 
   const source = safeString(label || 'unnamed source', 200);
 
-  const existing = safeString(existingContext || '', 16000);
+  const existing = safeString(existingContext || '', 24000);
 
   const limit = documentType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS;
 
@@ -3107,7 +3121,9 @@ function buildBatchPasses(documentType, fileId, label, existingContext, mediaTyp
       { id: 'pid_safety_loto', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 3 - SAFETY / RELIEF / ISOLATION. Extract PSVs with protected equipment, set pressure/rating only when shown, relief destination, inlet/outlet isolation, shutdown valves, isolation boundaries, drains/vents/bleeds/depressurization points, and LOTO-relevant energy/isolation relationships. This is source extraction only, never an approved LOTO.` },
 
       { id: 'pid_notes_specs', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 4 - DRAWING NOTES / SPECIAL DETAILS / GAPS. Extract process notes, line/service annotations, special valve notes, tie-in/continuation drawing references, explicit operating/normal-position notes, material/spec callouts, and remaining legible plant-specific details not already covered. Flag ambiguities, conflicts, and anything requiring field verification.` },
-      { id: 'pid_dependency_diagnostic_index', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 5 - DEPENDENCY / DIAGNOSTIC INDEX. From relationships actually shown, extract compact source-backed upstream->downstream dependencies, controller PV/SP/final-element associations, shared headers, recycle/bypass paths, peer equipment groupings, and which measurements can prove flow/restriction/valve-response hypotheses. Do not invent physics or connections absent from the drawing.` }
+      { id: 'pid_dependency_diagnostic_index', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 5 - DEPENDENCY / DIAGNOSTIC INDEX. From relationships actually shown, extract compact source-backed upstream->downstream dependencies, controller PV/SP/final-element associations, shared headers, recycle/bypass paths, peer equipment groupings, and which measurements can prove flow/restriction/valve-response hypotheses. Do not invent physics or connections absent from the drawing.` },
+      { id: 'pid_page_tag_register', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 6 - PAGE / TAG / CONTINUATION REGISTER. Build a compact retrieval index keyed by drawing/page, equipment tag, valve tag, instrument tag, line number and off-page continuation. Record the page/drawing source with every entry. Preserve duplicate tags as separate source observations when they occur on different sheets instead of silently merging them.` },
+      { id: 'pid_loto_boundary_matrix', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: P&ID / PROCESS DRAWING. PASS 7 - LOTO BOUNDARY MATRIX. For each major equipment item visible, enumerate ONLY source-shown energy paths that must be checked for a draft isolation: process inlet/outlet, recycle/bypass/common header, pressure source, liquid inventory, drains/vents/blowdown, relief/PSV path, utilities, rotating/electrical/pneumatic/hydraulic energy when explicitly shown, and every off-page continuation. For each potential isolation point record tag, side of boundary, source page/drawing, and whether positive-isolation capability is actually shown. If any path lacks a proven isolation or destination, mark the boundary INCOMPLETE and executionBlocked=true. Never approve a LOTO.` }
 
     ];
 
@@ -3124,7 +3140,8 @@ function buildBatchPasses(documentType, fileId, label, existingContext, mediaTyp
       { id: 'manual_operations', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 3 - OPERATIONS. Extract startup, shutdown, warm-up/cool-down, loading/unloading, normal operating checks, abnormal operating guidance, and required tests actually stated.` },
 
       { id: 'manual_maintenance_troubleshooting', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 4 - MAINTENANCE / TROUBLESHOOTING. Extract inspection and maintenance intervals, replacement criteria, troubleshooting cause/action tables, required measurements/tests, preservation/storage instructions, consumables, and maintenance warnings. Keep OEM guidance separate from Clear Fork-specific practice unless explicitly stated.` },
-      { id: 'manual_diagnostic_matrix', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 5 - DIAGNOSTIC MATRIX. Extract source-stated symptom -> possible cause -> check/test -> corrective guidance relationships, operating conditions that change capacity/temperature/pressure, and condition-monitoring indicators. Preserve OEM wording/units and do not convert family guidance into Clear Fork setpoints.` }
+      { id: 'manual_diagnostic_matrix', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 5 - DIAGNOSTIC MATRIX. Extract source-stated symptom -> possible cause -> check/test -> corrective guidance relationships, operating conditions that change capacity/temperature/pressure, and condition-monitoring indicators. Preserve OEM wording/units and do not convert family guidance into Clear Fork setpoints.` },
+      { id: 'manual_page_index_crossrefs', max_tokens: limit, text: `${rules}\n\nDOCUMENT TYPE: MANUAL. PASS 6 - PAGE INDEX / CROSS-REFERENCE. Build a compact retrieval index by section/page, equipment/model applicability, alarm/trip, maintenance interval, part/specification, troubleshooting symptom and referenced figure/table. Keep page/section citations in the extracted facts so Ryan can retrieve the right small slice later instead of reloading the whole manual.` }
 
     ];
 
@@ -3565,7 +3582,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AM, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AM, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3924,6 +3941,7 @@ module.exports.SIMULATOR_UI_KNOWLEDGE = SIMULATOR_UI_KNOWLEDGE;
 module.exports.PETROSKILLS_KNOWLEDGE = PETROSKILLS_KNOWLEDGE;
 
 module.exports.CLEAR_FORK_PID_KNOWLEDGE = CLEAR_FORK_PID_KNOWLEDGE;
+module.exports.CLEAR_FORK_INTERLOCK_UPDATE_20260812 = CLEAR_FORK_INTERLOCK_UPDATE_20260812;
 
 module.exports.FINAL_PID_MASTER_KNOWLEDGE = FINAL_PID_MASTER_KNOWLEDGE;
 
