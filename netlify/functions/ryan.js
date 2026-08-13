@@ -650,13 +650,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12AY';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AY-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12AZ';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12AZ-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AY-FAST-LOCAL-PID-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12AZ-INTERACTIVE-INGEST-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -667,7 +667,11 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
 ];
 
-const RYAN_CHANGESET_12AY = Object.freeze([
+const RYAN_CHANGESET_12AZ = Object.freeze([
+  '12AZ DOCUMENT RELIABILITY: removes Message Batches from the interactive learning path; PDFs/P&IDs are uploaded once then processed one pass per normal Messages API request so the UI cannot sit in batch in_progress indefinitely.',
+  '12AZ PARTIAL SUCCESS: each P&ID/manual pass has its own result, timeout/error state and retained facts; one failed pass does not discard successful passes.',
+  '12AZ IMAGE LEARNING: images use a single fast structured vision extraction instead of background batches, with a bounded request timeout and visible completion/failure.',
+  '12AZ TIMEOUT DISCIPLINE: upstream requests time out before Netlify inactivity limits so Ryan returns a useful error instead of an HTML 504.',
   'Simple chat defaults to a fast, attachment-free route to avoid Netlify inactivity timeouts.',
   'Selected documents are attached to chat only when the operator explicitly asks about the attachment or invokes a document/LOTO workflow.',
   'Local PDF/P&ID selection and drag/drop do not require HTTPS.',
@@ -719,17 +723,17 @@ const MAX_CONTEXT_CHARS = Number(process.env.RYAN_MAX_CONTEXT_CHARS || 120000);
 
 const MAX_ATTACHMENT_BYTES = Number(process.env.RYAN_MAX_ATTACHMENT_BYTES || 50 * 1024 * 1024);
 
-const REQUEST_TIMEOUT_MS = Number(process.env.RYAN_REQUEST_TIMEOUT_MS || 45000);
+const REQUEST_TIMEOUT_MS = Number(process.env.RYAN_REQUEST_TIMEOUT_MS || 22000);
 
 const INPUT_PRICE_PER_MILLION = Number(process.env.RYAN_INPUT_PRICE_PER_MILLION || 2);
 
 const OUTPUT_PRICE_PER_MILLION = Number(process.env.RYAN_OUTPUT_PRICE_PER_MILLION || 10);
 
-const DOC_MAX_TOKENS = Math.max(2048, Math.min(20000, Number(process.env.RYAN_DOC_MAX_TOKENS || 9000)));
+const DOC_MAX_TOKENS = Math.max(1600, Math.min(6000, Number(process.env.RYAN_DOC_MAX_TOKENS || 3200)));
 
-const IMAGE_MAX_TOKENS = Math.max(2048, Math.min(12000, Number(process.env.RYAN_IMAGE_MAX_TOKENS || 5000)));
+const IMAGE_MAX_TOKENS = Math.max(1200, Math.min(5000, Number(process.env.RYAN_IMAGE_MAX_TOKENS || 2400)));
 
-const FACTS_PER_PASS = Math.max(20, Math.min(90, Number(process.env.RYAN_FACTS_PER_PASS || 55)));
+const FACTS_PER_PASS = Math.max(15, Math.min(60, Number(process.env.RYAN_FACTS_PER_PASS || 30)));
 
 const MAX_LEARNED_FACTS = Math.max(200, Math.min(3000, Number(process.env.RYAN_MAX_LEARNED_FACTS || 1800)));
 
@@ -2365,7 +2369,7 @@ function safeString(value, maxChars) {
 
 function isPlantSpecificQuery(message, context, mode) {
   const text = `${message || ''}\n${context || ''}`;
-  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_batch_start','digest_batch_status','memory_extract'].includes(String(mode || '').toLowerCase())) return true;
+  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract'].includes(String(mode || '').toLowerCase())) return true;
   return hasClearForkTag(text) || /\b(Clear\s*Fork|HMI|control board|current PV|current SP|current CV|live plant|this plant|our plant|plant inlet|residue compressor|demethanizer|stabilizer tower|Ryan scan|LOTO|P&ID|PID)\b/i.test(text);
 }
 
@@ -2632,7 +2636,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12AY.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12AZ.join(' | ')}
 - Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
@@ -3236,7 +3240,7 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
 
   const payload = {
 
-    model: MODEL_V2,
+    model: FAST_MODEL,
 
     max_tokens: IMAGE_MAX_TOKENS,
 
@@ -3256,7 +3260,7 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
 
     ...(attachment.fileId ? { 'anthropic-beta': 'files-api-2025-04-14' } : {})
 
-  }, payload);
+  }, payload, 2);
 
   if (!result.ok) {
 
@@ -3323,6 +3327,70 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
 }
 
  
+
+
+async function prepareInteractiveDocument(attachment, documentType, existingContext, apiKey) {
+  if (!attachment) throw new Error('Document learning requires an attachment.');
+  const docType = inferDocumentType(attachment, documentType);
+  const fileId = await uploadAttachmentToAnthropic(attachment, apiKey);
+  const mediaType = String(attachment && attachment.mediaType || 'application/pdf').toLowerCase();
+  const sourceLabel = safeString(attachment && attachment.label || 'Ryan source document', 200);
+  const passes = buildBatchPasses(docType, fileId, sourceLabel, existingContext, mediaType);
+  return { fileId, documentType: docType, mediaType, sourceLabel, passCount: passes.length, passIds: passes.map(p => p.id) };
+}
+
+async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKey) {
+  if (!job || !job.fileId) throw new Error('Document pass requires an uploaded fileId.');
+  const docType = String(job.documentType || 'auto').toLowerCase();
+  const sourceLabel = safeString(job.sourceLabel || 'Ryan source document', 200);
+  const mediaType = String(job.mediaType || 'application/pdf').toLowerCase();
+  const passes = buildBatchPasses(docType, job.fileId, sourceLabel, existingContext, mediaType);
+  const idx = Math.max(0, Math.min(passes.length - 1, Number(passIndex || 0)));
+  const pass = passes[idx];
+  if (!pass) throw new Error(`Document pass ${idx} does not exist.`);
+  const payload = {
+    model: FAST_MODEL,
+    max_tokens: Math.min(pass.max_tokens || DOC_MAX_TOKENS, DOC_MAX_TOKENS),
+    output_config: documentExtractionOutputConfig(),
+    messages: [{ role: 'user', content: [batchSourceBlock(job.fileId, sourceLabel, mediaType), { type: 'text', text: pass.text }] }]
+  };
+  const result = await postJsonWithRetry('https://api.anthropic.com/v1/messages', {
+    'content-type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': ANTHROPIC_VERSION_V2,
+    'anthropic-beta': 'files-api-2025-04-14'
+  }, payload, 2);
+  if (!result.ok) {
+    const d = result.data || {};
+    throw new Error(d.error && d.error.message ? d.error.message : `Document pass failed (HTTP ${result.status}).`);
+  }
+  const data = result.data || {};
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text || '').join('\n');
+  const parsed = parseJsonReply(text);
+  const partialFacts = !parsed ? parsePartialFactsFromTruncatedJson(text) : [];
+  const facts = parsed && Array.isArray(parsed.facts) ? parsed.facts : (Array.isArray(parsed) ? parsed : partialFacts);
+  const seen = new Set();
+  const cleaned = (facts || []).filter(f => {
+    const statement = safeString(f && f.statement || '', 1400).trim();
+    if (!statement) return false;
+    const key = statement.toLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    f.statement = statement;
+    f.sourceLabel = f.sourceLabel || sourceLabel;
+    f.verificationStatus = 'DOCUMENT_EXTRACTED_UNVERIFIED';
+    return true;
+  }).slice(0, FACTS_PER_PASS);
+  const usage = data.usage || {};
+  return {
+    passIndex: idx,
+    passId: pass.id,
+    facts: cleaned,
+    warnings: [...(parsed && parsed.warnings || []), ...(!parsed ? [`Pass output needed recovery (stop_reason=${data.stop_reason || 'unknown'}).`] : [])],
+    stopReason: data.stop_reason || null,
+    usage: { inputTokens: Number(usage.input_tokens || 0), outputTokens: Number(usage.output_tokens || 0) }
+  };
+}
 
 async function startDocumentBatch(attachment, documentType, existingContext, apiKey) {
 
@@ -3635,7 +3703,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AY, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12AZ, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3672,6 +3740,29 @@ exports.handler = async function(event) {
     }
 
  
+
+    // Interactive document learning: upload once, then run one bounded extraction pass per request.
+    // This avoids Message Batches sitting in_progress for an interactive operator workflow.
+    if (effectiveMode === 'digest_prepare') {
+      if (!attachment) return { statusCode: 400, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Document learning requires an attachment.' }) };
+      try {
+        const job = await prepareInteractiveDocument(attachment, documentType, context, apiKey);
+        return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ buildId: RYAN_BUILD_ID, job }) };
+      } catch (e) {
+        return { statusCode: 502, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: `Could not prepare document learning: ${e.message || e}`, buildId: RYAN_BUILD_ID }) };
+      }
+    }
+    if (effectiveMode === 'digest_pass') {
+      const job = body && body.job;
+      const passIndex = Number(body && body.passIndex || 0);
+      if (!job || !job.fileId) return { statusCode: 400, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ error: 'Missing interactive document job/fileId.' }) };
+      try {
+        const pass = await runInteractiveDocumentPass(job, passIndex, context, apiKey);
+        return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ buildId: RYAN_BUILD_ID, pass }) };
+      } catch (e) {
+        return { statusCode: 502, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: `Document pass ${passIndex + 1} failed: ${e.message || e}`, buildId: RYAN_BUILD_ID, passIndex }) };
+      }
+    }
 
     // Long document learning is asynchronous on Anthropic's Message Batches API.
 
@@ -4051,5 +4142,5 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12AY = RYAN_CHANGESET_12AY;
+module.exports.RYAN_CHANGESET_12AZ = RYAN_CHANGESET_12AZ;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
