@@ -616,7 +616,11 @@ const OEM_MANUAL_KNOWLEDGE = {
 
       'Operating chapters cover pre-startup, seal-gas startup, lube-oil startup, startup sequence, troubleshooting, data collection, and shutdown.',
 
-      'Recommended spares identify expander and compressor bearings, wheels, shaft seals, vibration pickups, tachometer pickup, lube-oil and seal-gas filter elements, relief/safety valves, PLC modules, and vibration transmitters.'
+      'Recommended spares identify expander and compressor bearings, wheels, shaft seals, vibration pickups, tachometer pickup, lube-oil and seal-gas filter elements, relief/safety valves, PLC modules, and vibration transmitters.',
+
+      'Atlas Copco Gas & Process public technical description confirms compressor-loaded expanders use a centrifugal compressor on the common shaft, variable inlet guide vanes control flow across changing process conditions, and recovered expansion power is reused as compression power.',
+
+      'Atlas Copco public cryogenic guidance describes turboexpansion as providing greater cooling and liquid recovery than pressure-reduction valves. Use this only for generic physics; Clear Fork HMI/P&ID/operator data govern exact control logic and setpoints.'
 
     ]
 
@@ -650,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BB';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BB-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BC';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BC-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BB-LEARNED-RETRIEVAL-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BC-EXPANDER-SPLIT-ALARMHIST-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -667,7 +671,13 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
 ];
 
-const RYAN_CHANGESET_12BB = Object.freeze([
+const RYAN_CHANGESET_12BC = Object.freeze([
+  '12BC EXPANDER/COLD-SECTION CALIBRATION: cold-separator vapor has three parallel paths (E-1222 reflux, PCV-1121A JT, XV-1121B/EX-1121); current expander instrumentation is PDT-1121B 3.4 PSID, PT-1121B 876.7 psig, TE-1121D -85.7 F, PT-1121D 276.3 psig; PDT HI 5 / HIHI EX shutdown 15.',
+  '12BC PIC-1521D SPLIT CONTROL: JT faceplate SP 265/PV ~264 and EX faceplate SP 268/PV ~265/CV 100%; EX SP range 225-350 psig. Once IGV is saturated, additional pressure/throughput demand recruits PCV-1121A; current JT ~22%, extreme 350-psig example calibrates near 50% JT and roughly 240-245 MMSCFD. Compressor load steps remain preferred rate control.',
+  '12BC TURBOEXPANDER PHYSICS: Atlas Copco principle retained as OEM/general support—IGVs meter expander flow, expansion work drives the common-shaft booster compressor, and turboexpansion provides stronger cryogenic refrigeration/liquid recovery than simple JT pressure letdown. Clear Fork HMI/operator values govern plant-specific behavior.',
+  '12BC EXCHANGER SPLIT: TCV-1221 current 100%, TCV-1223 current 23%; manual steps are 1%. Additional 1221-open demand above 100 spills to 1223. Once 1223 exceeds 50%, it progressively pinches 1221 to a protected 10% minimum. TIC-1224B current 63/62.9/12.97 and TDIC-1224B 20/45/100.',
+  '12BC ALARM HISTORY: ACK no longer implies deletion; chronological alarm/event history retains first-in, acknowledgement, clear/reset, duration, recurrence and alarm/trip/ESD/event type for trend review.',
+  '12BC E-5000 HOT OIL: TV-5005A is physically on the hot-oil supply to the stabilizer inlet preheater; TIC-5000D current SP 80 F, PV 85.9 F, CV 0% MAN. In AUTO, PV above SP drives the valve open; hot-oil return leaves the exchanger bottom.',
   '12BB LEARNED-DOCUMENT RETRIEVAL: ordinary questions never resend an already-learned P&ID; the browser sends only a small ranked set of retained facts.',
   '12BB DOCUMENT SUMMARY: what-did-you-learn questions can be answered directly from the local retained-fact index without another Anthropic/Netlify round trip.',
   '12BA P&ID EXTRACTION FIX: structured JSON extraction requests never enable document citations; source/page provenance is stored in extracted fact metadata instead, avoiding Anthropic citations + output_config incompatibility.',
@@ -1452,7 +1462,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'Dry gas uses a 60/40 split. Majority gas/gas side: through TCV-1221D into the top of E-1221 gas/gas exchanger, exits side horizontally, then TE-1221B about 4.7 F, PDT-1221 about 17.11 PSID, then to chiller. TE-1221D LOW 40 F, LOLO shutdown -15 F; PDT-1221 HI 20 PSID.',
 
-    'Minor bottom/side side: TCV-1223 -> reboilers. TIC-1224B AUTO SP 60 F, PV about 60.2, CV about 13.05%; TDIC-1224B SP 20 F, PV about 37.8, CV 100%. TCV-1221D and TCV-1223 cross-limit: opening either beyond 50% progressively pinches the other, potentially to ~5%.',
+    'Minor bottom/side side: TCV-1223 -> reboilers. Current observed split is TCV-1221 100% / TCV-1223 23%, with most flow on 1221. TIC-1224B SP 63 F, PV 62.9, CV 12.97%; TDIC-1224B SP 20 F, PV 45, CV 100%. Manual valve steps are 1%. Additional TCV-1221 opening demand after 100% transfers to TCV-1223; once TCV-1223 exceeds 50%, it progressively pinches TCV-1221 to a protected 10% minimum.',
 
     'Bottom/side exchanger inlet: TE-1223A about 98.9 F; PDT-1223A about 4.7 PSID, HI 15, HIHI facility ESD 20; outlet TE-1224C about 2.5 F; then joins gas/gas outlet at common chiller inlet header.'
 
@@ -1464,7 +1474,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. TCV-1421 cold-spin valve normally stays closed, TIC-1421 SP -30 F, PV about -9.2, CV 0.',
 
-    'Cold-sep vapor splits to JT, reflux condenser, and expander. JT PCV-1121A normally 0, may be 1-7% at maximum loading; if expander is lost JT automatically opens roughly 80-95%. PIC-1521D JT SP 265, PV about 264.8. Expander path XV-1121B -> PDT-1121B ~3.5 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B ~889.49 -> EX-1121 (~24180 rpm / IGV 100%) -> TE-1121D ~-86.8 -> PT-1121D ~277.05 -> common outlet. PIC-1521D EX SP 268, PV ~266.07, CV 100%.'
+    'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 276.3 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is ~22%. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput ~240-245 MMSCFD, but compressor load steps are the preferred normal rate lever.'
 
   ],
 
@@ -1478,7 +1488,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
   ],
 
-  capacity: ['Vortex-separator flow meter can physically reach about 235 MMSCFD at max load steps, but 225 MMSCFD is the recommended maximum and >225 should alarm. Because of shrinkage/separation, residue outlet flow normally maxes around 217 MMSCFD.']
+  capacity: ['Normal throughput should be managed primarily with inlet/residue compressor load steps. Operator-observed/high tower-pressure operation can push the model into roughly 240-245 MMSCFD with EX IGV saturated and increasing JT share; this is an extreme operating envelope, not the preferred normal rate-control method.']
 
 };
 
@@ -2639,7 +2649,7 @@ CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12BB.join(' | ')}
+- Active change set: ${RYAN_CHANGESET_12BC.join(' | ')}
 - Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
@@ -3706,7 +3716,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BB, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BC, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4145,5 +4155,5 @@ module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag,
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
-module.exports.RYAN_CHANGESET_12BB = RYAN_CHANGESET_12BB;
+module.exports.RYAN_CHANGESET_12BC = RYAN_CHANGESET_12BC;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
