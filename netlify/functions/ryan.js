@@ -654,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BF';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BF-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BG';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BG-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BF-EXPANDER-DEHY-GC-ROUTING-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BG-DOCUMENT-FACT-REPORT-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,6 +672,8 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12BG DOCUMENT LEARNING REPORT: after PDF/P&ID/manual/image ingestion, every retained extracted fact is returned to the operator in numbered chat-style parts. Display chunking never controls retention; facts are persisted first, then reported. Duplicate sources still do not create duplicate facts.',
+  '12BG RETENTION CAPACITY: browser learned-fact storage cap raised to 5000 extracted atomic facts per learned-source run; source/page/classification metadata remains attached to every retained fact.',
   '12BF EXPANDER CURRENT CORRECTION: normal running condition has EX-1121 IGV taking the cold-separator vapor and PCV-1121A JT pinched near 0%; as IGV opens, JT closes. If EX-1121 is lost, IGV walks toward 0 while JT ramps quickly but not instantaneously toward about 80%.',
   '12BF EX-1121 LIVE SNAPSHOT: PT/PIC-1121E about 249 psig, PT-1121B about 875.6 psig, PT-1121A about 241.43 psig, SE-1121 about 24,030 RPM, TE-1121D about -85.70 F, PT-1121D about 249 psig, TE-1421A cold-separator outlet about -7 F, and lube-oil differential about 152 PSID with small normal fluctuation. PT-106/107 alarm low 110 and trip low 90 PSID.',
   '12BF BOOSTER/EXPANDER TOPOLOGY: EX-1121 discharge goes to T-1521 and never through A-1321. Only C-1121 booster discharge goes through A-1321. Booster anti-surge recycle comes off downstream of A-1321, passes FCV-1211A (currently about 0% open), and returns to the common C-1121 suction header.',
@@ -724,7 +726,7 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   'Fast-path routing keeps generic process questions out of the full Clear Fork plant context to reduce latency and token use.',
   'Optional Anthropic web-search tool is enabled for generic technical research requests while Clear Fork plant facts remain source-priority.',
   'Conversation history is bounded and compact for performance; 12AX defaults to ten recent messages so short follow-ups retain enough local context without flooding the request.',
-  'Large P&ID learning uses seven specialized passes; manuals use six passes; Ryan can retain up to 1800 learned facts per active learned-knowledge set with page/tag indexing for retrieval.',
+  'Large P&ID learning uses seven specialized passes; manuals use six passes; Ryan can retain up to 5000 extracted facts per learned-source run in the browser knowledge store, with page/tag indexing for retrieval.',
   'Multi-digit Clear Fork tag detection is authoritative before generic fast-path routing so tags such as PV-6050A and PIC-1441C cannot be misclassified as generic questions.',
   '12AO adds operator-photographed DCS interlock knowledge for ESD-1000D, XV-1410, XV-6810A, XV-4250B, XV-1040B, EX-1121 and PCV-1121E; photographed row order is authoritative and unseen numeric trip setpoints remain PENDING_VERIFICATION.',
   '12AP consolidates the GC display to one lower analyzer panel; V-1040 is one shared vessel on Plant Inlet/Inlet Separation with drain path V-1040 -> XV-1040B -> LCV-1040A -> closed-drain header and LIC-1040A controlling LCV-1040A.',
@@ -2831,7 +2833,7 @@ function attachmentToContentBlock(attachment) {
 
 function buildIngestionInstruction(documentType, label) {
 
-  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid compact JSON, no markdown fences and no prose outside JSON. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Existing P&ID Reference Library context may be supplied only to flag duplicates/conflicts; never use it to fill unreadable or missing facts in the attachment.`;
+  const common = `Source label: ${label || 'unnamed document'}. Return ONLY valid compact JSON, no markdown fences and no prose outside JSON. Every extracted fact must keep sourceLabel and verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Be comprehensive inside the assigned pass: emit every distinct readable/source-supported atomic fact that fits the pass scope; do not omit a fact merely because it seems routine. The browser persists all returned facts before displaying them. Existing P&ID Reference Library context may be supplied only to flag duplicates/conflicts; never use it to fill unreadable or missing facts in the attachment.`;
 
   if (documentType === 'pid') {
 
@@ -3726,7 +3728,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
