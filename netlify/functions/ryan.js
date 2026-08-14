@@ -654,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BH';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BH-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BI';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BI-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BH-LOTO-ATTACHMENT-SCOPE-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BI-LOTO-REQUEST-FIX-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,8 +672,6 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
-  '12BH LOTO STRUCTURED-OUTPUT FIX: when Build LOTO / Work Plan uses output_config JSON schema, uploaded PDF/text document blocks are sent without Anthropic document citations. This removes the citations + output_format incompatibility while preserving source/page provenance inside Ryan work-plan evidence fields.',
-  '12BH LOTO SCOPE COMPOSER: Ask Ryan includes a dedicated LOTO/work-plan instruction box so the operator can state the exact equipment and maintenance task; the typed scope is sent with the selected P&ID/document and remains subject to source-backed boundary tracing and field verification.',
   '12BG DOCUMENT LEARNING REPORT: after PDF/P&ID/manual/image ingestion, every retained extracted fact is returned to the operator in numbered chat-style parts. Display chunking never controls retention; facts are persisted first, then reported. Duplicate sources still do not create duplicate facts.',
   '12BG RETENTION CAPACITY: browser learned-fact storage cap raised to 5000 extracted atomic facts per learned-source run; source/page/classification metadata remains attached to every retained fact.',
   '12BF EXPANDER CURRENT CORRECTION: normal running condition has EX-1121 IGV taking the cold-separator vapor and PCV-1121A JT pinched near 0%; as IGV opens, JT closes. If EX-1121 is lost, IGV walks toward 0 while JT ramps quickly but not instantaneously toward about 80%.',
@@ -2575,7 +2573,7 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
   if (mode === 'loto' || mode === 'loto_workplan') {
 
-    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AM in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
+    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AM in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution. RETURN ONE JSON OBJECT ONLY, with no markdown fences or prose outside it. Required keys: title,status,scope,equipment,sourceDrawings,workBoundary,sourceEvidence,continuationDrawings,energyPathTrace,workPlanSteps,energySources,hazards,isolationPoints,blowdownPoints,psvMarkers,verificationChecklist,zeroEnergyCriteria,conflictsAndAmbiguities,approvalRequirements,executionBlocked,restorationSteps,missingInformation,fieldVerificationRequired,finalWarning. equipment/sourceDrawings/sourceEvidence/continuationDrawings/energyPathTrace/workPlanSteps/energySources/hazards/verificationChecklist/zeroEnergyCriteria/conflictsAndAmbiguities/approvalRequirements/restorationSteps/missingInformation are arrays of strings. isolationPoints/blowdownPoints/psvMarkers are arrays of objects with string keys tag,action,purpose,sourceDrawing,verification,sourceType,serviceOrEnergy,upstreamBoundary,downstreamBoundary,confidence. executionBlocked and fieldVerificationRequired are booleans.`;
 
   } else if (mode === 'audit') {
 
@@ -2761,9 +2759,7 @@ function estimateBase64Bytes(base64) {
 
  
 
-function attachmentToContentBlock(attachment, options = {}) {
-
-  const citationsEnabled = options.citationsEnabled !== false;
+function attachmentToContentBlock(attachment) {
 
   if (!attachment) return null;
 
@@ -2781,7 +2777,7 @@ function attachmentToContentBlock(attachment, options = {}) {
 
     if (mediaType === 'application/pdf' || mediaType === 'text/plain' || !mediaType) {
 
-      return { type: 'document', source: { type: 'file', file_id: attachment.fileId }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
+      return { type: 'document', source: { type: 'file', file_id: attachment.fileId }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
 
     }
 
@@ -2805,7 +2801,7 @@ function attachmentToContentBlock(attachment, options = {}) {
 
   if (mediaType === 'application/pdf') {
 
-    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
+    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
 
   }
 
@@ -2813,7 +2809,7 @@ function attachmentToContentBlock(attachment, options = {}) {
 
     const text = attachment.text || Buffer.from(attachment.base64, 'base64').toString('utf8');
 
-    return { type: 'document', source: { type: 'text', media_type: 'text/plain', data: safeString(text, 500000) }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
+    return { type: 'document', source: { type: 'text', media_type: 'text/plain', data: safeString(text, 500000) }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
 
   }
 
@@ -3732,7 +3728,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, lotoStructuredAttachmentCitationsDisabled: true, lotoScopeComposer: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, lotoPlainJsonNoGrammar: true, lotoDocumentCitationsDisabled: true, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3854,14 +3850,19 @@ exports.handler = async function(event) {
     if (fastQa && messages.length > 6) messages.splice(0, messages.length - 6);
 
     const userContent = [];
-    const isLotoWorkplan = effectiveMode === 'loto_workplan';
+
+ 
 
     if (attachment) {
-      // Anthropic does not allow document citations and structured output_format/output_config
-      // in the same request. LOTO uses a JSON schema, so omit document citations here and
-      // preserve provenance in the structured sourceEvidence/sourceDrawing fields instead.
-      const block = attachmentToContentBlock(attachment, { citationsEnabled: !isLotoWorkplan });
+
+      const block = attachmentToContentBlock(attachment);
+      // Anthropic does not allow uploaded-document citations together with some
+      // structured/grammar constrained request paths. LOTO uses source fields in
+      // the returned draft instead of API citation blocks, so keep citations off.
+      if (block && effectiveMode === 'loto_workplan' && block.type === 'document' && block.citations) delete block.citations;
+
       if (block) userContent.push(block);
+
     }
 
  
@@ -3903,12 +3904,18 @@ exports.handler = async function(event) {
 
  
 
+    const isLotoWorkplan = effectiveMode === 'loto_workplan';
+
     const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit']);
     const maxTokens = fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400))))));
 
-    const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
+    // LOTO/P&ID drafting deliberately uses a plain JSON response instead of
+    // output_config/json_schema. The previous schema + tool grammar exceeded the
+    // upstream compiled-grammar limit on dense P&ID requests. Keep LOTO source-
+    // grounded and deterministic through the prompt + server validation below.
+    const webTools = (!isLotoWorkplan && webResearchRequested) ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
     const requestModel = fastQa ? FAST_MODEL : MODEL_V2;
-    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
+    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}) };
 
  
 
@@ -4011,7 +4018,13 @@ exports.handler = async function(event) {
 
     if (effectiveMode === 'loto_workplan') {
 
-      try { parsedWorkplan = JSON.parse(reply); } catch (e) {
+      try {
+        let workplanText = String(reply || '').trim();
+        workplanText = workplanText.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+        const firstBrace = workplanText.indexOf('{'), lastBrace = workplanText.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) workplanText = workplanText.slice(firstBrace, lastBrace + 1);
+        parsedWorkplan = JSON.parse(workplanText);
+      } catch (e) {
 
         return { statusCode: 502, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'Ryan produced an unreadable LOTO/work-plan object. No work plan was saved. Retry the request.', buildId: RYAN_BUILD_ID }) };
 
