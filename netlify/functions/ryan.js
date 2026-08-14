@@ -654,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BG';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BG-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BH';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BH-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BG-DOCUMENT-FACT-REPORT-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BH-LOTO-ATTACHMENT-SCOPE-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,6 +672,8 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12BH LOTO STRUCTURED-OUTPUT FIX: when Build LOTO / Work Plan uses output_config JSON schema, uploaded PDF/text document blocks are sent without Anthropic document citations. This removes the citations + output_format incompatibility while preserving source/page provenance inside Ryan work-plan evidence fields.',
+  '12BH LOTO SCOPE COMPOSER: Ask Ryan includes a dedicated LOTO/work-plan instruction box so the operator can state the exact equipment and maintenance task; the typed scope is sent with the selected P&ID/document and remains subject to source-backed boundary tracing and field verification.',
   '12BG DOCUMENT LEARNING REPORT: after PDF/P&ID/manual/image ingestion, every retained extracted fact is returned to the operator in numbered chat-style parts. Display chunking never controls retention; facts are persisted first, then reported. Duplicate sources still do not create duplicate facts.',
   '12BG RETENTION CAPACITY: browser learned-fact storage cap raised to 5000 extracted atomic facts per learned-source run; source/page/classification metadata remains attached to every retained fact.',
   '12BF EXPANDER CURRENT CORRECTION: normal running condition has EX-1121 IGV taking the cold-separator vapor and PCV-1121A JT pinched near 0%; as IGV opens, JT closes. If EX-1121 is lost, IGV walks toward 0 while JT ramps quickly but not instantaneously toward about 80%.',
@@ -2759,7 +2761,9 @@ function estimateBase64Bytes(base64) {
 
  
 
-function attachmentToContentBlock(attachment) {
+function attachmentToContentBlock(attachment, options = {}) {
+
+  const citationsEnabled = options.citationsEnabled !== false;
 
   if (!attachment) return null;
 
@@ -2777,7 +2781,7 @@ function attachmentToContentBlock(attachment) {
 
     if (mediaType === 'application/pdf' || mediaType === 'text/plain' || !mediaType) {
 
-      return { type: 'document', source: { type: 'file', file_id: attachment.fileId }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+      return { type: 'document', source: { type: 'file', file_id: attachment.fileId }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
 
     }
 
@@ -2801,7 +2805,7 @@ function attachmentToContentBlock(attachment) {
 
   if (mediaType === 'application/pdf') {
 
-    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+    return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
 
   }
 
@@ -2809,7 +2813,7 @@ function attachmentToContentBlock(attachment) {
 
     const text = attachment.text || Buffer.from(attachment.base64, 'base64').toString('utf8');
 
-    return { type: 'document', source: { type: 'text', media_type: 'text/plain', data: safeString(text, 500000) }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', citations: { enabled: true } };
+    return { type: 'document', source: { type: 'text', media_type: 'text/plain', data: safeString(text, 500000) }, title: label, context: 'Plant reference supplied for Ryan ingestion/analysis.', ...(citationsEnabled ? { citations: { enabled: true } } : {}) };
 
   }
 
@@ -3728,7 +3732,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, lotoStructuredAttachmentCitationsDisabled: true, lotoScopeComposer: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -3850,15 +3854,14 @@ exports.handler = async function(event) {
     if (fastQa && messages.length > 6) messages.splice(0, messages.length - 6);
 
     const userContent = [];
-
- 
+    const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
     if (attachment) {
-
-      const block = attachmentToContentBlock(attachment);
-
+      // Anthropic does not allow document citations and structured output_format/output_config
+      // in the same request. LOTO uses a JSON schema, so omit document citations here and
+      // preserve provenance in the structured sourceEvidence/sourceDrawing fields instead.
+      const block = attachmentToContentBlock(attachment, { citationsEnabled: !isLotoWorkplan });
       if (block) userContent.push(block);
-
     }
 
  
@@ -3899,8 +3902,6 @@ exports.handler = async function(event) {
     messages.push({ role: 'user', content: userContent });
 
  
-
-    const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
     const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit']);
     const maxTokens = fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400))))));
