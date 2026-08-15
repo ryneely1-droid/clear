@@ -654,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BH';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BH-20260814';
+const RYAN_BUILD_ID = 'RYAN-2026-08-12BG';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BG-20260813';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BH-LOTO-SPLIT-SCHEDULE-20260814';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BG-DOCUMENT-FACT-REPORT-20260813';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,9 +672,6 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
-  '12BH LOTO RELIABILITY: LOTO/work-plan requests no longer use Anthropic output_config/json_schema, avoiding the upstream compiled-grammar-too-large failure and the uploaded-document citations/output-format incompatibility. Ryan still requires one compact JSON object and validates it server-side before exposing the draft.',
-  '12BH EXCHANGER SPLIT: current Clear Fork point is TCV-1221 100% open / TCV-1223 28% open. Operator manual changes are 1 percentage point per click. Attempting to open TCV-1221 beyond 100% pinches TCV-1223; closing TCV-1221 below 50% opens TCV-1223 point-for-point. Changing the split changes exchanger/reboiler duty, cold-section temperature/load and recovery; current plant/HMI evidence overrides generic assumptions.',
-  '12BH DEMETH/REBOILER THERMAL CALIBRATION: current tower-bottom region is about 168 F with the liquid headed to the E-1223 bottom reboiler around 160 F. Cooling the tower bottoms lowers that inlet temperature; increasing reboiler heat raises tower-bottom temperature and generally strips more volatile methane/ethane upward, while reducing heat does the opposite. Treat exact composition response as plant-model calibration, not a universal design constant.',
   '12BG DOCUMENT LEARNING REPORT: after PDF/P&ID/manual/image ingestion, every retained extracted fact is returned to the operator in numbered chat-style parts. Display chunking never controls retention; facts are persisted first, then reported. Duplicate sources still do not create duplicate facts.',
   '12BG RETENTION CAPACITY: browser learned-fact storage cap raised to 5000 extracted atomic facts per learned-source run; source/page/classification metadata remains attached to every retained fact.',
   '12BF EXPANDER CURRENT CORRECTION: normal running condition has EX-1121 IGV taking the cold-separator vapor and PCV-1121A JT pinched near 0%; as IGV opens, JT closes. If EX-1121 is lost, IGV walks toward 0 while JT ramps quickly but not instantaneously toward about 80%.',
@@ -690,7 +687,7 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   '12BC EXPANDER/COLD-SECTION CALIBRATION: cold-separator vapor has three parallel paths (E-1222 reflux, PCV-1121A JT, XV-1121B/EX-1121); current expander instrumentation is PDT-1121B 3.4 PSID, PT-1121B 876.7 psig, TE-1121D -85.7 F, PT-1121D 249 psig; PDT HI 5 / HIHI EX shutdown 15.',
   '12BC PIC-1521D SPLIT CONTROL: JT faceplate SP 265/PV ~264 and EX faceplate SP 268/PV ~265/CV 100%; EX SP range 225-350 psig. Once IGV is saturated, additional pressure/throughput demand recruits PCV-1121A; current JT near 0% during the current high-IGV operating condition, extreme 350-psig example calibrates near 50% JT and roughly 240-245 MMSCFD. Compressor load steps remain preferred rate control.',
   '12BC TURBOEXPANDER PHYSICS: Atlas Copco principle retained as OEM/general support—IGVs meter expander flow, expansion work drives the common-shaft booster compressor, and turboexpansion provides stronger cryogenic refrigeration/liquid recovery than simple JT pressure letdown. Clear Fork HMI/operator values govern plant-specific behavior.',
-  '12BD EXCHANGER SPLIT HOTFIX is superseded by 12BH. Do not use the old 24% / high-range transfer description; current operator-confirmed behavior is defined by the 12BH EXCHANGER SPLIT entry above.',
+  '12BD EXCHANGER SPLIT HOTFIX: TCV-1221 current 100%, TCV-1223 current 24%; each operator click is exactly 1.00 percentage point. The obsolete second/legacy TCV click handler was removed so it cannot corrupt the active split state. Additional 1221-open demand above 100 spills to 1223. Once 1223 exceeds 50%, it progressively pinches 1221 to a protected 10% minimum. TIC-1224B current 63/62.9/12.97 and TDIC-1224B 20/45/100.',
   '12BC ALARM HISTORY: ACK no longer implies deletion; chronological alarm/event history retains first-in, acknowledgement, clear/reset, duration, recurrence and alarm/trip/ESD/event type for trend review.',
   '12BC E-5000 HOT OIL: TV-5005A is physically on the hot-oil supply to the stabilizer inlet preheater; TIC-5000D current SP 80 F, PV 85.9 F, CV 0% MAN. In AUTO, PV above SP drives the valve open; hot-oil return leaves the exchanger bottom.',
   '12BB LEARNED-DOCUMENT RETRIEVAL: ordinary questions never resend an already-learned P&ID; the browser sends only a small ranked set of retained facts.',
@@ -1477,7 +1474,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'Dry gas uses a 60/40 split. Majority gas/gas side: through TCV-1221D into the top of E-1221 gas/gas exchanger, exits side horizontally, then TE-1221B about 4.7 F, PDT-1221 about 17.11 PSID, then to chiller. TE-1221D LOW 40 F, LOLO shutdown -15 F; PDT-1221 HI 20 PSID.',
 
-    'Minor bottom/side side: TCV-1223 -> reboilers. Current observed split is TCV-1221 100% / TCV-1223 28%, with most flow on 1221. TIC-1224B SP 63 F, PV 62.9, CV 12.97%; TDIC-1224B SP 20 F, PV 45, CV 100%. Manual valve steps are 1%. A further + request on TCV-1221 while it is already at 100% pinches TCV-1223 by 1 point per click. Closing TCV-1221 below 50% opens TCV-1223 by 1 point per click; reverse movement unwinds the split. Treat this 12BH behavior as authoritative over older split descriptions.',
+    'Minor bottom/side side: TCV-1223 -> reboilers. Current observed split is TCV-1221 100% / TCV-1223 23%, with most flow on 1221. TIC-1224B SP 63 F, PV 62.9, CV 12.97%; TDIC-1224B SP 20 F, PV 45, CV 100%. Manual valve steps are 1%. Additional TCV-1221 opening demand after 100% transfers to TCV-1223; once TCV-1223 exceeds 50%, it progressively pinches TCV-1221 to a protected 10% minimum.',
 
     'Bottom/side exchanger inlet: TE-1223A about 98.9 F; PDT-1223A about 4.7 PSID, HI 15, HIHI facility ESD 20; outlet TE-1224C about 2.5 F; then joins gas/gas outlet at common chiller inlet header.'
 
@@ -2576,7 +2573,7 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
   if (mode === 'loto' || mode === 'loto_workplan') {
 
-    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Return ONE compact valid JSON object only (no markdown fences and no prose before/after JSON) using the existing work-plan fields expected by Ryan. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AM in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
+    modeInstructions = `MODE: LOTO / WORK-PLAN DRAFTING. Build a source-traceable DRAFT only. Apply LOTO_PID_AUDIT_ENGINE_12AM in order. First define the exact physical work boundary, then trace every process and stored-energy path that can cross it upstream and downstream, including shared headers, bypasses, recycles, drains/vents, utilities, common sources, and every off-page continuation. Detailed P&IDs are required for exact plant isolation points; HMI/PFD/process descriptions may orient but cannot prove a boundary. For every isolation/blowdown/PSV marker provide exact tag only when source-backed, source drawing/reference, source type, service/energy, upstream/downstream boundary, verification action and confidence. If a tag or relationship is unreadable/unsupported, write PENDING VERIFICATION instead of guessing. Explicitly list source evidence, continuation drawings, energy-path trace, zero-energy criteria, conflicts/ambiguities, approval requirements and missing information. PSVs are protective devices; identify relief destination and protection relationship but never recommend defeating/isolation unless an approved site procedure/source explicitly governs it. Missing continuation drawings, ambiguous common headers, unknown pressure-release destination, unresolved PSV arrangement, unknown electrical/mechanical energy source, or any invented/unverified isolation makes executionBlocked=true and status='DRAFT - INCOMPLETE'. If the source set appears complete, executionBlocked still does not mean approved: fieldVerificationRequired must always be true and finalWarning must be exactly 'NOT APPROVED — FIELD VERIFICATION REQUIRED'. Include restoration/return-to-service verification in reverse order and require authorized field/site-procedure approval before execution.`;
 
   } else if (mode === 'audit') {
 
@@ -3910,8 +3907,7 @@ exports.handler = async function(event) {
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
     const requestModel = fastQa ? FAST_MODEL : MODEL_V2;
-    /* 12BH: LOTO/work-plan requests intentionally do NOT use output_config/json_schema. Anthropic compiles strict JSON schemas into a grammar; the previous large LOTO schema could exceed the upstream grammar limit and, on uploaded documents, also conflicted with document citations. Ryan now requests one compact JSON object in the prompt and validates/parses it server-side after the response. */
-    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}) };
+    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
 
  
 
