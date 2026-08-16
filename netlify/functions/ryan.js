@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-15BY';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BY-20260815';
+const RYAN_BUILD_ID = 'RYAN-2026-08-15BZ';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BZ-20260815';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BY-EXPANDER-1039-FULL-20260815';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BZ-PETRO-PAGES-REFLIB-20260815';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -749,6 +749,7 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12BZ PETROSKILLS REFERENCE-LIBRARY REPAIR: all 13 operator-supplied PetroSkills scan sets from the recent study-pack chats are now represented in the frontend as exact original page images, document/reference keys are explicitly isolated from 3-D Fly-To, and the ACMTC HIC-101 +/-/AUTO controls were converted from inline onclick handlers to explicit event listeners.',
   '12BY EXPANDER OEM FULL-MANUAL PASS: re-verified Atlas Copco Mafi-Trench Order 1039 / Machine EX/C-121 against the complete 254-page operator upload and expanded Ryan with package identity, nameplate limits, control-system setpoints, startup/shutdown, seal-gas/lube-oil behavior, thrust/vibration/speed protection, troubleshooting, monitoring cadence and spare/instrument references. No credential/passcode data is retained.',
   '12BV PETROSKILLS STUDY PACK: installed operator-supplied PetroSkills Mechanical Refrigeration pp.25-55 to 25-61 and Gas Expansion NGL Recovery / Cryogenic Plant Operations pp.22-50 to 22-67 as verified generic training references. Ryan must use them for refrigeration/cryo physics and troubleshooting while Clear Fork P&IDs, approved procedures, OEM requirements and verified plant knowledge retain priority.',
   '12BX PETROSKILLS PUMP STUDY PACK: installed operator-supplied PetroSkills Centrifugal Pumps pp.11-3 to 11-37 covering construction, head/pressure, NPSH/cavitation, performance curves, startup/control, minimum-flow recycle, troubleshooting and positive-displacement/vacuum pump fundamentals. Generic training reference only; Clear Fork and OEM sources retain priority.',
