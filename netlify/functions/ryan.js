@@ -654,13 +654,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-12BG';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BG-20260813';
+const RYAN_BUILD_ID = 'RYAN-2026-08-15BJ';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BJ-20260815';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BG-DOCUMENT-FACT-REPORT-20260813';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BH-FLOWPATH-AID-20260815';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,6 +672,9 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12BJ CONTROL-BOARD FLOW CLEANUP: corrected the dehy sequence everywhere to V-1410 -> F-1412 -> active mol-sieve beds V-1413/V-1414/V-1415 -> F-1416/F-1417; corrected the Utilities seal-gas source label to F-1438 -> E-1227; kept F-6800 limited to its verified dryout/regen, inlet-recycle, F-1438 and main sales takeoffs. Hot-oil topology was intentionally left unchanged. Stabilizer truck-loading detail is intentionally out of scope.',
+  '12BI V-1040 INLET FEED CONFIRMATION: operator confirmed 2026-08-15 that V-1040 is the main inlet-gas feed to the C-4100/C-4200 inlet compressors. Preserve V-1040 -> PIT/TIT/FIT-1045A -> common inlet-compressor suction header. The compressor discharge after AC-4101/AC-4201 goes to V-1410/F-1412/dehydration; never route compressor discharge back into V-1040.',
+  '12BH EQT FLOW-PATH TRAINING AID: incorporated the operator-supplied Clearfork colour-coded process-flow training aid dated 2026-08-15 as TRAINING_AID_NOT_CONTROLLED. It is used for plantwide flow orientation and reconciliation, never to override an issued P&ID/control narrative. Corrected the explicit F-6800 branch summary: seal gas to E-1227 comes from F-1438, not directly from F-6800.',
   '12BG DOCUMENT LEARNING REPORT: after PDF/P&ID/manual/image ingestion, every retained extracted fact is returned to the operator in numbered chat-style parts. Display chunking never controls retention; facts are persisted first, then reported. Duplicate sources still do not create duplicate facts.',
   '12BG RETENTION CAPACITY: browser learned-fact storage cap raised to 5000 extracted atomic facts per learned-source run; source/page/classification metadata remains attached to every retained fact.',
   '12BF EXPANDER CURRENT CORRECTION: normal running condition has EX-1121 IGV taking the cold-separator vapor and PCV-1121A JT pinched near 0%; as IGV opens, JT closes. If EX-1121 is lost, IGV walks toward 0 while JT ramps quickly but not instantaneously toward about 80%.',
@@ -1542,7 +1545,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09K = {
 
     'C-6100/C-6200/C-6300 currently boost roughly 297 psig suction to roughly 973 psig discharge. On startup, gas initially bypasses each reciprocating compressor; hitting LOAD closes the bypass and forces gas through the cylinders. Normal remote capacity is commonly about 80%.',
 
-    'The three compressor discharges combine, pass PIT-6050A ~974.4 psig, then F-6800 residue gas filter. Downstream of F-6800: sales/outlet metering; PV-6050A residue recycle back to residue suction; PV-6810A inlet-compressor recycle; RSV loop; a 1-inch seal-gas source; and a manual warm-dry-gas dry-out tie to the inlet side of F-1412 used after major outages.'
+    'The three compressor discharges combine, pass PIT-6050A ~974.4 psig, then F-6800 residue gas filter. The 2026-08-15 EQT colour-coded flow-path training aid (TRAINING AID - NOT A CONTROLLED DRAWING) explicitly identifies three service takeoffs from F-6800: 1040-8-inch dryout/regen gas to dehydration, 1017-10-inch recycle back to the inlet header, and 558-6-inch to F-1438, plus the main residue/sales path. It explicitly states seal gas is NOT sourced directly from F-6800; the 1051-2-inch gas line to E-1227 comes off F-1438. Issued P&IDs remain authoritative if a conflict is found.'
 
   ],
 
@@ -1971,6 +1974,41 @@ const OPERATOR_PROCESS_KNOWLEDGE_09M = {
  
 
 
+// ===== EQT CLEARFORK COLOUR-CODED PROCESS FLOW TRAINING AID — 2026-08-15 =====
+const CLEAR_FORK_FLOW_PATH_TRAINING_AID_20260815 = {
+  sourceStatus: 'TRAINING_AID_NOT_CONTROLLED_DRAWING',
+  source: 'EQT Clearfork Processing Facility — Colour-Coded Process Flow Path, operator-supplied 2026-08-15',
+  authority: 'Plant training/orientation aid. The source itself states TRAINING AID — NOT A CONTROLLED DRAWING and instructs users to work from the issued P&ID. Use for plantwide orientation, section-to-section flow direction, service grouping, and reconciliation flags. Never let it override a newer issued P&ID, control narrative, OEM package drawing, or verified live DCS evidence.',
+  inletAndDehy: [
+    'Operator clarification 2026-08-15 resolves the simplified training-aid ambiguity: V-1040 is the MAIN inlet-gas feed to C-4100/C-4200. Correct plant path is V-1000 -> V-1020/V-1025/V-1030 -> V-1040 -> PIT-1045A/TIT-1045A/FIT-1045A -> common inlet-compressor suction header -> C-4100/C-4200 -> AC-4101/AC-4201 -> V-1410 -> F-1412 -> dehydration. LP gathering gas and approved recycle/dryout streams may also join the compressor suction header as shown by the applicable P&IDs.',
+    'Dehydration overview: inlet header -> V-1410 -> F-1412 -> two adsorbing beds among V-1413/V-1414/V-1415 -> F-1416/F-1417 -> dry-gas section 2. Regen gas flows counter to adsorption through the regenerating bed, then A-1311 -> V-1418 -> C-1111 and back toward the inlet/regen header.',
+    '12BJ DEHY ORDER: F-1412 is upstream of the mol-sieve beds. The normal process sequence is V-1410 -> F-1412 -> active adsorption beds V-1413/V-1414/V-1415 -> F-1416/F-1417 dust filters. Never place F-1416/F-1417 ahead of the beds in Ryan answers or control-board descriptions.'
+  ],
+  cryogenicAndDemeth: [
+    'Dry gas enters the cryogenic section through E-1221/E-1222 gas/gas + reflux services, E-1223/E-1224 bottom/side-reboiler heat-recovery services, E-1241 propane gas chiller, then V-1421 cold separator. V-1421 vapor goes to EX-1121; C-1121 is the shaft-driven booster and discharges through A-1321 toward residue compression.',
+    'T-1521 training-aid tower connections: overhead residue out to E-1222/E-1221; reflux liquid return from E-1222; EX-1121 top feed; JT PCV-1121A to the same feed nozzle when expander is down; V-1421 cold-separator liquid feed; E-1224 side-reboiler draw/return; E-1223 bottom-reboiler draw/return; trim-reboiler sump draw/return; bottoms/Y-grade out.',
+    'Training aid labels the trim reboiler E-1225. Current detailed simulator P&ID repository identifies the equipment as E-1125 with TIC-1225. Preserve the detailed P&ID tag unless a newer issued drawing proves otherwise; keep the training-aid label as a reconciliation conflict.'
+  ],
+  residueAndSales: [
+    'Residue path: Section 2 -> C-6100/C-6200/C-6300 -> AC-6101/AC-6201/AC-6301 -> F-6800 -> GC/meter skid -> V-8200 residue pig launcher -> residue/sales gas.',
+    'The aid explicitly states THREE SERVICES COME OFF F-6800: 1040-8-inch dryout/regen gas to dehydration (M2105), 1017-10-inch recycle back to the inlet header, and 558-6-inch to F-1438 residue recycle gas filter.',
+    'The aid explicitly states seal gas is NOT off F-6800. The 1051-2-inch gas line to E-1227 seal-gas heater comes off F-1438. This corrects older simulator wording that showed E-1227 as a direct F-6800 branch.',
+    '12BJ UTILITIES DISPLAY: label the E-1227 seal-gas source as FROM F-1438 RESIDUE RECYCLE FILTER. F-6800 itself must not be shown as a direct E-1227 source.'
+  ],
+  nglAndStabilizer: [
+    'NGL/Y-grade path: T-1521 bottoms -> A-1322 demethanized cooler -> V-1422 demethanizer surge tank -> P-1619/P-1620 product booster pumps -> P-1630/P-1635 NGL pipeline pumps -> V-8000 NGL pig launcher -> NGL pipeline.',
+    'Condensate stabilization orientation: slug-catcher liquids -> F-1050/F-1055 -> E-5000 inlet preheater -> V-5010 flash tank -> F-5015/F-5016 -> E-5020 feed/bottoms exchanger -> T-5030 + E-5040 -> AC-5055 -> P-5060/P-5065 booster pumps. Downstream truck-loading detail is intentionally out of scope for the current control-board work.',
+    'C-5700 + P-5700 recover V-5010 flash vapor and stabilizer overhead, then compressed vapor returns to Section 1 / plant inlet.',
+    'The aid shows AC-5055 upstream of P-5060/P-5065 in the product path. Preserve any verified recycle branch such as FV-5030A separately; do not describe the pumps as only recirculating through AC-5055 back to T-5030.'
+  ],
+  refrigerationHotOilUtilities: [
+    'Propane refrigeration overview: E-1241 -> V-1441 suction scrubber -> C-1140/C-1141/C-1142 -> A-1343A/B/C condensers -> V-1444 accumulator -> V-1442 economizer -> E-1241, with V-1443 refrigerant reclaimer and compressor lube-oil coolers as auxiliaries.',
+    'Hot-oil training overview draws H-7100 -> P-7410/P-7420 -> F-7600 -> hot-oil users, with V-7500 expansion tank. Current simulator circulation ordering differs; use M2700/M2710 before changing the modeled loop.',
+    'Fuel/seal/dryout/methanol overview groups V-1460 fuel-gas scrubber, fuel-gas header, F-1438 residue recycle filter, TK-1640 methanol tank, P-1629 methanol injection pump, and E-1227 seal-gas heater.',
+    'Flare/relief/drain overview: V-8110 compressor-building flare KO -> V-9100 flare KO -> FL-9110 emergency flare; V-1650 cold drain and V-8100 closed drain are separate liquid-drain systems; instrument-air section includes C-9210/C-9220, D-9230, V-9241 and TK-9300 oil.'
+  ]
+};
+
 // ===== OPERATOR PROCESS KNOWLEDGE — 2026-08-11 INLET / INLET COMPRESSION =====
 // Current control-board corrections supplied directly by the operator. Current readings are
 // observed snapshots, not immutable design values. Topology/control relationships below are
@@ -2306,6 +2344,7 @@ function hasClearForkTag(text) {
 }
 
 const KNOWLEDGE_REGISTRY = {
+  flowPathTrainingAid0815: CLEAR_FORK_FLOW_PATH_TRAINING_AID_20260815,
   cryoExpert12AM: CRYO_EXPERT_ENGINE_12AM,
   operatorDecision12AM: CRYO_OPERATOR_DECISION_ENGINE_12AM,
   lotoPidAudit12AM: LOTO_PID_AUDIT_ENGINE_12AM,
@@ -2348,6 +2387,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'flowPathTrainingAid0815', re: /\b(flow path|colour-coded|color-coded|training aid|F-6800|E-1227|F-1438|V-1040|E-1225|E-1125|P-5060|P-5065|AC-5055|V-1422|P-1619|P-1620|P-1630|P-1635|V-8000)\b/i },
   { key: 'exchangerReboiler12AM', re: /\b(E-1221|E-1222|E-1223|E-1224|gas\/?gas exchanger|reflux condenser|BAHX|brazed aluminum|TCV-1221|TCV-1223|TE-1222J|FCV-1438|FIC-1438|FT-1222-COMP|PDIC-1222B|PDCV-1222B|reboiler|thermosiphon|heat integration|approach temperature|exchanger DP)\b/i },
   { key: 'operatorDecision12AM', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
   { key: 'lotoPidAudit12AM', re: /\b(LOTO|lockout|work plan|workplan|isolation boundary|zero energy|depressure|blowdown|bleed|energy source|off-page continuation|field verification)\b/i },
