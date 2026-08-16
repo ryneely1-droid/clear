@@ -598,7 +598,7 @@ const OEM_MANUAL_KNOWLEDGE = {
 
   expanderBooster: {
 
-    plantApplicability: 'This is plant/order-specific documentation for the Clear Fork expander/booster compressor package.',
+    plantApplicability: 'Plant/order-specific OEM documentation for the Clear Fork EX-1121/C-1121 turboexpander/booster package. Re-verified 2026-08-15 against the complete 254-page Atlas Copco manual uploaded by the operator.',
 
     equipmentIds: ['EX-1121','C-1121','EX/C-1121'], manufacturer: 'Atlas Copco Gas and Process / Mafi-Trench',
 
@@ -606,22 +606,99 @@ const OEM_MANUAL_KNOWLEDGE = {
 
     source: 'Atlas Copco Mafi-Trench Instruction Manual, Order 1039, Machine EX/C-121, built 2018, customer order 5972241, Ref. US-107468',
 
+    sourceScope: 'Complete instruction manual including safety, erection, operating instructions, plant description, technical data, maintenance, drawings, control-system setpoints and recommended spares. OEM values below are reference limits/setpoints from the delivered package documentation; current DCS values and approved plant procedures still govern live operation.',
+
+    identity: {
+      machine: 'EX/C-121',
+      order: '1039',
+      frame: 'EC 3.0 / Frame 3.0',
+      bearingType: 'Oil bearing',
+      built: 2018,
+      customerReference: 'US-107468',
+      nameplate: { maxPowerHP: 3700, ratedRPM: 27000, flowSCFH: 6900000, fluid: 'Natural gas', expanderMaxPressurePSIG: 1100, compressorMaxPressurePSIG: 675 }
+    },
+
+    designAndConstruction: [
+      'Three principal sections: expander, rotating assembly, and compressor. Expander and compressor are mechanically coupled on one shaft but have separate process gas paths.',
+      'IGVs are pneumatically actuated with an integral positioner and regulate expander mass flow. The OEM description gives an approximate 0-125% flow capability; IGVs do not seal gas-tight because mechanical stops leave a small tip gap.',
+      'Hydrodynamic radial/thrust bearings use embedded RTDs. Low bearing temperature can be used as a prevent-start condition; high bearing temperature is alarm/trip protected.',
+      'The shaft is designed to operate below first bending critical speed. Wheels are retained on tapered shaft ends with a center stretch rod.',
+      'Labyrinth shaft seals minimize process-gas leakage. A replaceable stainless rotating labyrinth is paired with a sacrificial stationary element intended to wear first if contact occurs.',
+      'Automatic Thrust Equalizer uses opposing thrust-pressure signals and a spool/gate arrangement to regulate pressure behind the compressor wheel and reduce rotor thrust.',
+      'Minimum inlet screen guidance is 30 mesh upstream of both expander inlet and compressor inlet. Exact installed screen configuration remains subject to Clear Fork drawings/field verification.'
+    ],
+
+    controlSetpoints: {
+      sealGasDifferential: { normalPSID: 50, alarmLowPSID: 30, tripLowPSID: 20, tags: 'PT-101/PT-102 -> PDI-101' },
+      lubeOilDifferential: { normalPSID: 150, alarmLowPSID: 110, tripLowPSID: 90, tags: 'PT-106/PT-107 -> PDI-106' },
+      lubeOilFilterDP: { normalPSID: 5, alarmHighPSID: 35, tags: 'PT-107/PT-108 -> PDI-108' },
+      lubeOilSupplyTemperature: { normalF: '90-130', alarmHighF: 130, controlTargetF: 110, tag: 'TE-105 / TCV-101' },
+      lubeOilReservoir: { normalLevelInAboveDeckplate: '28-30', alarmLowInAboveDeckplate: 21.3, resetInAboveDeckplate: 22, heaterControlF: 90, heaterElementOvertempF: 225 },
+      expanderThrustDP: { normalPSID: '0-50', alarmHighPSID: 150, tripHighPSID: 300 },
+      compressorThrustDP: { normalPSID: '0-50', alarmHighPSID: 150, tripHighPSID: 300 },
+      expanderBearingTemperature: { preventStartLowF: 60, normalF: 150, alarmHighF: 190, tripHighF: 200 },
+      compressorBearingTemperature: { normalF: 150, alarmHighF: 190, tripHighF: 200 },
+      vibration: { normalMils: 0.5, alarmHighMils: 1.0, tripHighMils: 1.6, expanderTags: 'VT-101A/B', compressorTags: 'VT-102A/B' },
+      speed: { normalRPM: 24300, alarmHighRPM: 28400, tripHighRPM: 29800, tag: 'SE-101' },
+      surgeControlReference: { K: 0.425, setpointPercent: 78, designFlowACFM: 7608, designRPM: 24300, molecularWeight: 16.38, Z: 0.98, inletTemperatureRankine: 578 },
+      regulatorsAndRelief: { sealGasPDCV101PSID: 50, lubeOilPDCV102PSID: 150, lubeOilTCV101F: 110, PSV101PSIG: 675, lubePumpRV101PSID: 260, instrumentAirPR300PSIG: 65, accumulatorsA101A102PrechargePSIG: 200 }
+    },
+
+    startupSequence: [
+      'After a standstill longer than 7 days, perform checks in the same manner as initial commissioning.',
+      'Verify control power ON; keep IGVs closed and in LOCAL initially.',
+      'Establish dry seal gas first. Purge housings/drains and pressurize expander housing, compressor housing and lube-oil reservoir progressively and approximately together. Do not exceed 50 psid differential between housings during pressurization.',
+      'When compressor housing pressure is nearly equal to compressor inlet piping pressure, open compressor inlet block valve; when expander housing pressure is nearly equal to expander discharge piping pressure, open expander discharge block valve.',
+      'Before lube-oil pump start: power available, valves in correct lineup, lube-oil heater target 90 F, reservoir oil at least 70 F, and seal/separation gas differential established. Start with return bypass open and close gradually after pumps have run to avoid collapsing filters.',
+      'OEM D12 sequence: start both lube pumps on HAND, establish 90-110 F inlet oil, confirm pressure, then place one pump in AUTO standby.',
+      'Clear alarms/shutdowns, verify IGVs closed, open required block valves, then use EXPANDER START to open the inlet trip valve. Gradually open IGVs while continuously monitoring machine and auxiliary instruments so the housings reach thermal equilibrium gradually.',
+      'Compressor recycle/anti-surge should be open at startup and remain available to prevent surge until sufficient compressor flow is established.'
+    ],
+
+    shutdownSequence: [
+      'Controlled shutdown: move HIC from REMOTE to LOCAL and slowly close IGVs. The plant control system should transfer flow toward the JT path as expander flow decreases.',
+      'Once IGVs are closed, stop the expander to close the expander inlet shutdown valve. Surge control valve should move fully open when the turboexpander stops.',
+      'Coastdown to near zero should occur in about 10-15 seconds. Confirm stop using tachometer and vibration indication, then isolate expander inlet and compressor discharge to prevent wind-milling.',
+      'For a short outage of roughly one or two hours, lube-oil pump and seal gas may remain in service with the expander discharge block valve left open, subject to the approved plant procedure.',
+      'For full depressurization: secure lube pumps and seal gas, close inlet/discharge block valves, and bleed casing pressure slowly. OEM guidance says depressurization should take about an hour rather than a few minutes to avoid forcing lube oil into the compressor housing.'
+    ],
+
+    troubleshooting: [
+      'High oil temperature: verify oil-cooler fan, verify TCV/cooler bypass operation, and check reservoir oil viscosity for condensate dilution. Ambient-temperature effects can cause some normal oil-temperature movement.',
+      'Unbalanced thrust toward expander bearing: possible washed expander wheel seal or plugged expander wheel relief holes. The manual links plugged relief holes to saturated/inoperative upstream dehydration and calls for warm-process-gas thawing; washed seal requires OEM assistance.',
+      'Unbalanced thrust toward compressor bearing: possible washed compressor wheel seal associated with excessive compressor temperature; contact OEM Aftermarket.',
+      'Frozen seal-gas line: seal-gas pressure or temperature too low can allow process gas to back into the seal-gas line. Check regulator and correct seal-gas pressure/temperature.',
+      'Cold oil-drain temperature: low seal-gas pressure may allow cold process gas into the bearing housing; correct seal-gas differential and then verify oil temperature response.',
+      'Compressor surge: insufficient compressor-inlet flow. Keep/open compressor recycle until adequate flow is restored. OEM notes tachometer oscillation around 150-200 RPM every 4-6 seconds as a surge symptom and warns prolonged surge can damage bearings.',
+      'Large pressure drop across the trip valve or inlet screens reduces turboexpander performance. Treat rising DP as a real process/mechanical constraint, not merely an indication issue.'
+    ],
+
+    operatingAndMaintenanceGuidance: [
+      'Protect the expander inlet from liquids, dust/sand, hydrates, welding slag and other construction contamination. This is an explicit OEM protection requirement.',
+      'Seal gas has two key duties: keep cold/unclean process gas away from bearings and keep lube oil out of the process stream. A dry external seal-gas supply is required during startup and normal operation.',
+      'Dual lube-oil filters use continuous-flow switching so one element can be changed without shutting down. Seal-gas filters may be changed online only if the installed system is the dual-filter arrangement.',
+      'Lube-oil accumulator(s) maintain bearing oil during pump switchover/loss. Charge with dry nitrogen only; air charging is prohibited by the OEM because of explosion risk.',
+      'Oil viscosity matters directly to hydrodynamic bearing behavior: too high can run bearings hot, too low weakens oil-film stiffness and can increase shaft vibration. OEM states viscosity down to 20 cSt at 100 F may be acceptable if vibration remains within recommended limits.',
+      'OEM recommended viscosity checks after startup: 1 week, 4 weeks, 8 weeks, then at plant discretion. Initial fill recommendation remains plant-specific and should not be guessed.',
+      'The OEM manual does not replace Clear Fork LOTO/permit procedures. Most maintenance requires the unit stopped, isolated and depressurized; electrical work requires local lockout/tagout.'
+    ],
+
+    monitoringCadence: {
+      startup: 'Record operating parameters hourly for the first four hours after startup.',
+      normal: 'Prefer once per shift thereafter; OEM minimum is daily.',
+      parameters: ['expander inlet/discharge pressure','compressor inlet/discharge pressure','expander inlet/discharge temperature','compressor inlet/discharge temperature','process gas flow','seal-gas pressure and temperature','oil pressure and temperature to bearings','oil drain temperature','speed','vibration','thrust pressures']
+    },
+
+    recommendedSparesAndInstrumentation: [
+      'Recommended spares include the spare rotating assembly, expander/compressor wheels and bearings, shaft seals, vibration pickups/transmitters, tachometer pickup, ATE rebuild kits, lube-oil and seal-gas filter elements, PSV/relief components, RTDs/temperature sensors, pressure transmitters, PLC I/O/CPU/power modules, and special assembly tools.',
+      'RSPL identifies Fisher Type 585C Size 50 actuator package associated with PV-101/ZT-101/PR-300 and includes a smart positioner, feedback transmitter and filter regulator.',
+      'Do not infer currently installed part revision solely from the 2018 RSPL when field replacements may have occurred; verify actual installed component/nameplate before ordering.'
+    ],
+
     keyOEMFacts: [
-
-      'Manual is specifically for an Expander Compressor (Oil Bearing), Frame 3.0, Order No. 1039, Machine No. EX/C-121, built in 2018 for Exterran Energy Solutions, L.P.',
-
-      'Manual contains safety, transport/storage, erection, operating instructions, troubleshooting, plant description, technical data, maintenance, drawings, and recommended spare parts.',
-
-      'Plant-description chapters cover inlet guide vanes, bearings, wheels, shaft, automatic thrust equalizer, seal-gas system, lubrication system, instrumentation/control, and machine characteristics.',
-
-      'Operating chapters cover pre-startup, seal-gas startup, lube-oil startup, startup sequence, troubleshooting, data collection, and shutdown.',
-
-      'Recommended spares identify expander and compressor bearings, wheels, shaft seals, vibration pickups, tachometer pickup, lube-oil and seal-gas filter elements, relief/safety valves, PLC modules, and vibration transmitters.',
-
-      'Atlas Copco Gas & Process public technical description confirms compressor-loaded expanders use a centrifugal compressor on the common shaft, variable inlet guide vanes control flow across changing process conditions, and recovered expansion power is reused as compression power.',
-
-      'Atlas Copco public cryogenic guidance describes turboexpansion as providing greater cooling and liquid recovery than pressure-reduction valves. Use this only for generic physics; Clear Fork HMI/P&ID/operator data govern exact control logic and setpoints.'
-
+      'This uploaded 254-page manual matches the already identified Order 1039 / Machine EX/C-121 source and therefore confirms, rather than conflicts with, the existing Clear Fork expander mapping.',
+      'Use the detailed OEM alarm/trip/reference values above for Ryan troubleshooting and cross-checking, while current DCS indication, current approved setpoints and current operating procedures remain higher priority for live operations.',
+      'For plant-specific operating questions, combine this OEM source with Clear Fork P&IDs, current control-board indications, operator-confirmed topology and the newest live snapshot. Never replace a newer verified plant value with an older design-case number from the OEM data sheets.'
     ]
 
   },
@@ -654,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-15BJ';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BJ-20260815';
+const RYAN_BUILD_ID = 'RYAN-2026-08-15BY';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12BY-20260815';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BH-FLOWPATH-AID-20260815';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12BY-EXPANDER-1039-FULL-20260815';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -672,6 +749,9 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12BY EXPANDER OEM FULL-MANUAL PASS: re-verified Atlas Copco Mafi-Trench Order 1039 / Machine EX/C-121 against the complete 254-page operator upload and expanded Ryan with package identity, nameplate limits, control-system setpoints, startup/shutdown, seal-gas/lube-oil behavior, thrust/vibration/speed protection, troubleshooting, monitoring cadence and spare/instrument references. No credential/passcode data is retained.',
+  '12BV PETROSKILLS STUDY PACK: installed operator-supplied PetroSkills Mechanical Refrigeration pp.25-55 to 25-61 and Gas Expansion NGL Recovery / Cryogenic Plant Operations pp.22-50 to 22-67 as verified generic training references. Ryan must use them for refrigeration/cryo physics and troubleshooting while Clear Fork P&IDs, approved procedures, OEM requirements and verified plant knowledge retain priority.',
+  '12BX PETROSKILLS PUMP STUDY PACK: installed operator-supplied PetroSkills Centrifugal Pumps pp.11-3 to 11-37 covering construction, head/pressure, NPSH/cavitation, performance curves, startup/control, minimum-flow recycle, troubleshooting and positive-displacement/vacuum pump fundamentals. Generic training reference only; Clear Fork and OEM sources retain priority.',
   '12BJ CONTROL-BOARD FLOW CLEANUP: corrected the dehy sequence everywhere to V-1410 -> F-1412 -> active mol-sieve beds V-1413/V-1414/V-1415 -> F-1416/F-1417; corrected the Utilities seal-gas source label to F-1438 -> E-1227; kept F-6800 limited to its verified dryout/regen, inlet-recycle, F-1438 and main sales takeoffs. Hot-oil topology was intentionally left unchanged. Stabilizer truck-loading detail is intentionally out of scope.',
   '12BI V-1040 INLET FEED CONFIRMATION: operator confirmed 2026-08-15 that V-1040 is the main inlet-gas feed to the C-4100/C-4200 inlet compressors. Preserve V-1040 -> PIT/TIT/FIT-1045A -> common inlet-compressor suction header. The compressor discharge after AC-4101/AC-4201 goes to V-1410/F-1412/dehydration; never route compressor discharge back into V-1040.',
   '12BH EQT FLOW-PATH TRAINING AID: incorporated the operator-supplied Clearfork colour-coded process-flow training aid dated 2026-08-15 as TRAINING_AID_NOT_CONTROLLED. It is used for plantwide flow orientation and reconciliation, never to override an issued P&ID/control narrative. Corrected the explicit F-6800 branch summary: seal gas to E-1227 comes from F-1438, not directly from F-6800.',
@@ -788,6 +868,10 @@ const PETROSKILLS_KNOWLEDGE = {
     sourceFamily: 'PetroSkills gas processing/operator training pages supplied by operator',
 
     currentSources: [
+      '2026-07-29 16-40(2).pdf — PetroSkills Mechanical Refrigeration pp. 25-55 through 25-61: condenser duty, surge drum/makeup quality, refrigeration principles and capacity/condenser control',
+      '2026-07-29 16-43(2).pdf — PetroSkills Gas Expansion NGL Recovery pp. 22-50 through 22-67: ethane rejection, cryogenic operations, startup/shutdown, JT operation and troubleshooting',
+      '2026-07-29 16-52(2).pdf — Centrifugal Pumps pp. 11-3 through 11-25: construction, impellers/casings, multistage pumps, seal systems, head vs pressure, affinity-law relationships, NPSH/cavitation, pump power and performance curves',
+      '2026-07-29 16-55(2).pdf — Centrifugal Pumps pp. 11-26 through 11-37: startup, flow control, low-flow recycle, speed control, routine checks, vapor-lock/low-flow troubleshooting, reciprocating/rotary PD pumps and vacuum pumps',
 
       '2026-07-29 16-55.pdf — Centrifugal Pumps pp. 11-26 through 11-37',
 
@@ -891,7 +975,11 @@ const PETROSKILLS_KNOWLEDGE = {
 
       'Low-flow operation can convert lost driver energy into liquid heat, causing vapor formation, vapor lock, and possible rubbing/damage. Low-flow recycle protects minimum flow; the training example uses roughly 15–20% of design flow as an illustrative control range, not a universal Clear Fork setpoint.',
 
-      'Variable speed changes capacity, head and power; use actual pump curves/OEM data for Clear Fork decisions.'
+      'Variable speed changes capacity, head and power; use actual pump curves/OEM data for Clear Fork decisions.',
+      'Head is energy per unit weight and is not identical to pressure. For comparable conditions, flow changes approximately with speed, head with speed squared, and power with speed cubed; liquid density determines the pressure rise corresponding to a given head.',
+      'NPSHA must exceed NPSHR with suitable margin. Low source level or vessel pressure, hotter liquid/higher vapor pressure, suction-line friction/restriction and higher flow reduce cavitation margin.',
+      'Multistage pumps add head through successive impellers; axial thrust must be controlled by opposed impellers, balance piston and/or thrust bearing arrangements as designed.',
+      'Pump power depends on flow, developed differential pressure and efficiency. Very low-flow operation can convert driver energy into liquid heat, increasing vapor-lock and mechanical-damage risk.'
 
     ],
 
@@ -901,7 +989,9 @@ const PETROSKILLS_KNOWLEDGE = {
 
       'Low flow: calculate/compare discharge minus suction pressure. High differential suggests discharge restriction/high backpressure; low suction pressure suggests source-level or suction-side restriction; low discharge with wear can indicate worn impeller/casing; vapor lock remains a competing cause.',
 
-      'Routine performance check: compare suction pressure, discharge pressure, differential/head and flow against the applicable performance curve and historical baseline; trend decline before failure.'
+      'Routine performance check: compare suction pressure, discharge pressure, differential/head and flow against the applicable performance curve and historical baseline; trend decline before failure.',
+      'Performance below the expected curve can support wear/internal leakage. High developed differential with low flow supports discharge restriction/backpressure; low suction pressure supports source/suction problems.',
+      'Startup proof points from the supplied training pages are liquid-filled/vented casing, developed discharge pressure, normal noise/vibration and acceptable seal behavior; a hot casing can flash incoming liquid and require cooling/venting before stable pumping.'
 
     ],
 
@@ -911,7 +1001,9 @@ const PETROSKILLS_KNOWLEDGE = {
 
       'Suction piping should preserve NPSH and avoid excessive velocity/restriction; pulsation dampening can reduce velocity surge.',
 
-      'Rotary PD pump families include external/internal gear, sliding vane, single/three-screw and progressive cavity; suitability depends on service, viscosity, differential pressure and entrained vapor.'
+      'Rotary PD pump families include external/internal gear, sliding vane, single/three-screw and progressive cavity; suitability depends on service, viscosity, differential pressure and entrained vapor.',
+      'Because positive-displacement pumps keep displacing volume, a safe relief/bypass path is essential; do not treat a throttled/blocked discharge like a centrifugal-pump control method.',
+      'Vacuum-service equipment can include ejectors, vane/lobe machines, liquid-ring pumps and Roots blowers; service fluid compatibility, compression ratio and sealing/lubrication requirements determine suitability.'
 
     ]
 
@@ -1133,6 +1225,39 @@ const PETROSKILLS_KNOWLEDGE = {
 
     ]
 
+  },
+
+  mechanicalRefrigeration_20260729: {
+    source: 'Operator-supplied PetroSkills Mechanical Refrigeration, pp.25-55 to 25-61, file 2026-07-29 16-40(2).pdf',
+    authority: 'VERIFIED_GENERIC_TRAINING_REFERENCE_NOT_CLEAR_FORK_SETPOINT_AUTHORITY',
+    reasoning: [
+      'Condenser duty is chiller/process refrigeration duty plus compressor work. Condensing pressure and condensing temperature are linked; lowering practical condensing temperature reduces compressor horsepower and condenser duty, limited by ambient conditions and equipment/control requirements.',
+      'Condenser airflow is a primary condensing-pressure control mechanism. Changes in ambient temperature or fan/louver/pitch/speed should propagate into condensing pressure, compressor work and liquid inventory instead of behaving as isolated indications.',
+      'The refrigerant surge drum normally runs near mid-level and its indicated level can shift with condensing temperature. Slow loss can reflect normal losses/maintenance; sudden rapid loss supports a leak or refrigerant migration/hang-up investigation.',
+      'Light non-condensables such as methane/ethane/nitrogen accumulate on the high side, elevate apparent condensing/discharge pressure and horsepower, and consume condenser area. Heavy/high-boiling contamination can accumulate in the chiller, coat/flood heat-transfer surfaces and force lower suction pressure for the same process temperature.',
+      'After equipment is opened, purge/vacuum discipline and maintaining positive chiller/compressor-suction pressure reduce air ingress. Refrigerant makeup quality should be verified; makeup dilutes contaminants most efficiently when system inventory is low.',
+      'Chiller pressure establishes refrigerant boiling temperature and therefore process outlet temperature. Chiller level/feed control establishes refrigerant circulation rate needed to match duty; compressor capacity must match the vapor generation rate.',
+      'At low refrigeration circulation, compressor minimum-flow/surge protection is required. At high circulation, compressor/driver capacity can become the limiting constraint and may force a higher chiller pressure or reduced circulation, sacrificing process outlet temperature.',
+      'For Clear Fork, apply these principles to the verified R-290 loop only after plant-specific valve action, alarms, trips, limits and actual Frick screw-compressor behavior are applied.'
+    ]
+  },
+
+  cryogenicPlantOperations_20260729: {
+    source: 'Operator-supplied PetroSkills Gas Expansion NGL Recovery, pp.22-50 to 22-67, file 2026-07-29 16-43(2).pdf',
+    authority: 'VERIFIED_GENERIC_TRAINING_REFERENCE_NOT_CLEAR_FORK_PROCEDURE_AUTHORITY',
+    reasoning: [
+      'Cryogenic operation balances product quality, production/recovery and operating cost. More recovery is not automatically optimal when residue recompression, reboil/reflux, methanol, downtime or equipment-stress costs exceed the value of added product.',
+      'Ethane rejection is a tower heat/pressure/composition problem: generic operation moves toward conditions that drive ethane overhead with residue rather than into NGL. Example values in the PetroSkills pages are illustrative and must never replace Clear Fork setpoints.',
+      'Stable feed to the demethanizer is essential. Expander-feed separators should act as surge buffers; overly tight level/pressure tuning can create erratic tower feed. Reboiler temperature response is inherently slow because of equipment and heat-transfer inertia.',
+      'Generic total startup after opening/depressuring proceeds through dryout, cooldown on JT, then expander/compressor startup. Seal gas and lube-oil circulation precede admitting/ramping expander flow. Use this only as theory; Clear Fork approved startup/OEM procedure governs execution.',
+      'When the expander is unavailable and flow transfers to JT bypass, liquid recovery falls materially, temperatures rise and tower/recompression pressures shift. Stabilization after the transfer can take a long time because cold-box and tower thermal inventories are large.',
+      'Normal cryo monitoring should correlate inlet flow/P/T, exchanger temperatures and DP, expander-feed separator P/T/level, JT and IGV/controller outputs, expander DP, seal/lube conditions, brake-compressor suction/discharge, reboiler temperatures, demeth bottom temperature/level, tower pressure/DP and NGL composition.',
+      'Freeze-up is a first-line cryo troubleshooting concern. Hydrates and solid CO2 can both create rising DP; dehydration performance, temperatures, pressures and composition determine which mechanism is plausible.',
+      'Methanol can help hydrate/ice only when it reaches the restriction; the supplied reference specifically states it does not melt a solid-CO2 plug. Solid CO2 requires approved derime/warming/depressuring strategy, never an improvised plug-clearing move.',
+      'A vapor-locked thermosiphon reboiler loses liquid circulation and heat transfer. Look for falling bottom temperature, increasing methane in bottoms, liquid backup, abnormal exchanger temperatures/DP and warm-side gas failing to cool normally before blaming the temperature controller.',
+      'Snowballing is a self-reinforcing cold cycle: colder separator/expander conditions create more liquid and colder residue, which increases cold-box chilling and drives conditions colder still. Diagnose reboiler heat and feed split/control before making aggressive expander/JT moves.',
+      'The PetroSkills procedures are explicitly generic guidelines. For Clear Fork, exact startup, shutdown, venting, isolation, methanol use, derime and trip-response actions require verified site procedures/P&IDs/OEM documentation.'
+    ]
   },
 
   clearForkOperatorFlowKnowledge: {
@@ -4209,3 +4334,82 @@ module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
 module.exports.RYAN_CHANGESET_12BF = RYAN_CHANGESET_12BF;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
+
+/* 12BX PetroSkills reference expansion: reciprocating compressors, process drawings, phase behavior, mass transfer.
+   Source-derived logic may be used to diagnose/correct simulator behavior, but plant-specific values/tags remain governed by verified Clear Fork P&IDs and documents. */
+window.RYAN_REFERENCE_LIBRARY = window.RYAN_REFERENCE_LIBRARY || {};
+window.RYAN_REFERENCE_LIBRARY.petroskills_12BX = {
+  title: 'PetroSkills operator reference expansion 12BX',
+  categories: {
+    reciprocating_compressors: {
+      topics: [
+        'piston, rings, rod, cylinder, suction/discharge valves, packing',
+        'clearance pockets and valve lifters/unloaders',
+        'cylinder and packing lubrication, divider blocks, oil alarms/shutdowns',
+        'compressor cylinder cooling and frame lubrication',
+        'crosshead, connecting rod, crankshaft/frame',
+        'pulsation damping, suction/discharge bottles, vibration',
+        'rod load and rod reversal, effects of loading/unloading and valve failures',
+        'electric motor and natural gas engine driver considerations'
+      ],
+      simulator_guidance: [
+        'Loaded starts for reciprocating compressors should be treated as abnormal unless verified plant logic specifically allows them.',
+        'Low frame oil pressure and high frame oil temperature are valid protective-trip concepts; exact trip values must come from verified plant documents.',
+        'Cylinder temperature, valve condition, lubrication flow, unloading state, speed and suction/discharge conditions should interact dynamically rather than as isolated indicators.',
+        'Improper unloading or failed suction/discharge valves can impair rod reversal and should influence mechanical health/vibration/temperature behavior.',
+        'Pulsation damping devices reduce harmful pulsation/vibration but do not eliminate pulsation.'
+      ]
+    },
+    process_drawings: {
+      topics: [
+        'BFD vs PFD vs P&ID information levels',
+        'control valve, controller, indicator and signal-line symbology',
+        'instrument location/function symbols',
+        'process piping, bypasses, drains, flares, utilities, spec breaks and off-page connectors',
+        'equipment tags and descriptive notes'
+      ],
+      simulator_guidance: [
+        'Use P&IDs as the highest-detail drawing basis for simulator topology and control relationships.',
+        'Do not infer valve action, fail position, exact controller type, line spec, or hidden internals unless the verified drawing or supporting document identifies them.',
+        'PFDs and BFDs can support process intent, but P&IDs control equipment/line/instrument detail when conflicts occur.'
+      ]
+    },
+    phase_behavior: {
+      topics: [
+        'single-component P-T-V behavior, triple point and critical point',
+        'multi-component phase envelopes, bubble point, dew point, quality lines',
+        'cricondenbar, cricondentherm and retrograde condensation',
+        'pump suction cavitation relationship to vapor pressure',
+        'pipeline hydrocarbon dewpoint behavior',
+        'flash separation and fractionation phase envelopes'
+      ],
+      simulator_guidance: [
+        'Phase state should respond jointly to pressure, temperature and composition.',
+        'Crossing dewpoint can create liquid from gas; crossing bubblepoint can create vapor from liquid.',
+        'Pump cavitation risk should increase when suction pressure margin over vapor pressure is lost.',
+        'Flash separator vapor and liquid products should have different compositions and therefore different phase envelopes.',
+        'Do not use generic phase-envelope numbers as Clear Fork plant values unless verified by plant-specific analysis.'
+      ]
+    },
+    mass_transfer: {
+      topics: [
+        'absorption, stripping and fractionation',
+        'tray towers, downcomers, weirs, bubble-cap/sieve/valve trays',
+        'packed towers, structured/random packing and liquid distribution',
+        'equilibrium stages, tray efficiency and HETP',
+        'relative volatility, reflux, reboilers and condensers',
+        'stabilization, absorber/contactors and stripper/regenerator operation'
+      ],
+      simulator_guidance: [
+        'Mass-transfer performance should depend on vapor/liquid rates, contact area, mixing, temperature, pressure, solvent condition and number/quality of contacts.',
+        'Absorption is favored by conditions that maintain a concentration driving force into the solvent; stripping uses the opposite driving direction.',
+        'Reflux directly affects overhead separation/composition; reboiler heat strongly affects bottoms stripping/composition.',
+        'Tower flooding, weeping, poor distribution, inadequate reflux, low reboiler duty and degraded solvent should produce coherent performance symptoms rather than single-value failures.',
+        'Use these relationships to audit simulator behavior without overriding verified Clear Fork-specific control narratives.'
+      ]
+    }
+  },
+  source_policy: 'Training/reference logic may explain or correct simulator relationships. Clear Fork-specific tags, limits, lineups, permissives, trips, setpoints and equipment details require verified plant sources; unknowns remain pending verification.'
+};
+
+/* 12BY: Full Atlas Copco Order 1039 expander manual verification installed above in OEM_MANUAL_KNOWLEDGE.expanderBooster. */
