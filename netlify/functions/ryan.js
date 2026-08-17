@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-17CI';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12CI-IMAGE-PDF-20260817';
+const RYAN_BUILD_ID = 'RYAN-2026-08-17DC';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12DC-KNOWLEDGE-SYNC-20260817';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CI-SERVER-SAFE-IMAGE-PDF-20260817';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12DC-CLEAR-FORK-KNOWLEDGE-SYNC-20260817';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -749,6 +749,11 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12DC RYAN KNOWLEDGE SYNC: synchronized backend plant knowledge with the 2026-08-17 control-board/training build while preserving LIVE simulator state as current-state authority.',
+  '12DC LEGACY SAFETY CLEANUP: removed stale legacy stabilizer, overhead-compressor, control-valve, pump-maintenance and residue-compressor seed blocks from active knowledge routing because they contained contradicted equipment identities, invented valve tags/setpoints, or copied unit tags. The source constants remain in file only for historical compatibility and are not selected for answers.',
+  '12DC V-1422: installed 80% LSHH context, shared LIC-1422/LIC-1422A level target, current outlet-rundown philosophy, verified PY-1623/PY-1624 flow-permit thresholds, and corrected stabilizer contribution to V-1422 inventory.',
+  '12DC RESIDUE STARTUP TRAINING: installed current C-6100/6200/6300 training-only startup sequence including XV-6100 bypass DP criterion, cooler-fan AUTO checks, unload/blowdown teaching, LOAD behavior, and SVU/FVCP local/remote gating. Training controls are explicitly not live plant controls or approved procedure.',
+  '12DC EXPANDER/DEHY: synchronized HIC-101/PIC-1521D normal AUTO behavior and preserved C-1111 as regeneration/dryout service rather than normal main-process dehy flow.',
   '12CI removes an accidental browser-only window.RYAN_REFERENCE_LIBRARY block from Netlify ryan.js; Node/server startup no longer throws ReferenceError: window is not defined.',
   '12CI verifies bounded plant-image/nameplate learning remains enabled and PDF/P&ID learning still uses the interactive multi-pass Anthropic Files workflow with page/tag/topology/continuation extraction.',
   '12CA REFERENCE/EXPANDER UI FIX: PetroSkills exact source PDFs are served from the frontend Reference Library as original documents; Ryan keeps the installed process/OEM knowledge. Expander HIC-101 MAN/AUTO and +/- controls now use explicit browser event listeners in the matched frontend. ',
@@ -2491,11 +2496,63 @@ const EXCHANGER_REBOILER_EXPERT_12AM = {
   sourceClass: 'Clear Fork topology from operator/real HMI; general BAHX/reboiler physics from Chart Industries and Gas Processing & LNG references. General research must not overwrite verified Clear Fork piping or current operator snapshots.'
 };
 
+// ===== CLEAR FORK VERIFIED KNOWLEDGE SYNC — 2026-08-17 =====
+// Synchronizes Ryan with the current control-board/training build without treating training-only
+// controls as live plant controls. Newer verified/operator-confirmed facts supersede legacy seed blocks.
+const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
+  sourceStatus: 'CURRENT_CLEAR_FORK_SIMULATOR_AND_OPERATOR_VERIFIED_SYNC_2026_08_17',
+  priority: 'LATEST_VERIFIED_OR_OPERATOR_CONFIRMED',
+  sourceRules: [
+    'LIVE simulator context remains authoritative for current PV/SP/CV, run state, alarm, bypass and valve position.',
+    'Training simulator controls teach sequence and cause/effect only. They are NEVER evidence that a live plant control exists or is presently positioned that way.',
+    'Issued Clear Fork P&IDs/control narratives and applicable OEM package documents govern exact field topology, protection, isolation and approved operating steps.',
+    'When this 2026-08-17 sync conflicts with an older legacy seed block, use this sync plus verified P&ID/OEM knowledge and explicitly disregard the stale legacy statement.'
+  ],
+  v1422NglSystem: [
+    'V-1422 is the shared NGL surge tank receiving demethanizer NGL plus stabilizer product only when the T-5030 product path is actually routed through the stabilizer product system to V-1422.',
+    'Operator-verified LSHH-1422 is 80% level. The current simulator models the HH response as isolating new inflow while leaving available outlet pumping for inventory rundown; this is simulator cause/effect training and must not be presented as a substitute for the issued shutdown narrative.',
+    'LIC-1422 on the Demeth board and LIC-1422A on the Product Pump board represent the same physical surge-tank level target. With a complete NGL outlet train running, level above SP increases requested export/pump speed; below SP the train can recirculate rather than export.',
+    'Verified product path: V-1422 -> one P-1619/P-1620 booster -> one P-1630/P-1635 pipeline pump -> A-1322 -> FT-1422 -> either FCV-1422 recycle to V-1422 or the parallel PCV-1623/PCV-1624 outlet paths -> Plant Outlet.',
+    'Verified PY-1623/PY-1624 flow permits: FT-1422 must exceed 291.50 GPM for initial opening; below 265.00 GPM the associated outlet PCV is interlocked closed; 265.00-291.50 GPM is a hold/deadband region.',
+    'Current control philosophy from the synchronized simulator: as V-1422 rises above target, PCV-1624 is driven high-open first and PCV-1623 can progressively open for extra rundown while FCV-1422 recycle is minimized. Near target, PCV-1623 pinches back and recycle may carry excess circulation. Treat exact selector internals as simulator/observed logic unless a control narrative verifies them.'
+  ],
+  stabilizerProduct: [
+    'The real Clear Fork condensate stabilizer is T-5030 with E-5040 reboiler, not V-1521. Legacy seed text that called V-1521 the stabilizer is obsolete and must not be used.',
+    'Slug-catcher liquids -> F-1050/F-1055 -> E-5000 -> V-5010 -> F-5015/F-5016 -> E-5020 -> T-5030/E-5040 -> AC-5055 -> P-5060/P-5065. Stabilizer product can then be routed to V-1422 through the verified product routing; recycle/return branches remain distinct.',
+    'P-5060/P-5065 are duty/standby stabilizer product/booster pumps in the current plant model. Do not reuse stale seed descriptions that make both simple recirculation pumps through AC-5055.'
+  ],
+  residueCompressorStartupTraining: [
+    'The 2026-08-17 residue-compressor trainer is a TRAINING-ONLY local package simulation for C-6100/C-6200/C-6300. It does not issue commands to live simulator process equipment.',
+    'Startup teaching sequence captured from the current trainer: verify package release/LOTO/red tags; perform package walkdown; establish required lubrication/permissives; place compressor oil cooler and all three residue cooler fans in AUTO; use the bypass around XV-6100 to reduce startup differential and do not close that bypass until DP is below 30 psid; clear alarms/permissives; use UNLOAD/blowdown training to reduce trapped compressor pressure below 300 psig when required; hold LOCAL START; verify oil/rotation/pressures; then LOAD only after stable running.',
+    'After LOAD, the trainer sets the captured teaching condition to Load Step 3 and exposes COMP SVU/FVCP capacity control. Login/authentication is required in the trainer before changing SVU/FVCP mode; REMOTE is blocked until the compressor is running and loaded.',
+    'Normal remote operating capacity is commonly around 80% in the operator-observed Clear Fork condition, but 80% is an observed/training calibration point, not a universal required setpoint.',
+    'Gas startup logic remains: each residue compressor initially has a bypass/unloaded path; loading transfers compression through the cylinders. The three units have separate suction branches from the common EX/C-1121 residue suction header and separate discharges that combine before F-6800.',
+    'Ryan may explain these trainer steps and expected indications, but must distinguish TRAINING CONTROL from LIVE DCS/PACKAGE CONTROL and must not imply the simulator trainer is an approved startup procedure.'
+  ],
+  expanderControl: [
+    'EX-1121 HIC-101 is normally AUTO/REMOTE under PIC-1521D EX during normal operation. Startup teaching uses MANUAL initially, ramps IGV cautiously to about 20%, then transfers to AUTO when conditions are ready.',
+    'The current synchronized control model uses the operator-confirmed normal point near PIC-1521D EX SP 268 psig / PV about 265 psig with IGV demand near 100%. High tower pressure closes/reduces the expander feed demand; low tower pressure opens/increases it.',
+    'If EX-1121 is lost, IGV walks toward zero while PCV-1121A JT opens rapidly but not instantaneously toward the established backup range. The expander and JT are coordinated parallel pressure/flow paths, not independent throughput controls.'
+  ],
+  dehyAndRegenScope: [
+    'Normal dehydration process order is V-1410 -> F-1412 -> two active adsorbing beds among V-1413/V-1414/V-1415 -> F-1416/F-1417 -> dry-gas cryogenic section.',
+    'C-1111 belongs to the regeneration/dryout loop and may return regen/dryout gas toward the inlet-compressor suction system. C-1111 is not part of the normal main-process dehydration flow path and should not be drawn or described as though normal process gas passes through it.'
+  ],
+  legacySeedCorrections: [
+    'Do not use legacy STABILIZER_KNOWLEDGE claims that identify V-1521 as the stabilizer or invent XV-1521-* isolation tags/setpoints for that service.',
+    'Do not use legacy CONTROL_VALVE_KNOWLEDGE that labels LCV-1241 as a stabilizer sump valve; LCV-1241 belongs to the propane refrigeration/chiller inventory system in the current verified model.',
+    'Do not use legacy PUMP_MAINTENANCE_KNOWLEDGE that describes P-1630/P-1635 as stabilizer recirculation/booster pumps; they are the NGL pipeline pump pair downstream of P-1619/P-1620 booster pumps.',
+    'Do not use legacy RESIDUE_COMPRESSOR_KNOWLEDGE statements that copy one PT-620x/TT-62xx tag set across all three compressors without unit-specific source confirmation.',
+    'Do not use legacy OVERHEAD_COMPRESSOR_KNOWLEDGE invented isolation-valve tags or estimated PSV/setpoint data when the current C-5700 P&ID/OEM records are available.'
+  ]
+});
+
 function hasClearForkTag(text) {
   return /\b(?:C|V|P|E|F|T|A|H)-\d{3,4}[A-Z]?\b|\bEX\/?C?-?\d{3,4}[A-Z]?\b|\b(?:PIC|PIT|PT|TIT|TE|FIT|FT|FIC|LIC|LIT|PDIT|PDIC|PV|PCV|FCV|LCV|TCV|XV|ESD|PSV|FQI|FFIC)-?\d{3,4}[A-Z]?\b/i.test(String(text || ''));
 }
 
 const KNOWLEDGE_REGISTRY = {
+  sync0817: OPERATOR_PROCESS_KNOWLEDGE_0817,
   flowPathTrainingAid0815: CLEAR_FORK_FLOW_PATH_TRAINING_AID_20260815,
   cryoExpert12AM: CRYO_EXPERT_ENGINE_12AM,
   operatorDecision12AM: CRYO_OPERATOR_DECISION_ENGINE_12AM,
@@ -2504,15 +2561,10 @@ const KNOWLEDGE_REGISTRY = {
   operatorProcess0812Y: OPERATOR_PROCESS_KNOWLEDGE_0812Y,
   operatorProcess0811: OPERATOR_PROCESS_KNOWLEDGE_0811,
 
-  stabilizer: STABILIZER_KNOWLEDGE,
 
-  overheadCompressor: OVERHEAD_COMPRESSOR_KNOWLEDGE,
 
-  controlValves: CONTROL_VALVE_KNOWLEDGE,
 
-  pumpMaintenance: PUMP_MAINTENANCE_KNOWLEDGE,
 
-  residueCompressors: RESIDUE_COMPRESSOR_KNOWLEDGE,
 
   simulatorUI: SIMULATOR_UI_KNOWLEDGE,
 
@@ -2539,6 +2591,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'sync0817', re: /\b(V-1422|LIC-1422|LSHH-1422|PCV-1623|PCV-1624|PY-1623|PY-1624|T-5030|P-5060|P-5065|C-6100|C-6200|C-6300|SVU|FVCP|XV-6100|residue compressor|HIC-101|PIC-1521D|C-1111|dehy|regen|stabilizer|NGL product)\b/i },
   { key: 'flowPathTrainingAid0815', re: /\b(flow path|colour-coded|color-coded|training aid|F-6800|E-1227|F-1438|V-1040|E-1225|E-1125|P-5060|P-5065|AC-5055|V-1422|P-1619|P-1620|P-1630|P-1635|V-8000)\b/i },
   { key: 'exchangerReboiler12AM', re: /\b(E-1221|E-1222|E-1223|E-1224|gas\/?gas exchanger|reflux condenser|BAHX|brazed aluminum|TCV-1221|TCV-1223|TE-1222J|FCV-1438|FIC-1438|FT-1222-COMP|PDIC-1222B|PDCV-1222B|reboiler|thermosiphon|heat integration|approach temperature|exchanger DP)\b/i },
   { key: 'operatorDecision12AM', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
@@ -2553,16 +2606,6 @@ const KNOWLEDGE_ROUTING_RULES = [
   { key: 'finalPIDs', re: /\b(M2600|M2610|M2615|M2680|M2690|M2700|M2710|M2900|M2901|M2902|M2910|M2915|M2920|M2921A|M2930|M2960|F-6800|F-1438|H-7100|V-8110|V-9100|C-9210|C-9220|D-9230|V-9241|TK-9300|flare|relief header|closed drain|instrument air|dehy sequence|regen sequence|piping rating|line spec|valve number|PSV rating)\b/i },
 
   { key: 'clearForkPIDs', re: /\b(M1110|M2040|M2050|M2105|M2110|M2130|M2135|M2140|M2145|M2150|M2155|M2160|M2165|M2175|M2200|M2205|M2210|M2225|M2240|M2260|M2500|M2505|M2510|M2514|M2515|M2520|M2560|M2570|M2571A|M2571B|M2600|M2610|M2615|M2900|M2901|M2922|M2960|V-1040|F-1050|F-1055|E-5000|V-5010|F-5015|F-5016|E-5020|T-5030|E-5040|P-5060|P-5065|AC-5055|C-5700|V-1460|E-1221|E-1222|E-1223|E-1224|E-1241|V-1421|EX-1121|C-1121|T-1521|E-1125|V-1422|P-1619|P-1620|P-1630|P-1635|A-1322|C-6100|C-6200|C-6300|AC-6101|AC-6201|AC-6301|P&ID|PID|flow path|isolation|LOTO|relief|depressure)\b/i },
-
-  { key: 'stabilizer', re: /\b(V-1521|P-5060|P-5065|AC-5055|stabilizer|demethanizer|LT-5060|TT-5060|PSV-1521)\b/i },
-
-  { key: 'overheadCompressor', re: /\b(C-5700|5700|overhead compressor|TT-5700|PS-5700|PSV-5700)\b/i },
-
-  { key: 'controlValves', re: /\b(PCV-1438|LCV-1241|control valve|Fisher|pilot air|actuator)\b/i },
-
-  { key: 'pumpMaintenance', re: /\b(P-1630|P-1635|ISO 68|pump oil|booster pump maintenance)\b/i },
-
-  { key: 'residueCompressors', re: /\b(C-6100|C-6200|C-6300|6100|6200|6300|residue compressor|PT-620[1-6]|TT-62\d\d)\b/i },
 
   { key: 'simulatorUI', re: /\b(simulation speed|real time|toolbar|outages panel|live|pause|simulator UI)\b/i },
 
@@ -2606,7 +2649,7 @@ function genericProcessKnowledge(message) {
   const out = {};
   if (/\b(stabiliz|fractionat|demeth|reboil|reflux|tower|NGL)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (/\b(compressor|reciprocating|centrifugal|screw|surge|recycle)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
-  if (/\b(valve|control valve|Cv|actuator|Fisher)\b/i.test(text)) out.controlValves = CONTROL_VALVE_KNOWLEDGE;
+  if (/\b(valve|control valve|Cv|actuator|Fisher)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (/\b(dehy|dehydrat|molecular sieve|adsorb|hydrate|dew point)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (/\b(refrigerat|propane|chiller|expander|JT|cryogenic|cold separator|phase)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (!Object.keys(out).length) out.petroSkills = PETROSKILLS_KNOWLEDGE;
@@ -2624,6 +2667,7 @@ function selectKnowledge(message, context, mode) {
   }
 
   const keys = new Set();
+  if (plantSpecific) keys.add('sync0817');
   if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AM');
 
   for (const rule of KNOWLEDGE_ROUTING_RULES) if (rule.re.test(haystack)) keys.add(rule.key);
