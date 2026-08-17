@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-17CG';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12CA-20260815';
+const RYAN_BUILD_ID = 'RYAN-2026-08-17CI';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12CI-IMAGE-PDF-20260817';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CG-225-OPERATING-236-CAPABILITY-20260817';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CI-SERVER-SAFE-IMAGE-PDF-20260817';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -749,6 +749,8 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
 ];
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12CI removes an accidental browser-only window.RYAN_REFERENCE_LIBRARY block from Netlify ryan.js; Node/server startup no longer throws ReferenceError: window is not defined.',
+  '12CI verifies bounded plant-image/nameplate learning remains enabled and PDF/P&ID learning still uses the interactive multi-pass Anthropic Files workflow with page/tag/topology/continuation extraction.',
   '12CA REFERENCE/EXPANDER UI FIX: PetroSkills exact source PDFs are served from the frontend Reference Library as original documents; Ryan keeps the installed process/OEM knowledge. Expander HIC-101 MAN/AUTO and +/- controls now use explicit browser event listeners in the matched frontend. ',
   '12BY EXPANDER OEM FULL-MANUAL PASS: re-verified Atlas Copco Mafi-Trench Order 1039 / Machine EX/C-121 against the complete 254-page operator upload and expanded Ryan with package identity, nameplate limits, control-system setpoints, startup/shutdown, seal-gas/lube-oil behavior, thrust/vibration/speed protection, troubleshooting, monitoring cadence and spare/instrument references. No credential/passcode data is retained.',
   '12BV PETROSKILLS STUDY PACK: installed operator-supplied PetroSkills Mechanical Refrigeration pp.25-55 to 25-61 and Gas Expansion NGL Recovery / Cryogenic Plant Operations pp.22-50 to 22-67 as verified generic training references. Ryan must use them for refrigeration/cryo physics and troubleshooting while Clear Fork P&IDs, approved procedures, OEM requirements and verified plant knowledge retain priority.',
@@ -3918,7 +3920,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4360,81 +4362,7 @@ module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
 module.exports.RYAN_CHANGESET_12BF = RYAN_CHANGESET_12BF;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
 
-/* 12BX PetroSkills reference expansion: reciprocating compressors, process drawings, phase behavior, mass transfer.
-   Source-derived logic may be used to diagnose/correct simulator behavior, but plant-specific values/tags remain governed by verified Clear Fork P&IDs and documents. */
-window.RYAN_REFERENCE_LIBRARY = window.RYAN_REFERENCE_LIBRARY || {};
-window.RYAN_REFERENCE_LIBRARY.petroskills_12BX = {
-  title: 'PetroSkills operator reference expansion 12BX',
-  categories: {
-    reciprocating_compressors: {
-      topics: [
-        'piston, rings, rod, cylinder, suction/discharge valves, packing',
-        'clearance pockets and valve lifters/unloaders',
-        'cylinder and packing lubrication, divider blocks, oil alarms/shutdowns',
-        'compressor cylinder cooling and frame lubrication',
-        'crosshead, connecting rod, crankshaft/frame',
-        'pulsation damping, suction/discharge bottles, vibration',
-        'rod load and rod reversal, effects of loading/unloading and valve failures',
-        'electric motor and natural gas engine driver considerations'
-      ],
-      simulator_guidance: [
-        'Loaded starts for reciprocating compressors should be treated as abnormal unless verified plant logic specifically allows them.',
-        'Low frame oil pressure and high frame oil temperature are valid protective-trip concepts; exact trip values must come from verified plant documents.',
-        'Cylinder temperature, valve condition, lubrication flow, unloading state, speed and suction/discharge conditions should interact dynamically rather than as isolated indicators.',
-        'Improper unloading or failed suction/discharge valves can impair rod reversal and should influence mechanical health/vibration/temperature behavior.',
-        'Pulsation damping devices reduce harmful pulsation/vibration but do not eliminate pulsation.'
-      ]
-    },
-    process_drawings: {
-      topics: [
-        'BFD vs PFD vs P&ID information levels',
-        'control valve, controller, indicator and signal-line symbology',
-        'instrument location/function symbols',
-        'process piping, bypasses, drains, flares, utilities, spec breaks and off-page connectors',
-        'equipment tags and descriptive notes'
-      ],
-      simulator_guidance: [
-        'Use P&IDs as the highest-detail drawing basis for simulator topology and control relationships.',
-        'Do not infer valve action, fail position, exact controller type, line spec, or hidden internals unless the verified drawing or supporting document identifies them.',
-        'PFDs and BFDs can support process intent, but P&IDs control equipment/line/instrument detail when conflicts occur.'
-      ]
-    },
-    phase_behavior: {
-      topics: [
-        'single-component P-T-V behavior, triple point and critical point',
-        'multi-component phase envelopes, bubble point, dew point, quality lines',
-        'cricondenbar, cricondentherm and retrograde condensation',
-        'pump suction cavitation relationship to vapor pressure',
-        'pipeline hydrocarbon dewpoint behavior',
-        'flash separation and fractionation phase envelopes'
-      ],
-      simulator_guidance: [
-        'Phase state should respond jointly to pressure, temperature and composition.',
-        'Crossing dewpoint can create liquid from gas; crossing bubblepoint can create vapor from liquid.',
-        'Pump cavitation risk should increase when suction pressure margin over vapor pressure is lost.',
-        'Flash separator vapor and liquid products should have different compositions and therefore different phase envelopes.',
-        'Do not use generic phase-envelope numbers as Clear Fork plant values unless verified by plant-specific analysis.'
-      ]
-    },
-    mass_transfer: {
-      topics: [
-        'absorption, stripping and fractionation',
-        'tray towers, downcomers, weirs, bubble-cap/sieve/valve trays',
-        'packed towers, structured/random packing and liquid distribution',
-        'equilibrium stages, tray efficiency and HETP',
-        'relative volatility, reflux, reboilers and condensers',
-        'stabilization, absorber/contactors and stripper/regenerator operation'
-      ],
-      simulator_guidance: [
-        'Mass-transfer performance should depend on vapor/liquid rates, contact area, mixing, temperature, pressure, solvent condition and number/quality of contacts.',
-        'Absorption is favored by conditions that maintain a concentration driving force into the solvent; stripping uses the opposite driving direction.',
-        'Reflux directly affects overhead separation/composition; reboiler heat strongly affects bottoms stripping/composition.',
-        'Tower flooding, weeping, poor distribution, inadequate reflux, low reboiler duty and degraded solvent should produce coherent performance symptoms rather than single-value failures.',
-        'Use these relationships to audit simulator behavior without overriding verified Clear Fork-specific control narratives.'
-      ]
-    }
-  },
-  source_policy: 'Training/reference logic may explain or correct simulator relationships. Clear Fork-specific tags, limits, lineups, permissives, trips, setpoints and equipment details require verified plant sources; unknowns remain pending verification.'
-};
+/* 12CI SERVER-RUNTIME FIX: browser-only Reference Library UI data must never execute inside Netlify ryan.js.
+   PetroSkills knowledge remains in PETROSKILLS_KNOWLEDGE above; frontend Reference Library presentation belongs in index.html only. */
 
 /* 12BY: Full Atlas Copco Order 1039 expander manual verification installed above in OEM_MANUAL_KNOWLEDGE.expanderBooster. */
