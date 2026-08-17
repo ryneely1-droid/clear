@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-17CD';
+const RYAN_BUILD_ID = 'RYAN-2026-08-17CG';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12CA-20260815';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CD-PETROSKILLS-KNOWLEDGE-20260817';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CG-225-OPERATING-236-CAPABILITY-20260817';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -763,13 +763,14 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   '12BF BOOSTER/EXPANDER TOPOLOGY: EX-1121 discharge goes to T-1521 and never through A-1321. Only C-1121 booster discharge goes through A-1321. Booster anti-surge recycle comes off downstream of A-1321, passes FCV-1211A (currently about 0% open), and returns to the common C-1121 suction header.',
   '12BF RED TAG: EX-1121/C-1121 red tag blocks restart from both the board START button and the ACMTC controller after the machine is stopped.',
   '12BF GC OPERATING ENVELOPE: current shift reports show roughly 221-225 MMSCFD, demeth bottoms about 166.2-170.4 F, and NGL ethane about 0.51-0.76%; use roughly 0.6-0.65% C2 near 220-224 MMSCFD and ~168 F as the local calibration, not a permanent constant.',
+  '12CG OPERATOR-CONFIRMED THROUGHPUT ENVELOPE: 225 MMSCFD is the verified maximum normal operating throughput. The plant/process equipment has approximately 236 MMSCFD capability under favorable conditions. Treat 225 as the normal operating ceiling and ~236 as capability, not a normal target.',
   '12BF REGEN/DEHY ROUTING: dry-out branch through PV-6805A/PIT-6805A continues rightward to REGEN GAS DRY OUT TO INLET COMP; dead-ended elbow remnants are not real process piping.',
   '12BE CURRENT EX-1121 OPERATING SNAPSHOT: PT-1121E/PIC-1121E PV ~249 psig; PT-1121B ~875.6 psig; PT-1121A ~241.43 psig; SE-1121 ~24,030 RPM; TE-1121D ~-85.70 F; PT-1121D ~249 psig; TE-1421A from the cold separator ~-7 F. Expander and C-1121 booster share a shaft but their gas paths are separate; only the C-1121 compressor stream goes through A-1321.',
   '12BE EXPANDER TRANSIENT: normal IGV control is AUTO. Startup is MANUAL, ramp IGV to about 20%, then transfer to AUTO. On expander loss the IGV walks toward 0 while PCV-1121A JT opens rapidly but not instantaneously toward about 80%, preserving tower flow with reduced refrigeration efficiency/recovery.',
   '12BE GC FIELD CALIBRATION: current plant reports around 220 MMSCFD and about 168 F demeth bottoms with NGL GC C2 around 0.64%. Treat this as an operator-observed calibration envelope, not a permanent constant; C2 still responds to bottoms heat, tower pressure, throughput, JT/expander share, reflux quality and dehy condition.',
   '12BE DOCUMENT DUPLICATE POLICY: when the exact same PDF/image content has already been fully learned, report it as a duplicate and add no duplicate facts. If a prior ingestion was incomplete, allow a retry rather than treating it as complete.',
   '12BC EXPANDER/COLD-SECTION CALIBRATION: cold-separator vapor has three parallel paths (E-1222 reflux, PCV-1121A JT, XV-1121B/EX-1121); current expander instrumentation is PDT-1121B 3.4 PSID, PT-1121B 876.7 psig, TE-1121D -85.7 F, PT-1121D 249 psig; PDT HI 5 / HIHI EX shutdown 15.',
-  '12BC PIC-1521D SPLIT CONTROL: JT faceplate SP 265/PV ~264 and EX faceplate SP 268/PV ~265/CV 100%; EX SP range 225-350 psig. Once IGV is saturated, additional pressure/throughput demand recruits PCV-1121A; current JT near 0% during the current high-IGV operating condition, extreme 350-psig example calibrates near 50% JT and roughly 240-245 MMSCFD. Compressor load steps remain preferred rate control.',
+  '12BC PIC-1521D SPLIT CONTROL: JT faceplate SP 265/PV ~264 and EX faceplate SP 268/PV ~265/CV 100%; EX SP range 225-350 psig. Once IGV is saturated, additional pressure/throughput demand recruits PCV-1121A; current JT near 0% during the current high-IGV operating condition, extreme 350-psig example calibrates near 50% JT and approximately 236 MMSCFD. Compressor load steps remain preferred rate control.',
   '12BC TURBOEXPANDER PHYSICS: Atlas Copco principle retained as OEM/general support—IGVs meter expander flow, expansion work drives the common-shaft booster compressor, and turboexpansion provides stronger cryogenic refrigeration/liquid recovery than simple JT pressure letdown. Clear Fork HMI/operator values govern plant-specific behavior.',
   '12BD EXCHANGER SPLIT HOTFIX: TCV-1221 current 100%, TCV-1223 current 24%; each operator click is exactly 1.00 percentage point. The obsolete second/legacy TCV click handler was removed so it cannot corrupt the active split state. Additional 1221-open demand above 100 spills to 1223. Once 1223 exceeds 50%, it progressively pinches 1221 to a protected 10% minimum. TIC-1224B current 63/62.9/12.97 and TDIC-1224B 20/45/100.',
   '12BC ALARM HISTORY: ACK no longer implies deletion; chronological alarm/event history retains first-in, acknowledgement, clear/reset, duration, recurrence and alarm/trip/ESD/event type for trend review.',
@@ -1638,7 +1639,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. TCV-1421 cold-spin valve normally stays closed, TIC-1421 SP -30 F, PV about -9.2, CV 0.',
 
-    'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput ~240-245 MMSCFD, but compressor load steps are the preferred normal rate lever.'
+    'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput approximately 236 MMSCFD capability (225 MMSCFD verified normal operating maximum), but compressor load steps are the preferred normal rate lever.'
 
   ],
 
@@ -1652,7 +1653,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
   ],
 
-  capacity: ['Normal throughput should be managed primarily with inlet/residue compressor load steps. Operator-observed/high tower-pressure operation can push the model into roughly 240-245 MMSCFD with EX IGV saturated and increasing JT share; this is an extreme operating envelope, not the preferred normal rate-control method.']
+  capacity: ['Normal throughput should be managed primarily with inlet/residue compressor load steps. Operator-observed/high tower-pressure operation can push the model into approximately 236 MMSCFD with EX IGV saturated and increasing JT share; this is an extreme operating envelope, not the preferred normal rate-control method.']
 
 };
 
@@ -2297,7 +2298,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_0812Y = {
     'Large P&IDs/manuals are learned through uploaded-file interactive multi-pass Messages requests; each pass completes independently, retains partial success, and structured extraction keeps page/source metadata without enabling API citation blocks.',
     'P&ID passes separately cover physical topology, instruments/controls, relief/isolation/LOTO-relevant detail and notes/specifications.',
     'Manual passes separately cover applicability/specifications, controls/safety, operations and maintenance/troubleshooting.',
-    'Netlify buffered function requests are limited to about 6 MB; base64 binary uploads effectively need to stay near 4.5 MB. Larger sources must be supplied through an Anthropic Files fileId or another server-side file reference rather than being silently truncated.'
+    'Netlify buffered function requests are limited to about 6 MB; browser image learning is auto-optimized to about 2.6 MB binary before base64/JSON overhead. Large PDFs still need to stay below the browser payload ceiling or use a server-side file reference. Larger sources must be supplied through an Anthropic Files fileId or another server-side file reference rather than being silently truncated.'
   ]
 };
 
@@ -3917,7 +3918,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 4 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
