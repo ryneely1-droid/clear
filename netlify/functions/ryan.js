@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-15CA';
+const RYAN_BUILD_ID = 'RYAN-2026-08-17CD';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12CA-20260815';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CA-PETROPDF-EXPCTRL-20260815';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12CD-PETROSKILLS-KNOWLEDGE-20260817';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -851,6 +851,7 @@ const MAX_LEARNED_FACTS = Math.max(200, Math.min(3000, Number(process.env.RYAN_M
  
 
 // ===== PETROSKILLS PROCESS / TROUBLESHOOTING BRAIN KNOWLEDGE =====
+// 12CD: full 13-set / 227-page PetroSkills study coverage retained for Ryan; Reference Library presentation is condensed only.
 
 // Expanded 2026-08-09 from operator-supplied PetroSkills pages. These are training/reference principles,
 
@@ -1226,6 +1227,28 @@ const PETROSKILLS_KNOWLEDGE = {
 
     ]
 
+  },
+
+  completeStudyCoverage_20260817: {
+    authority: 'COMPLETE_OPERATOR_SUPPLIED_PETROSKILLS_STUDY_SET_REVIEWED_AS_GENERIC_TRAINING_REFERENCE',
+    pageCoverage: 227,
+    sourceSets: [
+      '2026-07-29 16-40(2): Mechanical Refrigeration, 7 pages',
+      '2026-07-29 16-43(2): Gas Expansion / Cryogenic NGL Recovery, 18 pages',
+      '2026-07-29 16-52(2): Centrifugal Pumps fundamentals, 23 pages',
+      '2026-07-29 16-55(2): Pump operation/troubleshooting and PD/vacuum pumps, 13 pages',
+      '2026-07-29 17-05(2): Reciprocating Compressors part 1, 15 pages',
+      '2026-07-29 17-08(2): Reciprocating Compressors part 2, 10 pages',
+      '2026-07-29 17-10(2): Process Drawings, 10 pages',
+      '2026-07-29 17-13(2): Phase Behavior Fundamentals, 17 pages',
+      '2026-07-29 17-16(2): Mass Transfer Operations, 21 pages',
+      '2026-07-29 17-28(2): NGL Stabilization & Fractionation, 26 pages',
+      '2026-07-29 17-33(2): Water/Hydrocarbon Behavior & Hydrates, 26 pages',
+      '2026-07-29 17-36(2): Solid Bed Adsorbers part 1, 17 pages',
+      '2026-07-29 17-38(2): Solid Bed Adsorbers part 2, 24 pages'
+    ],
+    retentionRule: 'Ryan retains the detailed technical reasoning already extracted from all of these source sets. The operator-facing Reference Library is intentionally condensed for study/navigation, but Ryan must not reduce its internal process knowledge to those shorter summaries.',
+    applicationRule: 'Use this complete generic process knowledge to explain mechanisms, correlate symptoms, and audit simulator physics. Verified Clear Fork P&IDs, procedures, OEM manuals, live simulator values, and operator-confirmed plant facts remain authoritative for plant-specific tags, setpoints, permissives, trips, lineups, and maintenance actions.'
   },
 
   mechanicalRefrigeration_20260729: {
