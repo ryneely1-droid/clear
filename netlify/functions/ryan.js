@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-18A';
+const RYAN_BUILD_ID = 'RYAN-2026-08-18B';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EL-CLEAR-FORK-CALIBRATION-20260818';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EQ-TOPOLOGY-20260818';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -1679,7 +1679,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'Combined header -> TE-1241A about 2.3 F (LOLO -50) -> E-1241 chiller tube side. TE-1241C/TIC-1241C SP -7 F, PV about -7.4, CV 33.79%. PIC-1441C SP 17 psig, PV 16.56, CV 32.39%; PIC-1441A SP 30 psig, PV 16.65, CV 100%. PT-1441C LO 1 psig, HI 30, HIHI 240 and this shutdown is refrigeration-system-only.',
 
-    'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. TCV-1421 cold-spin valve normally stays closed, TIC-1421 SP -30 F, PV about -9.2, CV 0.',
+    'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. Operator-confirmed topology correction 2026-08-18: TV-1421 belongs on the top direct dry-gas path from the gas/gas section toward V-1421 Cold Separator; do not depict it as a separate warm-process-gas side branch into V-1421. TIC-1421 remains the cold-separator temperature controller.',
 
     'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput approximately 236 MMSCFD capability (225 MMSCFD verified normal operating maximum), but compressor load steps are the preferred normal rate lever.'
 
