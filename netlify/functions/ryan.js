@@ -731,17 +731,17 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-18C';
+const RYAN_BUILD_ID = 'RYAN-2026-08-18F';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12ER-TCV1421-REBOILER-20260818';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EU-V1422-OUTLET-DYNAMICS-20260818';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
-  'At that same point PCV-1624 is 100% open, PCV-1623 is about 1.5-2% open, and FCV-1422 recycle is 0% open. PIT-8000B is about 918 psig while pumping/exporting and falls toward about 850 psig when not pumping.',
+  'Historical established-export snapshot: PCV-1624 was 100% open, PCV-1623 about 1.5-2% open, and FCV-1422 recycle 0% open; PIT-8000B about 918 psig while exporting and about 850 psig when not pumping. Latest 2026-08-18 operator calibration supersedes this as the normal starting point: V-1422 about 31% on a 30% level SP, PCV-1624 about 90% open, PCV-1623 about 1% open, recycle 0%.',
   'PCV-1623 is governed by the LIC-1422B / PIC-1623 pair. Current LIC-1422B: SP 5%, PV 29.1%, CV 100%. Current PIC-1623: SP 1000 psig, PV 1012 psig, CV about 1.5%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'PCV-1624 is governed by the LIC-1422C / PIC-1624 pair. Current LIC-1422C: SP 30%, PV 29.1%, CV 100%. Current PIC-1624: SP 980 psig, PV 1004 psig, CV 100%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'The four controller readings are operator-observed live values, not universal tuning constants. Ryan must preserve them as a calibration point and distinguish observed behavior from any inferred selector/control action.',
@@ -837,7 +837,7 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   '12AT VERIFIED NGL PUMP STAGING: one P-1619/P-1620 boost pump supplies the suction of the operating P-1630/P-1635 pipeline pump. A pipeline pump must not run without a boost pump running; loss of the booster stage removes the pipeline-pump run permissive / requires the pipeline stage to stop.',
   '12AT VERIFIED NGL CIRCULATION: while the boost + pipeline train is running, liquid is always moving. Depending on outlet acceptance, the common discharge is (1) all recycle back to V-1422, (2) split between recycle and the sales pipeline, or (3) all sales-pipeline flow with recycle closed. As sales outlet capacity opens, recycle closes correspondingly.',
   'General pump-engineering support: centrifugal/high-head pump systems commonly use minimum-flow recycle to keep a running pump above minimum stable flow; series pumps add head and each stage requires adequate suction/NPSH. Treat Clear Fork P&IDs, HMI/interlocks and operator observations as authoritative for the exact permissives and valve logic.',
-  '12AU NGL selective-control calibration: current established export is FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. PCV-1623 is associated with LIC-1422B/PIC-1623 and PCV-1624 with LIC-1422C/PIC-1624; preserve the observed controller values and do not invent unverified selector details.',
+  'NGL outlet calibration history: earlier established-export snapshot was FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. Latest operator-confirmed normal starting condition is V-1422 ~31% on SP ~30%, PCV-1624 ~90%, PCV-1623 ~1%, FCV-1422 recycle 0%. Preserve both as time-specific observations, with the latest point preferred for startup calibration.',
   '12AU verified outlet flow permits: PY-1623 and PY-1624 each require FT-1422 >291.50 GPM for initial opening and each interlock its associated PCV closed below 265.00 GPM; hold prior permit state inside the 265.00-291.50 GPM deadband.',
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
@@ -1680,7 +1680,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'Combined header -> TE-1241A about 2.3 F (LOLO -50) -> E-1241 chiller tube side. TE-1241C/TIC-1241C SP -7 F, PV about -7.4, CV 33.79%. PIC-1441C SP 17 psig, PV 16.56, CV 32.39%; PIC-1441A SP 30 psig, PV 16.65, CV 100%. PT-1441C LO 1 psig, HI 30, HIHI 240 and this shutdown is refrigeration-system-only.',
 
-    'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. Operator-confirmed topology/control correction 2026-08-18: on the Gas/Gas exchanger page, TIC-1421 controls TCV-1421 immediately to the left of the separate TV-1421 cold-spin valve on the top dry-gas path toward V-1421. Current observed TIC-1421 point is SP -30 F, PV about -7.2 F, CV 0%. If PV falls below SP, TCV-1421 opens to increase warm-gas/reboiler duty and temper the cold section; when PV is above SP, TCV-1421 remains closed. TV-1421 remains a separate cold-spin valve. Do not depict TV-1421 as the same valve as TCV-1421.',
+    'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. Operator-confirmed topology/control correction 2026-08-18: on the Gas/Gas exchanger page, TIC-1421 controls the single TCV-1421 cold-spin valve on the top dry-gas path toward V-1421. Current observed TIC-1421 point is SP -30 F, PV about -7.2 F, CV 0%. If PV falls below SP, TCV-1421 opens to increase warm-gas/reboiler duty and temper the cold section; when PV is above SP, TCV-1421 remains closed. The previously drawn second downstream TV-1421 symbol was redundant and must not be treated as a second physical valve.',
 
     'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput approximately 236 MMSCFD capability (225 MMSCFD verified normal operating maximum), but compressor load steps are the preferred normal rate lever.'
 
@@ -2546,11 +2546,11 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
   ],
   v1422NglSystem: [
     'V-1422 is the shared NGL surge tank receiving demethanizer NGL plus stabilizer product only when the T-5030 product path is actually routed through the stabilizer product system to V-1422.',
-    'Operator-verified LSHH-1422 is 80% level. The current simulator models the HH response as isolating new inflow while leaving available outlet pumping for inventory rundown; this is simulator cause/effect training and must not be presented as a substitute for the issued shutdown narrative.',
+    'Operator-confirmed LSHH-1422 is 80% level and this condition causes a facility ESD. Healthy operation should not drift toward 80%; if level rises above SP, recycle should remain closed, PCV-1624 should move from roughly 90% toward 100%, and PCV-1623 should progressively open as a genuine second export path. Near 80%, both sales paths should be essentially wide open unless a real downstream restriction, pump loss, permit block, or outlet-acceptance problem prevents rundown.',
     'LIC-1422 on the Demeth board and LIC-1422A on the Product Pump board represent the same physical surge-tank level target. With a complete NGL outlet train running, level above SP increases requested export/pump speed; below SP the train can recirculate rather than export.',
     'Verified product path: V-1422 -> one P-1619/P-1620 booster -> one P-1630/P-1635 pipeline pump -> A-1322 -> FT-1422 -> either FCV-1422 recycle to V-1422 or the parallel PCV-1623/PCV-1624 outlet paths -> Plant Outlet.',
     'Verified PY-1623/PY-1624 flow permits: FT-1422 must exceed 291.50 GPM for initial opening; below 265.00 GPM the associated outlet PCV is interlocked closed; 265.00-291.50 GPM is a hold/deadband region.',
-    'Current control philosophy from the synchronized simulator: as V-1422 rises above target, PCV-1624 is driven high-open first and PCV-1623 can progressively open for extra rundown while FCV-1422 recycle is minimized. Near target, PCV-1623 pinches back and recycle may carry excess circulation. Treat exact selector internals as simulator/observed logic unless a control narrative verifies them.'
+    'Operator-confirmed V-1422 outlet philosophy: normal current point is about 31% level with SP about 30%, PCV-1624 about 90% open, PCV-1623 about 1% open, and FCV-1422 recycle 0%. Above SP, recycle stays closed, PCV-1624 opens farther toward 100%, and PCV-1623 progressively joins for additional export; near the 80% LSHH both outlet valves should be essentially wide open unless a real hydraulic/acceptance fault exists. Below/near target, recycle can carry minimum-flow circulation as required. Exact selector internals remain subject to issued control-narrative verification.'
   ],
   stabilizerProduct: [
     'The real Clear Fork condensate stabilizer is T-5030 with E-5040 reboiler, not V-1521. Legacy seed text that called V-1521 the stabilizer is obsolete and must not be used.',
@@ -3002,6 +3002,36 @@ ${modeInstructions}`;
 }
 
  
+
+
+function operatorDescriptionAnchor(description) {
+  const text = safeString(description || '', 2000).trim();
+  const ids = [];
+  const seen = new Set();
+  const matches = text.toUpperCase().match(/\b[A-Z]{1,6}-?\d{3,5}[A-Z]?\b/g) || [];
+  for (let x of matches) {
+    x = x.replace(/^([A-Z]+)(\d)/, '$1-$2');
+    if (!seen.has(x)) { seen.add(x); ids.push(x); }
+  }
+  let system = '';
+  if (/\bREGEN|REGENERATION|REGEN HEATER\b/i.test(text)) system = 'Regen';
+  else if (/\bDEHY|DEHYDRATION|MOLECULAR SIEVE\b/i.test(text)) system = 'Dehy';
+  else if (/\bREFRIG|FRICK|PROPANE\b/i.test(text)) system = 'Refrigeration';
+  else if (/\bRESIDUE\b/i.test(text)) system = 'Residue Compression';
+  else if (/\bINLET COMP|INLET COMPRESSION\b/i.test(text)) system = 'Inlet Compression';
+  else if (/\bEXPANDER|BOOST COMP|BOOSTER COMP\b/i.test(text)) system = 'Expander/Booster';
+  else if (/\bDEMETH|DEMETHANIZER\b/i.test(text)) system = 'Demethanizer';
+  else if (/\bSTABILIZER\b/i.test(text)) system = 'Stabilizer';
+  else if (/\bHOT OIL\b/i.test(text)) system = 'Hot Oil';
+  return { text, equipmentIds: ids, system };
+}
+function mergeEquipmentIds(a, b) {
+  const out = [], seen = new Set();
+  for (const x0 of [...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])]) {
+    const x = safeString(x0 || '', 80).trim(); if (x && !seen.has(x)) { seen.add(x); out.push(x); }
+  }
+  return out;
+}
 
 function inferDocumentType(attachment, requestedType) {
 
@@ -3542,10 +3572,11 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
   if (!/^image\/(jpeg|png|gif|webp)$/.test(mediaType)) throw new Error(`image_learn requires JPEG/PNG/GIF/WEBP, received ${mediaType || 'unknown'}.`);
 
   const sourceLabel = safeString(attachment.label || 'plant image', 200);
+  const anchor = operatorDescriptionAnchor(attachment.description || '');
 
   const existing = safeString(existingContext || '', 12000);
 
-  const prompt = `SOURCE: ${sourceLabel}\nDOCUMENT TYPE: PLANT IMAGE / PHOTO.\nInspect the image itself and extract ONLY facts that are actually visible/readable. First classify the source as plant_photo, nameplate, control_board_hmi, pid_drawing_photo, oem_reference, external_reference, or other. For plant/nameplate/control-board content, extract visible manufacturer, model, item/serial/part numbers, equipment tags, pressure/temperature/electrical/mechanical ratings, materials, labels, actuator/valve/instrument markings, instrument ranges, PV/SP/output/mode, alarm/status indicators, switches/selectors/buttons, displayed states, and clearly visible component relationships. If the image is a web/search screenshot or other generic technical reference, you MAY extract the technical statements it explicitly shows, but classify them as external_reference and never present them as Clear Fork-specific or verified plant facts. Do not infer blurred/cropped text or unstated plant facts. Every fact must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Keep facts compact and atomic. Target no more than ${Math.min(FACTS_PER_PASS, 45)} high-value facts so the response finishes cleanly. Existing Reference Library context is only for duplicate/conflict awareness and must not fill in unreadable image content.\nExisting context:\n${existing || '(none supplied)'}`;
+  const prompt = `SOURCE: ${sourceLabel}\nDOCUMENT TYPE: PLANT IMAGE / PHOTO.\nOPERATOR SOURCE IDENTITY: ${anchor.text || '(none supplied)'}.\nANCHOR EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}.\nANCHOR SYSTEM: ${anchor.system || '(none)'}.\nWhen an operator source identity is supplied, treat it as explicit OPERATOR_PROVIDED identity/context for what the image belongs to; attach the anchor equipment tag(s) to every extracted source fact so later questions about that tag retrieve this source. Do NOT treat the operator description as proof of nameplate ratings that are not visible.\nInspect the image itself and extract ONLY facts that are actually visible/readable. First classify the source as plant_photo, nameplate, control_board_hmi, pid_drawing_photo, oem_reference, external_reference, or other. For plant/nameplate/control-board content, extract visible manufacturer, model, item/serial/part numbers, equipment tags, pressure/temperature/electrical/mechanical ratings, materials, labels, actuator/valve/instrument markings, instrument ranges, PV/SP/output/mode, alarm/status indicators, switches/selectors/buttons, displayed states, and clearly visible component relationships. If the image is a web/search screenshot or other generic technical reference, you MAY extract the technical statements it explicitly shows, but classify them as external_reference and never present them as Clear Fork-specific or verified plant facts. Do not infer blurred/cropped text or unstated plant facts. Every fact must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Keep facts compact and atomic. Target no more than ${Math.min(FACTS_PER_PASS, 45)} high-value facts so the response finishes cleanly. Existing Reference Library context is only for duplicate/conflict awareness and must not fill in unreadable image content.\nExisting context:\n${existing || '(none supplied)'}`;
 
   const content = [attachmentToContentBlock(attachment), { type: 'text', text: prompt }].filter(Boolean);
 
@@ -3616,6 +3647,7 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
     f.sourceLabel = f.sourceLabel || sourceLabel;
 
     f.verificationStatus = 'DOCUMENT_EXTRACTED_UNVERIFIED';
+    f.equipmentIds = mergeEquipmentIds(f.equipmentIds, anchor.equipmentIds);
 
     return true;
 
@@ -3647,7 +3679,8 @@ async function prepareInteractiveDocument(attachment, documentType, existingCont
   const mediaType = String(attachment && attachment.mediaType || 'application/pdf').toLowerCase();
   const sourceLabel = safeString(attachment && attachment.label || 'Ryan source document', 200);
   const passes = buildBatchPasses(docType, fileId, sourceLabel, existingContext, mediaType);
-  return { fileId, documentType: docType, mediaType, sourceLabel, passCount: passes.length, passIds: passes.map(p => p.id) };
+  const anchor = operatorDescriptionAnchor(attachment && attachment.description || '');
+  return { fileId, documentType: docType, mediaType, sourceLabel, operatorDescription: anchor.text, anchorEquipmentIds: anchor.equipmentIds, anchorSystem: anchor.system, passCount: passes.length, passIds: passes.map(p => p.id) };
 }
 
 async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKey) {
@@ -3655,7 +3688,12 @@ async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKe
   const docType = String(job.documentType || 'auto').toLowerCase();
   const sourceLabel = safeString(job.sourceLabel || 'Ryan source document', 200);
   const mediaType = String(job.mediaType || 'application/pdf').toLowerCase();
+  const anchor = operatorDescriptionAnchor(job.operatorDescription || '');
   const passes = buildBatchPasses(docType, job.fileId, sourceLabel, existingContext, mediaType);
+  if (anchor.text) {
+    const prefix = `OPERATOR SOURCE IDENTITY: ${anchor.text}\nANCHOR EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}\nANCHOR SYSTEM: ${anchor.system || '(none)'}\nTreat this description as OPERATOR_PROVIDED identity/context for what the source belongs to. Index every extracted fact under the anchor equipment tag(s), while keeping values/ratings source-extracted only when actually visible/stated in the document.\n\n`;
+    passes.forEach(p => { p.text = prefix + p.text; });
+  }
   const idx = Math.max(0, Math.min(passes.length - 1, Number(passIndex || 0)));
   const pass = passes[idx];
   if (!pass) throw new Error(`Document pass ${idx} does not exist.`);
@@ -3690,6 +3728,7 @@ async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKe
     f.statement = statement;
     f.sourceLabel = f.sourceLabel || sourceLabel;
     f.verificationStatus = 'DOCUMENT_EXTRACTED_UNVERIFIED';
+    f.equipmentIds = mergeEquipmentIds(f.equipmentIds, anchor.equipmentIds);
     return true;
   }).slice(0, FACTS_PER_PASS);
   const usage = data.usage || {};
@@ -4014,7 +4053,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4388,7 +4427,7 @@ exports.handler = async function(event) {
 
           persistenceRequired: true,
 
-          persistenceInstruction: 'Store ingestion.facts/extracted in the simulator knowledge library and send the relevant records back as learnedKnowledge on later Ryan requests.'
+          persistenceInstruction: 'Store ingestion.facts/extracted in Ryan Core with equipmentIds/system/source identity so the frontend Reference Library can index the learned records by tag and system; send the relevant records back as learnedKnowledge on later Ryan requests.'
 
         };
 
