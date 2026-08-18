@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-17DC';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12DC-KNOWLEDGE-SYNC-20260817';
+const RYAN_BUILD_ID = 'RYAN-2026-08-18A';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12DC-CLEAR-FORK-KNOWLEDGE-SYNC-20260817';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EL-CLEAR-FORK-CALIBRATION-20260818';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -748,7 +748,42 @@ const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
 ];
 
+const OPERATOR_CALIBRATION_20260818 = Object.freeze({
+  sourceClass: 'OPERATOR_OBSERVED_HMI_SNAPSHOT',
+  gc: {
+    inletMolePct: {N2:0.3585,CO2:0.1602,C1:79.7295,C2:13.5908,C3:3.9982,iC4:0.4815,nC4:0.9412,iC5:0.2349,nC5:0.2176,C6plus:0.2876},
+    inletProperties: {BTU:1228.4,C2plusGalMcf:3.6338,C3plusGalMcf:1.1012,SGU:0.6983},
+    residueMolePct: {N2:0.3874,CO2:0.1687,C1:84.9352,C2:14.3888,C3:0.1200,iC4:0,nC4:0,iC5:0,nC5:0,C6plus:0},
+    residueProperties: {BTU:1118.1,relativeDensity:0.6277},
+    nglLiquidVolPct: {C1:0,C2:0.4721,C3:66.2303,iC4:10.1053,nC4:12.0022,iC5:5.0865,nC5:3.2847,C6plus:2.8190},
+    displayedC2Recovery:0.0173, displayedC3Recovery:97.2151, c2c3Ratio:0.7343,
+    pit1000Psig:506.4568, fit8210aMmscfd:207.6493,
+    interpretation:'Preserve displayed recovery values as HMI observations. Do not claim the C2 field definition/unit is verified. A methane-balance interpretation of the simultaneous compositions implies about 221.21 MMSCFD inlet gas, about 0.617% material C2 recovery, and about 97.183% material C3 recovery.'
+  },
+  refrigeration: {
+    running:['C-1140'], stopped:['C-1141','C-1142'],
+    C1140:{suctionPsig:19.0,dischargePsig:207.9,oilPsig:192.2,oilFilterPsig:194.8,suctionF:-3.2,dischargeF:167.7,oilF:140.2,separatorF:168.3},
+    C1141:{suctionPsig:19.5,dischargePsig:62.5,oilPsig:61.5,oilFilterPsig:60.1,suctionF:84.4,dischargeF:93.2,oilF:74.0,separatorF:118.1},
+    C1142:{suctionPsig:18.7,dischargePsig:59.9,oilPsig:58.5,oilFilterPsig:57.8,suctionF:75.2,dischargeF:92.1,oilF:74.5,separatorF:117.9}
+  },
+  inletCompressors: {
+    common:{loadStep:5,remoteCapacityPct:80,suctionSpPsig:475,dischargeSpPsig:1000,aftercoolerSpF:102},
+    C4100:{suctionPsig:426.9,stage1OddPsig:986.2,stage1EvenPsig:985.7,dischargePsig:977.8,oilPsig:58.2,rpm:895,suctionF:75.6,dischargeF:109.2,oilF:167.4,suctionControlPct:99.6,blowdownControlPct:0,recycleControlPct:0.1},
+    C4200:{suctionPsig:422.0,stage1OddPsig:984.9,stage1EvenPsig:985.5,dischargePsig:975.5,oilPsig:58.9,rpm:895,suctionF:75.8,dischargeF:114.6,oilF:167.8,suctionControlPct:99.8,blowdownControlPct:0,recycleControlPct:0},
+    note:'The current HMI has no inlet-compressor rod-load popup. Do not invent inlet rod-load screen data.'
+  },
+  residueCompressors: {
+    common:{loadStep:3,remoteCapacityPct:80,suctionSpPsig:265,dischargeSpPsig:1080,aftercoolerSpF:80,intercoolerSpF:80},
+    C6100:{suctionPsig:293.4,stage1OddPsig:528.1,stage1EvenPsig:988.9,dischargePsig:994.6,oilPsig:56.4,rpm:898,suction1F:100.8,suction2F:102.2,dischargeF:114.6,oilF:167.0,suctionControlPct:99.3,blowdownControlPct:0,recycleControlPct:0,rodLoads:[[48735.6,43402.5],[58711.6,48895.1],[48735.6,43402.5],[58711.6,48895.1],[29787.6,24454.5],[58711.6,48895.1]]},
+    C6200:{suctionPsig:293.4,stage1OddPsig:522.2,stage1EvenPsig:990.1,dischargePsig:996.9,oilPsig:64.6,rpm:895,suction1F:99.8,suction2F:101.6,dischargeF:114.0,oilF:166.0,suctionControlPct:98.3,blowdownControlPct:0,recycleControlPct:0,rodLoads:[[47464.1,42172.7],[59636.6,49874.1],[47464.1,42172.7],[59636.6,49874.1],[47464.1,42172.7],[59636.6,49874.1]]},
+    C6300:{suctionPsig:293.7,stage1OddPsig:503.6,stage1EvenPsig:988.0,dischargePsig:991.9,oilPsig:61.2,rpm:897,suction1F:103.8,suction2F:93.2,dischargeF:103.7,oilF:165.8,suctionControlPct:99.6,blowdownControlPct:1.1,recycleControlPct:0,rodLoads:[[43910.4,38727.2],[61336.8,51699.3],[43910.4,38727.2],[61336.8,51699.3],[26916.1,21733.0],[61336.8,51699.3]],note:'The photographed 1200 RPM indication is treated as a suspected bad HMI reading; use approximately 897 RPM for this observed condition.'}
+  }
+});
+
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12EL 2026-08-18 CALIBRATION SYNC: installed simultaneous GC inlet/residue/NGL composition, current PIT-1000/FIT-8210A, one-running/two-stopped refrigeration compressor snapshot, inlet compressor Step-5/80% package data, and residue Step-3/80% package plus throw-by-throw rod-load data.',
+  '12EL C-6300 RPM CORRECTION: treat the photographed 1200 RPM indication as a suspected bad HMI reading and use approximately 897 RPM at the observed Step-3/80% condition.',
+  '12EL GC INTERPRETATION: preserve HMI C2 Recovery 0.0173 and C3 Recovery 97.2151 as displayed observations. Do not invent the C2 field definition. The simultaneous composition balance supports about 0.617% material C2 recovery and 97.183% material C3 recovery.',
   '12DC RYAN KNOWLEDGE SYNC: synchronized backend plant knowledge with the 2026-08-17 control-board/training build while preserving LIVE simulator state as current-state authority.',
   '12DC LEGACY SAFETY CLEANUP: removed stale legacy stabilizer, overhead-compressor, control-valve, pump-maintenance and residue-compressor seed blocks from active knowledge routing because they contained contradicted equipment identities, invented valve tags/setpoints, or copied unit tags. The source constants remain in file only for historical compatibility and are not selected for answers.',
   '12DC V-1422: installed 80% LSHH context, shared LIC-1422/LIC-1422A level target, current outlet-rundown philosophy, verified PY-1623/PY-1624 flow-permit thresholds, and corrected stabilizer contribution to V-1422 inventory.',
@@ -2521,6 +2556,20 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
     'Slug-catcher liquids -> F-1050/F-1055 -> E-5000 -> V-5010 -> F-5015/F-5016 -> E-5020 -> T-5030/E-5040 -> AC-5055 -> P-5060/P-5065. Stabilizer product can then be routed to V-1422 through the verified product routing; recycle/return branches remain distinct.',
     'P-5060/P-5065 are duty/standby stabilizer product/booster pumps in the current plant model. Do not reuse stale seed descriptions that make both simple recirculation pumps through AC-5055.'
   ],
+  calibration20260818: [
+    'Operator-observed simultaneous GC snapshot: inlet gas mole % N2 0.3585, CO2 0.1602, C1 79.7295, C2 13.5908, C3 3.9982, iC4 0.4815, nC4 0.9412, iC5 0.2349, nC5 0.2176, C6+ 0.2876; inlet 1228.4 BTU, C2+ 3.6338 gal/Mcf, C3+ 1.1012 gal/Mcf, SGU 0.6983.',
+    'Same snapshot residue mole %: N2 0.3874, CO2 0.1687, C1 84.9352, C2 14.3888, C3 0.1200 and displayed C4+ species zero; residue 1118.1 BTU and relative density 0.6277.',
+    'Same snapshot NGL liquid volume %: C1 0, C2 0.4721, C3 66.2303, iC4 10.1053, nC4 12.0022, iC5 5.0865, nC5 3.2847, C6+ 2.8190; displayed C2/C3 ratio 0.7343.',
+    'The HMI displays C2 Recovery 0.0173 and C3 Recovery 97.2151. Preserve these as displayed site calculations. The C2 definition/unit is not verified and Ryan must not reinterpret 0.0173 as a conventional percent without evidence.',
+    'A methane-balance check of the simultaneous inlet/residue compositions with FIT-8210A 207.6493 MMSCFD implies approximately 221.21 MMSCFD inlet gas, about 0.617% material ethane recovery and about 97.183% material propane recovery. This is an engineering interpretation of the snapshot, not a replacement for the HMI calculation.',
+    'PIT-1000 was 506.4568 psig and FIT-8210A was 207.6493 MMSCFD in this snapshot; these are calibration observations, not fixed operating targets.'
+  ],
+  compressorCalibration20260818: [
+    'Refrigeration snapshot: only C-1140 is running. C-1140 19.0 psig suction / 207.9 psig discharge, -3.2 F suction, 167.7 F discharge, 192.2 psig oil, 194.8 psig oil-filter, 140.2 F oil, 168.3 F separator. C-1141 and C-1142 are stopped/equalizing with the observed nonzero pressures and warm temperatures retained in OPERATOR_CALIBRATION_20260818.',
+    'Inlet compressors are both running at Load Step 5 / remote capacity 80%. C-4100: 426.9 suction, 977.8 discharge, 895 RPM, 75.6 F suction, 109.2 F discharge, 167.4 F oil, suction control 99.6%, recycle 0.1%. C-4200: 422.0 suction, 975.5 discharge, 895 RPM, 75.8 F suction, 114.6 F discharge, 167.8 F oil, suction control 99.8%, recycle 0%. Both HMI SPs: suction 475 psig, discharge 1000 psig, aftercooler 102 F, capacity 80%.',
+    'Residue compressors are all running at Load Step 3 / remote capacity 80%. C-6100 is 293.4 suction / 994.6 discharge at 898 RPM; C-6200 is 293.4 / 996.9 at 895 RPM; C-6300 is 293.7 / 991.9 at approximately 897 RPM. Preserve their individual temperatures, valve positions and rod loads from OPERATOR_CALIBRATION_20260818 rather than cloning one machine across all three.',
+    'There is no current inlet-compressor rod-load popup on the plant HMI. Do not invent inlet rod-load screen values or claim they were observed.'
+  ],
   residueCompressorStartupTraining: [
     'The 2026-08-17 residue-compressor trainer is a TRAINING-ONLY local package simulation for C-6100/C-6200/C-6300. It does not issue commands to live simulator process equipment.',
     'Startup teaching sequence captured from the current trainer: verify package release/LOTO/red tags; perform package walkdown; establish required lubrication/permissives; place compressor oil cooler and all three residue cooler fans in AUTO; use the bypass around XV-6100 to reduce startup differential and do not close that bypass until DP is below 30 psid; clear alarms/permissives; use UNLOAD/blowdown training to reduce trapped compressor pressure below 300 psig when required; hold LOCAL START; verify oil/rotation/pressures; then LOAD only after stable running.',
@@ -2591,7 +2640,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
-  { key: 'sync0817', re: /\b(V-1422|LIC-1422|LSHH-1422|PCV-1623|PCV-1624|PY-1623|PY-1624|T-5030|P-5060|P-5065|C-6100|C-6200|C-6300|SVU|FVCP|XV-6100|residue compressor|HIC-101|PIC-1521D|C-1111|dehy|regen|stabilizer|NGL product)\b/i },
+  { key: 'sync0818', re: /\b(V-1422|LIC-1422|LSHH-1422|PCV-1623|PCV-1624|PY-1623|PY-1624|T-5030|P-5060|P-5065|C-6100|C-6200|C-6300|C-1140|C-1141|C-1142|GC|chromatograph|C2 Recovery|C3 Recovery|SVU|FVCP|XV-6100|residue compressor|HIC-101|PIC-1521D|C-1111|dehy|regen|stabilizer|NGL product)\b/i },
   { key: 'flowPathTrainingAid0815', re: /\b(flow path|colour-coded|color-coded|training aid|F-6800|E-1227|F-1438|V-1040|E-1225|E-1125|P-5060|P-5065|AC-5055|V-1422|P-1619|P-1620|P-1630|P-1635|V-8000)\b/i },
   { key: 'exchangerReboiler12AM', re: /\b(E-1221|E-1222|E-1223|E-1224|gas\/?gas exchanger|reflux condenser|BAHX|brazed aluminum|TCV-1221|TCV-1223|TE-1222J|FCV-1438|FIC-1438|FT-1222-COMP|PDIC-1222B|PDCV-1222B|reboiler|thermosiphon|heat integration|approach temperature|exchanger DP)\b/i },
   { key: 'operatorDecision12AM', re: /\b(what changed|first moved|first mover|normal state|baseline|bad transmitter|bad indication|instrument issue|startup readiness|shutdown readiness|ready to start|ready to stop|confidence|operator brief|fastest proof|proof check|troubleshoot|diagnos|upset|abnormal)\b/i },
