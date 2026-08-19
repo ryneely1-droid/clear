@@ -731,21 +731,33 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-19G';
+const RYAN_BUILD_ID = 'RYAN-2026-08-19J';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EV-NGL-FLOW-RECYCLE-20260819';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EY-REFRIG-REBOILER-UTILITIES-20260819';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
   'Historical established-export snapshot: PCV-1624 was 100% open, PCV-1623 about 1.5-2% open, and FCV-1422 recycle 0% open; PIT-8000B about 918 psig while exporting and about 850 psig when not pumping. Latest normal starting point remains V-1422 about 31% on a 30% level SP, PCV-1624 about 90% open, PCV-1623 about 1% open, recycle 0%. New 2026-08-19 operator envelope: FT-1422 highest witnessed normal ~377 GPM, FIC-1422A SP 385 GPM, and PV above SP drives FCV-1422 farther open; FIT-8000A highest witnessed normal ~370 GPM. Around ~370 GPM the recycle valve is usually only lightly open, roughly 10-25% position.',
+  '2026-08-19 operator correction confirmed by recent shift reports: when V-1422 level PV drops below its level SP, the sales outlet PCVs close and FCV-1422 opens to recycle. This can produce a genuine 0 GPM NGL/Cameron Ridge SALES-flow report while the pump train remains running and circulating internally. When level recovers above SP, sales outlets reopen and recycle reduces according to FIC-1422A/FT-1422 demand. Use small hysteresis only to prevent simulator chatter around SP.',
+  'Recent 8/15-8/19 shift-report envelope: V-1422 is commonly about 25-35%; reported NGL ethane is roughly 0.2-0.8%; C3 recovery roughly 96.5-97.75%. Treat these as recent observed envelopes, not hard limits. Zero NGL sales-flow entries in these reports are real operating states, not missing data.',
   'PCV-1623 is governed by the LIC-1422B / PIC-1623 pair. Current LIC-1422B: SP 5%, PV 29.1%, CV 100%. Current PIC-1623: SP 1000 psig, PV 1012 psig, CV about 1.5%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'PCV-1624 is governed by the LIC-1422C / PIC-1624 pair. Current LIC-1422C: SP 30%, PV 29.1%, CV 100%. Current PIC-1624: SP 980 psig, PV 1004 psig, CV 100%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'The four controller readings are operator-observed live values, not universal tuning constants. Ryan must preserve them as a calibration point and distinguish observed behavior from any inferred selector/control action.',
   'Do not confuse PIT-8000A/PIT-8000B pressure tags (psig) with FIT-8000A flow (GPM).'
+
+];
+
+const OPERATOR_PROCESS_UPDATE_20260819J = [
+  'Refrigeration receiver correction, operator-confirmed 2026-08-19: V-1444 is part of a fixed-charge R-290 system. A high V-1444 level means propane inventory has migrated from the other refrigeration vessels/vapor inventory unless makeup was actually added; the simulator must not create propane to fill V-1444.',
+  'LSHH-1444 is operator-confirmed at 80% and trips the REFRIGERATION SYSTEM. This is not described as a facility-wide ESD. Before 80%, the existing LCV-1442 / LCV-1241 liquid-level path should redistribute liquid downstream when V-1442/E-1241 have room. Refrigeration restart remains blocked while the high-high trip is latched.',
+  'Current trim-reboiler temperature calibration, operator-observed 2026-08-19: TIC-1225 SP 167 F, PV 169.8 F, TCV-1225A 43.89% open. It is a heating loop: PV above SP trims the valve closed; PV below SP opens the valve. Process response is slow/thermal, not instantaneous.',
+  'Current related temperature observations: TE-1125 about 171.10 F, TE-1125D about 170.70 F, and V-1422 surge-tank TE-1422 about 164.4 F. The T-1521 draw to E-1223 bottom reboiler remains around 153.3 F with slight fluctuation.',
+  'Utilities display correction: preserve actual liquid-level indication/fill graphics for TK-8100 closed drain and TK-9300 lube-oil makeup storage. Do not allow undefined/NaN transmitter values to propagate to the Utilities HMI; use the verified screen seeds only as startup calibration, then let live process state own the indication.',
+  'Refrigeration P&ID visual correction: the 2-inch propane makeup branch arrow direction is corrected on the refrigeration-system board.'
 ];
 
 const OPERATOR_CALIBRATION_20260818 = Object.freeze({
@@ -2542,12 +2554,13 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
     'LIVE simulator context remains authoritative for current PV/SP/CV, run state, alarm, bypass and valve position.',
     'Training simulator controls teach sequence and cause/effect only. They are NEVER evidence that a live plant control exists or is presently positioned that way.',
     'Issued Clear Fork P&IDs/control narratives and applicable OEM package documents govern exact field topology, protection, isolation and approved operating steps.',
-    'When this 2026-08-17 sync conflicts with an older legacy seed block, use this sync plus verified P&ID/OEM knowledge and explicitly disregard the stale legacy statement.'
+    'When this 2026-08-17 sync conflicts with an older legacy seed block, use this sync plus verified P&ID/OEM knowledge and explicitly disregard the stale legacy statement.',
+    'For residue-compressor and GC current-state questions, the 2026-08-19 operator snapshot supersedes the 2026-08-18 operating point; retain 2026-08-18 as a historical calibration anchor for interpolation and comparison.'
   ],
   v1422NglSystem: [
     'V-1422 is the shared NGL surge tank receiving demethanizer NGL plus stabilizer product only when the T-5030 product path is actually routed through the stabilizer product system to V-1422.',
     'Operator-confirmed LSHH-1422 is 80% level and this condition causes a facility ESD. Healthy operation should not drift toward 80%; if level rises above SP, recycle should remain closed, PCV-1624 should move from roughly 90% toward 100%, and PCV-1623 should progressively open as a genuine second export path. Near 80%, both sales paths should be essentially wide open unless a real downstream restriction, pump loss, permit block, or outlet-acceptance problem prevents rundown.',
-    'LIC-1422 on the Demeth board and LIC-1422A on the Product Pump board represent the same physical surge-tank level target. With a complete NGL outlet train running, level above SP increases requested export/pump speed; below SP the train can recirculate rather than export.',
+    'LIC-1422 on the Demeth board and LIC-1422A on the Product Pump board represent the same physical surge-tank level target. With a complete NGL outlet train running, level above SP increases requested export/pump speed. Operator-confirmed 2026-08-19: when level PV drops below SP, both sales outlet PCVs close and FCV-1422 opens to recycle, so downstream NGL/Cameron Ridge sales flow can legitimately read 0 GPM while the pump train continues internal circulation. Sales reopen after level recovers above SP.',
     'Verified product path: V-1422 -> one P-1619/P-1620 booster -> one P-1630/P-1635 pipeline pump -> A-1322 -> FT-1422 -> either FCV-1422 recycle to V-1422 or the parallel PCV-1623/PCV-1624 outlet paths -> Plant Outlet.',
     'Verified PY-1623/PY-1624 flow permits: FT-1422 must exceed 291.50 GPM for initial opening; below 265.00 GPM the associated outlet PCV is interlocked closed; 265.00-291.50 GPM is a hold/deadband region.',
     'Operator-confirmed V-1422 outlet philosophy: normal current point is about 31% level with SP about 30%, PCV-1624 about 90% open, PCV-1623 about 1% open, and FCV-1422 recycle 0%. Above SP, PCV-1624 opens farther toward 100% and PCV-1623 progressively joins for additional export; near the 80% LSHH both outlet valves should be essentially wide open unless a real hydraulic/acceptance fault exists. FCV-1422 is governed primarily by FIC-1422A flow error, not vessel level alone: FIC-1422A SP is 385 GPM, PV above SP opens recycle farther, and around ~370 GPM normal recycle is only roughly 10-25% valve position. Exact selector internals remain subject to issued control-narrative verification.'
@@ -2570,6 +2583,17 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
     'Inlet compressors are both running at Load Step 5 / remote capacity 80%. C-4100: 426.9 suction, 977.8 discharge, 895 RPM, 75.6 F suction, 109.2 F discharge, 167.4 F oil, suction control 99.6%, recycle 0.1%. C-4200: 422.0 suction, 975.5 discharge, 895 RPM, 75.8 F suction, 114.6 F discharge, 167.8 F oil, suction control 99.8%, recycle 0%. Both HMI SPs: suction 475 psig, discharge 1000 psig, aftercooler 102 F, capacity 80%.',
     'Residue compressors are all running at Load Step 3 / remote capacity 80%. C-6100 is 293.4 suction / 994.6 discharge at 898 RPM; C-6200 is 293.4 / 996.9 at 895 RPM; C-6300 is 293.7 / 991.9 at approximately 897 RPM. Preserve their individual temperatures, valve positions and rod loads from OPERATOR_CALIBRATION_20260818 rather than cloning one machine across all three.',
     'There is no current inlet-compressor rod-load popup on the plant HMI. Do not invent inlet rod-load screen values or claim they were observed.'
+  ],
+  calibration20260819: [
+    'Latest operator-observed residue-compressor snapshot supersedes the older all-Step-3 condition for CURRENT starting calibration while preserving the 2026-08-18 points as historical anchors. All three are at remote capacity 80% and share suction near 298-299 psig / discharge near 1004-1009 psig, but they are on different load steps.',
+    'C-6100 current point: Load Step 2, suction 298.9 psig, stage-1 odd 551.9 psig, stage-1 even 999.9 psig, final discharge 1003.7 psig, oil 56.1 psig, 895 RPM, stage-1 suction 96.0 F, stage-2 suction 92.4 F, discharge 100.9 F, oil 166.8 F, suction-control valve 99.4%, blowdown/recycle 0%, all three gas cooler fans running. Current rod loads: T1/T3 52,331.0 compression / 46,806.3 tension / 99,137.3 total; T2/T4/T6 57,062.4 / 47,004.1 / 104,066.4; T5 31,943.7 / 26,418.9 / 58,362.6 lbf.',
+    'C-6200 current point: Load Step 4, suction 298.4 psig, stage-1 odd 545.2 psig, stage-1 even 1001.7 psig, final discharge 1009.4 psig, oil 64.6 psig, 895 RPM, stage-1 suction 95.0 F, stage-2 suction 99.2 F, discharge 111.4 F, oil 166.6 F, suction-control valve 98.7%, blowdown/recycle 0%, all three gas cooler fans running. Current rod loads: T1/T3/T5 51,179.5 compression / 45,709.0 tension / 96,888.5 total; T2/T4/T6 58,421.0 / 48,441.9 / 106,862.9 lbf.',
+    'C-6300 current point: Load Step 3, suction 298.5 psig, stage-1 odd 511.8 psig, stage-1 even 999.6 psig, final discharge 1003.6 psig, oil 61.3 psig, stage-1 suction 99.0 F, stage-2 suction 90.1 F, discharge 99.5 F, oil 165.5 F, suction-control valve 99.7%, blowdown control 1.1%, recycle 0%, all three gas cooler fans running. The HMI again displays 1200 RPM, but operator judgment continues to classify that as a bad reading; use approximately 897 RPM unless later verified otherwise. Current rod loads: T1/T3 44,457.4 / 39,190.9 / 83,648.3; T2/T4/T6 61,838.2 / 52,075.6 / 113,913.8; T5 27,255.3 / 21,988.8 / 49,244.1 lbf.',
+    'Rod-load logic should use machine-specific, throw-specific multi-point calibration. Do not assume rod load rises monotonically with load-step number: the observed C-6100 Step-2 loads are higher on several throws than the older Step-3 point, showing that pressure/cylinder unloading configuration matters. Intermediate values are empirical training estimates until Ariel unit-specific cylinder/performance files are available.',
+    'Latest GC/HMI snapshot: inlet mole % N2 0.3353, CO2 0.1592, C1 80.9844, C2 12.9588, C3 3.6205, iC4 0.4643, nC4 0.8210, iC5 0.2173, nC5 0.1799, C6+ 0.2592; inlet 1212.2 BTU, C2+ 3.4648 gal/Mcf, C3+ 0.9972 gal/Mcf, SGU 0.6876.',
+    'Same latest snapshot residue mole % N2 0.3579, CO2 0.1630, C1 85.1138, C2 14.2272, C3 0.1382, heavier species displayed zero; residue 1117.5 BTU, relative density 0.6269, HMI C2 Recovery 0.0000 and C3 Recovery 96.4309.',
+    'Same latest NGL liquid volume %: C1 0, C2 0.5283, C3 65.5224, iC4 10.7857, nC4 11.6933, iC5 5.1933, nC5 3.1280, C6+ 3.1461; displayed C2/C3 ratio 0.8306 and C2 Liquid Vol % 0.5283. PIT-1000 507.9169 psig, FIT-8210A 208.0334 MMSCFD, expander thrust differential 0.0000 psid.',
+    'Do not force an exact instantaneous C2 material balance through the latest displayed GC/meter snapshot. The displayed inlet/residue composition and residue flow do not close a physically exact C2 balance, likely because of analyzer/meter timing or averaging differences. Treat the snapshot as an empirical analyzer calibration point while preserving conservative internal component accounting.'
   ],
   residueCompressorStartupTraining: [
     'The 2026-08-17 residue-compressor trainer is a TRAINING-ONLY local package simulation for C-6100/C-6200/C-6300. It does not issue commands to live simulator process equipment.',
@@ -2949,6 +2973,7 @@ CURRENT BACKEND REVISION:
 - Code signature: ${RYAN_CODE_SIGNATURE}
 - Active change set: ${RYAN_CHANGESET_12BF.join(' | ')}
 - Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
+- Current refrigeration/reboiler/utilities update: ${OPERATOR_PROCESS_UPDATE_20260819J.join(' | ')}
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -4494,6 +4519,7 @@ module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
 module.exports.RYAN_CHANGESET_12BF = RYAN_CHANGESET_12BF;
 module.exports.OPERATOR_NGL_HYDRAULICS_12AU = OPERATOR_NGL_HYDRAULICS_12AU;
+module.exports.OPERATOR_PROCESS_UPDATE_20260819J = OPERATOR_PROCESS_UPDATE_20260819J;
 
 /* 12CI SERVER-RUNTIME FIX: browser-only Reference Library UI data must never execute inside Netlify ryan.js.
    PetroSkills knowledge remains in PETROSKILLS_KNOWLEDGE above; frontend Reference Library presentation belongs in index.html only. */
