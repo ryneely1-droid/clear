@@ -731,17 +731,17 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-18F';
+const RYAN_BUILD_ID = 'RYAN-2026-08-19G';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EU-V1422-OUTLET-DYNAMICS-20260818';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EV-NGL-FLOW-RECYCLE-20260819';
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
-  'Historical established-export snapshot: PCV-1624 was 100% open, PCV-1623 about 1.5-2% open, and FCV-1422 recycle 0% open; PIT-8000B about 918 psig while exporting and about 850 psig when not pumping. Latest 2026-08-18 operator calibration supersedes this as the normal starting point: V-1422 about 31% on a 30% level SP, PCV-1624 about 90% open, PCV-1623 about 1% open, recycle 0%.',
+  'Historical established-export snapshot: PCV-1624 was 100% open, PCV-1623 about 1.5-2% open, and FCV-1422 recycle 0% open; PIT-8000B about 918 psig while exporting and about 850 psig when not pumping. Latest normal starting point remains V-1422 about 31% on a 30% level SP, PCV-1624 about 90% open, PCV-1623 about 1% open, recycle 0%. New 2026-08-19 operator envelope: FT-1422 highest witnessed normal ~377 GPM, FIC-1422A SP 385 GPM, and PV above SP drives FCV-1422 farther open; FIT-8000A highest witnessed normal ~370 GPM. Around ~370 GPM the recycle valve is usually only lightly open, roughly 10-25% position.',
   'PCV-1623 is governed by the LIC-1422B / PIC-1623 pair. Current LIC-1422B: SP 5%, PV 29.1%, CV 100%. Current PIC-1623: SP 1000 psig, PV 1012 psig, CV about 1.5%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'PCV-1624 is governed by the LIC-1422C / PIC-1624 pair. Current LIC-1422C: SP 30%, PV 29.1%, CV 100%. Current PIC-1624: SP 980 psig, PV 1004 psig, CV 100%. Treat the more restrictive controller demand as the active valve demand unless verified selector logic says otherwise.',
   'The four controller readings are operator-observed live values, not universal tuning constants. Ryan must preserve them as a calibration point and distinguish observed behavior from any inferred selector/control action.',
@@ -837,7 +837,7 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   '12AT VERIFIED NGL PUMP STAGING: one P-1619/P-1620 boost pump supplies the suction of the operating P-1630/P-1635 pipeline pump. A pipeline pump must not run without a boost pump running; loss of the booster stage removes the pipeline-pump run permissive / requires the pipeline stage to stop.',
   '12AT VERIFIED NGL CIRCULATION: while the boost + pipeline train is running, liquid is always moving. Depending on outlet acceptance, the common discharge is (1) all recycle back to V-1422, (2) split between recycle and the sales pipeline, or (3) all sales-pipeline flow with recycle closed. As sales outlet capacity opens, recycle closes correspondingly.',
   'General pump-engineering support: centrifugal/high-head pump systems commonly use minimum-flow recycle to keep a running pump above minimum stable flow; series pumps add head and each stage requires adequate suction/NPSH. Treat Clear Fork P&IDs, HMI/interlocks and operator observations as authoritative for the exact permissives and valve logic.',
-  'NGL outlet calibration history: earlier established-export snapshot was FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. Latest operator-confirmed normal starting condition is V-1422 ~31% on SP ~30%, PCV-1624 ~90%, PCV-1623 ~1%, FCV-1422 recycle 0%. Preserve both as time-specific observations, with the latest point preferred for startup calibration.',
+  'NGL outlet calibration history: an earlier snapshot displayed FT-1422 ~406 GPM, FIT-1630A ~285 GPM fluctuating, FIT-8000A ~335 GPM, PIT-8000B ~918 psig, FCV-1422 0%, PCV-1624 100%, PCV-1623 ~1.5-2%. Do not use 406 GPM as the normal hydraulic anchor: the operator reports the highest FT-1422 witnessed in normal service is ~377 GPM and the highest normal FIT-8000A witnessed is ~370 GPM. Current normal V-1422 starting condition remains ~31% on SP ~30%, PCV-1624 ~90%, PCV-1623 ~1%, recycle 0%.',
   '12AU verified outlet flow permits: PY-1623 and PY-1624 each require FT-1422 >291.50 GPM for initial opening and each interlock its associated PCV closed below 265.00 GPM; hold prior permit state inside the 265.00-291.50 GPM deadband.',
   '12AI is a material Ryan architecture upgrade built from the verified 12AC physical backend baseline.',
   'Adds a Clear Fork cryogenic expert engine: dependency reasoning, trend-aware diagnosis, cause/effect forecasting, equipment health, maintenance prediction, provenance discipline, and instructor scenarios.',
@@ -1790,7 +1790,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09L = {
 
     'Pump demand can be selected LEVEL or FLOW. LEVEL: LIC-1422A SP 30%, PV ~29.08%, CV ~83.17. FLOW: FIC-1422 SP 625 GPM, PV ~381 GPM, CV ~70%.',
 
-    'Common discharge FT-1422 ~376 GPM: LOLO 265, LO 280. Six-inch recycle to V-1422 uses FCV-1422 controlled by FIC-1422A, SP 385 GPM, PV ~377, CV ~68.20; more recycle means less net pipeline flow.',
+    'Common NGL flow FT-1422 normally tops out around ~377 GPM by operator observation; LOLO 265, LO 280. FCV-1422 recycle is controlled by FIC-1422A at SP 385 GPM. Operator-confirmed action: if FIC-1422A PV rises above SP, FCV-1422 opens farther. Around ~370 GPM, recycle is typically light (roughly 10-25% valve position). Treat older CV ~68.20 snapshots as time-specific observations, not the present normal anchor.',
 
     'A-1322 NGL product cooler normally cools about 164 F at TE-1422 to about 78.4 F at TE-1322B. TE-1322B HIHI product SD 190 F; TE-1322C HI 135 F. Two cooler fan motors can be red-tagged.',
 
@@ -2550,7 +2550,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
     'LIC-1422 on the Demeth board and LIC-1422A on the Product Pump board represent the same physical surge-tank level target. With a complete NGL outlet train running, level above SP increases requested export/pump speed; below SP the train can recirculate rather than export.',
     'Verified product path: V-1422 -> one P-1619/P-1620 booster -> one P-1630/P-1635 pipeline pump -> A-1322 -> FT-1422 -> either FCV-1422 recycle to V-1422 or the parallel PCV-1623/PCV-1624 outlet paths -> Plant Outlet.',
     'Verified PY-1623/PY-1624 flow permits: FT-1422 must exceed 291.50 GPM for initial opening; below 265.00 GPM the associated outlet PCV is interlocked closed; 265.00-291.50 GPM is a hold/deadband region.',
-    'Operator-confirmed V-1422 outlet philosophy: normal current point is about 31% level with SP about 30%, PCV-1624 about 90% open, PCV-1623 about 1% open, and FCV-1422 recycle 0%. Above SP, recycle stays closed, PCV-1624 opens farther toward 100%, and PCV-1623 progressively joins for additional export; near the 80% LSHH both outlet valves should be essentially wide open unless a real hydraulic/acceptance fault exists. Below/near target, recycle can carry minimum-flow circulation as required. Exact selector internals remain subject to issued control-narrative verification.'
+    'Operator-confirmed V-1422 outlet philosophy: normal current point is about 31% level with SP about 30%, PCV-1624 about 90% open, PCV-1623 about 1% open, and FCV-1422 recycle 0%. Above SP, PCV-1624 opens farther toward 100% and PCV-1623 progressively joins for additional export; near the 80% LSHH both outlet valves should be essentially wide open unless a real hydraulic/acceptance fault exists. FCV-1422 is governed primarily by FIC-1422A flow error, not vessel level alone: FIC-1422A SP is 385 GPM, PV above SP opens recycle farther, and around ~370 GPM normal recycle is only roughly 10-25% valve position. Exact selector internals remain subject to issued control-narrative verification.'
   ],
   stabilizerProduct: [
     'The real Clear Fork condensate stabilizer is T-5030 with E-5040 reboiler, not V-1521. Legacy seed text that called V-1521 the stabilizer is obsolete and must not be used.',
