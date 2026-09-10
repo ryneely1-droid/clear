@@ -731,13 +731,66 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-08-19J';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-12EL-GC-COMPRESSOR-CAL-20260818';
+const RYAN_BUILD_ID = 'RYAN-2026-09-08A';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-SHIFT-REPORT-TREND-20260908';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-12EY-REFRIG-REBOILER-UTILITIES-20260819';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-ANALYTICS-20260908';
+
+
+
+// ===== SHIFT / TWO-HOUR REPORT ANALYTICS — 2026-09-08 =====
+// Historical report intelligence. These records are trend evidence, not live state and not authority
+// to overwrite verified P&ID/interlock/OEM limits without explicit operator confirmation.
+const SHIFT_REPORT_ANALYTICS_20260908 = Object.freeze({
+  authority: 'OPERATOR_SUPPLIED_HISTORICAL_REPORT_ANALYTICS',
+  identityPatterns: [
+    'two hour report','2 hour report','2-hour report','shift report','end of shift','eos report',
+    'operator report','daily report','historical report','spreadsheet report','xlsx report'
+  ],
+  sourceRules: [
+    'Treat report timestamps as historical observations. LIVE simulator context always wins for current-state questions.',
+    'Never silently overwrite a verified trip, alarm, setpoint, topology, equipment identity, or procedure from a historical report.',
+    'Preserve zero values when physically plausible; do not reinterpret 0 GPM NGL sales flow as missing data when V-1422 is below SP and the outlet valves are closed with recycle active.',
+    'Flag impossible/contradictory rows as suspect data instead of averaging them into the normal envelope.',
+    'When multiple reports are supplied, order them chronologically before comparing values.'
+  ],
+  analysisMethod: [
+    'Identify timestamps, shift boundaries, sheet names, tags, units, equipment states and operator notes.',
+    'Build chronological series by tag/variable. Distinguish step change, gradual ramp, oscillation, drift, flatline and isolated outlier.',
+    'For each important variable report count, min, max, mean/median when meaningful, first/last value, absolute change, rate-of-change and recurrence.',
+    'Compare peer machines separately; never clone one compressor behavior across C-4100/C-4200 or C-6100/C-6200/C-6300.',
+    'Correlate inlet throughput, residue throughput, PIT-1000/inlet pressure, compressor load steps, JT/expander share, cold-section temperatures, demeth conditions, NGL flow/level, GC composition and recovery only when timestamps overlap.',
+    'Call out time lag: hydraulic/control changes can lead; vessel inventories and thermal sections respond slower; GC/analyzer values may lag process changes.',
+    'Quantify evidence as occurrences such as seen in N of M readings, rather than claiming a rule from one snapshot.',
+    'Separate OBSERVED PATTERN from PROPOSED SIMULATOR CALIBRATION. Calibration recommendations require repeated evidence and must remain bounded by verified plant knowledge.'
+  ],
+  clearForkRules: [
+    'Inlet pressure at PIT-1000 may vary roughly 440-600 psig in operator history and is not a direct one-to-one function of plant throughput. Gathering/source pressure, pad changes, pigging, PIC-1010A demand and inlet-compressor pull all matter.',
+    'When inlet compressors are lost or pull less gas, PIT-1000 can rise; with a high PIC-1010A setpoint and loss of inlet compression, pressure can rise rapidly toward the verified high-high shutdown region. Use verified live limits from the current simulator/P&ID rather than historical report rows.',
+    'Residue and inlet reciprocating compressor load steps are discrete and nonlinear. Similar plant rates can be achieved with different step combinations. Use report history as dispatch probability/calibration evidence, not a hard linear map.',
+    'At V-1422 below level SP, outlet sales valves may close and recycle open, producing legitimate 0 GPM sales flow while pumps continue circulating. Above SP, export demand should increase before recycle, subject to verified FT-1422/PY-1623/PY-1624 permissives.',
+    'Normal process values should generally show inertia. Do not make 10-minute trends visually dramatic for ~1 psi, 1 F or 1 GPM movement without supporting process change.'
+  ],
+  outputSections: [
+    'REPORT COVERAGE','FIRST MOVERS','REPEATED OPERATING ENVELOPES','OUTLIERS / SUSPECT DATA',
+    'CROSS-SYSTEM CORRELATIONS','SIMULATOR CALIBRATION CANDIDATES','DO NOT AUTO-LEARN / DO NOT OVERWRITE'
+  ]
+});
+
+function isShiftReportQuery(message, context, mode) {
+  const text = `${message || ''}\n${context || ''}`.toLowerCase();
+  const modeKey = String(mode || '').toLowerCase();
+  return modeKey === 'shift_report' || modeKey === 'report_analysis' ||
+    /\b(two[- ]?hour|2[- ]?hour|shift report|end[- ]?of[- ]?shift|eos report|operator report|historical report|xlsx report|spreadsheet report|analy[sz]e (?:these|the) reports?)\b/i.test(text);
+}
+
+function buildShiftReportInstruction(message, context) {
+  const text = `${message || ''}\n${context || ''}`;
+  return `MODE: CLEAR FORK SHIFT / TWO-HOUR REPORT ANALYSIS. The supplied report data is historical evidence, not LIVE state. Apply SHIFT_REPORT_ANALYTICS_20260908. Sort by timestamp; preserve sheet/source labels and units; distinguish missing, zero, suspect and valid values. Analyze repeated operating envelopes, first movers, correlations and lag. For each proposed simulator change state the evidence count and whether it is OBSERVED, INFERRED or PENDING VERIFICATION. Do not overwrite verified P&ID topology, trip/alarm limits, or current operator calibration from a single report. If the report includes tab-delimited text converted from XLSX, treat it as the report source itself. Current request/context:\n${safeString(text, 8000)}`;
+}
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
   'Operator-confirmed NGL product-pump point (8/12/26 late shift): with product export established, FT-1422 is about 406 GPM after the pumps, FIT-1630A is about 285 GPM and fluctuating, and FIT-8000A is about 335 GPM.',
@@ -793,6 +846,7 @@ const OPERATOR_CALIBRATION_20260818 = Object.freeze({
 });
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '2026-09-08 SHIFT REPORT ANALYTICS: added explicit two-hour/EOS historical-report mode, chronological trend statistics, outlier handling, lag-aware cross-system correlation, evidence counts, and protection against historical rows overwriting verified live/P&ID limits.',
   '12EL 2026-08-18 CALIBRATION SYNC: installed simultaneous GC inlet/residue/NGL composition, current PIT-1000/FIT-8210A, one-running/two-stopped refrigeration compressor snapshot, inlet compressor Step-5/80% package data, and residue Step-3/80% package plus throw-by-throw rod-load data.',
   '12EL C-6300 RPM CORRECTION: treat the photographed 1200 RPM indication as a suspected bad HMI reading and use approximately 897 RPM at the observed Step-3/80% condition.',
   '12EL GC INTERPRETATION: preserve HMI C2 Recovery 0.0173 and C3 Recovery 97.2151 as displayed observations. Do not invent the C2 field definition. The simultaneous composition balance supports about 0.617% material C2 recovery and 97.183% material C3 recovery.',
@@ -2626,6 +2680,7 @@ function hasClearForkTag(text) {
 }
 
 const KNOWLEDGE_REGISTRY = {
+  shiftReportAnalytics20260908: SHIFT_REPORT_ANALYTICS_20260908,
   sync0817: OPERATOR_PROCESS_KNOWLEDGE_0817,
   flowPathTrainingAid0815: CLEAR_FORK_FLOW_PATH_TRAINING_AID_20260815,
   cryoExpert12AM: CRYO_EXPERT_ENGINE_12AM,
@@ -2665,6 +2720,7 @@ const KNOWLEDGE_REGISTRY = {
  
 
 const KNOWLEDGE_ROUTING_RULES = [
+  { key: 'shiftReportAnalytics20260908', re: /\b(two[- ]?hour|2[- ]?hour|shift report|end[- ]?of[- ]?shift|eos report|historical report|operator report|xlsx report|spreadsheet report|report trend|report analysis)\b/i },
   { key: 'sync0818', re: /\b(V-1422|LIC-1422|LSHH-1422|PCV-1623|PCV-1624|PY-1623|PY-1624|T-5030|P-5060|P-5065|C-6100|C-6200|C-6300|C-1140|C-1141|C-1142|GC|chromatograph|C2 Recovery|C3 Recovery|SVU|FVCP|XV-6100|residue compressor|HIC-101|PIC-1521D|C-1111|dehy|regen|stabilizer|NGL product)\b/i },
   { key: 'flowPathTrainingAid0815', re: /\b(flow path|colour-coded|color-coded|training aid|F-6800|E-1227|F-1438|V-1040|E-1225|E-1125|P-5060|P-5065|AC-5055|V-1422|P-1619|P-1620|P-1630|P-1635|V-8000)\b/i },
   { key: 'exchangerReboiler12AM', re: /\b(E-1221|E-1222|E-1223|E-1224|gas\/?gas exchanger|reflux condenser|BAHX|brazed aluminum|TCV-1221|TCV-1223|TE-1222J|FCV-1438|FIC-1438|FT-1222-COMP|PDIC-1222B|PDCV-1222B|reboiler|thermosiphon|heat integration|approach temperature|exchanger DP)\b/i },
@@ -2703,7 +2759,7 @@ function safeString(value, maxChars) {
 
 function isPlantSpecificQuery(message, context, mode) {
   const text = `${message || ''}\n${context || ''}`;
-  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract'].includes(String(mode || '').toLowerCase())) return true;
+  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract','shift_report','report_analysis'].includes(String(mode || '').toLowerCase())) return true;
   return hasClearForkTag(text) || /\b(Clear\s*Fork|HMI|control board|current PV|current SP|current CV|live plant|this plant|our plant|plant inlet|residue compressor|demethanizer|stabilizer tower|Ryan scan|LOTO|P&ID|PID)\b/i.test(text);
 }
 
@@ -2742,6 +2798,7 @@ function selectKnowledge(message, context, mode) {
 
   const keys = new Set();
   if (plantSpecific) keys.add('sync0817');
+  if (isShiftReportQuery(message, context, mode)) { keys.add('shiftReportAnalytics20260908'); keys.add('cryoExpert12AM'); keys.add('operatorDecision12AM'); keys.add('operatorProcess0812Y'); }
   if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AM');
 
   for (const rule of KNOWLEDGE_ROUTING_RULES) if (rule.re.test(haystack)) keys.add(rule.key);
@@ -2918,6 +2975,10 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
   } else if (mode === 'operator_brief') {
     modeInstructions = `MODE: OPERATOR BRIEF. Answer in no more than six concise bullets first: current concern, top cause(s), fastest proof tag/trend, immediate safe check, downstream/upstream consequence and confidence. Add deeper engineering detail only if it materially helps.`;
 
+  } else if (mode === 'shift_report' || mode === 'report_analysis') {
+
+    modeInstructions = buildShiftReportInstruction('', '');
+
   } else if (mode === 'memory_extract') {
 
     modeInstructions = `MODE: MEMORY EXTRACTION. Extract only durable plant-specific memory candidates explicitly provided by the operator or clearly supported by supplied context. Do not store temporary live values, generic process theory, secrets, passwords, API keys, speculation, or unsupported safety-critical limits. Return strict JSON only: {"memories":[{"text":"...","title":"...","equipmentIds":[],"tags":[],"confidence":"high|medium|low"}]}. If none, return {"memories":[]}.`;
@@ -3002,6 +3063,7 @@ PLANT-WIDE SME BEHAVIOR:
 
 - Apply CRYO_EXPERT_ENGINE_12AM when routed: use dependency relationships, 10m/3h/24h/72h trend windows, ranked proof tests, cause/effect time horizons, equipment health and maintenance prediction.
 - Apply EXCHANGER_REBOILER_EXPERT_12AM for E-1221/E-1222/E-1223/E-1224 questions: preserve the verified individual passes, explain heat-integration/DP/approach effects, and trace downstream refrigeration/tower/composition consequences.
+- For shift/two-hour/EOS reports, apply SHIFT_REPORT_ANALYTICS_20260908: historical chronology first, repeated-pattern evidence, outlier handling, lag-aware cross-system correlation, and explicit separation between observed history and simulator calibration proposals.
 
 - For GENERAL INDUSTRY questions, you may use web-search results when provided by the API. Clearly separate web/general knowledge from Clear Fork-specific facts. Never let a web result overwrite a verified Clear Fork P&ID, procedure, OEM fact, or LIVE simulator value.
 
@@ -4078,7 +4140,7 @@ exports.handler = async function(event) {
     const effectiveMode = String(mode || 'qa').toLowerCase();
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4188,7 +4250,8 @@ exports.handler = async function(event) {
     const msg = safeString(message, MAX_MESSAGE_CHARS);
 
     const fastQa = effectiveMode === 'qa_fast';
-    const ctx = safeString(context, fastQa ? 22000 : MAX_CONTEXT_CHARS);
+    const shiftReportMode = effectiveMode === 'shift_report' || effectiveMode === 'report_analysis' || isShiftReportQuery(message, context, effectiveMode);
+    const ctx = safeString(context, fastQa ? 22000 : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 120000) : MAX_CONTEXT_CHARS));
 
     const plantSpecificQuery = isPlantSpecificQuery(msg, ctx, effectiveMode);
     const webResearchRequested = wantsWebResearch(msg, effectiveMode) && !plantSpecificQuery;
@@ -4214,6 +4277,7 @@ exports.handler = async function(event) {
  
 
     let userText = msg;
+    if (shiftReportMode) userText = `${buildShiftReportInstruction(msg, ctx)}\n\n${msg || 'Analyze the supplied shift reports.'}`;
 
     if (!userText && attachment && String(attachment.mediaType || '').toLowerCase().startsWith('image/')) userText = 'Analyze the attached plant image carefully. Describe what is actually visible, identify legible tags/values/controls, relate it to supplied plant context, and clearly mark anything unreadable or uncertain instead of guessing.';
 
@@ -4252,7 +4316,7 @@ exports.handler = async function(event) {
 
     const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
-    const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit']);
+    const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit','shift_report','report_analysis']);
     const maxTokens = fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400))))));
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
@@ -4509,10 +4573,12 @@ module.exports.OPERATOR_PROCESS_KNOWLEDGE_09M = OPERATOR_PROCESS_KNOWLEDGE_09M;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0811 = OPERATOR_PROCESS_KNOWLEDGE_0811;
 module.exports.OPERATOR_PROCESS_KNOWLEDGE_0812Y = OPERATOR_PROCESS_KNOWLEDGE_0812Y;
 module.exports.CRYO_EXPERT_ENGINE_12AM = CRYO_EXPERT_ENGINE_12AM;
+module.exports.SHIFT_REPORT_ANALYTICS_20260908 = SHIFT_REPORT_ANALYTICS_20260908;
+module.exports.isShiftReportQuery = isShiftReportQuery;
 module.exports.EXCHANGER_REBOILER_EXPERT_12AM = EXCHANGER_REBOILER_EXPERT_12AM;
 module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide;
 
-module.exports._test = { selectKnowledge, isPlantSpecificQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
+module.exports._test = { selectKnowledge, isPlantSpecificQuery, isShiftReportQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
 
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
