@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-10A';
+const RYAN_BUILD_ID = 'RYAN-2026-09-10B';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-AUTH-HASH-FALLBACK-20260910';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-AUTH-HASH-FALLBACK-20260910';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-TIMEOUT-FIX-20260910B';
 
 
 
@@ -4291,11 +4291,10 @@ exports.handler = async function(event) {
 
  
 
-    const msg = safeString(message, MAX_MESSAGE_CHARS);
-
     const fastQa = effectiveMode === 'qa_fast';
     const shiftReportMode = effectiveMode === 'shift_report' || effectiveMode === 'report_analysis' || isShiftReportQuery(message, context, effectiveMode);
-    const ctx = safeString(context, fastQa ? 22000 : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 120000) : MAX_CONTEXT_CHARS));
+    const msg = safeString(message, shiftReportMode ? Math.max(MAX_MESSAGE_CHARS, 56000) : MAX_MESSAGE_CHARS);
+    const ctx = safeString(context, fastQa ? 22000 : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 18000) : MAX_CONTEXT_CHARS));
 
     const plantSpecificQuery = isPlantSpecificQuery(msg, ctx, effectiveMode);
     const webResearchRequested = wantsWebResearch(msg, effectiveMode) && !plantSpecificQuery;
@@ -4361,10 +4360,10 @@ exports.handler = async function(event) {
     const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
     const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit','shift_report','report_analysis']);
-    const maxTokens = fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400))))));
+    const maxTokens = shiftReportMode ? 1800 : (fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400)))))));
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
-    const requestModel = fastQa ? FAST_MODEL : MODEL_V2;
+    const requestModel = (fastQa || shiftReportMode) ? FAST_MODEL : MODEL_V2;
     const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
 
  
