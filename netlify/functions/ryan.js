@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-08A';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-SHIFT-REPORT-TREND-20260908';
+const RYAN_BUILD_ID = 'RYAN-2026-09-09A';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-REPORT-AUTH-XLSX-20260909';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-ANALYTICS-20260908';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-REPORT-AUTH-XLSX-20260909';
 
 
 
@@ -3290,6 +3290,26 @@ function secureEqual(a, b) {
 
 }
 
+function makeRyanAuthToken(secret) {
+  if (!secret) return '';
+  const exp = Date.now() + 45 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ exp, build: RYAN_BUILD_ID })).toString('base64url');
+  const sig = crypto.createHmac('sha256', String(secret)).update(payload).digest('base64url');
+  return payload + '.' + sig;
+}
+
+function verifyRyanAuthToken(token, secret) {
+  try {
+    if (!token || !secret) return false;
+    const parts = String(token).split('.');
+    if (parts.length !== 2) return false;
+    const expected = crypto.createHmac('sha256', String(secret)).update(parts[0]).digest('base64url');
+    if (!secureEqual(parts[1], expected)) return false;
+    const data = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
+    return data && data.build === RYAN_BUILD_ID && Number(data.exp) > Date.now();
+  } catch { return false; }
+}
+
  
 
 function postJson(url, headers, payloadObj) {
@@ -4129,15 +4149,17 @@ exports.handler = async function(event) {
 
  
 
-    const { message, context, mode, scanLabel, history, password, attachment, learnedKnowledge, documentType, clientBuild } = body || {};
+    const { message, context, mode, scanLabel, history, password, authToken, attachment, learnedKnowledge, documentType, clientBuild } = body || {};
 
     const expectedPw = process.env.RYAN_AI_PASSWORD;
-
-    if (expectedPw && !secureEqual(password, expectedPw)) return { statusCode: 403, body: JSON.stringify({ error: 'Incorrect password.' }) };
-
- 
-
     const effectiveMode = String(mode || 'qa').toLowerCase();
+    const tokenOk = expectedPw ? verifyRyanAuthToken(authToken, expectedPw) : true;
+    const passwordOk = expectedPw ? secureEqual(password, expectedPw) : true;
+    if (expectedPw && !tokenOk && !passwordOk) return { statusCode: 403, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'Incorrect password.', authRequired: true, buildId: RYAN_BUILD_ID }) };
+    if (effectiveMode === 'auth') {
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, codeSignature: RYAN_CODE_SIGNATURE, authToken: makeRyanAuthToken(expectedPw), authExpiresMinutes: 45 }) };
+    }
+
 
     if (effectiveMode === 'health') {
       return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
