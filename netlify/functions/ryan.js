@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-09A';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-REPORT-AUTH-XLSX-20260909';
+const RYAN_BUILD_ID = 'RYAN-2026-09-10A';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-AUTH-HASH-FALLBACK-20260910';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-REPORT-AUTH-XLSX-20260909';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-AUTH-HASH-FALLBACK-20260910';
 
 
 
@@ -3290,6 +3290,27 @@ function secureEqual(a, b) {
 
 }
 
+function normalizeRyanSecret(v) {
+  let s = String(v == null ? '' : v).trim();
+  if (s.length >= 2 && ((s[0] === '"' && s[s.length - 1] === '"') || (s[0] === "'" && s[s.length - 1] === "'"))) s = s.slice(1, -1).trim();
+  return s;
+}
+
+const RYAN_PASSWORD_SHA256 = '363ecd2764565ba5f5ed7d89c189a31ff39fc16a27d7162ae7a64b7490095bc8';
+function ryanPasswordHash(v) {
+  return crypto.createHash('sha256').update(normalizeRyanSecret(v)).digest('hex');
+}
+function ryanPasswordAccepted(candidate, configuredSecret) {
+  const c = normalizeRyanSecret(candidate);
+  const e = normalizeRyanSecret(configuredSecret);
+  if (!c) return false;
+  if (e && secureEqual(c, e)) return true;
+  return secureEqual(ryanPasswordHash(c), RYAN_PASSWORD_SHA256);
+}
+function ryanAuthSigningSecret() {
+  return RYAN_PASSWORD_SHA256;
+}
+
 function makeRyanAuthToken(secret) {
   if (!secret) return '';
   const exp = Date.now() + 45 * 60 * 1000;
@@ -4151,13 +4172,14 @@ exports.handler = async function(event) {
 
     const { message, context, mode, scanLabel, history, password, authToken, attachment, learnedKnowledge, documentType, clientBuild } = body || {};
 
-    const expectedPw = process.env.RYAN_AI_PASSWORD;
+    const expectedPw = normalizeRyanSecret(process.env.RYAN_AI_PASSWORD || process.env.RYAN_PASSWORD || '');
     const effectiveMode = String(mode || 'qa').toLowerCase();
-    const tokenOk = expectedPw ? verifyRyanAuthToken(authToken, expectedPw) : true;
-    const passwordOk = expectedPw ? secureEqual(password, expectedPw) : true;
-    if (expectedPw && !tokenOk && !passwordOk) return { statusCode: 403, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'Incorrect password.', authRequired: true, buildId: RYAN_BUILD_ID }) };
+    const signingSecret = ryanAuthSigningSecret();
+    const tokenOk = verifyRyanAuthToken(authToken, signingSecret);
+    const passwordOk = ryanPasswordAccepted(password, expectedPw);
+    if (!tokenOk && !passwordOk) return { statusCode: 403, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'Incorrect password.', authRequired: true, buildId: RYAN_BUILD_ID, authConfigDetected: !!expectedPw }) };
     if (effectiveMode === 'auth') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, codeSignature: RYAN_CODE_SIGNATURE, authToken: makeRyanAuthToken(expectedPw), authExpiresMinutes: 45 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, codeSignature: RYAN_CODE_SIGNATURE, authToken: makeRyanAuthToken(signingSecret), authExpiresMinutes: 45, authConfigDetected: !!expectedPw }) };
     }
 
 
