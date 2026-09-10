@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-10B';
+const RYAN_BUILD_ID = 'RYAN-2026-09-10C';
 const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-AUTH-HASH-FALLBACK-20260910';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-TIMEOUT-FIX-20260910B';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-CHUNKED-20260910C';
 
 
 
@@ -2759,7 +2759,7 @@ function safeString(value, maxChars) {
 
 function isPlantSpecificQuery(message, context, mode) {
   const text = `${message || ''}\n${context || ''}`;
-  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract','shift_report','report_analysis'].includes(String(mode || '').toLowerCase())) return true;
+  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract','shift_report','report_analysis','shift_report_chunk','shift_report_synthesis'].includes(String(mode || '').toLowerCase())) return true;
   return hasClearForkTag(text) || /\b(Clear\s*Fork|HMI|control board|current PV|current SP|current CV|live plant|this plant|our plant|plant inlet|residue compressor|demethanizer|stabilizer tower|Ryan scan|LOTO|P&ID|PID)\b/i.test(text);
 }
 
@@ -3333,7 +3333,7 @@ function verifyRyanAuthToken(token, secret) {
 
  
 
-function postJson(url, headers, payloadObj) {
+function postJson(url, headers, payloadObj, timeoutMs = REQUEST_TIMEOUT_MS) {
 
   return new Promise((resolve, reject) => {
 
@@ -3359,7 +3359,7 @@ function postJson(url, headers, payloadObj) {
 
     });
 
-    req.setTimeout(REQUEST_TIMEOUT_MS, () => req.destroy(new Error(`Anthropic request timed out after ${REQUEST_TIMEOUT_MS} ms.`)));
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`Anthropic request timed out after ${timeoutMs} ms.`)));
 
     req.on('error', reject);
 
@@ -3373,7 +3373,7 @@ function postJson(url, headers, payloadObj) {
 
  
 
-async function postJsonWithRetry(url, headers, payload, attempts = 5) {
+async function postJsonWithRetry(url, headers, payload, attempts = 5, timeoutMs = REQUEST_TIMEOUT_MS) {
 
   let last;
   const retryable = new Set([429,500,502,503,504,529]);
@@ -3381,7 +3381,7 @@ async function postJsonWithRetry(url, headers, payload, attempts = 5) {
   for (let i = 0; i < attempts; i++) {
 
     try {
-      last = await postJson(url, headers, payload);
+      last = await postJson(url, headers, payload, timeoutMs);
     } catch (e) {
       if (i === attempts - 1) throw e;
       const waitMs = Math.min(6500, 700 * Math.pow(2, i)) + Math.floor(Math.random() * 250);
@@ -4292,9 +4292,11 @@ exports.handler = async function(event) {
  
 
     const fastQa = effectiveMode === 'qa_fast';
-    const shiftReportMode = effectiveMode === 'shift_report' || effectiveMode === 'report_analysis' || isShiftReportQuery(message, context, effectiveMode);
-    const msg = safeString(message, shiftReportMode ? Math.max(MAX_MESSAGE_CHARS, 56000) : MAX_MESSAGE_CHARS);
-    const ctx = safeString(context, fastQa ? 22000 : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 18000) : MAX_CONTEXT_CHARS));
+    const shiftReportMode = ['shift_report','report_analysis','shift_report_chunk','shift_report_synthesis'].includes(effectiveMode) || isShiftReportQuery(message, context, effectiveMode);
+    const shiftReportChunkMode = effectiveMode === 'shift_report_chunk';
+    const shiftReportSynthesisMode = effectiveMode === 'shift_report_synthesis';
+    const msg = safeString(message, shiftReportMode ? Math.max(MAX_MESSAGE_CHARS, shiftReportChunkMode ? 14000 : 30000) : MAX_MESSAGE_CHARS);
+    const ctx = safeString(context, fastQa ? 22000 : (shiftReportChunkMode ? 0 : (shiftReportSynthesisMode ? Math.min(MAX_CONTEXT_CHARS, 8000) : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 10000) : MAX_CONTEXT_CHARS))));
 
     const plantSpecificQuery = isPlantSpecificQuery(msg, ctx, effectiveMode);
     const webResearchRequested = wantsWebResearch(msg, effectiveMode) && !plantSpecificQuery;
@@ -4320,7 +4322,9 @@ exports.handler = async function(event) {
  
 
     let userText = msg;
-    if (shiftReportMode) userText = `${buildShiftReportInstruction(msg, ctx)}\n\n${msg || 'Analyze the supplied shift reports.'}`;
+    if (shiftReportChunkMode) userText = `MODE: CLEAR FORK SHIFT REPORT CHUNK EXTRACTION. Extract only concrete historical observations from this report chunk. Preserve timestamp/tag/value/unit. Flag missing or suspect entries. Do not provide a long explanation, do not use web research, and do not infer plant changes yet. Return compact bullets suitable for a later synthesis.\n\n${msg}`;
+    else if (shiftReportSynthesisMode) userText = `MODE: CLEAR FORK SHIFT REPORT SYNTHESIS. The text below is a set of compact factual extracts from one report. Synthesize the operating trends, ranges, outliers, cause/effect only when supported, comparison to current simulator behavior, and justified calibration recommendations. Historical evidence must not overwrite verified trips, topology, safety limits, or newer operator-confirmed values. Keep the answer concise but useful.\n\n${msg}`;
+    else if (shiftReportMode) userText = `${buildShiftReportInstruction(msg, ctx)}\n\n${msg || 'Analyze the supplied shift reports.'}`;
 
     if (!userText && attachment && String(attachment.mediaType || '').toLowerCase().startsWith('image/')) userText = 'Analyze the attached plant image carefully. Describe what is actually visible, identify legible tags/values/controls, relate it to supplied plant context, and clearly mark anything unreadable or uncertain instead of guessing.';
 
@@ -4359,8 +4363,18 @@ exports.handler = async function(event) {
 
     const isLotoWorkplan = effectiveMode === 'loto_workplan';
 
-    const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit','shift_report','report_analysis']);
-    const maxTokens = shiftReportMode ? 1800 : (fastQa ? 1100 : (isIngest ? (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS) : (effectiveMode === 'scan' ? 5000 : (isMemoryExtract ? 1200 : (isLotoWorkplan ? 5200 : (operatorToolModes.has(effectiveMode) ? 3200 : (plantSpecificQuery ? 2400 : 1400)))))));
+    const operatorToolModes = new Set(['recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','audit','shift_report','report_analysis','shift_report_chunk','shift_report_synthesis']);
+    let maxTokens;
+    if (shiftReportChunkMode) maxTokens = 650;
+    else if (shiftReportSynthesisMode) maxTokens = 1050;
+    else if (shiftReportMode) maxTokens = 1200;
+    else if (fastQa) maxTokens = 1100;
+    else if (isIngest) maxTokens = (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS);
+    else if (effectiveMode === 'scan') maxTokens = 5000;
+    else if (isMemoryExtract) maxTokens = 1200;
+    else if (isLotoWorkplan) maxTokens = 5200;
+    else if (operatorToolModes.has(effectiveMode)) maxTokens = 3200;
+    else maxTokens = plantSpecificQuery ? 2400 : 1400;
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
     const requestModel = (fastQa || shiftReportMode) ? FAST_MODEL : MODEL_V2;
@@ -4382,7 +4396,7 @@ exports.handler = async function(event) {
 
         ...((attachment && attachment.fileId) || webResearchRequested ? { 'anthropic-beta': [attachment && attachment.fileId ? 'files-api-2025-04-14' : null, webResearchRequested ? 'web-search-2025-03-05' : null].filter(Boolean).join(',') } : {}),
 
-      }, payload);
+      }, payload, shiftReportMode ? 1 : 5, shiftReportMode ? 18000 : REQUEST_TIMEOUT_MS);
 
     } catch (networkErr) {
 
