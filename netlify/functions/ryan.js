@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-10C';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-DIAG-AUTH-HASH-FALLBACK-20260910';
+const RYAN_BUILD_ID = 'RYAN-2026-09-16A';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-HIERARCHICAL-LIBRARY-BINDING-20260916A';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-SHIFT-REPORT-CHUNKED-20260910C';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-HIERARCHICAL-REFERENCE-BINDING-20260916A';
 
 
 
@@ -846,6 +846,7 @@ const OPERATOR_CALIBRATION_20260818 = Object.freeze({
 });
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12FQ HIERARCHICAL REFERENCE LIBRARY: attachment descriptions now create structured System > Parent Equipment > Device Tag bindings; the exact operator description is preserved, device facts stay owned by the primary tag, parent/system links drive nested library navigation, and alias search opens the child record directly.',
   '2026-09-08 SHIFT REPORT ANALYTICS: added explicit two-hour/EOS historical-report mode, chronological trend statistics, outlier handling, lag-aware cross-system correlation, evidence counts, and protection against historical rows overwriting verified live/P&ID limits.',
   '12EL 2026-08-18 CALIBRATION SYNC: installed simultaneous GC inlet/residue/NGL composition, current PIT-1000/FIT-8210A, one-running/two-stopped refrigeration compressor snapshot, inlet compressor Step-5/80% package data, and residue Step-3/80% package plus throw-by-throw rod-load data.',
   '12EL C-6300 RPM CORRECTION: treat the photographed 1200 RPM indication as a suspected bad HMI reading and use approximately 897 RPM at the observed Step-3/80% condition.',
@@ -3091,26 +3092,23 @@ ${modeInstructions}`;
  
 
 
+const RYAN_CHILD_TAG_PREFIXES = new Set(['PCV','PVC','PV','PIC','PIT','PT','PDI','PDT','PSV','LCV','LIC','LT','LSH','LSHH','LSLL','TCV','TIC','TE','TIT','FT','FIT','FIC','FFIC','FQI','XV','ESD','SDV','FCV','HIC','HC','HS','ZI','ZT','ZSC','ZSO','ZAO','ZAC','XXY','PY','TY','LY','AE','ME','MI','VAH','VSH']);
+const RYAN_PARENT_TAG_PREFIXES = new Set(['H','V','C','E','T','F','P','AC','TK','EX','FL','PK','A']);
+function normalizeEquipmentTag(value) { const s=safeString(value||'',80).trim().toUpperCase().replace(/[\u2010-\u2015]/g,'-').replace(/\s+/g,''); const m=s.match(/^([A-Z]{1,6})-?(\d{2,5}[A-Z]?)$/); return m?`${m[1]}-${m[2]}`:s; }
+function equipmentTagPrefix(value){const m=normalizeEquipmentTag(value).match(/^([A-Z]+)/);return m?m[1]:'';}
+function descriptionSystem(text,parentTag){const t=String(text||''),p=normalizeEquipmentTag(parentTag);const defs=[[/\bHOT\s*OIL\b|\bH-?7100\b|\bV-?7500\b|\bP-?7410\b|\bP-?7420\b/i,'hot_oil','Hot Oil','Hot Oil System'],[/\bREGEN(?:ERATION)?\b|\bH-?1711\b|\bC-?1111\b/i,'regen','Regen','Dehydration & Regen'],[/\bDEHY(?:DRATION)?\b|\bMOLECULAR\s+SIEVE\b|\bV-?141[345]\b/i,'dehy','Dehydration','Dehydration & Regen'],[/\bREFRIG(?:ERATION)?\b|\bFRICK\b|\bPROPANE\b|\bV-?144[124]\b/i,'refrigeration','Refrigeration','Refrigeration (Propane)'],[/\bRESIDUE\b|\bC-?6[123]00\b/i,'residue_compression','Residue Compression','Residue Compression'],[/\bINLET\s+COMP(?:RESSION|RESSOR)?\b|\bC-?4[12]00\b/i,'inlet_compression','Inlet Compression','Inlet Compression'],[/\bEXPANDER\b|\bBOOST(?:ER)?\s+COMP\b|\bEX-?1121\b/i,'expander_booster','Expander/Booster','Cryo / Gas-Gas / Reflux'],[/\bDEMETH(?:ANIZER)?\b|\bT-?1521\b/i,'demethanizer','Demethanizer','Demethanizer & Reboilers'],[/\bSTABILIZER\b|\bT-?5030\b/i,'stabilizer','Stabilizer','Inlet Stabilizer'],[/\bNGL\b|\bV-?1422\b|\bP-?16(?:19|20|30|35)\b/i,'ngl_product','NGL Product','NGL Product / Pipeline']];for(const d of defs)if(d[0].test(t)||d[0].test(p))return {id:d[1],title:d[2],category:d[3]};return {id:'',title:'',category:''};}
+function descriptionItemType(text,primaryTag){const patterns=[[/fuel\s*gas\s+pressure\s+control\s+valve/i,'Fuel Gas Pressure Control Valve'],[/pressure\s+control\s+valve/i,'Pressure Control Valve'],[/temperature\s+control\s+valve/i,'Temperature Control Valve'],[/level\s+control\s+valve/i,'Level Control Valve'],[/flow\s+control\s+valve/i,'Flow Control Valve'],[/shutdown\s+valve/i,'Shutdown Valve'],[/block\s+valve/i,'Block Valve'],[/control\s+valve/i,'Control Valve'],[/pressure\s+(?:transmitter|indicator)/i,'Pressure Transmitter / Indicator'],[/temperature\s+(?:transmitter|element|indicator)/i,'Temperature Instrument'],[/flow\s+(?:transmitter|meter|indicator)/i,'Flow Instrument'],[/level\s+(?:transmitter|indicator|switch)/i,'Level Instrument'],[/data\s*plate|name\s*plate/i,'Equipment Data Plate']];for(const p of patterns)if(p[0].test(text))return p[1];const map={PCV:'Pressure Control Valve',PVC:'Pressure Control Valve',PV:'Pressure Valve',PIC:'Pressure Indicating Controller',PIT:'Pressure Indicating Transmitter',PT:'Pressure Transmitter',TCV:'Temperature Control Valve',TIC:'Temperature Indicating Controller',LCV:'Level Control Valve',LIC:'Level Indicating Controller',FCV:'Flow Control Valve',FIC:'Flow Indicating Controller',XV:'Automated Block Valve',ESD:'Emergency Shutdown Device',PSV:'Pressure Safety Valve',FIT:'Flow Indicating Transmitter',FT:'Flow Transmitter',TE:'Temperature Element',LT:'Level Transmitter'};return map[equipmentTagPrefix(primaryTag)]||'Learned Plant Device';}
 function operatorDescriptionAnchor(description) {
-  const text = safeString(description || '', 2000).trim();
-  const ids = [];
-  const seen = new Set();
-  const matches = text.toUpperCase().match(/\b[A-Z]{1,6}-?\d{3,5}[A-Z]?\b/g) || [];
-  for (let x of matches) {
-    x = x.replace(/^([A-Z]+)(\d)/, '$1-$2');
-    if (!seen.has(x)) { seen.add(x); ids.push(x); }
-  }
-  let system = '';
-  if (/\bREGEN|REGENERATION|REGEN HEATER\b/i.test(text)) system = 'Regen';
-  else if (/\bDEHY|DEHYDRATION|MOLECULAR SIEVE\b/i.test(text)) system = 'Dehy';
-  else if (/\bREFRIG|FRICK|PROPANE\b/i.test(text)) system = 'Refrigeration';
-  else if (/\bRESIDUE\b/i.test(text)) system = 'Residue Compression';
-  else if (/\bINLET COMP|INLET COMPRESSION\b/i.test(text)) system = 'Inlet Compression';
-  else if (/\bEXPANDER|BOOST COMP|BOOSTER COMP\b/i.test(text)) system = 'Expander/Booster';
-  else if (/\bDEMETH|DEMETHANIZER\b/i.test(text)) system = 'Demethanizer';
-  else if (/\bSTABILIZER\b/i.test(text)) system = 'Stabilizer';
-  else if (/\bHOT OIL\b/i.test(text)) system = 'Hot Oil';
-  return { text, equipmentIds: ids, system };
+  const text = safeString(description || '', 2000).trim(), entries=[], seen=new Set(), re=/\b([A-Z]{1,6})\s*-?\s*(\d{2,5}[A-Z]?)\b/ig; let m;
+  while((m=re.exec(text))){const tag=normalizeEquipmentTag(`${m[1]}-${m[2]}`);if(!seen.has(tag)){seen.add(tag);entries.push({tag,prefix:equipmentTagPrefix(tag),start:m.index,end:re.lastIndex,raw:m[0]});}}
+  const ids=entries.map(e=>e.tag),children=entries.filter(e=>RYAN_CHILD_TAG_PREFIXES.has(e.prefix)),parents=entries.filter(e=>RYAN_PARENT_TAG_PREFIXES.has(e.prefix));
+  const primary=children[0]||entries[0]||null;let parent=null,relationshipExplicit=false;
+  if(primary){for(const pe of parents){if(pe.tag===primary.tag)continue;const a=Math.min(primary.end,pe.end),b=Math.max(primary.start,pe.start),between=text.slice(a,b);if(/\b(?:FOR|ON|AT|OF|SERVING|ASSOCIATED\s+WITH|BELONGS\s+TO|PART\s+OF|HEATER|COMPRESSOR|VESSEL)\b/i.test(between)){parent=pe;relationshipExplicit=true;break;}}}
+  if(!parent&&primary&&children.length&&parents.length===1&&parents[0].tag!==primary.tag)parent=parents[0];
+  const primaryTag=primary?primary.tag:'',parentTag=parent?parent.tag:'',hierarchical=!!(primaryTag&&parentTag&&RYAN_CHILD_TAG_PREFIXES.has(primary.prefix)),sys=descriptionSystem(text,parentTag),itemType=descriptionItemType(text,primaryTag),aliases=[];
+  const addAlias=x=>{const n=normalizeEquipmentTag(x);if(n&&!aliases.includes(n))aliases.push(n);const nh=n.replace('-','');if(nh&&!aliases.includes(nh))aliases.push(nh);};(hierarchical?[primaryTag]:ids).forEach(addAlias);if(equipmentTagPrefix(primaryTag)==='PVC'&&/pressure\s+control\s+valve/i.test(text))addAlias(`PCV-${primaryTag.split('-').slice(1).join('-')}`);if(equipmentTagPrefix(primaryTag)==='PCV')addAlias(`PVC-${primaryTag.split('-').slice(1).join('-')}`);
+  const binding={schemaVersion:2,primaryTag:primaryTag||null,primaryTitle:primaryTag?`${primaryTag} — ${itemType}`:null,itemType,parentTag:parentTag||null,parentKeyHint:parentTag?parentTag.toLowerCase().replace(/[^a-z0-9]/g,''):null,parentTitle:parentTag||null,systemId:sys.id||null,systemTitle:sys.title||null,libraryCategory:sys.category||null,aliases,relatedEquipmentIds:ids.slice(),hierarchical,relationshipExplicit,operatorDescription:text};
+  return {text,equipmentIds:(hierarchical&&primaryTag)?[primaryTag]:ids.slice(),indexEquipmentIds:(hierarchical&&primaryTag)?[primaryTag]:ids.slice(),relatedEquipmentIds:ids.slice(),primaryTag,parentTag,system:sys.title||'',libraryCategory:sys.category||'',referenceBinding:binding};
 }
 function mergeEquipmentIds(a, b) {
   const out = [], seen = new Set();
@@ -3704,7 +3702,7 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
 
   const existing = safeString(existingContext || '', 12000);
 
-  const prompt = `SOURCE: ${sourceLabel}\nDOCUMENT TYPE: PLANT IMAGE / PHOTO.\nOPERATOR SOURCE IDENTITY: ${anchor.text || '(none supplied)'}.\nANCHOR EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}.\nANCHOR SYSTEM: ${anchor.system || '(none)'}.\nWhen an operator source identity is supplied, treat it as explicit OPERATOR_PROVIDED identity/context for what the image belongs to; attach the anchor equipment tag(s) to every extracted source fact so later questions about that tag retrieve this source. Do NOT treat the operator description as proof of nameplate ratings that are not visible.\nInspect the image itself and extract ONLY facts that are actually visible/readable. First classify the source as plant_photo, nameplate, control_board_hmi, pid_drawing_photo, oem_reference, external_reference, or other. For plant/nameplate/control-board content, extract visible manufacturer, model, item/serial/part numbers, equipment tags, pressure/temperature/electrical/mechanical ratings, materials, labels, actuator/valve/instrument markings, instrument ranges, PV/SP/output/mode, alarm/status indicators, switches/selectors/buttons, displayed states, and clearly visible component relationships. If the image is a web/search screenshot or other generic technical reference, you MAY extract the technical statements it explicitly shows, but classify them as external_reference and never present them as Clear Fork-specific or verified plant facts. Do not infer blurred/cropped text or unstated plant facts. Every fact must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Keep facts compact and atomic. Target no more than ${Math.min(FACTS_PER_PASS, 45)} high-value facts so the response finishes cleanly. Existing Reference Library context is only for duplicate/conflict awareness and must not fill in unreadable image content.\nExisting context:\n${existing || '(none supplied)'}`;
+  const prompt = `SOURCE: ${sourceLabel}\nDOCUMENT TYPE: PLANT IMAGE / PHOTO.\nOPERATOR SOURCE IDENTITY: ${anchor.text || '(none supplied)'}.\nPRIMARY REFERENCE TAG: ${anchor.primaryTag || '(none)'}.\nPARENT EQUIPMENT: ${anchor.parentTag || '(none)'}.\nREFERENCE LIBRARY SYSTEM: ${anchor.referenceBinding && anchor.referenceBinding.libraryCategory || anchor.system || '(none)'}.\nINDEX EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}.\nWhen an operator source identity is supplied, treat it as explicit OPERATOR_PROVIDED identity/context. Store source facts under the PRIMARY REFERENCE TAG when one is identified. Keep PARENT EQUIPMENT and SYSTEM as navigation relationships; do not duplicate every child-device fact as a loose parent-equipment fact. Do NOT treat the operator description as proof of nameplate ratings that are not visible.\nInspect the image itself and extract ONLY facts that are actually visible/readable. First classify the source as plant_photo, nameplate, control_board_hmi, pid_drawing_photo, oem_reference, external_reference, or other. For plant/nameplate/control-board content, extract visible manufacturer, model, item/serial/part numbers, equipment tags, pressure/temperature/electrical/mechanical ratings, materials, labels, actuator/valve/instrument markings, instrument ranges, PV/SP/output/mode, alarm/status indicators, switches/selectors/buttons, displayed states, and clearly visible component relationships. If the image is a web/search screenshot or other generic technical reference, you MAY extract the technical statements it explicitly shows, but classify them as external_reference and never present them as Clear Fork-specific or verified plant facts. Do not infer blurred/cropped text or unstated plant facts. Every fact must use verificationStatus="DOCUMENT_EXTRACTED_UNVERIFIED". Keep facts compact and atomic. Target no more than ${Math.min(FACTS_PER_PASS, 45)} high-value facts so the response finishes cleanly. Existing Reference Library context is only for duplicate/conflict awareness and must not fill in unreadable image content.\nExisting context:\n${existing || '(none supplied)'}`;
 
   const content = [attachmentToContentBlock(attachment), { type: 'text', text: prompt }].filter(Boolean);
 
@@ -3787,7 +3785,8 @@ async function learnPlantImageDirect(attachment, existingContext, apiKey) {
 
   return {
 
-    ingestion: { ok: cleaned.length > 0, documentType: parsed && parsed.documentType || 'image', sourceLabel, facts: cleaned, warnings: [...(parsed && parsed.warnings || []), ...warnings], persistenceRequired: true },
+    ingestion: { ok: cleaned.length > 0, documentType: parsed && parsed.documentType || 'image', sourceLabel, facts: cleaned, warnings: [...(parsed && parsed.warnings || []), ...warnings], persistenceRequired: true, referenceBinding: anchor.referenceBinding },
+    referenceBinding: anchor.referenceBinding,
 
     cost: { usd: (inputTokens * INPUT_PRICE_PER_MILLION + outputTokens * OUTPUT_PRICE_PER_MILLION) / 1_000_000, inputTokens, outputTokens, inRate: INPUT_PRICE_PER_MILLION, outRate: OUTPUT_PRICE_PER_MILLION },
 
@@ -3808,7 +3807,7 @@ async function prepareInteractiveDocument(attachment, documentType, existingCont
   const sourceLabel = safeString(attachment && attachment.label || 'Ryan source document', 200);
   const passes = buildBatchPasses(docType, fileId, sourceLabel, existingContext, mediaType);
   const anchor = operatorDescriptionAnchor(attachment && attachment.description || '');
-  return { fileId, documentType: docType, mediaType, sourceLabel, operatorDescription: anchor.text, anchorEquipmentIds: anchor.equipmentIds, anchorSystem: anchor.system, passCount: passes.length, passIds: passes.map(p => p.id) };
+  return { fileId, documentType: docType, mediaType, sourceLabel, operatorDescription: anchor.text, anchorEquipmentIds: anchor.equipmentIds, anchorIndexEquipmentIds: anchor.indexEquipmentIds, anchorRelatedEquipmentIds: anchor.relatedEquipmentIds, anchorPrimaryEquipmentId: anchor.primaryTag || null, anchorParentEquipmentId: anchor.parentTag || null, anchorSystem: anchor.system, anchorLibraryCategory: anchor.libraryCategory, referenceBinding: anchor.referenceBinding, passCount: passes.length, passIds: passes.map(p => p.id) };
 }
 
 async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKey) {
@@ -3819,7 +3818,7 @@ async function runInteractiveDocumentPass(job, passIndex, existingContext, apiKe
   const anchor = operatorDescriptionAnchor(job.operatorDescription || '');
   const passes = buildBatchPasses(docType, job.fileId, sourceLabel, existingContext, mediaType);
   if (anchor.text) {
-    const prefix = `OPERATOR SOURCE IDENTITY: ${anchor.text}\nANCHOR EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}\nANCHOR SYSTEM: ${anchor.system || '(none)'}\nTreat this description as OPERATOR_PROVIDED identity/context for what the source belongs to. Index every extracted fact under the anchor equipment tag(s), while keeping values/ratings source-extracted only when actually visible/stated in the document.\n\n`;
+    const prefix = `OPERATOR SOURCE IDENTITY: ${anchor.text}\nPRIMARY REFERENCE TAG: ${anchor.primaryTag || '(none)'}\nPARENT EQUIPMENT: ${anchor.parentTag || '(none)'}\nREFERENCE LIBRARY SYSTEM: ${anchor.referenceBinding && anchor.referenceBinding.libraryCategory || anchor.system || '(none)'}\nINDEX EQUIPMENT TAGS: ${anchor.equipmentIds.join(', ') || '(none)'}\nTreat this description as OPERATOR_PROVIDED identity/context. Index extracted facts under the primary reference tag when identified. Preserve the parent equipment and system as a relationship/navigation path, not as duplicate fact ownership. Values/ratings remain source-extracted only when actually visible/stated in the document.\n\n`;
     passes.forEach(p => { p.text = prefix + p.text; });
   }
   const idx = Math.max(0, Math.min(passes.length - 1, Number(passIndex || 0)));
@@ -4184,7 +4183,7 @@ exports.handler = async function(event) {
 
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, hierarchicalReferenceBinding: true, parentChildLibraryNavigation: true, operatorDescriptionPreserved: true, attachmentTagAliasSearch: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4573,7 +4572,8 @@ exports.handler = async function(event) {
 
           persistenceRequired: true,
 
-          persistenceInstruction: 'Store ingestion.facts/extracted in Ryan Core with equipmentIds/system/source identity so the frontend Reference Library can index the learned records by tag and system; send the relevant records back as learnedKnowledge on later Ryan requests.'
+          referenceBinding: operatorDescriptionAnchor(attachment && attachment.description || '').referenceBinding,
+          persistenceInstruction: 'Store ingestion facts under referenceBinding.primaryTag; keep parentTag/system/libraryCategory as the navigation relationship and preserve operatorDescription verbatim. Do not duplicate child-device facts as loose parent-equipment facts. Send the relevant records back as learnedKnowledge on later Ryan requests.'
 
         };
 
@@ -4638,6 +4638,7 @@ module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide
 module.exports._test = { selectKnowledge, isPlantSpecificQuery, isShiftReportQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
 
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
+module.exports.operatorDescriptionAnchor = operatorDescriptionAnchor;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
 module.exports.RYAN_CODE_SIGNATURE = RYAN_CODE_SIGNATURE;
 module.exports.RYAN_CHANGESET_12BF = RYAN_CHANGESET_12BF;
