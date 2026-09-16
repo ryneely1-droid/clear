@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-16B';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-PID-REFERENCE-FOLDER-BINDING-20260916B';
+const RYAN_BUILD_ID = 'RYAN-2026-09-16C';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-OPERATIONAL-EXPERIENCE-BRAIN-20260916C';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-PID-REFERENCE-FOLDER-BINDING-20260916B';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-OPERATIONAL-EXPERIENCE-BRAIN-20260916C';
 
 
 
@@ -790,6 +790,66 @@ function isShiftReportQuery(message, context, mode) {
 function buildShiftReportInstruction(message, context) {
   const text = `${message || ''}\n${context || ''}`;
   return `MODE: CLEAR FORK SHIFT / TWO-HOUR REPORT ANALYSIS. The supplied report data is historical evidence, not LIVE state. Apply SHIFT_REPORT_ANALYTICS_20260908. Sort by timestamp; preserve sheet/source labels and units; distinguish missing, zero, suspect and valid values. Analyze repeated operating envelopes, first movers, correlations and lag. For each proposed simulator change state the evidence count and whether it is OBSERVED, INFERRED or PENDING VERIFICATION. Do not overwrite verified P&ID topology, trip/alarm limits, or current operator calibration from a single report. If the report includes tab-delimited text converted from XLSX, treat it as the report source itself. Current request/context:\n${safeString(text, 8000)}`;
+}
+
+
+// ===== OPERATIONAL EXPERIENCE BRAIN — 2026-09-16C =====
+// Converts report/trend analysis into compact, source-labelled operating episodes that the
+// browser can persist and retrieve on later troubleshooting questions. Historical evidence
+// never becomes a trip limit, topology fact, approved procedure, or proof of causation.
+const OPERATIONAL_EXPERIENCE_BRAIN_20260916C = Object.freeze({
+  authority: 'SOURCE_LABELLED_HISTORICAL_OPERATING_EVIDENCE',
+  rules: [
+    'Create records only from supplied report extracts, trend summaries, operator notes, or an already-grounded Ryan analysis.',
+    'Separate observed conditions/responses from inferred relationships. Correlation is not causation.',
+    'Real operator shift reports and simulator historian windows are different source classes and must never be blended without labels.',
+    'Historical normal ranges are comparison envelopes, not alarm, trip, design, or equipment limits.',
+    'Do not retain passwords, secrets, generic theory, temporary chat wording, or unsupported safety-critical values.',
+    'Prefer repeated patterns and distinct operating episodes. Include evidence count, time window, source label, confidence, tags, and troubleshooting cues.',
+    'LIVE simulator state and newer operator-confirmed facts supersede historical episodes for current-condition questions.'
+  ]
+});
+
+function operatingMemoryOutputConfig() {
+  return {
+    format: {
+      type: 'json_schema',
+      schema: {
+        type: 'object',
+        properties: {
+          records: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                summary: { type: 'string' },
+                system: { type: 'string' },
+                equipmentIds: { type: 'array', items: { type: 'string' } },
+                tags: { type: 'array', items: { type: 'string' } },
+                conditions: { type: 'array', items: { type: 'string' } },
+                responses: { type: 'array', items: { type: 'string' } },
+                relationships: { type: 'array', items: { type: 'string' } },
+                normalRanges: { type: 'array', items: { type: 'string' } },
+                outliers: { type: 'array', items: { type: 'string' } },
+                troubleshootingCues: { type: 'array', items: { type: 'string' } },
+                confidence: { type: 'string' },
+                evidenceCount: { type: 'number' },
+                startTime: { type: 'string' },
+                endTime: { type: 'string' },
+                doNotTreatAs: { type: 'array', items: { type: 'string' } }
+              },
+              required: ['title','summary','system','equipmentIds','tags','conditions','responses','relationships','normalRanges','outliers','troubleshootingCues','confidence','evidenceCount','startTime','endTime','doNotTreatAs'],
+              additionalProperties: false
+            }
+          },
+          warnings: { type: 'array', items: { type: 'string' } }
+        },
+        required: ['records','warnings'],
+        additionalProperties: false
+      }
+    }
+  };
 }
 
 const OPERATOR_NGL_HYDRAULICS_12AU = [
@@ -2761,7 +2821,7 @@ function safeString(value, maxChars) {
 
 function isPlantSpecificQuery(message, context, mode) {
   const text = `${message || ''}\n${context || ''}`;
-  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract','shift_report','report_analysis','shift_report_chunk','shift_report_synthesis'].includes(String(mode || '').toLowerCase())) return true;
+  if (['audit','scan','loto','loto_workplan','recommend','forecast','health_profile','maintenance','instructor','what_changed','readiness','operator_brief','digest','learn','ingest','image_learn','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','memory_extract','operating_memory_extract','shift_report','report_analysis','shift_report_chunk','shift_report_synthesis'].includes(String(mode || '').toLowerCase())) return true;
   return hasClearForkTag(text) || /\b(Clear\s*Fork|HMI|control board|current PV|current SP|current CV|live plant|this plant|our plant|plant inlet|residue compressor|demethanizer|stabilizer tower|Ryan scan|LOTO|P&ID|PID)\b/i.test(text);
 }
 
@@ -2985,6 +3045,10 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
 
     modeInstructions = `MODE: MEMORY EXTRACTION. Extract only durable plant-specific memory candidates explicitly provided by the operator or clearly supported by supplied context. Do not store temporary live values, generic process theory, secrets, passwords, API keys, speculation, or unsupported safety-critical limits. Return strict JSON only: {"memories":[{"text":"...","title":"...","equipmentIds":[],"tags":[],"confidence":"high|medium|low"}]}. If none, return {"memories":[]}.`;
 
+  } else if (mode === 'operating_memory_extract') {
+
+    modeInstructions = `MODE: OPERATIONAL EXPERIENCE EXTRACTION. Apply OPERATIONAL_EXPERIENCE_BRAIN_20260916C. Return only the structured JSON requested by output_config. Build compact, durable operating episodes from the supplied source-labelled report/trend material. Preserve time window, source identity, tags, equipment, conditions, responses, repeated ranges, suspect data, evidence count and troubleshooting cues. Put causal claims in relationships only when explicitly supported; otherwise state correlation/sequence and what would verify it. Never turn historical ranges into limits or overwrite verified topology, trips, setpoints or procedures. If the source supports no durable record, return an empty records array with a warning.`;
+
   } else if (['digest','learn','ingest'].includes(mode)) {
 
     modeInstructions = `MODE: DOCUMENT INGESTION. Extract only facts actually visible or stated in the supplied document. Do not merge in general knowledge. Do not silently correct the document. Return strict JSON only as instructed in the user message.`;
@@ -3003,6 +3067,8 @@ function buildSystemPrompt(mode, selectedKnowledge, learnedKnowledge) {
   const core = `You are Ryan, the plant-wide subject matter expert for the Clearfork Cryogenic Unit #1 simulator. You are expected to reason across the entire facility: process flow, control boards/HMIs, control loops, instruments, alarms, trips, permissives, interlocks, equipment states, valve states, operating modes, maintenance references, P&IDs, OEM manuals, procedures, and cross-system cause-and-effect. The simulator-supplied CONTEXT is authoritative for what is happening right now; source-backed Reference Library/document facts are authoritative for static plant knowledge according to their stated verification status. When CONTEXT contains a PLANT STATE ENGINE section, use its evaluated failed/healthy interlock and verification-gap results before making troubleshooting claims. When CONTEXT contains a PLANT GRAPH section, use the relationship type, source, and confidence labels exactly: never convert an interlock association into a piping connection, never reverse a directed flow edge without evidence, and prefer P&ID/Reference-Library flow edges over inference.
 
  
+
+When CONTEXT contains HISTORICAL OPERATING EXPERIENCE, use it as empirical comparison evidence for troubleshooting. Always identify whether an episode came from a real operator shift report or a simulator historian window, include its time/source/evidence count when material, compare it to LIVE state, and name the fastest tag/trend that would confirm or disprove the analogy. Do not treat a historical envelope as an alarm/design limit and do not state that correlation proves cause.
 
 TRUST MODEL:
 
@@ -4182,7 +4248,7 @@ exports.handler = async function(event) {
 
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, hierarchicalReferenceBinding: true, parentChildLibraryNavigation: true, pidReferenceFolderBinding: true, pidDrawingRecordOwnership: true, pidSystemFolderNavigation: true, pidTagCrossReferenceSearch: true, operatorDescriptionPreserved: true, attachmentTagAliasSearch: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, hierarchicalReferenceBinding: true, parentChildLibraryNavigation: true, pidReferenceFolderBinding: true, pidDrawingRecordOwnership: true, pidSystemFolderNavigation: true, pidTagCrossReferenceSearch: true, operatorDescriptionPreserved: true, attachmentTagAliasSearch: true, learnedReferenceLibrarySync: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, operationalExperienceBrain: true, reportToBrainInstallation: true, trendWindowBrainInstallation: true, sourceLabelledOperatingEpisodes: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -4293,8 +4359,9 @@ exports.handler = async function(event) {
     const shiftReportMode = ['shift_report','report_analysis','shift_report_chunk','shift_report_synthesis'].includes(effectiveMode) || isShiftReportQuery(message, context, effectiveMode);
     const shiftReportChunkMode = effectiveMode === 'shift_report_chunk';
     const shiftReportSynthesisMode = effectiveMode === 'shift_report_synthesis';
-    const msg = safeString(message, shiftReportMode ? Math.max(MAX_MESSAGE_CHARS, shiftReportChunkMode ? 14000 : 30000) : MAX_MESSAGE_CHARS);
-    const ctx = safeString(context, fastQa ? 22000 : (shiftReportChunkMode ? 0 : (shiftReportSynthesisMode ? Math.min(MAX_CONTEXT_CHARS, 8000) : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 10000) : MAX_CONTEXT_CHARS))));
+    const operatingMemoryExtractMode = effectiveMode === 'operating_memory_extract';
+    const msg = safeString(message, operatingMemoryExtractMode ? 30000 : (shiftReportMode ? Math.max(MAX_MESSAGE_CHARS, shiftReportChunkMode ? 14000 : 30000) : MAX_MESSAGE_CHARS));
+    const ctx = safeString(context, operatingMemoryExtractMode ? 0 : (fastQa ? 22000 : (shiftReportChunkMode ? 0 : (shiftReportSynthesisMode ? Math.min(MAX_CONTEXT_CHARS, 8000) : (shiftReportMode ? Math.min(MAX_CONTEXT_CHARS, 10000) : MAX_CONTEXT_CHARS)))));
 
     const plantSpecificQuery = isPlantSpecificQuery(msg, ctx, effectiveMode);
     const webResearchRequested = wantsWebResearch(msg, effectiveMode) && !plantSpecificQuery;
@@ -4322,6 +4389,7 @@ exports.handler = async function(event) {
     let userText = msg;
     if (shiftReportChunkMode) userText = `MODE: CLEAR FORK SHIFT REPORT CHUNK EXTRACTION. Extract only concrete historical observations from this report chunk. Preserve timestamp/tag/value/unit. Flag missing or suspect entries. Do not provide a long explanation, do not use web research, and do not infer plant changes yet. Return compact bullets suitable for a later synthesis.\n\n${msg}`;
     else if (shiftReportSynthesisMode) userText = `MODE: CLEAR FORK SHIFT REPORT SYNTHESIS. The text below is a set of compact factual extracts from one report. Synthesize the operating trends, ranges, outliers, cause/effect only when supported, comparison to current simulator behavior, and justified calibration recommendations. Historical evidence must not overwrite verified trips, topology, safety limits, or newer operator-confirmed values. Keep the answer concise but useful.\n\n${msg}`;
+    else if (operatingMemoryExtractMode) userText = `MODE: INSTALL SOURCE-LABELLED OPERATIONAL EXPERIENCE IN RYAN'S BRAIN. Extract durable operating episodes/patterns from the supplied grounded report or historian summary. Follow OPERATIONAL_EXPERIENCE_BRAIN_20260916C and return only the output_config JSON.\n\n${msg}`;
     else if (shiftReportMode) userText = `${buildShiftReportInstruction(msg, ctx)}\n\n${msg || 'Analyze the supplied shift reports.'}`;
 
     if (!userText && attachment && String(attachment.mediaType || '').toLowerCase().startsWith('image/')) userText = 'Analyze the attached plant image carefully. Describe what is actually visible, identify legible tags/values/controls, relate it to supplied plant context, and clearly mark anything unreadable or uncertain instead of guessing.';
@@ -4336,6 +4404,7 @@ exports.handler = async function(event) {
     const isIngest = ['digest','learn','ingest'].includes(effectiveMode);
 
     const isMemoryExtract = effectiveMode === 'memory_extract';
+    const isOperatingMemoryExtract = effectiveMode === 'operating_memory_extract';
 
     let ingestType = null;
 
@@ -4369,14 +4438,15 @@ exports.handler = async function(event) {
     else if (fastQa) maxTokens = 1100;
     else if (isIngest) maxTokens = (ingestType === 'image' ? IMAGE_MAX_TOKENS : DOC_MAX_TOKENS);
     else if (effectiveMode === 'scan') maxTokens = 5000;
+    else if (isOperatingMemoryExtract) maxTokens = 2200;
     else if (isMemoryExtract) maxTokens = 1200;
     else if (isLotoWorkplan) maxTokens = 5200;
     else if (operatorToolModes.has(effectiveMode)) maxTokens = 3200;
     else maxTokens = plantSpecificQuery ? 2400 : 1400;
 
     const webTools = webResearchRequested ? [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }] : [];
-    const requestModel = (fastQa || shiftReportMode) ? FAST_MODEL : MODEL_V2;
-    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}) };
+    const requestModel = (fastQa || shiftReportMode || isOperatingMemoryExtract) ? FAST_MODEL : MODEL_V2;
+    const payload = { model: requestModel, max_tokens: maxTokens, system, messages, ...(webTools.length ? { tools: webTools } : {}), ...(isLotoWorkplan ? { output_config: lotoWorkplanOutputConfig() } : {}), ...(isOperatingMemoryExtract ? { output_config: operatingMemoryOutputConfig() } : {}) };
 
  
 
@@ -4394,7 +4464,7 @@ exports.handler = async function(event) {
 
         ...((attachment && attachment.fileId) || webResearchRequested ? { 'anthropic-beta': [attachment && attachment.fileId ? 'files-api-2025-04-14' : null, webResearchRequested ? 'web-search-2025-03-05' : null].filter(Boolean).join(',') } : {}),
 
-      }, payload, shiftReportMode ? 1 : 5, shiftReportMode ? 18000 : REQUEST_TIMEOUT_MS);
+      }, payload, (shiftReportMode || isOperatingMemoryExtract) ? 1 : 5, (shiftReportMode || isOperatingMemoryExtract) ? 18000 : REQUEST_TIMEOUT_MS);
 
     } catch (networkErr) {
 
@@ -4439,7 +4509,7 @@ exports.handler = async function(event) {
 
     // Some reasoning-heavy requests can consume the entire output budget before a visible final answer is emitted.
     // A successful HTTP response with zero visible text is not a successful Ryan answer. Recover once with a concise-final request.
-    const recoverableTextMode = !isIngest && !isMemoryExtract && !isLotoWorkplan;
+    const recoverableTextMode = !isIngest && !isMemoryExtract && !isOperatingMemoryExtract && !isLotoWorkplan;
     if (!reply && recoverableTextMode) {
       const recoveryMessages = messages.map(m => ({ ...m, content: Array.isArray(m.content) ? m.content.slice() : m.content }));
       const finalInstruction = { type: 'text', text: 'Return the FINAL OPERATOR-FACING ANSWER now. No hidden analysis, no preamble. Be concise and actionable. Use at most 8 bullets and include confidence / fastest proof check when relevant.' };
@@ -4543,7 +4613,13 @@ exports.handler = async function(event) {
 
     }
 
- 
+    if (isOperatingMemoryExtract) {
+
+      const parsedOperating = parseJsonReply(reply);
+
+      response.operatingMemoryExtraction = parsedOperating && Array.isArray(parsedOperating.records) ? parsedOperating : { records: [], warnings: ['Ryan returned no readable operational-experience records.'] };
+
+    }
 
     if (isIngest) {
 
