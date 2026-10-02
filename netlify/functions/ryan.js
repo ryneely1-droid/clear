@@ -731,13 +731,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID = 'RYAN-2026-09-16C';
-const RYAN_DIAGNOSTIC_REVISION = 'CF-OPERATIONAL-EXPERIENCE-BRAIN-20260916C';
+const RYAN_BUILD_ID = 'RYAN-2026-10-02D';
+const RYAN_DIAGNOSTIC_REVISION = 'CF-REFRIG-SUCTION-RSV-12GA-20261002D';
 const RYAN_SOURCE_BASELINE = 'operator-uploaded-08-11A';
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE = 'CF-RYAN-OPERATIONAL-EXPERIENCE-BRAIN-20260916C';
+const RYAN_CODE_SIGNATURE = 'CF-RYAN-REFRIG-SUCTION-RSV-12GA-20261002D';
 
 
 
@@ -906,6 +906,10 @@ const OPERATOR_CALIBRATION_20260818 = Object.freeze({
 });
 
 const RYAN_CHANGESET_12BF = Object.freeze([
+  '12GA: researched R-290 suction/slide/cooling/power/rejection response; one-Frick lineup; F-1438 confirmed replacement at 10 PSID preserving 15 PSID RSV-only trip. Supersedes 12FZ auxiliary run lineup.',
+  '12FZ RUNNING POINT: operator-requested 205.37 MMSCFD inlet / 196.01 residue; all compressors and EX running. Empirical loading, current shrinkage anchor, active EX/JT pressure tracking, shared flow indications and corrected historian sample clock.',
+  '12FY OPERATOR JT/C3 CORRECTION: only JT and EX are alternative main gas paths; stopped EX has zero flow and continuing feed uses JT. Operator-observed C3 recovery 77-85% JT-only versus 95-98% EX normal. No third fallback path; recovery percentages are not residue C3 concentration.',
+  '12FX OPERATOR EXPANDER CONTROL 2026-10-02: separate LOCAL/REMOTE ownership from board MAN/AUTO; local 20% then board match 20%, REMOTE, JT SP below EX SP, then EX AUTO. Both controllers regulate tower pressure; EX higher-SP preference closes JT when EX capacity is available. Earlier shorthand and high-EX-SP-implies-JT assumptions are superseded.',
   '12FR P&ID REFERENCE FOLDER FILING: operator-described P&IDs now create canonical drawing-owned records filed under P&IDs > system folder > drawing number; extracted tags remain searchable indexes and system cross-references without duplicating fact ownership.',
   '12FQ HIERARCHICAL REFERENCE LIBRARY: attachment descriptions now create structured System > Parent Equipment > Device Tag bindings; the exact operator description is preserved, device facts stay owned by the primary tag, parent/system links drive nested library navigation, and alias search opens the child record directly.',
   '2026-09-08 SHIFT REPORT ANALYTICS: added explicit two-hour/EOS historical-report mode, chronological trend statistics, outlier handling, lag-aware cross-system correlation, evidence counts, and protection against historical rows overwriting verified live/P&ID limits.',
@@ -939,7 +943,7 @@ const RYAN_CHANGESET_12BF = Object.freeze([
   '12BE EXPANDER TRANSIENT: normal IGV control is AUTO. Startup is MANUAL, ramp IGV to about 20%, then transfer to AUTO. On expander loss the IGV walks toward 0 while PCV-1121A JT opens rapidly but not instantaneously toward about 80%, preserving tower flow with reduced refrigeration efficiency/recovery.',
   '12BE GC FIELD CALIBRATION: current plant reports around 220 MMSCFD and about 168 F demeth bottoms with NGL GC C2 around 0.64%. Treat this as an operator-observed calibration envelope, not a permanent constant; C2 still responds to bottoms heat, tower pressure, throughput, JT/expander share, reflux quality and dehy condition.',
   '12BE DOCUMENT DUPLICATE POLICY: when the exact same PDF/image content has already been fully learned, report it as a duplicate and add no duplicate facts. If a prior ingestion was incomplete, allow a retry rather than treating it as complete.',
-  '12BC EXPANDER/COLD-SECTION CALIBRATION: cold-separator vapor has three parallel paths (E-1222 reflux, PCV-1121A JT, XV-1121B/EX-1121); current expander instrumentation is PDT-1121B 3.4 PSID, PT-1121B 876.7 psig, TE-1121D -85.7 F, PT-1121D 249 psig; PDT HI 5 / HIHI EX shutdown 15.',
+  '12BC EXPANDER/COLD-SECTION CALIBRATION: JT and EX are the two alternative main gas letdown paths; existing reflux service is separate, not a third fallback; current expander instrumentation is PDT-1121B 3.4 PSID, PT-1121B 876.7 psig, TE-1121D -85.7 F, PT-1121D 249 psig; PDT HI 5 / HIHI EX shutdown 15.',
   '12BC PIC-1521D SPLIT CONTROL: JT faceplate SP 265/PV ~264 and EX faceplate SP 268/PV ~265/CV 100%; EX SP range 225-350 psig. Once IGV is saturated, additional pressure/throughput demand recruits PCV-1121A; current JT near 0% during the current high-IGV operating condition, extreme 350-psig example calibrates near 50% JT and approximately 236 MMSCFD. Compressor load steps remain preferred rate control.',
   '12BC TURBOEXPANDER PHYSICS: Atlas Copco principle retained as OEM/general support—IGVs meter expander flow, expansion work drives the common-shaft booster compressor, and turboexpansion provides stronger cryogenic refrigeration/liquid recovery than simple JT pressure letdown. Clear Fork HMI/operator values govern plant-specific behavior.',
   '12BD EXCHANGER SPLIT HOTFIX: TCV-1221 current 100%, TCV-1223 current 24%; each operator click is exactly 1.00 percentage point. The obsolete second/legacy TCV click handler was removed so it cannot corrupt the active split state. Additional 1221-open demand above 100 spills to 1223. Once 1223 exceeds 50%, it progressively pinches 1221 to a protected 10% minimum. TIC-1224B current 63/62.9/12.97 and TDIC-1224B 20/45/100.',
@@ -1810,7 +1814,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_09J = {
 
     'V-1421 cold separator: side horizontal gas inlet from chiller; gas leaves top vertically; liquid leaves bottom horizontally. PT-1421 about 893.35 psig HI 1035; TE-1421 about -9.9 F LO -45 HI 12; TE-1421A about -7.4 F LOLO facility ESD -50. LIC-1421 SP/PV 35%, CV about 43%; rising level increases liquid GPM. HIHI level facility ESD; LOLO closes liquid outlet valve only. Operator-confirmed topology/control correction 2026-08-18: on the Gas/Gas exchanger page, TIC-1421 controls the single TCV-1421 cold-spin valve on the top dry-gas path toward V-1421. Current observed TIC-1421 point is SP -30 F, PV about -7.2 F, CV 0%. If PV falls below SP, TCV-1421 opens to increase warm-gas/reboiler duty and temper the cold section; when PV is above SP, TCV-1421 remains closed. The previously drawn second downstream TV-1421 symbol was redundant and must not be treated as a second physical valve.',
 
-    'Cold-sep vapor splits three ways: E-1222 reflux branch, JT PCV-1121A, and expander. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. Raising EX pressure SP can increase tower pressure/throughput and JT share; at an extreme 350-psig example, model JT approaches ~50% and plant throughput approximately 236 MMSCFD capability (225 MMSCFD verified normal operating maximum), but compressor load steps are the preferred normal rate lever.'
+    'There are only two alternative main gas paths: PCV-1121A JT and XV-1121B / EX-1121. Expander stopped means zero EX forward flow; continuing feed uses JT. Existing reflux services are not a third fallback around JT and EX. Current expander path XV-1121B -> PDT-1121B 3.4 PSID (HI 5, HIHI 15 expander-only SD) -> PT-1121B 876.7 psig -> EX-1121 -> TE-1121D -85.7 F -> PT-1121D 249 psig -> T-1521. JT path starts near TE-1421A -7 F and current TE-1121A is about -61.6 F. PIC-1521D JT SP 265/PV ~264; PIC-1521D EX SP 268/PV ~265/CV 100%, range 225-350 psig. Current JT is near 0% with the expander/IGV carrying the present load. 12FX supersedes the older pressure-SP/JT-share assumption: with EX running REMOTE/AUTO and EX SP above JT SP, EX has first call on letdown gas and JT closes while EX has capacity. Do not infer a fixed JT opening or throughput from EX SP alone; compressor loading remains the normal rate lever.'
 
   ],
 
@@ -2720,7 +2724,7 @@ const OPERATOR_PROCESS_KNOWLEDGE_0817 = Object.freeze({
     'Ryan may explain these trainer steps and expected indications, but must distinguish TRAINING CONTROL from LIVE DCS/PACKAGE CONTROL and must not imply the simulator trainer is an approved startup procedure.'
   ],
   expanderControl: [
-    'EX-1121 HIC-101 is normally AUTO/REMOTE under PIC-1521D EX during normal operation. Startup teaching uses MANUAL initially, ramps IGV cautiously to about 20%, then transfers to AUTO when conditions are ready.',
+    '12FX operator correction: EX-1121 normally runs REMOTE with PIC-1521D EX AUTO. Startup uses LOCAL 20%, independent board MANUAL match 20%, outside operator REMOTE, JT SP below EX SP, then board AUTO. See OPERATOR_EXPANDER_CONTROL_20261002; REMOTE and AUTO are not the same step.',
     'The current synchronized control model uses the operator-confirmed normal point near PIC-1521D EX SP 268 psig / PV about 265 psig with IGV demand near 100%. High tower pressure closes/reduces the expander feed demand; low tower pressure opens/increases it.',
     'If EX-1121 is lost, IGV walks toward zero while PCV-1121A JT opens rapidly but not instantaneously toward the established backup range. The expander and JT are coordinated parallel pressure/flow paths, not independent throughput controls.'
   ],
@@ -2741,7 +2745,65 @@ function hasClearForkTag(text) {
   return /\b(?:C|V|P|E|F|T|A|H)-\d{3,4}[A-Z]?\b|\bEX\/?C?-?\d{3,4}[A-Z]?\b|\b(?:PIC|PIT|PT|TIT|TE|FIT|FT|FIC|LIC|LIT|PDIT|PDIC|PV|PCV|FCV|LCV|TCV|XV|ESD|PSV|FQI|FFIC)-?\d{3,4}[A-Z]?\b/i.test(String(text || ''));
 }
 
+const OPERATOR_EXPANDER_CONTROL_20261002 = Object.freeze({
+  "t": "EX-1121 / JT - Local 20% Handover and Tower Pressure (12FX)",
+  "d": [
+    "SOURCE: operator description supplied 2026-10-02. Operator-provided plant control philosophy; not an independently approved field procedure.",
+    "Both PIC-1521D JT and PIC-1521D EX use tower pressure. When EX-1121 is running in REMOTE/AUTO with sufficient capacity and EX SP above JT SP, the expander IGVs open/take letdown gas and PCV-1121A JT closes. The E-1222 reflux branch remains independent.",
+    "Startup handover: outside operator opens local HIC-101 IGVs to 20%; board operator independently matches MANUAL EX output to 20%; outside operator selects REMOTE; work JT SP below EX SP; then select EX AUTO. REMOTE alone does not select AUTO or run a 5%-to-100% ramp in the main control model.",
+    "LOCAL/REMOTE selects who commands the IGVs. Board MANUAL/AUTO is separate. In LOCAL, board manual changes stage a demand but do not move vanes. Handover checks compare displayed whole-percent values; those checks and valve/controller response gains are simulator-only assumptions, not new safety interlocks.",
+    "Changing controls does not run an extra physics tick. Trips, red tags, XV isolation and the independent source-based startup trainer remain separate. Follow the current approved field procedure and authorized verification before plant operation."
+  ]
+});
+
+const OPERATOR_JT_C3_20261002 = Object.freeze({
+  "t": "JT / Expander Only - C3 Recovery Operator Correction (12FY)",
+  "d": [
+    "SOURCE: Clear Fork operator instruction, 2026-10-02. OPERATOR_OBSERVED. This is operating experience, not a design guarantee, alarm limit or approved field procedure.",
+    "There are only two alternative gas letdown paths: JT PCV-1121A and EX-1121. When the expander is not running and the plant continues processing, EX flow is zero and gas in this feed route goes through JT. Never invent a third fallback route around both. Reflux services remain separate process circuits, not another alternative for the JT/EX feed.",
+    "Operator-reported usual C3 recovery is about 77-85% on JT only / expander stopped, versus 95-98% with the expander running normally. More C3 stays in the residue stream in JT-only operation. Preserve these ranges rather than substituting generic near-normal recovery claims.",
+    "Interpret these as the C3 recovery indicator associated with residue reporting, not 77-85 mole% propane in the residue stream. In the simulator, C3 recovery is the fraction of feed C3 routed into NGL; residue C3 concentration is a separate value.",
+    "The transition uses actual EX/JT flow share, thermal lag and a conserved component split. Interpolation, thermal penalties, 120-second recovery response and 300-second GC sampling are simulator assumptions, not supplied field response times. Observed bands are not hard clamps; abnormal conditions can fall outside them.",
+    "Existing LOCAL 20% / independently matched board MANUAL 20% / REMOTE / JT SP below EX SP / EX AUTO handover remains. Both pressure controllers control tower pressure. Isolation and ESD are not bypassed: a closed/unavailable JT path cannot carry flow, and no third path is substituted."
+  ]
+});
+
+const OPERATOR_RUNNING_POINT_20261002 = Object.freeze({
+  "t": "Current Running Point - 205.37 Inlet / 196.01 Residue (12FZ)",
+  "d": [
+    "SOURCE: operator-requested Clear Fork simulation starting point, 2026-10-02. FIT-1045A 205.37 MMSCFD and FIT-8210A 196.01 MMSCFD, both subtly fluctuating. This is a scenario anchor, not a permanent throughput target or limit.",
+    "LATEST 12GA LINEUP supersedes the 12FZ all-compressors request: C-4100/C-4200, C-6100/C-6200/C-6300, EX-1121/C-1121, C-1111, C-1140 and first air compressor V-9210 remain running. C-1141/C-1142, C-5700 and V-9220 (second air compressor, also C-9220 in reference records) start STOPPED. This is a simulation scenario and never overrides current LIVE run states.",
+    "Model-derived loading: both inlet KBZ packages Step 3 at 78.005% Remote Capacity (shown to three decimal places), giving 102.685 MMSCFD modeled displacement each. All three residue packages Step 2 at 80%, giving about 203 MMSCFD aggregate modeled capacity and enough margin for 196.01 MMSCFD sales. These settings are solved from existing empirical simulator curves, not OEM performance guarantees or real-plant operating instructions.",
+    "The new simultaneous meter difference is 9.36 MMSCFD. The old 10-18 MMSCFD typical difference is historical, not a hard lower bound. Current meter calibration is independent of the older GC snapshot; no new feed composition or complete plant mass balance can be inferred from two flowmeters alone.",
+    "Demethanizer controlled pressure must settle at the active EX/JT pressure SP during healthy AUTO operation, not drift to an unrelated flow-derived pressure. Current EX SP 268 / JT SP 265 psig are retained. Both faceplates read the same controlled pressure. PT-1521A is the lower-section instrument: preserve real modeled tower differential pressure rather than adding an arbitrary fixed 3 psi or clipping all pressure tags to one number.",
+    "A controller SP is not a physical pressure ceiling. Manual operation, lost control authority, a blocked sales path, insufficient residue removal and transients must remain visible and must not be hidden by a hard PV clamp. Existing alarms, ESDs, red tags and the 20% local-to-remote expander handover are preserved.",
+    "Stopped EX has zero forward EX flow and continuing letdown gas uses JT only. Operator-observed C3 recovery remains 77-85% JT-only versus 95-98% normal EX operation. Questions Asked and learned Reference Library records remain intact."
+  ]
+});
+
+const REFRIGERATION_SUCTION_12GA = Object.freeze({
+  "t": "Refrigeration Suction - Full Rejection (12GA)",
+  "d": [
+    "SOURCE CLASSES: operator-requested lineup and F-1438 maintenance threshold; NIST pure-propane property correlations; generic FRICK capacity-control documentation; Campbell refrigeration research; UOP rejection overview. Empirical model tuning is not an OEM compressor selection or approved Clear Fork procedure.",
+    "PIC-1441C controls the running screw-compressor capacity slide in AUTO. PV above SP requests loading; PV below SP requests unloading; finite slide travel precedes low-side pressure and process-temperature response. In MANUAL, output controls the slide and SP alone cannot force suction pressure.",
+    "Lower ACTUAL propane suction/evaporating pressure lowers saturation temperature. Raising actual pressure raises it. SP changes do not instantly change pressure, temperatures or GC. Insufficient machine capacity permits actual suction to remain above SP. Separate PIC-1441A/PCV-1441A pressure-limiter SP is not overwritten by compressor suction SP.",
+    "At comparable cooling duty and condensing conditions, lower suction temperature increases lift and generally specific power. Absolute pressures define compression ratio. Actual total kW/amperes also depend on mass flow, load, head, wetting and efficiency: do not promise a universal amps direction. Condenser heat is removed process heat plus compressor work.",
+    "FULL REJECTION continues to reject ethane while recovering propane/heavier hydrocarbons. Colder feed tends to increase condensation/C3 retention, but may require more reboil/ethane stripping. When reboiler heat or capacity is limiting, C2 can slip into NGL; colder is not unconditionally better. Warmer feed tends to lose more C3 into residue. Existing C3 observations (77-85% JT-only, 95-98% normal EX) remain observations, not guaranteed clamps.",
+    "Simulation calibration: 14.7 psia atmosphere, 3.2 F clean gas approach, 620 tons/full slide at 17/208 psig, finite pressure/thermal/GC lags and empirical heat-balance gains. These are transparent assumptions, not verified Clear Fork design values or control tuning. NIST coefficients are only used within their temperature ranges; overlap blending and inverse solve are numerical implementation choices.",
+    "Current requested startup lineup: C-1140 RUNNING; C-1141/C-1142 STOPPED; C-5700 STOPPED; V-9220 second instrument-air compressor STOPPED; first V-9210 stays RUNNING. Inlet/residue compressors, C-1111 and EX remain running. Preserve 205.37/196.01 MMSCFD initial meter targets and EX/JT pressure control; LIVE state supersedes the startup preset.",
+    "F-1438 CHANGE FILTER at 10 PSID. Existing 15 PSID threshold closes XV-1438B / RSV path, not a new whole-facility trip. Maintenance button records a simulated confirmed replacement, resets modeled element DP only, and never opens isolation, creates a bypass, clears an unrelated ESD or invents a field LOTO boundary. Shared seal-gas consumers and verified source drawings must be checked for real work.",
+    "RESEARCH: NIST Chemistry WebBook propane Antoine coefficients, https://webbook.nist.gov/cgi/cbook.cgi?ID=C74986&Type=ANTOINE (accessed 2026-10-02).",
+    "RESEARCH: FRICK Quantum S90-010 O, April 2002, p19 generic capacity-control action, https://docs.johnsoncontrols.com/industrialrefrigeration/api/khub/documents/UsS6AXejdax1WaUhG2I0Kg/content (accessed 2026-10-02). This supports action, not installed Quantum HD tuning.",
+    "RESEARCH: M. Moshfeghian, Refrigeration with Heat Exchanger Economizer vs Simple Refrigeration System, May 2014, https://www.jmcampbell.com/tip-of-the-month/2014/05/refrigeration-with-heat-exchanger-economizer-vs-simple-refrigeration-system/ (accessed 2026-10-02). Study results are not plant calibration.",
+    "RESEARCH: Honeywell UOP Ortloff NGL Recovery brochure, April 2019, https://www.honeywell.com/content/dam/honcorp/us-en/industries/oil-and-gas/gas-processing/hon-ortloff-ngl-recovery-brochure.pdf (accessed 2026-10-02). Rejection/C3 objective only; no proprietary performance or specification is assigned to Clear Fork."
+  ]
+});
+
 const KNOWLEDGE_REGISTRY = {
+  refrigerationSuction12GA: REFRIGERATION_SUCTION_12GA,
+  runningPoint12FZ: OPERATOR_RUNNING_POINT_20261002,
+  jtC3Routing12FY: OPERATOR_JT_C3_20261002,
+  expanderControl12FX: OPERATOR_EXPANDER_CONTROL_20261002,
   shiftReportAnalytics20260908: SHIFT_REPORT_ANALYTICS_20260908,
   sync0817: OPERATOR_PROCESS_KNOWLEDGE_0817,
   flowPathTrainingAid0815: CLEAR_FORK_FLOW_PATH_TRAINING_AID_20260815,
@@ -2845,6 +2907,10 @@ function genericProcessKnowledge(message) {
   if (/\b(dehy|dehydrat|molecular sieve|adsorb|hydrate|dew point)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (/\b(refrigerat|propane|chiller|expander|JT|cryogenic|cold separator|phase)\b/i.test(text)) out.petroSkills = PETROSKILLS_KNOWLEDGE;
   if (!Object.keys(out).length) out.petroSkills = PETROSKILLS_KNOWLEDGE;
+  if (/refrig|suction|1438|1140|1141|1142|9220|5700|full rejection/i.test(text)) out.refrigerationSuction12GA = REFRIGERATION_SUCTION_12GA;
+  if (/compress|flow|throughput|1045|8210|demeth|tower|pressure|expander/i.test(text)) out.runningPoint12FZ = OPERATOR_RUNNING_POINT_20261002;
+  if (/expander|\bigv\b|hic.?101|1521d|\bj[ -]?t\b/i.test(text)) out.expanderControl12FX = OPERATOR_EXPANDER_CONTROL_20261002;
+  if (/expander|\bj[ -]?t\b|\bc3\b|propane|residue/i.test(text)) out.jtC3Routing12FY = OPERATOR_JT_C3_20261002;
   return out;
 }
 
@@ -2859,7 +2925,10 @@ function selectKnowledge(message, context, mode) {
   }
 
   const keys = new Set();
+  if (plantSpecific || /compress|flow|throughput|1045|8210|demeth|tower|pressure|expander/i.test(haystack)) keys.add('runningPoint12FZ');
+  if (plantSpecific || /expander|\bj[ -]?t\b|\bc3\b|propane|residue/i.test(haystack)) keys.add('jtC3Routing12FY');
   if (plantSpecific) keys.add('sync0817');
+  if (plantSpecific || /expander|\bigv\b|hic.?101|1521d|\bj[ -]?t\b/i.test(haystack)) keys.add('expanderControl12FX');
   if (isShiftReportQuery(message, context, mode)) { keys.add('shiftReportAnalytics20260908'); keys.add('cryoExpert12AM'); keys.add('operatorDecision12AM'); keys.add('operatorProcess0812Y'); }
   if (plantSpecific || ['recommend','forecast','health_profile','maintenance','instructor','audit','scan'].includes(modeKey)) keys.add('cryoExpert12AM');
 
@@ -3087,6 +3156,12 @@ TRUST MODEL:
 Never promote a lower-trust fact to VERIFIED without source evidence.
 
 Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step, or nameplate value.
+
+For current compressor lineup, throughput and tower pressure, OPERATOR_RUNNING_POINT_20261002 is the latest requested SIMULATOR SCENARIO: 205.37 inlet / 196.01 residue MMSCFD with main inlet/residue compressors and EX running. LATEST 12GA overrides the auxiliary lineup: C-1140 only; C-1141/C-1142, C-5700 and V-9220 STOPPED. REFRIGERATION_SUCTION_12GA governs suction-pressure cause/effect and F-1438 maintenance; empirical gains are not verified field tuning. Current LIVE context always overrides the starting values. Never call modeled 78.005% inlet capacity or three-Frick simulation allowance an approved real-plant setting. Do not turn an EX/JT SP into a hard physical pressure ceiling or confuse PT-1521A lower-section pressure with the controlled PV.
+
+For Clear Fork JT/EX gas routing and C3 recovery, OPERATOR_JT_C3_20261002 is the latest operator correction: only JT and EX are alternative feed paths; no EX flow when stopped, continued gas uses JT. Usual C3 recovery is 77-85% JT-only and 95-98% with EX operating normally. Cite these as operator observations, not residue composition, design guarantees or trips. Newer ranges supersede older generic high-recovery assumptions. Existing reflux circuits are not a third substitute for JT or EX.
+
+For Clear Fork expander/JT/control-handover questions, OPERATOR_EXPANDER_CONTROL_20261002 is the latest operator-provided correction. Distinguish LOCAL/REMOTE authority from board MANUAL/AUTO. Do not repeat older startup shorthand or claim that raising EX SP alone must open JT. Do not confuse the standalone historical startup trainer with main control-board behavior. Exact field approval remains unverified.
 
 For Clear Fork P&ID questions, prefer FINAL_PID_MASTER_KNOWLEDGE and newer verified drawing facts over older simulator notes.
 
@@ -4712,6 +4787,8 @@ module.exports.buildActiveTroubleshootingGuide = buildActiveTroubleshootingGuide
 
 module.exports._test = { selectKnowledge, isPlantSpecificQuery, isShiftReportQuery, hasClearForkTag, inferDocumentType, parseJsonReply, parsePartialFactsFromTruncatedJson, sanitizeHistory, attachmentToContentBlock, buildBatchPasses, buildSystemPrompt };
 
+module.exports.OPERATOR_EXPANDER_CONTROL_20261002 = OPERATOR_EXPANDER_CONTROL_20261002;
+module.exports.OPERATOR_JT_C3_20261002 = OPERATOR_JT_C3_20261002;
 module.exports.RYAN_BUILD_ID = RYAN_BUILD_ID;
 module.exports.operatorDescriptionAnchor = operatorDescriptionAnchor;
 module.exports.RYAN_DIAGNOSTIC_REVISION = RYAN_DIAGNOSTIC_REVISION;
@@ -4724,3 +4801,6 @@ module.exports.OPERATOR_PROCESS_UPDATE_20260819J = OPERATOR_PROCESS_UPDATE_20260
    PetroSkills knowledge remains in PETROSKILLS_KNOWLEDGE above; frontend Reference Library presentation belongs in index.html only. */
 
 /* 12BY: Full Atlas Copco Order 1039 expander manual verification installed above in OEM_MANUAL_KNOWLEDGE.expanderBooster. */
+module.exports.OPERATOR_RUNNING_POINT_20261002 = OPERATOR_RUNNING_POINT_20261002;
+
+module.exports.REFRIGERATION_SUCTION_12GA = REFRIGERATION_SUCTION_12GA;
