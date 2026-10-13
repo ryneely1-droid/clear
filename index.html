@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<!-- 12KC: source-only PetroSkills pump delta and current/later plate collection filter. Baseline 12KB; no geometry/control/storage migration. -->
+<html lang="en">
+<!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
+<head>
+<meta name="cf-deployment-package" content="12KQ-D1">
+<!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
+<!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
+<!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
+<!--12KL: organized dashboard, source-owned XV-6255A body/actuator evidence, shared sister specifications and 30 PetroSkills practice questions. Matched backend required. -->
+<!--12KF: cumulative E-5000 plate and source-only PetroSkills additions; geometry/control/storage unchanged.-->
+<!-- 12KA: read-only shaft/oil-fan animation, in-place vessel/filter detailing and field-plate gap references; baseline12JZ preserved. -->
+<!-- 12JZ: inlet vendor source presentation; preserve all 12JY work. Paired backend RYAN-2026-10-12-12JZ. -->
+<!-- 12JY: individual residue-compressor vendor geometry and notebooks. Clean overview, selective detail, cumulative source/Finder/Ryan sync. Operating controls and history preserved. -->
+<!-- 12JX: source-scoped M2800/M2920 geometry, full component Finder and Ryan sync. Baseline12JW retained. Source gaps remain explicit. -->
+<!--12JW: source-supported M2915 flare update from12JV. All prior air/TK9300/source/control/history work preserved.--> 
+<!-- 12JV: M2921A/M2922 actual source air geometry; matched backend12JV.12JU tank/oil and all operating algorithms retained. -->
+<!-- 12JU: in-place horizontal elevated TK-9300; M2930/M2940 source-backed local accessories and six oil supplies. Matched RYAN-2026-10-12-12JU. No process/storage migration. -->
+<!--12JT: Ryan knowledge sync from12JS; geometry, equations, interlocks and storage retained. Matched RYAN-2026-10-12-12JT.-->
+<!-- 12IN: lower T-1521 534 takeoff, rack PSV-1521, source-backed instruments and shared camera navigation repair. Built from 12IM; runtime pair RYAN-2026-10-08-12JD. Previous release comments below are historical. -->
+<!-- 12IM: M2260 cold-drain header and V-1650 local equipment; PCV-1442 paired nameplates. Geometry-only/source update. -->
+<!-- 12IL: TK-1640 methanol tank and M2250 source accessories; PCV-1441A body photo. Schematic placement, no new process logic. Matched RYAN-2026-10-06-12IL. -->
+<!-- 12IK: global component finder, source-required valve positions, M2240 and TV-5040A. No process-state or geometry changes. Matched RYAN-2026-10-06-12IK. -->
+
+<!-- 12IJ: whole-model PSV inventory and eight additional connected local assemblies. All process/storage logic preserved; remote relief routing and source-coverage gaps remain explicit. Deploy with RYAN-2026-10-06-12IJ; CF-RYAN-PLANTWIDE-PSV-12IJ-20261006. -->
+
+<!-- 12II: refrigeration PSV physical-completion and M2210 source review. Prior 12IH: refrigeration vessels / M2205 Rev8; source qualified visual and small-branch update; existing process and storage retained. -->
+<!-- 12IG: M2200 chiller/reclaimer visual/source update; F5015/F5016 one-plate identity allocation pending. Match the 12IG Ryan backend; process/history unchanged. -->
+<!-- 12IF: P-1630/P-1635 visual upgrade, M2175 source review, separate P-5060/P-5065 seal-pot photo. Controls and storage unchanged. -->
+<!-- 12IE: source-qualified M2165 small-branch additions and LV-5040A nameplate. Preserve 12ID visuals, main piping, controls and saved-data code. Matched backend RYAN-2026-10-06-12II. -->
+<!-- 12ID: P-1619/P-1620 visual details, M2160 Rev8 source review, FV-5020A nameplate. Matched pair; no control or storage change. -->
+<!-- 12IC: V-1422 / A-1322 visual upgrade; M2155 Rev8 source review; FV-5020B nameplate. Paired backend RYAN-2026-10-06-12II. -->
+<!-- 12IB: M2150 demeth local accessories and source reference; FV-5030A visible-tag nameplate. Matched backend RYAN-2026-10-06-12II. No controls/history change. -->
+<!-- 12HT: M2105 Rev 1 local valves/relief/drain review and confirming FCV-1438 photo; 12HS retained. -->
+<!-- 12HS: horizontal pipeline liquid filters, existing main flare-header tie-ins, M2100 inlet separator source refinement. Startup password remains deferred. -->
+<!-- 12HR: PSV equipment-name search and source-backed M2050 branches. Practical quiz retained. Startup access gate deferred; existing Ryan AI unlock unchanged. -->
+<meta charset="utf-8">
+<!-- 12IA: expander visual enhancement; M2145 and targeted M2140 source review; XV-6060 and PV-6050A photos. Paired backend RYAN-2026-10-06-12II. -->
+<!-- 12HW: FCV-1422 actuator-only source; M2120 Rev 8 heater refinement. Matched with RYAN-2026-10-06-12II. No process/storage change. -->
+<!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
+<title>12KQ | Clear Fork - Expander vendor detail</title>
+<!--
+  ============================================================
+  CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
+  Interactive 3D model built from issued-for-construction P&IDs
+  ------------------------------------------------------------
+  PROGRESS LOG (sheets incorporated so far):
+    - 020185-AE-DW-M2150  T-1521 Demethanizer
+    - 020185-AE-DW-M2145  EX/C-1121 Expander/Compressor + A-1321 cooler
+    - 020185-AE-DW-M2135  V-1421 Cold Separator
+    - 020185-AE-DW-M2200  E-1241 Gas Chiller / V-1443 Refrigerant Reclaimer
+    - 020185-AE-DW-M2165  E-1223/E-1224 Combined Reboiler Exchanger (+ hot oil trim)
+    - 020185-AE-DW-M2155  E-1221/E-1222 Combined Gas/Gas Exchanger + Reflux Condenser
+    - 020185-AE-DW-M2155  V-1422 Demethanizer Surge Tank + A-1322 Product Cooler + pumps
+    - 020185-AE-DW-M2160  NGL Product Booster Pumps P-1619 / P-1620
+    - 020185-AE-DW-M2175  NGL Pipeline Pumps P-1630 / P-1635 (no NGL storage)
+    - 020185-AE-DW-M2610/M2615  Residue Gas Compressors C-6100/6200/6300 (Ariel KBZ/6 · Hyundai 7500 HP motors) + AC coolers
+    - 020185-AE-DW-M2205/M2200/M2210/M2225  Propane refrigeration: V-1441/1442/1444, C-1140/41/42, A-1343A/B/C
+
+  TIED-IN LINES:
+    415-12"  V-1421 vapor -> EX-1121 suction
+    427-14"  EX-1121 discharge -> T-1521 feed
+    444-10"  V-1421 liquid (LCV-1421A) -> T-1521 feed
+    461-12"  E-1241 chilled gas -> V-1421 inlet junction
+
+  OPEN STUBS AWAITING FUTURE P&IDs:
+    404-12" / 408-10" separator feeds, 468-12" chiller gas inlet,
+    601-24" refrig suction (C-1141/C-1140, M2210/M2225),
+    452-18" compressor suction (M2130), 458/418-18" residue (M2500),
+    450/562/420 column feeds (E-1222, W2130), 436/437/439/441 reboiler
+    lines (E-1223/24/25), 434-12" C2 rejection (M2140), 432-6" recovery
+    (W2130), 534-10" equalizing (V-1422, W2155), 518-10" bottoms (W2153),
+    414-8" warm gas to valve skid, refrigerant liquid & hot-gas supplies.
+
+  PSV SET POINTS CAPTURED:
+    PSV-1521  550 psig (PCV-1121A failure)  |  comp. discharge PSV 540 psig
+    (blocked outlet) | V-1443 PSV 230 psig (PCV-1443 failure)
+
+  OPTIONAL LAYERS (checkboxes): Manual valves | Instruments & flow meters |
+    Trees & fence environment.  ENVIRONMENT: gravel pad, perimeter fence,
+    wooded tree line.
+  ============================================================
+-->
+<style>
+  :root{--bg:#0c0f13;--panel:#141920;--panel2:#1a2028;--line:#2c3540;--txt:#e8ecf2;--mut:#9aa6b2;--acc:#8d83f2;--steel:#aab1b9;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 "Segoe UI",system-ui,Arial,sans-serif;}
+  header{padding:18px 22px 10px;border-bottom:1px solid var(--line);}
+  header h1{margin:0;font-size:19px;font-weight:600;letter-spacing:0.3px;}
+  header p{margin:4px 0 0;font-size:12.5px;color:var(--mut);}
+  .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 22px 0;}
+  .bar2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:8px 22px 0;}
+  .bar3{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:8px 22px 10px;font-size:13px;color:var(--mut);}
+  button{font:14px inherit;padding:10px 16px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:9px;cursor:pointer;min-height:40px;touch-action:manipulation;}
+  button:hover{border-color:var(--acc);}
+  #walkbtn{color:var(--acc);font-weight:600;}
+  select{flex:1;min-width:230px;font:15px inherit;padding:10px 10px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;min-height:40px;}
+  label{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px;}
+  #wrap{position:relative;margin:0 22px;}
+  #v3d{width:100%;height:62vh;min-height:420px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0e1116;}
+  .pad{display:none;position:absolute;user-select:none;}
+  #dpad{bottom:14px;left:14px;} #lpad{bottom:14px;right:14px;}
+  .pad .cap{font-size:10px;color:var(--mut);text-align:center;margin-bottom:3px;letter-spacing:1px;}
+  .pad .grid{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px;}
+  .pad button{font-size:15px;padding:0;background:rgba(20,24,30,0.85);border-radius:8px;}
+  #lpad button{color:var(--acc);}
+  #walkhint{display:none;position:absolute;top:12px;left:12px;font-size:12px;color:var(--txt);background:rgba(18,22,28,0.88);padding:6px 10px;border-radius:8px;border:1px solid var(--line);max-width:300px;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 22px 0;font-size:12px;color:var(--mut);}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .sw{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  .swr{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  #panel{margin:12px 22px 26px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;}
+  #ptitle{margin:0 0 6px;font-weight:600;font-size:15px;}
+  #plist{margin:0;padding-left:18px;font-size:13px;line-height:1.75;color:var(--mut);}
+  footer{padding:0 22px 24px;font-size:11.5px;color:#5f6a76;}
+
+#qhd{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.55);}
+#qhdbox{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(700px,95vw);max-height:93vh;overflow:auto;background:#0e1217;border:1px solid #39424d;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.65);color:#dfe6ee;font:13px/1.45 'Segoe UI',system-ui,Arial,sans-serif;}
+#qhd .qtop{display:flex;align-items:center;justify-content:space-between;background:#14181e;border-bottom:3px solid #c0182b;padding:9px 14px;}
+#qhd .qlogo{font-size:24px;font-weight:800;color:#fff;}#qhd .qlogo b{color:#3fb4e6;}
+#qhd .qjc{font-size:12px;color:#cdd5de;text-align:right;line-height:1.15;}
+#qhd .qsub{display:flex;justify-content:space-between;align-items:center;background:#1a212a;border-bottom:1px solid #2c3540;padding:5px 14px;font-size:11px;color:#9aa6b2;gap:8px;}
+#qhd .qsub .ok{color:#5cd07a;font-weight:700;}
+#qhd .qctrl{padding:6px 14px;background:#10151b;border-bottom:1px solid #2c3540;font-size:11.5px;color:#aeb6c2;}
+#qhd .qctrl b{color:#eef2f7;}
+#qhd .qbody{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:13px;}
+#qhd .qcol{display:flex;flex-direction:column;gap:11px;}
+#qhd .qsec{border:1px solid #2c3540;border-radius:7px;overflow:hidden;background:#121821;}
+#qhd .qsec h4{margin:0;padding:5px 10px;background:#1d2835;color:#bcd6ee;font-size:11.5px;font-weight:600;}
+#qhd table{width:100%;border-collapse:collapse;font-size:11.5px;}
+#qhd td,#qhd th{padding:3px 10px;text-align:left;}
+#qhd th{color:#8fa0b2;font-weight:600;font-size:10.5px;}
+#qhd td.v{text-align:right;color:#eef2f7;font-variant-numeric:tabular-nums;}
+#qhd tr+tr td{border-top:1px solid rgba(255,255,255,0.05);}
+#qhd .qbig{font-size:26px;font-weight:700;color:#7fe0ff;text-align:center;padding:4px 6px 8px;}
+#qhd .qrow{display:flex;justify-content:space-between;padding:4px 10px;border-top:1px solid rgba(255,255,255,0.05);}
+#qhd .qrdy{background:#1f3550;color:#7fe0ff;font-weight:700;padding:4px 10px;text-align:right;font-size:11px;}
+#qhd .qfoot{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-top:1px solid #2c3540;background:#14181e;gap:8px;}
+#qhd .qstart{background:#2f7d46;border:1px solid #3fae5f;color:#fff;border-radius:6px;padding:7px 16px;font:600 12px inherit;cursor:pointer;}
+#qhd .qstart.on{background:#9a2b2b;border-color:#c84b4b;}
+#qhd .qx{background:#2a313a;border:1px solid #3a434e;color:#dfe6ee;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit;}
+#qhd .york{font-size:11px;color:#9fb6cc;font-weight:700;letter-spacing:.5px;}#qhd .qnote{font-size:10px;color:#7c8794;font-weight:400;letter-spacing:0;}
+#qhd .qspb{background:#243140;border:1px solid #3a4a5c;color:#cfe6ff;border-radius:4px;width:21px;height:21px;line-height:1;padding:0;cursor:pointer;font:700 13px inherit;vertical-align:middle;}#qhd .qspb:hover{background:#2e4256;}
+#qhd .uchip{flex:1;background:#241f25;border:1px solid #4a3340;color:#caa9b8;border-radius:5px;padding:5px 0;cursor:pointer;font:600 10.5px inherit;}#qhd .uchip.on{background:#1f3a26;border-color:#3fae5f;color:#bff0c9;}
+#acmtc{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.55);}
+#acmtcbox{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(700px,96vw);max-height:92vh;overflow:auto;background:#0c1116;border:1px solid #39424d;border-radius:10px;color:#dbe6ef;font:12.5px/1.4 'Segoe UI',system-ui,Arial,sans-serif;}
+#acmtc .atop{display:flex;justify-content:space-between;background:#10151b;border-bottom:3px solid #2f7d9a;padding:8px 14px;font-weight:700;letter-spacing:.5px;}
+#acmtc .asub{padding:5px 14px;color:#9fb6cc;font-size:11px;border-bottom:1px solid #232c34;}
+#acmtc .arun{color:#7af0a0;font-weight:700;}#acmtc .astop{color:#ff9a9a;font-weight:700;}
+#acmtc .adiag{display:flex;align-items:center;justify-content:center;padding:14px 14px 6px;}
+#acmtc .aexp,#acmtc .acomp{background:#16202a;border:1px solid #3a4a5c;color:#cfe6ff;font-weight:700;padding:16px 22px;}
+#acmtc .aexp{clip-path:polygon(0 24%,100% 0,100% 100%,0 76%);}
+#acmtc .acomp{clip-path:polygon(0 0,100% 24%,100% 76%,0 100%);}
+#acmtc .ashaft{display:flex;flex-direction:column;align-items:center;border-top:2px solid #5b6b7c;border-bottom:2px solid #5b6b7c;padding:8px 30px;margin:0 -1px;}
+#acmtc .arpm{font-size:17px;font-weight:700;color:#7fe0ff;}#acmtc .atag{font-size:10px;color:#8fa0b2;letter-spacing:.5px;}
+#acmtc .actrlbar{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#121821;border-top:1px solid #232c34;border-bottom:1px solid #232c34;flex-wrap:wrap;}
+#acmtc .aspb{background:#243140;border:1px solid #3a4a5c;color:#cfe6ff;border-radius:4px;width:21px;height:21px;line-height:1;padding:0;cursor:pointer;font:700 13px inherit;}#acmtc .aspb:hover{background:#2e4256;}
+#acmtc #aSlider{flex:1;min-width:130px;accent-color:#3fb4e6;cursor:pointer;}
+#acmtc .acols{display:flex;gap:10px;padding:10px 14px;}#acmtc .acol{flex:1;}
+#acmtc .acol h4{margin:0 0 5px;color:#bcd6ee;font-size:12px;border-bottom:1px solid #2a333c;padding-bottom:3px;}
+#acmtc .acol table{width:100%;border-collapse:collapse;font-size:11.5px;}
+#acmtc .acol td{padding:3px 4px;border-top:1px solid rgba(255,255,255,0.05);}
+#acmtc .acol td.v{text-align:right;color:#eef2f7;font-weight:600;white-space:nowrap;}
+#acmtc .afoot{display:flex;align-items:center;gap:8px;padding:9px 14px;border-top:1px solid #2c3540;background:#10151b;color:#9aa6b2;font-size:10.5px;}
+#eqt{display:none;position:fixed;inset:0;z-index:70;background:#0a0d11;color:#d7dee6;font:12px/1.35 'Segoe UI',system-ui,Arial,sans-serif;}
+#eqt .ehead{display:flex;align-items:stretch;background:#cfd3d6;color:#10151b;border-bottom:2px solid #2f7d9a;position:relative;z-index:10;}
+#eqt .elogo{display:flex;flex-direction:column;justify-content:center;align-items:center;background:#fff;padding:4px 12px;font-weight:800;color:#c0392b;font-size:20px;border-right:1px solid #aab;}
+#eqt .elogo small{color:#555;font-size:8px;font-weight:600;}
+#eqt .enav{display:grid;grid-template-columns:repeat(8,1fr);grid-auto-rows:auto;gap:1px;flex:1;padding:2px 3px;background:#aab1b7;}
+#eqt .etab{background:#dfe3e6;border:1px solid #b7bdc2;border-radius:2px;font:600 10px/1.1 inherit;color:#1a2128;cursor:pointer;padding:2px 3px;text-align:center;display:flex;align-items:center;justify-content:center;}
+#eqt .etab:hover{background:#eef1f3;}#eqt .etab.act{background:#2f7d9a;color:#fff;border-color:#246079;}
+#eqt .estat{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:4px 10px;background:#cfd3d6;min-width:150px;}
+#eqt .estat .clk{font-weight:700;font-size:12px;}#eqt .estat .mode{background:#13351d;color:#7af0a0;font-weight:700;padding:1px 6px;border-radius:3px;font-size:10px;text-align:center;}
+#eqt .eclose{background:#c0392b;color:#fff;border:none;font-weight:700;padding:0 14px;cursor:pointer;}
+#eqt .escr{position:absolute;top:110px;bottom:34px;left:0;right:0;overflow:auto;padding:10px 14px;}
+#eqt .etitle{text-align:center;font-weight:700;letter-spacing:1px;color:#bcd6ee;margin:0 0 10px;font-size:14px;}
+#eqt .erow{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:flex-start;}
+#eqt .eb{background:#10151b;border:1px solid #2a333c;border-radius:4px;padding:4px 8px;min-width:104px;}
+#eqt .eb span{display:block;color:#8fa0b2;font-size:9.5px;}#eqt .eb b{color:#5cff8f;font-size:14px;font-family:'Consolas',monospace;}
+#eqt .lp,#eqt .cp{background:#10151b;border:1px solid #2a333c;border-radius:5px;padding:7px 9px;min-width:172px;}
+#eqt .lpt,#eqt .cpt{font-weight:700;color:#cfe0f0;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+#eqt .lpr,#eqt .cpr{font-size:11px;color:#aeb9c4;margin:2px 0;display:flex;align-items:center;gap:5px;}
+#eqt .lpr b,#eqt .cpr b{color:#eef2f7;font-family:'Consolas',monospace;}#eqt .lpr b.pv{color:#5cff8f;}
+#eqt .maut{background:#1f3a26;color:#9ff0b6;border:1px solid #3fae5f;border-radius:3px;padding:1px 7px;cursor:pointer;font-size:10px;font-weight:700;}
+#eqt .mman{background:#3a2f1c;color:#f0d9a9;border:1px solid #c79a3f;border-radius:3px;padding:1px 7px;cursor:pointer;font-size:10px;font-weight:700;}
+#eqt .run{background:#1f3a26;color:#7af0a0;border:1px solid #3fae5f;border-radius:3px;padding:1px 7px;cursor:pointer;font-size:10px;font-weight:700;}
+#eqt .stop{background:#3a1f22;color:#ff9a9a;border:1px solid #c0504a;border-radius:3px;padding:1px 7px;cursor:pointer;font-size:10px;font-weight:700;}
+#eqt button[data-act]{background:#243140;border:1px solid #3a4a5c;color:#cfe6ff;border-radius:3px;min-width:20px;height:19px;line-height:1;padding:0 4px;cursor:pointer;font:700 12px inherit;}
+#eqt button[data-act]:hover{background:#2e4256;}
+#eqt .sect{color:#8fb0cc;font-weight:700;font-size:11px;border-bottom:1px solid #243; margin:6px 0 4px;padding-bottom:2px;letter-spacing:.5px;}
+#eqt .stub{margin:40px auto;max-width:560px;text-align:center;color:#8fa0b2;background:#10151b;border:1px dashed #34404c;border-radius:8px;padding:26px;}
+#eqt .ebar{position:absolute;bottom:0;left:0;right:0;height:34px;background:#14181e;border-top:1px solid #2c3540;display:flex;align-items:center;gap:8px;padding:0 12px;}
+#eqt .ebar .bnr{flex:1;height:18px;background:#000;border:1px solid #333;}
+#eqt .ebar .ack,#eqt .ebar .rst{background:#dfe3e6;color:#10151b;border:none;border-radius:3px;padding:3px 12px;font-weight:700;cursor:pointer;}
+#eqt .ebar .esd{background:#c0392b;color:#fff;border:none;border-radius:3px;padding:3px 14px;font-weight:800;cursor:pointer;}
+#eqt .note{color:#7c8794;font-size:10px;margin-top:6px;}
+#eqt .scen{background:#14110c;border:1px solid #5a4a22;border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:11px;}
+#eqt .scen b{color:#f0d9a9;}
+#eqt .scen button[data-act]{background:#3a2f1c;border:1px solid #c79a3f;color:#f0d9a9;border-radius:4px;height:21px;padding:0 8px;margin:0 3px;cursor:pointer;font:700 10.5px inherit;}
+#eqt .scen button[data-act]:hover{background:#4a3c22;}
+#eqt .scact{margin-top:6px;color:#ffce5c;background:#1c1206;border:1px solid #6a4a1a;border-radius:4px;padding:6px 8px;}
+#eqt .scres{margin-top:6px;border-radius:4px;padding:6px 8px;}
+#eqt .scres.good{background:#10260f;border:1px solid #3fae5f;color:#bff0c9;}
+#eqt .scres.bad{background:#2a1212;border:1px solid #c0504a;color:#ffc0c0;}
+#eqt .scres ul{margin:4px 0 0;padding-left:18px;}#eqt .scres li{margin:1px 0;}
+#eqt .lim{font-size:10px;color:#9aa6b2;border-collapse:collapse;margin-top:4px;}#eqt .lim td,#eqt .lim th{border:1px solid #2a333c;padding:2px 6px;text-align:center;}#eqt .lim th{color:#8fb0cc;}
+#eqt .mwrap{margin-bottom:8px;}
+#eqt .mlegend{font-size:10px;color:#8fa0b2;margin:2px 0 6px;}
+#eqt svg text{font-family:'Segoe UI',Arial,sans-serif;}
+#eqt .pop{position:absolute;inset:6px;background:#0d1116;border:2px solid #2f7d9a;border-radius:8px;z-index:6;overflow:auto;box-shadow:0 12px 44px rgba(0,0,0,.6);}
+#eqt .poph{display:flex;justify-content:space-between;align-items:center;background:#16202a;padding:8px 14px;font-weight:700;color:#bcd6ee;border-bottom:1px solid #2a333c;position:sticky;top:0;}
+#eqt .poph button{background:#c0392b;color:#fff;border:none;border-radius:4px;padding:3px 14px;cursor:pointer;font-weight:700;}
+#eqt .popb{display:flex;flex-wrap:wrap;gap:14px;padding:12px 14px;}
+#eqt .poc{flex:1;min-width:205px;}
+#eqt .por{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1c242c;padding:3px 4px;font-size:11px;color:#aeb9c4;gap:8px;}
+#eqt .por b{font-family:Consolas,monospace;color:#5cff8f;white-space:nowrap;}
+#eqt .por.wn b{color:#ffce5c;}#eqt .por.al b{color:#ff7a7a;}
+#eqt .pott{color:#8fb0cc;font-weight:700;border-bottom:1px solid #2a3b30;margin-bottom:4px;}
+#eqt .popf{padding:10px 14px;border-top:1px solid #2a333c;background:#10151b;}
+#eqt .pol{margin:5px 0;font-size:11px;color:#cfe0f0;}
+#eqt .pop button[data-act]{background:#243140;border:1px solid #3a4a5c;color:#cfe6ff;border-radius:3px;padding:2px 9px;cursor:pointer;font:700 11px inherit;margin:0 2px;}
+#eqt .pop button.dng{background:#3a1f22;border-color:#c0504a;color:#ff9a9a;}
+#ctrl{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.55);}#ctrlbox{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(720px,96vw);max-height:92vh;overflow:auto;background:#0e1217;border:1px solid #39424d;border-radius:10px;color:#dfe6ee;font:12.5px/1.4 'Segoe UI',system-ui,Arial,sans-serif;}#ctrl .ctop{display:flex;justify-content:space-between;align-items:center;background:#14181e;border-bottom:3px solid #2f7d9a;padding:9px 14px;font-size:15px;font-weight:700;}#ctrl .csec{padding:10px 13px;}#ctrl h4{margin:0 0 6px;color:#bcd6ee;font-size:12px;}#ctrl table{width:100%;border-collapse:collapse;font-size:11.5px;}#ctrl th{color:#8fa0b2;font-weight:600;text-align:left;padding:3px 6px;font-size:10.5px;}#ctrl td{padding:5px 6px;border-top:1px solid rgba(255,255,255,0.06);vertical-align:middle;}#ctrl td b{color:#7fe0ff;}#ctrl .obar{display:inline-block;width:54px;height:8px;background:#1c2530;border:1px solid #2c3540;border-radius:3px;vertical-align:middle;overflow:hidden;margin-right:5px;}#ctrl .obar i{display:block;height:100%;background:#3fb4e6;width:0;}#ctrl .spb{background:#243140;border:1px solid #3a4a5c;color:#cfe6ff;border-radius:4px;width:19px;height:19px;line-height:1;padding:0;cursor:pointer;font:700 12px inherit;}#ctrl .spb:hover{background:#2e4256;}#ctrl .modebtn{border-radius:5px;padding:3px 9px;cursor:pointer;font:700 10.5px inherit;border:1px solid;}#ctrl .modebtn.auto{background:#1f3a26;border-color:#3fae5f;color:#bff0c9;}#ctrl .modebtn.man{background:#3a2f1c;border-color:#c79a3f;color:#f0d9a9;}#ctrl .cfoot{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid #2c3540;background:#14181e;color:#9aa6b2;font-size:10.5px;gap:8px;}
+
+/* ===== EQT light HMI theme (match real control-room screens) ===== */
+#eqt{background:#c7cacc;color:#101418;}
+#eqt .escr{background:#ffffff;}
+#eqt .etitle{color:#101418;text-decoration:underline;}
+#eqt .eb{background:#e9ebec;border:1px solid #9aa0a4;border-radius:2px;padding:3px 6px;}
+#eqt .eb span{color:#26303a;font-size:9px;}
+#eqt .eb b{display:inline-block;background:#0a0d10;color:#22e34a;font-family:'Consolas',monospace;padding:1px 6px;border-radius:2px;font-size:13px;margin-top:1px;}
+#eqt .lp,#eqt .cp{background:#eef0f1;border:1px solid #aab0b4;}
+#eqt .lpt,#eqt .cpt{color:#10151b;}
+#eqt .lpr,#eqt .cpr{color:#26303a;}
+#eqt .lpr b,#eqt .cpr b{color:#101418;}
+#eqt .lpr b.pv,#eqt .cpr b.pv{background:#0a0d10;color:#22e34a;padding:0 5px;border-radius:2px;}
+#eqt button[data-act]{background:#dfe3e6;border:1px solid #9aa0a4;color:#10151b;}
+#eqt button[data-act]:hover{background:#eef1f3;}
+#eqt .run{background:#1f7a3a;color:#fff;border-color:#15602c;}
+#eqt .stop{background:#c0392b;color:#fff;border-color:#9a2b20;}
+#eqt .maut{background:#1f7a3a;color:#fff;border-color:#15602c;}
+#eqt .mman{background:#c8920f;color:#fff;border-color:#a07408;}
+#eqt .sect{color:#1a4a6b;border-bottom:1px solid #c2c8cc;}
+#eqt .stub{background:#eef0f1;border:1px dashed #aab0b4;color:#3a444c;}
+#eqt .note{color:#46505a;}
+#eqt .mlegend{color:#46505a;}
+#eqt .ebar{background:#cfd3d6;border-top:1px solid #9aa0a4;}
+#eqt .ebar>span{color:#10151b !important;}
+#eqt .ebar .bnr{background:#0a0d10;border:1px solid #555;}
+#eqt .scen{background:#eef0f1;border:1px solid #c2a85a;}
+#eqt .scen b{color:#7a5a10;}
+#eqt .scen button[data-act]{background:#efe7cc;border:1px solid #c2a85a;color:#5a4410;}
+#eqt .scen button[data-act]:hover{background:#f6f0dc;}
+#eqt .scact{background:#fff6e0;border:1px solid #d4b25a;color:#7a5810;}
+#eqt .scres.good{background:#e4f6e6;border:1px solid #2f9a4a;color:#1a5a28;}
+#eqt .scres.bad{background:#f9e4e4;border:1px solid #c0504a;color:#8a2020;}
+#eqt .lim{color:#26303a;}#eqt .lim td,#eqt .lim th{border:1px solid #c2c8cc;}#eqt .lim th{color:#1a4a6b;}
+#eqt .pop{background:#e9ebec;border:2px solid #6a7782;}
+#eqt .poph{background:#cfd3d6;color:#101418;border-bottom:1px solid #9aa0a4;}
+#eqt .por{color:#26303a;border-bottom:1px solid #cfd3d6;}
+#eqt .por b{background:#0a0d10;color:#22e34a;padding:0 5px;border-radius:2px;}
+#eqt .por.wn b{color:#ffcf5c;}#eqt .por.al b{color:#ff7a7a;}
+#eqt .pott{color:#1a4a6b;border-bottom:1px solid #c2c8cc;}
+#eqt .popf{background:#dfe3e6;border-top:1px solid #9aa0a4;}
+#eqt .pol{color:#101418;}
+#eqt .pop button[data-act]{background:#dfe3e6;border:1px solid #9aa0a4;color:#10151b;}
+#eqt .pop button.dng{background:#c0392b;border-color:#9a2b20;color:#fff;}
+#eqt .estat span[style]{color:#26303a !important;}
+
+/* === 12CJ Plant Equipment Startup / Shutdown Training Guide === */
+#startupguide{display:none;position:fixed;inset:0;z-index:96;background:rgba(4,8,12,.78);backdrop-filter:blur(2px);}
+#startupguidebox{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:min(1180px,96vw);height:min(790px,90vh);background:#0d141c;border:1px solid #35506a;border-radius:10px;box-shadow:0 16px 60px rgba(0,0,0,.65);color:#dce7f2;overflow:hidden;font-family:Arial,sans-serif;}
+#startupguide .sghead{display:flex;align-items:center;gap:12px;padding:11px 14px;background:#102333;border-bottom:2px solid #2a90c8;font-weight:800;}
+#startupguide .sghead .sgtitle{font-size:16px;letter-spacing:.2px;}
+#startupguide .sghead .sgbadge{font:10px Consolas,monospace;color:#ffde8a;background:#3a2f12;border:1px solid #7a6430;border-radius:999px;padding:3px 8px;}
+#startupguide .sgclose{margin-left:auto;background:#8d2c24;color:#fff;border:1px solid #c84b3f;border-radius:5px;padding:7px 15px;cursor:pointer;font-weight:700;}
+#startupguide .sgwarn{padding:8px 14px;background:#2b2411;border-bottom:1px solid #66531f;color:#f6dda0;font-size:11px;line-height:1.4;}
+#startupguide .sgbody{display:grid;grid-template-columns:255px 1fr;height:calc(100% - 89px);min-height:0;}
+#startupguide .sgnav{border-right:1px solid #253747;background:#0a1016;padding:10px;overflow:auto;}
+#startupguide .sgnav button{display:block;width:100%;text-align:left;margin:0 0 7px;padding:10px 11px;background:#111c27;color:#b9cbe0;border:1px solid #26394c;border-radius:6px;cursor:pointer;font-size:12px;}
+#startupguide .sgnav button.active{background:#17354b;border-color:#3f95c5;color:#fff;font-weight:800;}
+#startupguide .sgcontent{overflow:auto;padding:15px 18px 24px;}
+#startupguide .sgcontent h2{margin:0 0 4px;color:#e9f5ff;font-size:21px;}
+#startupguide .sgsource{font:10px Consolas,monospace;color:#8eb5cf;margin-bottom:12px;}
+#startupguide .sgstatus{display:inline-block;border-radius:4px;padding:3px 7px;margin-left:6px;font-weight:800;}
+#startupguide .verified{background:#153d29;color:#9ff2b8;border:1px solid #2c7850;}
+#startupguide .observed{background:#3b3318;color:#ffe29a;border:1px solid #7e6b2b;}
+#startupguide .pending{background:#3b1f1f;color:#ffb4a8;border:1px solid #7d3932;}
+#startupguide .sgsection{background:#101923;border:1px solid #253848;border-radius:7px;margin:10px 0;padding:11px 13px;}
+#startupguide .sgsection h3{font-size:13px;color:#79c7f4;margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px;}
+#startupguide .sgsection ol,#startupguide .sgsection ul{margin:5px 0 3px 19px;padding:0;}
+#startupguide .sgsection li{margin:5px 0;line-height:1.42;font-size:12px;color:#d7e1ea;}
+#startupguide .sgcheck{color:#92d7ff;font-weight:700;}
+#startupguide .sgstop{color:#ffb6a6;font-weight:700;}
+#startupguide .sgnote{font-size:11px;color:#91a5b8;line-height:1.45;margin-top:7px;}
+#startupguide .sgnoact{padding:8px 10px;background:#102815;border:1px solid #2d6c38;border-radius:6px;color:#b8efc1;font-size:11px;font-weight:700;margin:8px 0 12px;}
+
+</style>
+
+<style id="startupTrainingWideLayout12CY">
+#startupguidebox{left:1vw;right:1vw;top:1.5vh;bottom:1.5vh;transform:none;width:auto;height:auto;max-width:none;max-height:none;}
+#startupguide .sgbody{grid-template-columns:190px 1fr;height:calc(100% - 89px);}
+#startupguide .sgnav{padding:7px;}
+#startupguide .sgnav button{padding:8px 9px;margin-bottom:5px;font-size:11px;}
+#startupguide .sgcontent{padding:9px 11px 12px;overflow:auto;}
+#startupguide .sgcontent h2{font-size:18px;margin-bottom:2px;}
+#startupguide .sgsource{margin-bottom:6px;}
+#startupguide .sgnoact{margin:5px 0 7px;padding:6px 8px;}
+#startupguide .extrainworkspace{display:grid;grid-template-columns:minmax(245px,300px) minmax(0,1fr);gap:10px;align-items:start;}
+#startupguide .extraincontrols{position:sticky;top:0;align-self:start;max-height:calc(100vh - 145px);overflow:auto;padding-right:2px;}
+#startupguide .extrainmain{min-width:0;}
+#startupguide .exstepbar{grid-template-columns:repeat(3,1fr);gap:4px;margin:5px 0 7px;}
+#startupguide .exstepbar div{padding:4px 3px;font-size:9px;}
+#startupguide .exactionbar{margin:5px 0;gap:5px;}
+#startupguide .exactionbar button{padding:6px 7px;font-size:10px;}
+#startupguide .exteach{margin:5px 0;padding:7px 8px;}
+#startupguide .exsim{margin:0 0 8px;}
+#startupguide .exstage{min-height:440px;}
+#startupguide .sgsection.exsequence{margin:7px 0 0;padding:7px 9px;}
+#startupguide .sgsection.exsequence h3{margin-bottom:4px;}
+#startupguide .sgsection.exsequence ol{columns:2;column-gap:24px;margin-top:3px;}
+#startupguide .sgsection.exsequence li{break-inside:avoid;font-size:10.5px;margin:3px 0;line-height:1.3;}
+#startupguide .sgsection.excomplete{margin:7px 0 0;padding:7px 9px;}
+/* 12CZ training viewport fix: keep both trainer columns independently scrollable and keep F keys reachable. */
+#startupguide .sgcontent{min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;}
+#startupguide .extrainworkspace{height:calc(100vh - 190px);min-height:0;align-items:stretch;}
+#startupguide .extraincontrols{position:relative;top:auto;max-height:none;height:100%;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;}
+#startupguide .extrainmain{height:100%;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;padding-bottom:18px;}
+#startupguide .exstage{min-height:430px;}
+#startupguide .exscreen{display:flex;flex-direction:column;min-height:0;padding-bottom:8px;}
+#startupguide .exfkeys{position:sticky;left:auto;right:auto;bottom:0;margin-top:auto;padding:7px 4px 3px;background:linear-gradient(to bottom,rgba(172,178,182,.9),#acb2b6 32%);z-index:4;}
+#startupguide .exkeys{overflow-y:auto;justify-content:flex-start;scrollbar-width:thin;}
+#startupguide .exkeys button{flex:0 0 auto;}
+@media(max-width:1000px){#startupguide .extrainworkspace{grid-template-columns:1fr;}#startupguide .extraincontrols{position:relative;max-height:none;}#startupguide .sgbody{grid-template-columns:150px 1fr;}#startupguide .sgsection.exsequence ol{columns:1;}}
+</style>
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style id="questionsAsked12FV">
+.qa-panel{font:13px/1.55 "Segoe UI",Arial,sans-serif;color:#dce6ee;min-width:0;}
+.qa-panel h2{margin:0 0 5px;font-size:23px;color:#e9f5ff;}
+.qa-meta{display:block;color:#91a7ba;font-size:11px;margin:4px 0 10px;}
+.qa-notice,.qa-chat-notice{padding:10px 12px;border:1px solid #816a32;border-radius:6px;background:#2b2515;color:#f4dfab;font-size:11px;margin:9px 0;}
+.qa-chat-notice{background:#123126;border-color:#368264;color:#c8f0dd;}
+.qa-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;}
+.qa-actions button,.qa-panel button,.qa-import{min-height:32px;padding:6px 10px;border:1px solid #3b5b72;border-radius:5px;background:#1a3041;color:#d3e8f6;font:600 11px "Segoe UI",Arial,sans-serif;cursor:pointer;}
+.qa-import{display:inline-flex;align-items:center;}
+#qaArchiveSearch{width:100%;padding:9px 12px;margin:8px 0 14px;background:#08131e;border:1px solid #3b5b72;border-radius:5px;color:#e7f3ff;}
+.qa-entry{border:1px solid #2c4559;border-radius:7px;background:#111e2a;margin:9px 0;overflow:hidden;}
+.qa-entry>summary{padding:12px 14px;cursor:pointer;font-weight:650;color:#c9e8ff;}
+.qa-entry>summary .qa-meta{margin:4px 0 0;font-weight:400;}
+.qa-record{padding:12px 2px;overflow-wrap:anywhere;}
+.qa-entry .qa-record{padding:2px 14px 14px;}
+.qa-record h3{font-size:17px;line-height:1.4;color:#e4f4ff;margin:8px 0;}
+.qa-answer{color:#dce7ef;line-height:1.6;font-size:13px;}
+.qa-answer h2,.qa-answer h3,.qa-answer h4,.qa-answer h5{color:#a7d8f8;line-height:1.35;margin:14px 0 8px;}
+.qa-answer h2{font-size:19px;}.qa-answer h3{font-size:17px;}.qa-answer h4,.qa-answer h5{font-size:14px;}
+.qa-answer hr{border:0;border-top:1px solid #345064;margin:15px 0;}
+.qa-gap{height:8px;}.qa-bullet{padding-left:13px;margin:3px 0;}.qa-line{white-space:pre-wrap;}
+.qa-tablewrap{overflow-x:auto;max-width:100%;margin:10px 0;}
+.qa-table{border-collapse:collapse;font-size:11.5px;min-width:100%;}
+.qa-table td{padding:7px 9px;border:1px solid #365065;vertical-align:top;}
+.qa-table tr:first-child{background:#203849;font-weight:650;}
+.qa-code{white-space:pre-wrap;overflow-wrap:anywhere;background:#07121d;border:1px solid #2a475d;padding:10px;border-radius:5px;font-size:11px;}
+</style>
+
+<style id="expander-control-12fx">
+#eqt .ex-control12fx{margin:10px 14px;border:1px solid #738c9e;border-radius:6px;background:#f4f7f9;color:#172b3c;padding:12px;}
+#eqt .ex-control-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;border-bottom:1px solid #adbecb;padding-bottom:8px;}
+#eqt .ex-control-top span{font-weight:700;color:#15583a;}
+#eqt .ex-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0;font-size:12px;}
+#eqt .ex-control-grid>div{padding:10px;border:1px solid #b4c6d3;border-radius:4px;background:white;}
+#eqt .ex-control-grid label{display:flex;color:#263b4b;font-size:12px;margin:8px 0;}
+#eqt .ex-control-grid input[type=range]{width:100%;min-height:28px;cursor:pointer;accent-color:#2479a9;}
+#eqt .ex-control-grid input:disabled{opacity:.4;cursor:not-allowed;}
+#eqt .ex-control-buttons{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0;}
+#eqt .ex-control-buttons button[data-act]{height:auto;min-height:30px;padding:4px 8px;font-size:11px;}
+#eqt .ex-control-scale{display:flex;justify-content:space-between;font-size:10px;color:#3f5b6c;}
+#eqt .ex-control-values{font:12px/1.7 Consolas,monospace;}
+#eqt .ex-control-message{padding:8px;background:#e5edf4;border-left:3px solid #448ab9;font-size:12px;margin:8px 0;}
+#eqt .ex-control-sequence{font-size:11px;line-height:1.5;}
+#eqt .ex-control-caution{font-size:10px;color:#695122;margin-top:7px;}
+@media(max-width:700px){#eqt .ex-control-grid{grid-template-columns:1fr;}}
+</style>
+
+<style id="plate-audit-style12kb">.plate-audit12kb{font:14px/1.5 'Segoe UI',Arial,sans-serif;color:#233744;background:#f7fafb;padding:22px;box-sizing:border-box}.plate-audit12kb *{box-sizing:border-box}.plate-audit12kb h2{font-size:25px;margin:0 0 8px;color:#17364a}.plate-audit12kb p{margin:7px 0;overflow-wrap:anywhere}.plate-audit12kb .audit-lead{font-size:15px}.plate-audit12kb .audit-warning{background:#fff4d8;border-left:4px solid #b08029;padding:12px 16px;margin:16px 0}.plate-audit12kb .audit-warning p{font-size:12px}.plate-audit12kb .audit-controls{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.plate-audit12kb label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#23475b}.plate-audit12kb input,.plate-audit12kb select{min-width:165px;max-width:100%;padding:9px;border:1px solid #9eb4c2;border-radius:5px;background:#fff;color:#142f40;font:13px inherit}.plate-audit12kb input[type=search]{width:310px}.plate-audit12kb input[type=checkbox]{min-width:20px;width:20px}.plate-audit12kb button{background:#e5eef4;color:#20445b;border:1px solid #819fad;border-radius:5px;padding:7px 11px;min-height:32px;font:12px 'Segoe UI',Arial,sans-serif;cursor:pointer}.plate-audit12kb button:disabled{opacity:.4}.plate-audit12kb .audit-actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.plate-audit12kb .audit-count{font-weight:650}.plate-audit12kb .audit-tablewrap{overflow-x:auto}.plate-audit12kb table{border-collapse:collapse;table-layout:fixed;width:100%;min-width:1040px;background:white}.plate-audit12kb th{background:#21465e;color:#fff;text-align:left;padding:11px 10px;font-size:12px}.plate-audit12kb td{vertical-align:top;border:1px solid #d0dce3;padding:10px;font-size:12px;overflow-wrap:anywhere}.plate-audit12kb th:nth-child(1){width:20%}.plate-audit12kb th:nth-child(2){width:18%}.plate-audit12kb th:nth-child(3){width:20%}.plate-audit12kb th:nth-child(4){width:27%}.plate-audit12kb th:nth-child(5){width:15%}.plate-audit12kb details{margin:7px 0}.plate-audit12kb summary{cursor:pointer;font-weight:650}.plate-audit12kb .audit-warntext{color:#8f4820}.plate-audit12kb .audit-small,.plate-audit12kb small{font-size:11px;color:#537082}.plate-audit12kb .audit-local{color:#345b49}.plate-note12kb{padding:12px 15px;border:1px solid #637f90;background:#122938;color:#e5edf3;border-radius:6px;margin:13px 0;font:12px/1.6 'Segoe UI',Arial,sans-serif}.plate-note12kb h3{font-size:15px;margin:0 0 5px}.plate-note12kb button{font-size:12px;padding:6px 10px;min-height:30px}.plate-note12kb p{margin:6px 0}@media print{.plate-audit12kb{padding:0;font-size:10px}.plate-audit12kb .audit-controls,.plate-audit12kb .audit-actions,.plate-audit12kb button{display:none}.plate-audit12kb table{min-width:0}.plate-audit12kb td{font-size:9px}.plate-audit12kb th{font-size:9px}.plate-audit12kb tr{break-inside:avoid}.plate-audit12kb .audit-tablewrap{overflow:visible}.plate-audit12kb thead{display:table-header-group}}
+@media print{body:has(#plateAuditDialog12KB)>*:not(#plateAuditDialog12KB){display:none!important}#plateAuditDialog12KB{position:static!important;inset:auto!important;display:block!important;border:0!important;box-shadow:none!important;height:auto!important;max-height:none!important}#plateAuditDialog12KB>div:first-child{display:none!important}#plateAuditDialog12KB>div:last-child{overflow:visible!important}#plateAuditDialog12KB .audit-tablewrap{overflow:visible!important}}
+</style>
+</head>
+<body>
+<!-- 12JK: source-supported NGL pig-launcher station. Existing controls and12JJ flow-popup fix preserved. -->
+<!-- 12JJ: repaired flow popup application scope; separate exchanger circuits and qualified phase changes. No operating algorithm or physical piping changed. Backend 12JD unchanged. -->
+<!-- 12JI: retired V-1441 remnant removed; researched cold-surface frost and flow/pilot-linked flare visuals. Existing 12JD backend unchanged. -->
+<!-- 12JH: source-preserving in-pipe phase visual + schematic flare rack alignment. Backend remains 12JD. -->
+<div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather\u2026</div>
+<header>
+  <h1>Clear Fork / Cryogenic Unit #1 - 12KQ</h1>
+  <p>Sheets in model: M2150 (T-1521) · M2145 (EX/C-1121, A-1321) · M2135 (V-1421) · M2200 (E-1241, V-1443) · M2165 (reboiler) · M2155 (gas/gas reflux, surge tank) · M2160 (booster pumps) · M2175 (pipeline pumps) · M2610/M2615 (residue compressors) · M2110 (V-1413/14/15 dehy adsorbers) · M2105 (F-1412 coalescer, F-1416/17 dust filters) · refrigeration (V-1441/1442/1444, C-1140/41/42, A-1343). Click any component for line numbers, service and set points. Toggle manual valves, instruments/flow meters, and the site environment below.</p>
+</header>
+<div class="bar">
+  <button id="walkbtn">&#9658; Walk mode</button>
+  <button id="rodbtn">Fishing pole</button>
+  <button id="bowbtn">Bow</button>
+  <button id="flowpathbtn" data-act="flowpath" title="Toggle animated gas flow path through plant">&#9654; Gas Flow</button>
+  <button id="pbbtn">Records</button>
+  <button id="trophybtn">Trophy Log</button>
+  <button data-v="ov">Overview</button>
+  <button data-v="plot">Plot plan</button>
+  <button id="qhdbtn">Quantum HD panel</button>
+  <button id="ctrlbtn">Controls &amp; indicators</button>
+  <button id="acmtcbtn">Expander controller (ACMTC 1039)</button>
+  <button id="eqtbtn" style="background:#ffd54a;color:#151515;border-color:#c89b00;font-weight:800;">EQT Control Board</button>
+
+  <button id="startupguidebtn" style="background:#183b32;color:#c7ffe9;border-color:#3d806c;font-weight:800;">🧰 Equipment Start/Stop Training</button>
+  <button id="libbtn">📚 Reference Library</button>
+  <button id="jumpbtn" style="background:#1c3a5c;color:#bfe0ff;border-color:#3a6a9c;font-weight:700;">🗺️ Quick Jump</button>
+  <button id="quizbtn" style="background:#3a1c5c;color:#e0bfff;border-color:#6a3a9c;font-weight:700;">🧠 Pop Quiz</button>
+  <button id="officialtestbtn" style="background:#5c3a1c;color:#ffd9bf;border-color:#9c6a3a;font-weight:700;">📋 Official Test</button>
+  <button id="c2calcbtn" style="background:#1c5c3a;color:#bfffd9;border-color:#3a9c6a;font-weight:700;">🧮 C2 Calculator</button>
+  <button id="cmdcenterbtn" style="background:#1c3a5c;color:#bfe0ff;border-color:#3a6a9c;font-weight:700;">🚦 Command Center</button>
+  <button id="askryanbtn" style="background:#1c3a2c;color:#bfe6cf;border-color:#3a6a4a;font-weight:700;margin-left:6px;">🙋 Ask Ryan</button>
+  <button id="cfWeatherToggle" style="background:#3a3018;color:#f0d99a;border-color:#7a6a3a;font-weight:700;">Weathering: ON</button>
+  <button id="cfOpenSecond" style="background:#1c3a3a;color:#bfffff;border-color:#3a7a7a;font-weight:700;">🖥️ Open on 2nd Screen</button>
+  <button id="cfMaintAgingToggle" style="background:#3a1c1c;color:#ffbfa0;border-color:#7a3a2a;font-weight:700;">Maintenance Aging: OFF</button>
+  <button id="cfOutagesBtn" style="display:none;background:#3a2a10;color:#ffd280;border-color:#7a5a20;font-weight:700;">🛠️ Outages</button>
+  <button id="cfLiveBtn" style="background:#1c3a1c;color:#bfffbf;border-color:#3a7a3a;font-weight:700;">▶️ LIVE</button>
+  <button id="cfSpeedBtn" style="background:#1c3a3a;color:#bfffff;border-color:#3a7a7a;font-weight:700;">⏩ 1x REAL TIME</button>
+</div>
+<div class="bar2">
+  <label for="finder">Find</label>
+  <select id="finder">
+    <option value="">&mdash; fly to a tag or line &mdash;</option>
+    <optgroup label="Equipment">
+      <option value="column">T-1521 demethanizer</option>
+      <option value="v1421">V-1421 cold separator</option>
+      <option value="e1241">E-1241 gas chiller</option>
+      <option value="v1443">V-1443 refrigerant reclaimer</option>
+      <option value="exc">EX/C-1121 expander/compressor</option>
+      <option value="ex">EX-1121 turboexpander</option>
+      <option value="c">C-1121 booster compressor</option>
+      <option value="a1321">A-1321 discharge cooler</option>
+      <option value="lube">Lube oil console</option>
+      <option value="e1224">E-1223/24 combined reboiler</option>
+      <option value="hotoil">Hot oil trim reboiler</option>
+      <option value="rebskid">Reboiler exchanger skid</option>
+      <option value="e1222">E-1221/22 gas/gas reflux exchanger</option>
+      <option value="f1412">F-1412 dehydration inlet coalescer (M2105)</option>
+      <option value="f1416">F-1416 / F-1417 dehydration dust filters (M2105)</option>
+      <option value="dustout">401-14&#8243; cryo inlet gas / 60-40 split</option>
+      <option value="v1413">V-1413 dehydration adsorber (M2110)</option>
+      <option value="v1414">V-1414 dehydration adsorber (M2110)</option>
+      <option value="v1415">V-1415 dehydration adsorber (M2110)</option>
+      <option value="v1422">V-1422 demethanizer surge tank</option>
+      <option value="a1322">A-1322 product cooler</option>
+      <option value="p1630">P-1630 / P-1635 NGL pipeline pumps (M2175)</option>
+      <option value="c6100">C-6100 residue gas compressor #1</option>
+      <option value="c4100">C-4100 / C-4200 inlet gas compressors</option>
+      <option value="v1040sep">V-1040 vortex separator</option>
+      <option value="c6200">C-6200 residue gas compressor #2</option>
+      <option value="c6300">C-6300 residue gas compressor #3</option>
+      <option value="mot6100">C-6100 drive motor &#8212; Hyundai 7500 HP</option>
+      <option value="mot6200">C-6200 drive motor (Hyundai 7500 HP)</option>
+      <option value="mot6300">C-6300 drive motor (Hyundai 7500 HP)</option>
+      <option value="acc6100">AC-6101/6201/6301 residue coolers</option>
+      <option value="v1441">V-1441 refrigerant suction scrubber</option>
+      <option value="v1444">V-1444 refrigerant accumulator</option>
+      <option value="v1442">V-1442 refrigerant economizer</option>
+      <option value="c1140">C-1140 / 1141 / 1142 Frick refrig compressors</option>
+      <option value="a1343">A-1343A/B/C refrigerant condensers</option>
+      <option value="p1619">P-1619 NGL booster pump</option>
+      <option value="p1620">P-1620 NGL booster pump</option>
+    </optgroup>
+    <optgroup label="Relief &amp; control valves">
+      <option value="psv">PSV-1521 &mdash; 550 psig</option>
+      <option value="psvC">Comp discharge PSV &mdash; 540 psig</option>
+      <option value="psvV">V-1443 PSV &mdash; 230 psig</option>
+      <option value="pdv">PDV-1521 vent</option>
+      <option value="jt">PCV-1121A J-T valve</option>
+      <option value="lv">LV-1521 (FC)</option>
+      <option value="lcvA">LCV-1421A C2 recovery</option>
+      <option value="lcvB">LCV-1421B recovery</option>
+      <option value="warm">TCV-1421 cold spin</option>
+      <option value="refl">Refrig level valve</option>
+      <option value="hvr">Hot vapor recycle</option>
+      <option value="cbyp">C-1121 bypass</option>
+      <option value="as">Anti-surge FV</option>
+    </optgroup>
+    <optgroup label="Lines">
+      <option value="f461">461-12&#8243; chiller &#8594; cold sep</option>
+      <option value="f468">468-12&#8243; inlet gas &#8594; E-1241</option>
+      <option value="e1225">440-14&#8243; &#8594; E-1125 (open)</option>
+      <option value="f406">406-10&#8243; inlet gas (open)</option>
+      <option value="f518">518-10&#8243; bottoms &#8594; surge tank</option>
+      <option value="f1260">1260-8&#8243; &#8594; sales pipeline</option>
+      <option value="f521">521-10&#8243; booster suction (from V-1422)</option>
+      <option value="f533">532/533-10&#8243; booster discharge &#8594; pipeline pumps</option>
+      <option value="rcsuct">Residue compressor suction (from A-1321)</option>
+      <option value="rcdis">Residue gas discharge &#8594; sales pipeline</option>
+      <option value="rsuct">Refrigerant suction (propane vapor)</option>
+      <option value="rdis">Refrigerant discharge / condensers</option>
+      <option value="rliq">Liquid refrigerant &#8594; accumulator/economizer</option>
+      <option value="fcv1422">FCV-1422 recycle &#8594; surge tank</option>
+      <option value="sA">Residue gas &#8594; compressor</option>
+      <option value="sB">RSV pass &#8594; tower (450)</option>
+      <option value="sC">Dust-filter gas &#8594; gas/gas</option>
+      <option value="sD">Reflux feed (bypass expander)</option>
+      <option value="suct601">601-24&#8243; refrig suction (open)</option>
+      <option value="in415">415-12&#8243; vapor &#8594; EX-1121</option>
+      <option value="f444">444-10&#8243; liquid &#8594; T-1521</option>
+      <option value="f427">427-14&#8243; expander discharge</option>
+      <option value="vliq">430/431 liquid header</option>
+      <option value="rej">434-12&#8243; C2 rejection (open)</option>
+      <option value="f411">411-16&#8243; separator inlet</option>
+      <option value="f404">404-12&#8243; (open)</option>
+      <option value="f408">408-10&#8243; inlet gas &#8594; reboiler</option>
+      <option value="ovhd">Overhead vapor</option>
+      <option value="flare">1016-12&#8243; flare header</option>
+      <option value="f450">450-18&#8243; RSV &#8594; tower (2nd nozzle)</option>
+      <option value="f562">562-8&#8243; reflux &#8594; tower (3rd nozzle)</option>
+      <option value="f436">436-12&#8243; side draw &#8594; E-1224</option>
+      <option value="f437">437-14&#8243; &#8592; E-1224</option>
+      <option value="f439">439-12&#8243; &#8592; E-1223 (free drain)</option>
+      <option value="f441">440-14&#8243; &#8594; E-1125</option>
+      <option value="eq">534-10&#8243; equalizing</option>
+      <option value="bot">504/518-10&#8243; bottoms</option>
+      <option value="dry">590-1&#8243; dryout</option>
+      <option value="in452">452-18&#8243; suction (open)</option>
+      <option value="out458">458/418-18&#8243; residue (open)</option>
+      <option value="seal">475-3&#8243; seal gas</option>
+    </optgroup>
+  </select>
+</div>
+<div class="bar3">
+  <label><input type="checkbox" id="lblchk" style="width:auto;"> All labels</label>
+  <label><input type="checkbox" id="mvchk" checked style="width:auto;"> Manual valves</label>
+  <label><input type="checkbox" id="instchk" checked style="width:auto;"> Instruments &amp; flow meters</label>
+  <label><input type="checkbox" id="flowchk" style="width:auto;"> Compressor flow path</label>
+  <label><input type="checkbox" id="envchk" checked style="width:auto;"> Trees &amp; fence</label>
+  <label><input type="checkbox" id="schemchk" style="width:auto;"> Schematic (hide frames &amp; detail)</label>
+  <label><input type="checkbox" id="rackchk" style="width:auto;"> Pipe rack (optional)</label>
+  <label><input type="checkbox" id="plotchk" style="width:auto;"> Site plot plan (Job 50373)</label>
+</div>
+<div id="wrap">
+  <div id="v3d"></div>
+<div id="fishpanel" style="display:none;position:absolute;top:62px;right:14px;z-index:30;background:rgba(12,18,26,0.95);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--txt);max-width:225px;">
+  <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#a0c8f8;border-bottom:1px solid #1e2a3a;padding-bottom:5px;">&#127907; Fishing Setup</div>
+  <div style="margin-bottom:8px;">
+    <div style="font-weight:600;margin-bottom:5px;font-size:12px;">Bait &amp; Lure</div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <button class="lurebtn" data-lure="ys" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ffd23f;margin-right:7px;vertical-align:middle;"></span>Yellow Spinner</button>
+      <button class="lurebtn" data-lure="rs" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e24b4a;margin-right:7px;vertical-align:middle;"></span>Red Spinner</button>
+      <button class="lurebtn" data-lure="bs" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#378add;margin-right:7px;vertical-align:middle;"></span>Blue Spinner</button>
+      <button class="lurebtn" data-lure="wm" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#b07a43;margin-right:7px;vertical-align:middle;"></span>Live Nightcrawler</button>
+      <button class="lurebtn" data-lure="rw" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#6b3fa0;margin-right:7px;vertical-align:middle;"></span>Soft Plastic Worm</button>
+      <button class="lurebtn" data-lure="pb" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:conic-gradient(#e24b4a,#ef9f27,#ffd23f,#378add,#e24b4a);margin-right:7px;vertical-align:middle;"></span>PowerBait (stocked trout)</button>
+      <button class="lurebtn" data-lure="cr" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#c96434;margin-right:7px;vertical-align:middle;"></span>Crankbait / Shad</button>
+      <button class="lurebtn" data-lure="jg" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#7a9ea0;margin-right:7px;vertical-align:middle;"></span>Jig &amp; Tube (panfish)</button>
+      <button class="lurebtn" data-lure="sf" style="text-align:left;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#a0b060;margin-right:7px;vertical-align:middle;"></span>Stinkbait (catfish)</button>
+    </div>
+  </div>
+  <!-- DRAG SETTING -->
+  <div style="border-top:1px solid #1e2a3a;padding-top:8px;margin-bottom:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span style="font-weight:600;font-size:12px;">Drag Setting</span>
+      <span id="dragVal" style="font-size:12px;font-weight:700;color:#49c2ff;">50%</span>
+    </div>
+    <input id="dragSlider" type="range" min="10" max="90" value="50" style="width:100%;accent-color:#49c2ff;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#6a8098;margin-top:2px;">
+      <span>Loose (runs freely)</span><span>Tight (reel fast)</span>
+    </div>
+  </div>
+  <div style="font-size:11px;color:#6a8098;line-height:1.5;border-top:1px solid #1e2a3a;padding-top:6px;">
+    <b style="color:#a0c8f8;">Controls:</b> Hold <b>X</b> to charge cast &middot; release to throw &middot; <b>tap Space</b> to set hook &middot; <b>hold Space</b> to reel &middot; release when fish runs &middot; adjust drag for heavy fish
+  </div>
+</div>
+<div id="fishhud" style="display:none;position:absolute;bottom:96px;left:50%;transform:translateX(-50%);z-index:30;text-align:center;color:#fff;font-size:13px;pointer-events:none;">
+  <div id="fishmsg" style="margin-bottom:6px;text-shadow:0 1px 4px #000;font-weight:500;"></div>
+  <div id="powerWrap" style="display:none;width:170px;height:9px;background:rgba(255,255,255,0.25);border-radius:5px;margin:0 auto;"><div id="powerBar" style="width:0%;height:100%;background:#ffd23f;border-radius:5px;"></div></div>
+  <div id="reelWrap" style="display:none;width:170px;height:9px;background:rgba(255,255,255,0.25);border-radius:5px;margin:0 auto;"><div id="reelBar" style="width:0%;height:100%;background:#49c2ff;border-radius:5px;"></div></div>
+  <div id="tensWrap" style="display:none;width:170px;height:8px;background:rgba(255,255,255,0.25);border-radius:5px;margin:7px auto 0;"><div id="tensBar" style="width:0%;height:100%;background:#49c2ff;border-radius:5px;"></div></div>
+  <div id="tenscap" style="display:none;font-size:10px;color:#e6ebf2;text-shadow:0 1px 3px #000;margin-top:3px;">line tension — ease off when it runs</div>
+</div>
+<div id="catchcard" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:40;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;color:var(--txt);box-shadow:0 10px 40px rgba(0,0,0,0.5);"></div>
+<div id="pbpanel" style="display:none;position:absolute;top:62px;right:14px;z-index:35;background:rgba(18,22,28,0.96);border:1px solid var(--line);border-radius:10px;padding:12px 14px;width:282px;color:var(--txt);box-shadow:0 10px 40px rgba(0,0,0,0.5);"></div>
+
+<!-- BOW HUNTING: mirrors the fishing UI pattern (same fence-exit gate, same HUD/panel/card
+     styling) -- crosshair + draw-power reticle, harvest result card, trophy log panel. -->
+<div id="crosshair" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:32;width:46px;height:46px;pointer-events:none;">
+  <div style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 4px rgba(0,0,0,0.8);"></div>
+  <div style="position:absolute;top:50%;left:0;width:16px;height:2px;margin-top:-1px;background:#e8ecf0;box-shadow:0 0 3px rgba(0,0,0,0.9);"></div>
+  <div style="position:absolute;top:50%;right:0;width:16px;height:2px;margin-top:-1px;background:#e8ecf0;box-shadow:0 0 3px rgba(0,0,0,0.9);"></div>
+  <div style="position:absolute;left:50%;top:0;width:2px;height:16px;margin-left:-1px;background:#e8ecf0;box-shadow:0 0 3px rgba(0,0,0,0.9);"></div>
+  <div style="position:absolute;left:50%;bottom:0;width:2px;height:16px;margin-left:-1px;background:#e8ecf0;box-shadow:0 0 3px rgba(0,0,0,0.9);"></div>
+  <div id="crosshairRing" style="position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px;border-radius:50%;border:2px solid rgba(255,255,255,0.0);transition:border-color 0.1s;"></div>
+</div>
+<!-- Real 3-pin compound sight: top pin = shortest range (arrow drops less), pins
+     step progressively lower AND the gaps grow with range -- researched real pin
+     setups (20/30/40 or 20/40/60 yard gaps are standard) and real drop physics
+     (20-30yd ~6" drop, 30-40yd ~10", 40-50yd ~15" -- accelerating, so the gap
+     between the 40 and 60 pin is visibly bigger than between 20 and 40). Green/
+     yellow/red is a real hunter color convention: brightest/most-used color on
+     the closest, most-common-shot pin, red on the longest/most rarely used one
+     (red is also the first color to wash out in low light, matching how a real
+     60-yard shot at last light is already inadvisable). Pins glow/dim live based
+     on the actual range to whatever's under the crosshair -- a real functional
+     aiming aid, not just a decoration. -->
+<div id="sightPins" style="display:none;position:absolute;top:50%;left:50%;z-index:32;pointer-events:none;">
+  <div id="pin20" data-yd="20" style="position:absolute;left:27px;top:-9px;width:12px;height:2.6px;background:#3fcf6a;box-shadow:0 0 2px rgba(0,0,0,0.9);opacity:0.35;transition:opacity 0.15s,box-shadow 0.15s;"></div>
+  <div id="pin40" data-yd="40" style="position:absolute;left:27px;top:5px;width:12px;height:2.6px;background:#ffd23f;box-shadow:0 0 2px rgba(0,0,0,0.9);opacity:0.35;transition:opacity 0.15s,box-shadow 0.15s;"></div>
+  <div id="pin60" data-yd="60" style="position:absolute;left:27px;top:27px;width:12px;height:2.6px;background:#ff3b3b;box-shadow:0 0 2px rgba(0,0,0,0.9);opacity:0.35;transition:opacity 0.15s,box-shadow 0.15s;"></div>
+</div>
+<div id="huntinghud" style="display:none;position:absolute;bottom:96px;left:50%;transform:translateX(-50%);z-index:30;text-align:center;color:#fff;font-size:13px;pointer-events:none;">
+  <div id="huntmsg" style="margin-bottom:6px;text-shadow:0 1px 4px #000;font-weight:500;">Hold Space to draw</div>
+  <div id="drawWrap" style="display:none;width:170px;height:9px;background:rgba(255,255,255,0.25);border-radius:5px;margin:0 auto;"><div id="drawBar" style="width:0%;height:100%;background:#ff9a3f;border-radius:5px;"></div></div>
+  <div id="rangecap" style="display:none;font-size:10.5px;color:#e6ebf2;text-shadow:0 1px 3px #000;margin-top:4px;"></div>
+</div>
+<div id="harvestcard" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:40;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;color:var(--txt);box-shadow:0 10px 40px rgba(0,0,0,0.5);"></div>
+<div id="trophypanel" style="display:none;position:absolute;top:62px;right:14px;z-index:35;background:rgba(18,22,28,0.96);border:1px solid var(--line);border-radius:10px;padding:12px 14px;width:282px;color:var(--txt);box-shadow:0 10px 40px rgba(0,0,0,0.5);"></div>
+
+<div id="startupguide" aria-hidden="true"><div id="startupguidebox">
+ <div class="sghead"><span class="sgtitle">🧰 Plant Equipment Start / Stop Training</span><span class="sgbadge">FIELD TEACHING TOOL — NO SIMULATION CONTROL</span><button class="sgclose" id="startupguideequipmentmenu" style="background:#24435d;margin-left:auto;">Equipment Menu</button><button class="sgclose" id="startupguideclose">Close</button></div>
+ <div class="sgwarn"><b>Training use only.</b> This popup does not issue start/stop commands and is not an approved operating procedure. Before field operation, use the current Clear Fork SOP/permit/LOTO requirements, current DCS status, local package instructions, and authorized field verification. Where a site-specific step has not been verified, this tool says so instead of inventing it.</div><div id="startupEquipmentChooser" class="sgchooser" aria-hidden="false">
+  <div class="sgchooserbox">
+    <h2>Select Equipment Training</h2>
+    <div class="sgchoosergrid">
+      <button data-sgchoose="expander">Expander</button>
+      <button data-sgchoose="refrig">Refridge Compressor</button>
+      <button data-sgchoose="residue">Residue Compressor</button>
+      <button data-sgchoose="inlet">Inlet Compressor</button>
+      <button data-sgchoose="overhead">Overhead Compressor</button>
+    </div>
+    <div class="sgchoosernote">Training only — these selections open the teaching simulator and do not operate live simulator equipment.</div>
+  </div>
+ </div>
+ <div class="sgbody"><div class="sgnav" id="startupguidenav">
+   <button data-sg="expander" class="active">EX-1121 Turboexpander</button>
+   <button data-sg="refrig">C-1140/1141/1142 Refrigeration Compressor</button>
+   <button data-sg="inlet">Inlet Compressor — Ariel KBZ/6</button>
+   <button data-sg="residue">C-6100/6200/6300 Residue Compressor</button>
+   <button data-sg="overhead">C-5700 Overhead Compressor</button>
+ </div><div class="sgcontent" id="startupguidecontent"></div></div>
+</div></div>
+
+<div id="qhd"><div id="qhdbox">
+ <div class="qtop"><div class="qlogo">Quantum<b> HD</b></div><div class="qjc">Johnson<br>Controls</div></div>
+ <div class="qsub"><span class="ok">Normal</span><span>New Event &mdash; See The Event Log</span><span id="qhdclock">&mdash;</span></div>
+ <div class="qctrl">Unit <b id="qhdtag">C-1140</b> &nbsp;&middot;&nbsp; Refrigerant <b>R-290 (Propane)</b> &nbsp;&middot;&nbsp; Control <b>Suction Pressure</b> &nbsp;&middot;&nbsp; Setpoint <button class="qspb" id="qDn">&minus;</button> <b><span id="qSP">17</span> PSIG</b> <button class="qspb" id="qUp">+</button> &nbsp;&middot;&nbsp; Actual <b><span id="qActual">30.0</span> PSIG</b></div>
+ <div class="qbody">
+  <div class="qcol">
+   <div class="qsec"><h4>Package Operating Values</h4>
+    <table><tr><th>&nbsp;</th><th style="text-align:right">Pressure</th><th style="text-align:right">Temp</th><th style="text-align:right">Superheat</th></tr>
+    <tr><td>Suction</td><td class="v" id="qSuctP"></td><td class="v" id="qSuctT"></td><td class="v" id="qSuctSH"></td></tr>
+    <tr><td>Discharge</td><td class="v" id="qDiscP"></td><td class="v" id="qDiscT"></td><td class="v" id="qDiscSH"></td></tr>
+    <tr><td>Oil</td><td class="v" id="qOilP"></td><td class="v" id="qOilT"></td><td class="v">&mdash;</td></tr>
+    <tr><td>Separator</td><td class="v">&mdash;</td><td class="v" id="qSep"></td><td class="v">&mdash;</td></tr>
+    <tr><td>Filter Diff.</td><td class="v" id="qFilt"></td><td class="v">&mdash;</td><td class="v">&mdash;</td></tr></table></div>
+   <div class="qsec"><h4>Motor</h4>
+    <table><tr><td>Amps</td><td class="v" id="qAmps"></td></tr>
+    <tr><td>Motor FLA</td><td class="v" id="qFla"></td></tr>
+    <tr><td>Motor kW (est.)</td><td class="v" id="qKw"></td></tr>
+    <tr><td>Run Hours</td><td class="v" id="qRun"></td></tr></table></div>
+   <div class="qsec"><h4>System Operating Values</h4>
+    <table><tr><td>Vibration &mdash; Drive End</td><td class="v" id="qVibDE"></td></tr>
+    <tr><td>Vibration &mdash; Opp. Drive End</td><td class="v" id="qVibODE"></td></tr></table></div>
+  </div>
+  <div class="qcol">
+   <div class="qsec"><h4>Capacity Management &mdash; Suction Pressure Control</h4>
+    <div class="qrow"><span>Capacity Control</span><b id="qMode">Mode 1 (Auto)</b></div>
+    <div class="qrow"><span>Suction Setpoint</span><b><span id="qSP2">17</span> PSIG</b></div>
+    <input type="range" id="qSlider" min="8" max="28" step="1" value="17" style="width:calc(100% - 20px);margin:9px 10px 2px;accent-color:#3fb4e6;cursor:pointer;">
+    <div style="display:flex;justify-content:space-between;padding:0 10px 2px;color:#7c8794;font-size:9.5px;"><span>8 PSIG &mdash; colder evap</span><span>warmer &mdash; 28 PSIG</span></div>
+    <div style="padding:4px 10px 0;color:#8fa0b2;font-size:10.5px;">Actual Suction</div>
+    <div class="qbig"><span id="qActual2">30.0</span> PSIG</div>
+    <div id="qPeg" style="display:none;padding:2px 10px 9px;color:#ffce5c;font-size:10.5px;">&#9888; Capacity limit active &mdash; suction is more than 2 PSIG above setpoint with the slide at its upper limit.</div></div>
+   <div class="qsec"><h4>Compressor</h4>
+    <div class="qrdy" id="qReady">Ready</div>
+    <div class="qrow"><span>Compressor</span><b id="qCompState">Off</b></div>
+    <div class="qrow"><span>Capacity Slide</span><b><span id="qCapSlide"></span> %</b></div>
+    <div class="qrow"><span>Volume Slide</span><b id="qVolSlide"></b></div>
+    <div class="qrow"><span>Oil Pump</span><b id="qOilPump">Off</b></div><div style="font-size:9.5px;color:#5a6b7c;padding:3px 0 0;">Oil cold on startup? See 📚 Reference Library → Refrigeration Operating Procedures for the warm-up steps.</div></div>
+   <div class="qsec"><h4>Refrigeration Process (R-290)</h4>
+    <table><tr><td>Evaporator (sat. suction)</td><td class="v" id="qTevap"></td></tr>
+    <tr><td>Chiller gas outlet (E-1241)</td><td class="v" id="qChill"></td></tr>
+    <tr><td>Condensing temp (A-1343)</td><td class="v" id="qTcond"></td></tr>
+    <tr><td>Compression ratio</td><td class="v" id="qCR"></td></tr>
+    <tr><td>Cooling duty</td><td class="v" id="qDuty"></td></tr>
+    <tr><td>Specific power</td><td class="v" id="qKwTon"></td></tr>
+    <tr><td>COP</td><td class="v" id="qCOP"></td></tr>
+    <tr><td>Units running</td><td class="v" id="qNrun"></td></tr>
+    <tr><td>Plant cooling duty</td><td class="v" id="qPduty"></td></tr>
+    <tr><td>Condenser fans running</td><td class="v" id="qFans"></td></tr></table>
+    <div style="display:flex;gap:6px;padding:7px 10px 9px;"><button class="uchip" id="u_c1140">C-1140</button><button class="uchip" id="u_c1141">C-1141</button><button class="uchip" id="u_c1142">C-1142</button></div><div style="padding:0 10px 1px;color:#8fa0b2;font-size:10px;">Condenser fans (A-1343A/B/C) &mdash; start/stop</div><div style="display:flex;gap:6px;padding:4px 10px 9px;"><button class="uchip" id="f_a1343a">Fan A</button><button class="uchip" id="f_a1343b">Fan B</button><button class="uchip" id="f_a1343c">Fan C</button></div></div>
+  </div>
+ </div>
+ <div class="qfoot"><span class="york">YORK PROCESS SYSTEMS &nbsp;<span class="qnote">&middot; live propane (R-290) refrigeration model</span></span><span><button class="qstart" id="qStart">Start compressor</button> <button class="qx" id="qClose">Close</button></span></div>
+</div></div>
+<div id="ctrl"><div id="ctrlbox">
+ <div class="ctop"><span>Process Controls &amp; Indicators</span><span id="ctrlclock" style="font-size:11px;color:#9aa6b2;font-weight:400;">&mdash;</span></div>
+ <div class="csec"><h4>Control Loops &mdash; set SP (AUTO) or Output (MAN)</h4>
+  <table><thead><tr><th>Loop</th><th>Service</th><th>PV</th><th>Setpoint</th><th>Output</th><th>Mode</th></tr></thead><tbody id="ctbody"></tbody></table></div>
+ <div class="csec"><h4>Indicators (live &mdash; respond to your changes)</h4>
+  <table><tbody id="itbody"></tbody></table></div>
+ <div class="cfoot"><span>Toggle AUTO/MAN. In AUTO the controller drives output to hold setpoint; in MAN you set output and watch PV &amp; downstream indicators drift. Refrigeration couples in from the Quantum&nbsp;HD suction setpoint.</span><button class="qx" id="ctrlClose">Close</button></div>
+</div></div>
+<div id="acmtc"><div id="acmtcbox">
+ <div class="atop"><span>ATLAS COPCO MAFI-TRENCH COMPANY</span><span id="aClock">--:--</span></div>
+ <div class="asub">MAIN SCREEN &middot; ACMTC 1039 &middot; <span id="aStatus" class="arun">RUNNING</span></div>
+ <div class="adiag">
+  <div class="aexp">EXP&nbsp;&#9665;</div>
+  <div class="ashaft"><div class="arpm"><span id="aRPM">24029</span> RPM</div><div class="atag">ACMTC&nbsp;1039</div></div>
+  <div class="acomp">&#9655;&nbsp;COMP</div>
+ </div>
+ <div class="actrlbar">Inlet guide vanes HIC-101 <button class="aspb" id="aDn">&minus;</button> <b><span id="aIGV">92</span>%</b> <button class="aspb" id="aUp">+</button>
+  <input type="range" id="aSlider" min="0" max="100" step="1" value="92">
+  <button class="qx" id="aAuto" style="margin-left:8px;padding:4px 12px;">AUTO</button><span id="aRemote" style="margin-left:7px;color:#76d7ff;font-size:10px;font-weight:700;">REMOTE: PIC-1521D EX</span>
+  <button class="qx" id="aCascade" style="margin-left:6px;padding:4px 12px;">BOARD EX: AUTO</button>
+  <span style="margin-left:auto;color:#9fb6cc;">Shaft power <b style="color:#eef2f7;"><span id="aHP">2250</span> HP</b></span></div>
+ <div style="padding:5px 14px 7px;border-bottom:1px solid #233241;color:#9fb6cc;font:10px Consolas,monospace;">PIC-1521D EX: SP <b id="aPicSP" style="color:#eef2f7;">268.0</b> PSIG &nbsp; PV <b id="aPicPV" style="color:#eef2f7;">265.6</b> PSIG &nbsp; CV/IGV DEMAND <b id="aPicCV" style="color:#eef2f7;">100.0</b>%</div>
+ <div class="acols">
+  <div class="acol"><h4>Expander</h4><table>
+   <tr><td>PI-101 discharge</td><td class="v" id="aPi101">249 PSIG</td></tr>
+   <tr><td>Inlet pressure</td><td class="v" id="aExpIn">875.6 PSIG</td></tr>
+   <tr><td>Outlet temp &rarr; T-1521</td><td class="v" id="aExpOutT">-85.7 °F</td></tr>
+   <tr><td>&quot;X&quot; vibration</td><td class="v" id="aExpVibX">0.02 MILS</td></tr>
+   <tr><td>&quot;Y&quot; vibration</td><td class="v" id="aExpVibY">0.07 MILS</td></tr>
+   <tr><td>Thrust bearing</td><td class="v" id="aThrust">239 PSIG</td></tr>
+   <tr><td>Lube oil &Delta;P</td><td class="v" id="aLubeDP">152 PSID</td></tr>
+   <tr><td>Bearing temp</td><td class="v" id="aExpBrg">152 °F</td></tr></table></div>
+  <div class="acol"><h4>Compressor</h4><table>
+   <tr><td>PI-109 suction</td><td class="v" id="aCompSuc">241 PSIG</td></tr>
+   <tr><td>PI-103 discharge</td><td class="v" id="aCompDis">386 PSIG</td></tr>
+   <tr><td>FI-110 flow</td><td class="v" id="aAcfm">7889 ACFM</td></tr>
+   <tr><td>PDI-110</td><td class="v" id="aPdi">466 &quot;H2O</td></tr>
+   <tr><td>&quot;X&quot; vibration</td><td class="v" id="aCompVibX">0.14 MILS</td></tr>
+   <tr><td>&quot;Y&quot; vibration</td><td class="v" id="aCompVibY">0.09 MILS</td></tr>
+   <tr><td>Seal gas &Delta;P</td><td class="v" id="aSealDP">50 PSID</td></tr>
+   <tr><td>Bearing temp</td><td class="v" id="aCompBrg">133 °F</td></tr></table></div>
+ </div>
+ <div class="afoot"><span>Adjust HIC-101 guide vanes to load the expander &mdash; speed, recompression, flow and the expander outlet (cryo) temperature all respond. Nameplate: 3700&nbsp;HP &middot; 27,000&nbsp;RPM &middot; expander 1100&nbsp;psig / compressor 675&nbsp;psig.</span>
+  <button class="qx" id="aStart">Stop expander</button><button class="qx" id="aClose">Close</button></div>
+</div></div>
+<div id="eqt">
+ <div class="ehead">
+  <div class="elogo">EQT<small>3713 &middot; 161</small></div>
+  <div class="enav" id="eqtnav"></div>
+  <div class="estat"><span class="clk" id="eqtclk">--:--:--</span><span class="mode" id="eqtmode">FULL REJECTION</span><span style="font-size:9px;color:#41506a;">Training simulator</span></div>
+  <button class="eclose" id="plantHealthBtn" style="background:#1a4020;border-color:#2a6030;margin-right:8px;">PLANT HEALTH</button>
+  <button class="eclose" id="shiftDashBtn" style="background:#1a3040;border-color:#2a4a60;margin-right:8px;">SHIFT DASHBOARD</button>
+  <button class="eclose" id="notifBellBtn" style="background:#20242c;border-color:#3a4048;margin-right:8px;font-size:16px;padding:2px 10px;">&#128276;</button>
+  <button class="eclose" id="scheduleBtn" style="background:#2a3a2a;border-color:#3a5a3a;margin-right:8px;">SCHEDULE</button>
+  <button class="eclose" id="eqtclose">Close</button>
+ </div>
+ <div class="escr" id="eqtscr"></div>
+ <div class="ebar"><span style="font-weight:700;color:#cfe0f0;">Silence Alarm</span><div class="bnr"></div><button class="ack">ACK</button><button class="atrend">ALARM TREND</button><button class="rst">RESET</button><button class="esd">ESD</button></div>
+</div>
+<div id="officialtest" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(4,7,11,0.94);">
+ <div style="max-width:1000px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;flex-wrap:wrap;gap:8px;">
+   <div style="display:flex;align-items:center;gap:12px;">
+    <div style="font-weight:700;color:#dce6ee;font-size:15px;">📋 Official Clear Fork Test</div>
+    <a href="https://clear-forkquiz.netlify.app/" target="_blank" rel="noopener" title="Scan or click to open the official Clear Fork quiz at clear-forkquiz.netlify.app" style="display:flex;align-items:center;gap:8px;text-decoration:none;background:#1c2733;border:1px solid #2a3542;border-radius:6px;padding:4px 10px 4px 4px;">
+     <img src="data:image/png;base64,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" alt="QR code linking to the official Clear Fork quiz" style="width:40px;height:40px;border-radius:3px;background:#fff;display:block;">
+     <span style="font-size:10.5px;color:#9fb0c0;line-height:1.3;">Scan or tap for<br>the live official quiz</span>
+    </a>
+   </div>
+   <div>
+    <label id="officialTestDropZone" style="background:#243140;border:1.5px dashed #3a4a5c;color:#cfe6ff;border-radius:4px;padding:5px 12px;cursor:pointer;font-weight:700;margin-right:8px;">📎 Upload/replace test files (or drag &amp; drop)
+     <input id="officialTestUpload" type="file" accept=".html,.htm,image/*" multiple style="display:none;"></label>
+    <button id="officialtestClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+   </div>
+  </div>
+  <div id="officialTestBody" style="flex:1;overflow:hidden;background:#fff;"></div>
+ </div>
+</div>
+<div id="c2calc" style="display:none;position:fixed;inset:0;z-index:955;background:rgba(4,7,11,0.94);">
+ <div style="max-width:920px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">🧮 Demeth/Cryo C2 Calculator</div>
+   <button id="c2calcClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+  </div>
+  <div id="c2calcBody" style="flex:1;overflow-y:auto;padding:16px;background:#0d1116;color:#c3ccd4;font:13px/1.5 -apple-system,Segoe UI,Arial,sans-serif;"></div>
+ </div>
+</div>
+<div id="cmdcenter" style="display:none;position:fixed;inset:0;z-index:956;background:rgba(4,7,11,0.94);">
+ <div style="max-width:1000px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">🚦 Clearfork Command Center</div>
+   <button id="cmdcenterClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+  </div>
+  <div style="display:flex;gap:4px;padding:8px 12px 0;background:#101620;border-bottom:1px solid #2a3542;flex-wrap:wrap;">
+   <button class="cmdtab" data-tab="health" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">Plant Health</button>
+   <button class="cmdtab" data-tab="boards" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">Board Audit</button>
+   <button class="cmdtab" data-tab="fg" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">Fire &amp; Gas (training)</button>
+   <button class="cmdtab" data-tab="lead" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">System Lead</button>
+   <button class="cmdtab" data-tab="teachryan" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">Teach Ryan</button>
+   <button class="cmdtab" data-tab="engreview" style="background:#1c2733;border:1px solid #2c3844;color:#cfe6ff;border-radius:4px 4px 0 0;padding:7px 14px;cursor:pointer;font:700 12px inherit;">Engineering Review</button>
+  </div>
+  <div id="cmdcenterBody" style="flex:1;overflow-y:auto;padding:16px;background:#0d1116;color:#c3ccd4;font:13px/1.5 -apple-system,Segoe UI,Arial,sans-serif;"></div>
+ </div>
+</div>
+<div id="askryan" style="display:none;position:fixed;inset:0;z-index:957;background:rgba(4,7,11,0.94);">
+ <div style="max-width:760px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">🙋 Ask Ryan</div>
+   <button id="askryanClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+  </div>
+  <div id="askryanBody" style="flex:1;overflow-y:auto;padding:16px;background:#0d1116;color:#c3ccd4;font:13px/1.5 -apple-system,Segoe UI,Arial,sans-serif;"></div>
+ </div>
+</div>
+<div id="library" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(4,7,11,0.92);">
+ <div style="max-width:1180px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;gap:10px;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">📚 Clearfork Cryo Unit #1 &mdash; Reference Library</div>
+   <div style="display:flex;gap:7px;align-items:center;">
+         <button id="libQuestionsAskedBtn" data-qa-home style="background:#193e30;color:#d1fce5;border:1px solid #3b805c;padding:5px 13px;border-radius:4px;font-weight:700;">Questions Asked</button>
+     <button id="libAttachmentsBtn" style="background:#243b50;color:#cfe8ff;border:1px solid #3c6485;padding:5px 13px;border-radius:4px;cursor:pointer;font-weight:700;">📎 Attachments</button>
+    <button id="libClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+   </div>
+  </div>
+  <div style="padding:8px 16px;background:#101620;border-bottom:1px solid #22303c;">
+   <input id="libSearch" type="text" placeholder="Search by tag or keyword (e.g. reboiler, V-1421, hot oil)..." style="width:100%;padding:7px 10px;background:#0a0e13;border:1px solid #2c3844;border-radius:4px;color:#dce6ee;font:13px inherit;">
+  </div>
+   <div id="libStorageStatus" role="status" style="display:none;padding:6px 16px;background:#332915;color:#ffe0a2;font-size:11px;"></div>
+  <div style="display:flex;flex:1;overflow:hidden;">
+   <div id="libCats" style="width:230px;flex-shrink:0;overflow-y:auto;background:#0f141b;border-right:1px solid #22303c;padding:8px 0;"></div>
+   <div id="libList" style="width:280px;flex-shrink:0;overflow-y:auto;border-right:1px solid #22303c;padding:8px 0;"></div>
+   <div id="libDetail" style="flex:1;overflow-y:auto;padding:18px 22px;"></div>
+  </div>
+ </div>
+</div>
+<div id="attachmentLibrary" style="display:none;position:fixed;inset:0;z-index:905;background:rgba(4,7,11,0.94);">
+ <div style="max-width:1220px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#141a22;border-bottom:1px solid #2a3542;gap:10px;">
+   <div><div style="font-weight:800;color:#dce6ee;font-size:15px;">📎 Reference Library Attachments</div><div style="font-size:10px;color:#718397;margin-top:1px;">Learned source references. New PDF/photo files are temporary; only extracted facts and metadata are saved.</div></div>
+   <div style="display:flex;gap:7px;align-items:center;">
+    <label style="background:#1f4d36;color:#d9ffe7;border:1px solid #367b56;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:700;font-size:12px;">＋ Select source to learn<input id="attachmentUpload" type="file" accept="image/*,application/pdf" multiple style="display:none;"></label>
+    <button id="attachmentBack" style="background:#243b50;color:#cfe8ff;border:1px solid #3c6485;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:700;">← Reference Library</button>
+    <button id="attachmentClose" style="background:#c0392b;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-weight:700;">Close</button>
+   </div>
+  </div>
+  <div id="attachmentDropZone" style="padding:8px 16px;background:#101820;border-bottom:1px solid #22303c;display:flex;gap:9px;align-items:center;">
+   <input id="attachmentSearch" type="text" placeholder="Search attachments by filename, description, system, parent equipment or tag..." style="flex:1;padding:7px 10px;background:#0a0e13;border:1px solid #2c3844;border-radius:4px;color:#dce6ee;font:13px inherit;">
+   <span id="attachmentStatus" style="font-size:10px;color:#718397;white-space:nowrap;">Drop files anywhere on this bar</span>
+  </div>
+  <div style="display:flex;flex:1;overflow:hidden;">
+   <div id="attachmentCats" style="width:245px;flex-shrink:0;overflow-y:auto;background:#0f141b;border-right:1px solid #22303c;padding:8px 0;"></div>
+   <div id="attachmentList" style="width:315px;flex-shrink:0;overflow-y:auto;border-right:1px solid #22303c;padding:8px 0;"></div>
+   <div id="attachmentDetail" style="flex:1;overflow-y:auto;padding:18px 22px;"></div>
+  </div>
+ </div>
+</div>
+<div id="jumppanel" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(4,7,11,0.94);">
+ <div style="max-width:1100px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:18px;">🗺️ Quick Jump — tap any system to fly there</div>
+   <button id="jumpClose" style="background:#c0392b;color:#fff;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-weight:700;font-size:15px;min-height:44px;">Close</button>
+  </div>
+  <div id="jumpBody" style="flex:1;overflow-y:auto;padding:18px;"></div>
+ </div>
+</div>
+<div id="quizpanel" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(4,7,11,0.94);">
+ <div style="max-width:900px;margin:2vh auto;height:96vh;background:#0d1116;border:1px solid #2a3542;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:18px;">🧠 Pop Quiz — Clearfork Cryo Unit 1</div>
+   <button id="quizClose" style="background:#c0392b;color:#fff;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-weight:700;font-size:15px;min-height:44px;">Close</button>
+  </div>
+  <div id="quizBody" style="flex:1;overflow-y:auto;padding:22px;"></div>
+ </div>
+</div>
+<div id="outagePanel" style="display:none;position:fixed;inset:0;z-index:952;background:rgba(4,7,11,0.92);">
+ <div style="max-width:900px;margin:5vh auto;background:#0d1116;border:1px solid #2a3542;border-radius:10px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">🛠️ Planned Outages / Turnaround Scheduling</div>
+   <div>
+    <label style="font-size:11px;color:#9aa6b2;margin-right:10px;">Outage time speed: <select id="outageSpeedSel" style="background:#1a2028;color:#dce6ee;border:1px solid #3a4a5c;border-radius:4px;padding:2px 4px;"><option value="1">1x</option><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option></select></label>
+    <button id="outageClose" style="background:#c0392b;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;">Close</button>
+   </div>
+  </div>
+  <div id="outageBody" style="padding:16px;overflow-y:auto;flex:1;"></div>
+ </div>
+</div>
+<div id="livePanel" style="display:none;position:fixed;inset:0;z-index:953;background:rgba(4,7,11,0.92);">
+ <div style="max-width:520px;margin:12vh auto;background:#0d1116;border:1px solid #2a3542;border-radius:10px;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">▶️/⏸️ Live / Pause</div>
+   <button id="liveClose" style="background:#c0392b;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;">Close</button>
+  </div>
+  <div id="liveBody" style="padding:18px;"></div>
+ </div>
+</div>
+<div id="speedPanel" style="display:none;position:fixed;inset:0;z-index:953;background:rgba(4,7,11,0.92);">
+ <div style="max-width:520px;margin:12vh auto;background:#0d1116;border:1px solid #2a3542;border-radius:10px;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div style="font-weight:700;color:#dce6ee;font-size:15px;">⏩ Simulation Speed</div>
+   <button id="speedClose" style="background:#c0392b;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;">Close</button>
+  </div>
+  <div id="speedBody" style="padding:18px;"></div>
+ </div>
+</div>
+<div id="trendpanel" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(4,7,11,0.85);">
+ <div style="max-width:680px;margin:8vh auto;background:#0d1116;border:1px solid #2a3542;border-radius:10px;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#141a22;border-bottom:1px solid #2a3542;">
+   <div id="trendTitle" style="font-weight:700;color:#dce6ee;font-size:15px;">Trend</div>
+   <button id="trendClose" style="background:#c0392b;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;">Close</button>
+  </div>
+  <div id="trendBody" style="padding:16px;"></div>
+ </div>
+</div>
+  <div id="dpad" class="pad"><div class="cap">MOVE</div><div class="grid">
+    <span></span><button data-d="f">&#9650;</button><span></span>
+    <button data-d="l">&#9664;</button><button data-d="b">&#9660;</button><button data-d="r">&#9654;</button>
+  </div></div>
+  <div id="lpad" class="pad"><div class="cap">LOOK</div><div class="grid">
+    <span></span><button data-l="u">&#11165;</button><span></span>
+    <button data-l="tl">&#10554;</button><button data-l="d">&#11167;</button><button data-l="tr">&#10555;</button>
+  </div></div>
+  <div id="walkhint">W/S move &#183; A/D strafe &#183; &#8592;/&#8594; or Q/E turn &#183; R/F or &#8593;/&#8595; look up/down &#183; drag to look &#183; Shift run</div>
+</div>
+<div class="legend" id="pipeServiceLegend12JF" title="Model service colors, not field paint or current valve state. Temporary tracing overlays are separate."><span><span class="sw" style="background:#145a3c"></span>Raw inlet mixed stream</span><span><span class="sw" style="background:#f2d020"></span>Process gas</span><span><span class="sw" style="background:#d82c2c"></span>Residue gas</span><span><span class="sw" style="background:#f0f0ec"></span>Propane refrigerant</span><span><span class="sw" style="background:#2ecc50"></span>Regen gas</span><span><span class="sw" style="background:#2f6fe0"></span>NGL</span><span><span class="sw" style="background:#0d1a4a"></span>Stabilizer condensate</span><span><span class="sw" style="background:#d9c442"></span>Overhead gas</span><span><span class="sw" style="background:#8e3fc7"></span>Hot oil</span><span><span class="sw" style="background:#ff6600"></span>Fuel gas</span><span><span class="sw" style="background:#b8c4cc"></span>Instrument air</span><span><span class="sw" style="background:#b0694b"></span>Flare / relief</span><span><span class="sw" style="background:#63664e"></span>Closed drain</span><span><span class="sw" style="background:#536c72"></span>Cold drain</span><span><span class="sw" style="background:#0a0a0a"></span>Other retained drains / utilities</span><span><span class="sw" style="background:#b7c5cf"></span>Instrument / pending local branch</span><span><span class="sw" style="background:#8d83f2"></span>Control actuator</span><span><span class="sw" style="background:#ee8735"></span>ESD actuator</span><span><span class="sw" style="background:#30b9c4"></span>PSV bonnet</span></div>
+<div id="panel"><p id="ptitle"></p><ul id="plist"></ul></div>
+<footer>Built from issued-for-construction P&amp;IDs 020185-AE-DW-M2150 / M2145 / M2135 / M2200 (XcL Processing Operating, LLC — Clearfork Processing Facility, Cryogenic Unit #1). Geometry is schematic; elevations, routing, valve and instrument placement are representative, not to scale. Verify all data against the stamped drawings.</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- 12KQ-D1: same 12KQ application/source release; local assets are required. -->
+<script id="cf12kqDeploymentBootstrap">
+(function () {
+  'use strict';
+  var pending = Object.create(null);
+  var consumed = [];
+  var failure = null;
+  var expected = ["CF_TEXT_POOL_12KG","CF_COLOR_PLAN_12JF","CF_DRAIN_AUDIT_12JL","CF_DRAIN_AUDIT_12JN","CF_DRAIN_AUDIT_12JR","CF_SOURCE_12JV","CF_SOURCE_12JW","CF_SOURCE_12JX","CF_MODEL_12JY","CF_MODEL_12JZ","CF_TRACE_DATA_12IZ","CF_PHASE_PLAN_12JH","CF_PLATE_AUDIT_12KB","CF_SOURCE_12KO","CF_SOURCE_12KP"];
+  window.CF12KQDeploymentD1 = {
+    package: '12KQ-D1',
+    applicationRelease: '12KQ',
+    pending: pending,
+    fail: function (name) {
+      failure = String(name);
+      var box = document.getElementById('cfDeployMissingAsset12KQ');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'cfDeployMissingAsset12KQ';
+        box.setAttribute('role', 'alert');
+        box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:999999;padding:16px;border:2px solid #b64030;background:#fff2e8;color:#38150c;font:16px/1.5 Arial,sans-serif;white-space:pre-wrap';
+        (document.body || document.documentElement).appendChild(box);
+      }
+      box.textContent = 'Clear Fork 12KQ-D1: a required local file did not load: ' + failure +
+        '\nUpload index.html together with the complete assets/clearfork-12kq-d1 folder. Do not upload the small index alone.' +
+        '\nThis message does not clear or change saved browser data.';
+    },
+    take: function (name) {
+      if (!Object.prototype.hasOwnProperty.call(pending, name)) {
+        this.fail(name);
+        throw new Error('12KQ-D1 required static data not loaded: ' + name);
+      }
+      var value = pending[name];
+      delete pending[name];
+      consumed.push(name);
+      return value;
+    },
+    status: function () {
+      return { package: '12KQ-D1', applicationRelease: '12KQ', expectedDataAssets: expected.length,
+        availableDataAssets: Object.keys(pending).length, consumedDataAssets: consumed.length,
+        failedAsset: failure,
+        note: 'Packaging diagnostic only. Loaded files do not establish correct process behavior or field authorization.' };
+    }
+  };
+})();
+</script>
+<script src="./assets/clearfork-12kq-d1/data-01-cf_text_pool_12kg.js" onerror="window.CF12KQDeploymentD1.fail('data-01-cf_text_pool_12kg.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-02-cf_color_plan_12jf.js" onerror="window.CF12KQDeploymentD1.fail('data-02-cf_color_plan_12jf.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-03-cf_drain_audit_12jl.js" onerror="window.CF12KQDeploymentD1.fail('data-03-cf_drain_audit_12jl.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-04-cf_drain_audit_12jn.js" onerror="window.CF12KQDeploymentD1.fail('data-04-cf_drain_audit_12jn.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-05-cf_drain_audit_12jr.js" onerror="window.CF12KQDeploymentD1.fail('data-05-cf_drain_audit_12jr.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-06-cf_source_12jv.js" onerror="window.CF12KQDeploymentD1.fail('data-06-cf_source_12jv.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-07-cf_source_12jw.js" onerror="window.CF12KQDeploymentD1.fail('data-07-cf_source_12jw.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-08-cf_source_12jx.js" onerror="window.CF12KQDeploymentD1.fail('data-08-cf_source_12jx.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-09-cf_model_12jy.js" onerror="window.CF12KQDeploymentD1.fail('data-09-cf_model_12jy.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-10-cf_model_12jz.js" onerror="window.CF12KQDeploymentD1.fail('data-10-cf_model_12jz.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-11-cf_trace_data_12iz.js" onerror="window.CF12KQDeploymentD1.fail('data-11-cf_trace_data_12iz.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-12-cf_phase_plan_12jh.js" onerror="window.CF12KQDeploymentD1.fail('data-12-cf_phase_plan_12jh.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-13-cf_plate_audit_12kb.js" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-14-cf_source_12ko.js" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
+<script src="./assets/clearfork-12kq-d1/data-15-cf_source_12kp.js" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
+<script src="./assets/clearfork-12kq-d1/clearfork-main.js" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+
+<script>
+window.PETROSKILLS_12BX_REFERENCE = {
+  sections:['Reciprocating Compressors','Process Drawings','Phase Behavior Fundamentals','Mass Transfer Operations'],
+  use:'Reference logic is available to Ryan and for simulator behavior audits; plant-specific facts still require verified Clear Fork sources.'
+};
+</script>
+<script id="startupTrainingGuide12CJJs">
+/* === 12CJ Plant Equipment Start / Stop Training Guide ===
+   Static training content only. No functions below write to PLANT, EXP, QHD, valves, compressors,
+   controllers, alarms, or any simulator process state. */
+(function(){
+ var DATA={
+  expander:{
+   title:'EX-1121 / C-1121 Turboexpander–Booster Package',
+   source:'Atlas Copco Mafi-Trench Instruction Manual — Order 1039 / Machine EX/C-121 (plant/order-specific source)',
+   status:'VERIFIED', cls:'verified',
+   before:[
+    'Confirm the unit is released for operation and no red tag, LOTO, maintenance hold, unresolved trip, or field work remains on the package.',
+    'Walk the package. Check for obvious leakage, loose hardware, abnormal oil/seal-gas condition, blocked vents/drains, and anything left from maintenance.',
+    'Confirm the process lineup and downstream path are available under the current approved plant procedure. Do not create a lineup from memory.',
+    'Verify seal-gas supply is available and the package seal-gas system is lined up and healthy before rotation.',
+    'Verify the lubrication system is ready, oil level/temperature are acceptable, filters are in service, and the auxiliary/pre-lube system can establish required oil pressure/flow.',
+    'At the control system, confirm no active shutdown permissive is missing and the inlet guide-vane command is at the approved startup condition.'
+   ],
+   start:[
+    'Establish and verify seal gas first; confirm differential/pressure indications are stable and no seal-gas alarm is present.',
+    'Start/establish lube-oil circulation in accordance with the Order 1039 sequence; verify oil pressure / differential and bearing-oil supply before allowing the machine to rotate.',
+    'Confirm the package is permissive-ready and the process pressure path is available.',
+    'Initiate the approved expander startup sequence from the proper local/remote control station. Do not bypass a permissive to make the machine start.',
+    'Load the expander with HIC-101 / inlet guide vanes gradually. Watch shaft speed, thrust, vibration, bearing temperatures, seal-gas differential, lube-oil differential, expander outlet temperature, and booster suction/discharge.',
+    'When the machine is stable, transfer the pressure/IGV control to the normal approved automatic/remote mode only after manual demand and controller demand are reasonably matched.'
+   ],
+   run:[
+    'Prove speed is stable and not accelerating unexpectedly.',
+    'Check thrust, X/Y vibration, bearing temperatures, lube-oil differential, seal-gas differential, expander inlet/outlet pressure and temperature, and booster suction/discharge.',
+    'Confirm the cold section and T-1521 respond normally as expander load is increased.'
+   ],
+   stop:[
+    'For a controlled shutdown, transfer the loading/IGV control to the approved local/manual condition before unloading.',
+    'Reduce guide-vane/load demand gradually while watching tower/cold-section pressure, JT share, machine speed, thrust and vibration.',
+    'Use the package stop command only after the machine is unloaded to the approved shutdown condition.',
+    'Keep required seal-gas and lube-oil support in service through coastdown. Do not secure auxiliary systems early.',
+    'After zero speed, follow the approved depressurization/isolation and post-run oil/seal-gas steps. Record any trip or abnormal indication before resetting it.'
+   ],
+   note:'Order 1039 contains dedicated pre-startup, seal-gas startup, lube-oil startup, startup sequence, operating checks and shutdown sections. Exact field valve positions and any revised site-specific sequence must come from the current Clear Fork procedure/P&ID.'
+  },
+  refrig:{
+   title:'C-1140 / C-1141 / C-1142 Propane Refrigeration Compressor',
+   source:'Frick RWF II family mapping + Clear Fork refrigeration controls; exact unit size/serial and plant startup SOP still pending verification',
+   status:'OPERATOR-OBSERVED FAMILY / SITE SEQUENCE PENDING', cls:'observed',
+   before:[
+    'Confirm the selected compressor is released for service, not tagged/locked out, and the refrigeration system has an available suction/discharge path.',
+    'Walk the package for propane leakage, oil leakage, loose guards, abnormal separator/oil level, and maintenance items left incomplete.',
+    'Verify suction and discharge stop-valve lineup, oil circuit, oil cooler path, condenser/fan availability, and economizer/interstage path using the current site procedure.',
+    'Confirm R-290 inventory vessels and chiller levels/pressures are in a reasonable operating range and no liquid carryover condition is indicated at the suction side.',
+    'Verify oil temperature is adequate for startup. If oil is cold, use the plant-approved oil-warming/oil-pump procedure before starting the compressor.',
+    'At Quantum HD / package controls, clear only understood alarms and verify the unit shows ready/permissive.'
+   ],
+   start:[
+    'Start/verify the oil pump or pre-lube function if required by the selected RWF II package and current oil-temperature condition.',
+    'Confirm suction pressure is available and the capacity slide is at the approved low-load/start position.',
+    'Start the compressor from the authorized package control station and immediately verify rotation/run status, oil pressure, oil-filter differential and motor current.',
+    'Confirm suction pressure begins responding and discharge/condensing pressure remains controlled with available condenser fans.',
+    'Load capacity gradually. Watch suction/discharge pressure and temperature, separator/oil temperature, motor amps, vibration, chiller performance, V-1444/V-1442 inventory and condenser pressure.',
+    'Do not add another refrigeration compressor only to chase a bad transmitter, closed valve, lost condenser fan, low refrigerant inventory, or contaminated refrigeration condition.'
+   ],
+   run:[
+    'Watch suction/discharge pressure, oil pressure, oil-filter differential, separator/oil temperature, motor amps, vibration and capacity-slide position.',
+    'Correlate compressor load with chiller outlet temperature, condenser pressure/fan status, and V-1444/V-1442/E-1241 inventory behavior.'
+   ],
+   stop:[
+    'Unload the compressor to the approved minimum-load condition before a normal stop when the package/site procedure requires it.',
+    'Stop the selected unit from the authorized Quantum/package control station.',
+    'Verify motor current and compressor run status fall to zero and the discharge check/stop arrangement prevents reverse flow.',
+    'Keep any required oil-pump/post-lube function running for the specified package cooldown period.',
+    'Watch suction/discharge pressures equalize only as expected; investigate unexpected liquid migration, pressure rise, or rapid vessel-level change.'
+   ],
+   note:'The installed Frick source currently verifies RWF II construction/components but is not a complete Clear Fork startup SOP. The tool therefore teaches the operating logic and checks without inventing exact valve numbers, timer values, or package-specific button sequences.'
+  },
+  inlet:{
+   title:'Inlet Compressor — Ariel KBZ/6 Frame',
+   source:'Ariel KBU/KBZ maintenance/startup guidance + Clear Fork inlet-compressor control-board knowledge',
+   status:'OEM FAMILY VERIFIED / EXACT SITE PACKAGE SEQUENCE PENDING', cls:'observed',
+   before:[
+    'Confirm the compressor/driver are released for operation and all maintenance, LOTO, red tags and open work are cleared by the authorized process.',
+    'Walk the package. Inspect crankcase/frame oil level, force-feed lubricator condition, cylinder/packing lubrication, guards, drains, coolers and visible leakage.',
+    'Confirm suction/discharge process lineup, scrubber/catch-bottle liquid levels, recycle/bypass path and cooler path using the current Clear Fork lineup.',
+    'Verify no cylinder or process section is unintentionally isolated or trapped and that required drains/dumps are functional.',
+    'Establish frame pre-lube for the OEM/site-required period and pressure before rotation; verify force-feed lubrication is primed and delivering.',
+    'At the package/Murphy controls, verify oil pressure, permissives, shutdown devices and unload/recycle state are ready for startup.'
+   ],
+   start:[
+    'Start the driver/package from the authorized local control after pre-lube and permissives are proven.',
+    'Immediately verify frame oil pressure, force-feed lubrication indication, abnormal noise/vibration and cylinder/packing temperatures.',
+    'Confirm suction and discharge pressures develop normally and the recycle/unloader system prevents an excessive initial load.',
+    'Load the compressor in the approved sequence rather than jumping directly to full capacity. Watch rod-load related pressures, cylinder temperatures and compressor horsepower/load.',
+    'Verify V-1410 / F-1412 inlet-separation conditions remain stable as plant feed increases and that no scrubber/catch-bottle liquid shutdown condition develops.'
+   ],
+   run:[
+    'Trend suction/discharge pressure, frame oil pressure/temp, cylinder discharge temperatures, bearing temperatures, vibration and lubrication status.',
+    'Check liquid handling at compressor scrubbers/catch bottles and confirm recycle is not masking a downstream restriction or capacity problem.'
+   ],
+   stop:[
+    'Unload/recycle the compressor using the approved package sequence before a normal stop.',
+    'Stop the driver from the authorized control and verify the machine reaches zero speed without reverse rotation or abnormal coastdown.',
+    'Maintain required post-lube/auxiliary lubrication if the package procedure calls for it.',
+    'Record the reason for shutdown and preserve first-out/alarm information before resetting. For maintenance, isolate, vent and verify zero residual cylinder pressure under LOTO.'
+   ],
+   note:'The Ariel KBZ/6 manual covers startup, frame oil/pre-lube, force-feed lubrication and protective instrumentation. Exact inlet-compressor unit tags, driver-specific controls and Clear Fork field valve sequence remain site-procedure items.'
+  },
+  residue:{
+   title:'C-6100 / C-6200 / C-6300 Residue Compressors — Ariel KBZ/6',
+   source:'Ariel KBU/KBZ maintenance/startup guidance + Clear Fork residue-compressor board/interlock knowledge',
+   status:'OEM FAMILY + PLANT TAGS KNOWN / EXACT PACKAGE SEQUENCE PENDING', cls:'observed',
+   before:[
+    'Confirm the selected residue compressor is released, no red tag/LOTO is active, and suction/discharge/recycle paths are available.',
+    'Walk the machine and inspect frame-oil level, force-feed lubrication, coolers, guards, drains, packing/cylinder areas and visible leaks.',
+    'Confirm suction-side separator F-6800 condition and liquid level/dump availability before starting a machine that will pull on the residue suction header.',
+    'Verify the residue recycle line and XV-6060/interlock path are in the approved state; do not defeat the PIT-6050C high-high protection.',
+    'Establish frame pre-lube and verify lubrication/permissives before allowing rotation.',
+    'Verify unload/recycle state and downstream residue system capacity before adding the unit.'
+   ],
+   start:[
+    'Start the package/driver only after pre-lube and permissives are proven.',
+    'Immediately verify frame oil pressure, force-feed lubrication, vibration/noise and suction/discharge pressure development.',
+    'Bring load on in the approved step sequence while watching residue suction pressure, discharge pressure, recycle demand and cylinder temperatures.',
+    'Confirm plant throughput rises only as downstream capacity allows; excessive recycle means the compressor may be moving internal flow without increasing net plant rate.',
+    'Watch F-6800 and common residue suction conditions so starting a unit does not pull liquid forward or collapse suction pressure.'
+   ],
+   run:[
+    'Monitor common suction, individual discharge/load, recycle valve demand, frame oil, lubrication, cylinder/bearing temperatures and vibration.',
+    'Correlate residue compression with total plant throughput; the residue train can become the bottleneck even when inlet compression has spare capacity.'
+   ],
+   stop:[
+    'Unload/recycle the selected compressor according to the approved package sequence.',
+    'Stop the driver and verify zero speed and stable header pressures.',
+    'Maintain required post-lube and preserve first-out/trip information.',
+    'If the stop is for maintenance, follow LOTO, isolate and vent the process, and verify cylinders contain no residual pressure before work.'
+   ],
+   note:'Clear Fork has specific residue recycle/interlock information in the simulator, but the exact field start button sequence and package-specific timer values have not been verified from a current site SOP.'
+  },
+  overhead:{
+   title:'C-5700 Stabilizer Overhead Compressor — Ariel JGQ/2',
+   source:'Ariel JGM/JGN/JGP/JGQ maintenance/startup guidance + Clear Fork C-5700 process knowledge',
+   status:'MODEL/TAG OPERATOR-CONFIRMED / SITE STARTUP SOP PENDING', cls:'observed',
+   before:[
+    'Confirm C-5700 is released for service and no LOTO, red tag, maintenance hold or unresolved trip remains.',
+    'Walk the package for frame oil level, force-feed lubrication, cooling, packing/cylinder leakage, guards, drains and general mechanical condition.',
+    'Confirm the stabilizer overhead suction source and compressor discharge return path are available using the current P&ID/site lineup.',
+    'Verify suction vessels/lines are not carrying liquid and that upstream stabilizer/flash pressure is suitable for putting C-5700 online.',
+    'Establish frame pre-lube and verify the required oil-pressure start permissive before rotation.',
+    'Verify the unit is unloaded/recycled as required for startup and the discharge system can accept flow.'
+   ],
+   start:[
+    'Start the motor/package from the authorized control after pre-lube/permissives are proven.',
+    'Immediately verify frame oil pressure and force-feed lubrication, then check for abnormal vibration/noise and proper pressure development.',
+    'Load the compressor gradually using the approved unloader/recycle strategy while watching suction pressure, discharge pressure, stabilizer/flash pressure and cylinder temperatures.',
+    'Confirm increased overhead vapor demand is being handled without driving the stabilizer into an abnormal pressure or liquid-level condition.',
+    'Verify the discharge return to the inlet/slug-catcher side is stable and does not create an unexpected inlet-pressure/recycle interaction.'
+   ],
+   run:[
+    'Monitor lube oil pressure/temperature, suction/discharge pressure, cylinder/packing temperature, vibration and recycle/unloader state.',
+    'Correlate C-5700 load with T-5030/V-5010 pressure and light-ends/C2 loading instead of treating compressor load as an isolated indication.'
+   ],
+   stop:[
+    'Unload/recycle the compressor to the approved normal-stop condition.',
+    'Stop the motor/package and verify zero speed and stable suction/discharge pressure.',
+    'Maintain any required post-lube and document first-out/alarm information.',
+    'For maintenance, isolate/vent under LOTO and verify no trapped cylinder/process pressure before opening equipment.'
+   ],
+   note:'C-5700 is mapped to an Ariel JGQ/2 frame. The OEM family manual includes startup and required instrumentation, but exact Clear Fork field lineup and package sequence must be verified from the current site procedure before this page is promoted from training guidance to a site procedure.'
+  }
+ };
+ function esc(x){return String(x==null?'':x).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+ function list(items){return '<ol>'+items.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ol>';}
+ function render(key){var d=DATA[key]||DATA.expander,el=document.getElementById('startupguidecontent');if(!el)return;
+  el.innerHTML='<h2>'+esc(d.title)+'</h2><div class="sgsource">Source basis: '+esc(d.source)+' <span class="sgstatus '+d.cls+'">'+esc(d.status)+'</span></div>'+
+   '<div class="sgnoact">This page is read-only training. Clicking steps never starts, stops, loads, unloads, or changes any simulated equipment.</div>'+
+   '<div class="sgsection"><h3>1 — Before You Touch Start</h3>'+list(d.before)+'</div>'+
+   '<div class="sgsection"><h3>2 — Startup Teaching Sequence</h3>'+list(d.start)+'</div>'+
+   '<div class="sgsection"><h3>3 — What To Prove After It Starts</h3>'+list(d.run)+'</div>'+
+   '<div class="sgsection"><h3>4 — Controlled Stop Teaching Sequence</h3>'+list(d.stop)+'</div>'+
+   '<div class="sgsection"><h3>Source / Verification Note</h3><div class="sgnote">'+esc(d.note)+'</div></div>';
+ }
+ function open(){var p=document.getElementById('startupguide');if(!p)return;p.style.display='block';p.setAttribute('aria-hidden','false');render('expander');document.querySelectorAll('#startupguidenav button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-sg')==='expander');});}
+ function close(){var p=document.getElementById('startupguide');if(!p)return;p.style.display='none';p.setAttribute('aria-hidden','true');}
+ var b=document.getElementById('startupguidebtn');if(b)b.addEventListener('click',open);
+ var c=document.getElementById('startupguideclose');if(c)c.addEventListener('click',close);
+ var p=document.getElementById('startupguide');if(p)p.addEventListener('click',function(e){if(e.target===p)close();});
+ document.querySelectorAll('#startupguidenav button').forEach(function(n){n.addEventListener('click',function(){var key=n.getAttribute('data-sg');document.querySelectorAll('#startupguidenav button').forEach(function(x){x.classList.remove('active');});n.classList.add('active');render(key);});});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('startupguide')&&document.getElementById('startupguide').style.display==='block')close();});
+})();
+
+
+</script>
+<style id="startupEquipmentChooserCss">
+#startupguidebox{position:relative}
+#startupguide .sgchooser{position:absolute;inset:78px 18px 18px 18px;z-index:20;background:rgba(6,11,17,.96);display:flex;align-items:flex-start;justify-content:center;padding-top:44px;border-radius:10px}
+#startupguide .sgchooserbox{width:min(760px,92%);background:#101a24;border:1px solid #35536b;border-radius:12px;padding:20px;box-shadow:0 16px 45px rgba(0,0,0,.45);color:#e9f4ff}
+#startupguide .sgchooserbox h2{margin:0 0 16px;text-align:center;font-size:22px}
+#startupguide .sgchoosergrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#startupguide .sgchoosergrid button{min-height:92px;border:1px solid #47769c;border-radius:10px;background:#173049;color:#e9f5ff;font-size:18px;font-weight:900;cursor:pointer;padding:14px}
+#startupguide .sgchoosergrid button:hover{background:#214565}
+#startupguide .sgchoosernote{margin-top:14px;text-align:center;color:#99b7cf;font-size:11px}
+@media(max-width:760px){#startupguide .sgchoosergrid{grid-template-columns:1fr}}
+</style>
+<style id="expanderTraining12CXCss">
+#startupguide .exsim{border:1px solid #35536b;border-radius:9px;overflow:hidden;background:#0b1016;margin:10px 0 14px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+#startupguide .exsimtop{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#142431;border-bottom:1px solid #35536b;font:700 12px Consolas,monospace;color:#d7eaff}
+#startupguide .exsimtop .run{margin-left:auto;padding:3px 8px;border-radius:3px;background:#173b24;color:#9cf0b4;border:1px solid #317a4a}
+#startupguide .exsimtop .stop{margin-left:auto;padding:3px 8px;border-radius:3px;background:#3b1d1d;color:#ffb3a8;border:1px solid #7e3931}
+#startupguide .exstage{display:grid;grid-template-columns:58px 1fr 58px;min-height:500px;background:#aeb5ba;color:#111}
+#startupguide .exkeys{background:#d8dde0;padding:8px 5px;display:flex;flex-direction:column;gap:5px;justify-content:center}
+#startupguide .exkeys button,#startupguide .exfkeys button{font:700 10px Arial,sans-serif;border:1px solid #315d87;background:#2b8bd2;color:white;border-radius:12px;padding:5px 3px;cursor:pointer}
+#startupguide .exkeys button.active,#startupguide .exfkeys button.active{background:#ffd54a;color:#111;border-color:#9e7e00}
+#startupguide .exscreen{position:relative;min-width:0;padding:13px;background:#acb2b6;border-left:2px solid #7a8388;border-right:2px solid #7a8388}
+#startupguide .exscreen h4{text-align:center;margin:2px 0 10px;font:800 17px Arial;color:#17212a;text-transform:uppercase}
+#startupguide .exscreen .vendor{text-align:center;font:800 18px Arial;color:#eee;background:#30415b;padding:4px;margin:-13px -13px 8px}
+#startupguide .exrow{display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap}
+#startupguide .exbox{background:#d9d7c9;border:1px solid #777;padding:7px 9px;min-width:94px;font:700 12px Consolas,monospace;text-align:center}
+#startupguide .exgreen{background:#269342;color:#08170c;border:1px solid #154d25;font-weight:900}
+#startupguide .exyellow{background:#e1c64c;color:#181300;border:1px solid #8f7b1f;font-weight:900}
+#startupguide .exred{background:#b23d31;color:white;border:1px solid #73261f;font-weight:900}
+#startupguide .exbtn{border:2px solid #264a68;border-radius:3px;background:#2a6091;color:#fff;font-weight:800;padding:7px 10px;cursor:pointer}
+#startupguide .exbtn.good{background:#399642;border-color:#235f2a}.exbtn.warn{background:#d0a729;color:#111;border-color:#8b6f1c}.exbtn.danger{background:#a83a30;border-color:#6f231d}
+#startupguide .exbtn:disabled{opacity:.35;cursor:not-allowed}
+#startupguide .exfkeys{position:absolute;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+#startupguide .exfkeys button{border-radius:5px;padding:5px 1px;font-size:9px}
+#startupguide .exnotice{padding:7px 9px;border:1px solid #65717b;background:#cbd0d3;font:700 12px Arial;margin:8px 0}
+#startupguide .expumpgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:8px 0}
+#startupguide .expump{border:1px solid #6f777c;background:#c8cdd0;padding:9px;text-align:center}
+#startupguide .exlamp{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;background:#7c858b;border:1px solid #31383c;vertical-align:-1px}.exlamp.on{background:#42c75b;box-shadow:0 0 7px #42c75b}.exlamp.amber{background:#e4c239}
+#startupguide .exmeter{height:14px;background:#777;border:1px solid #444;position:relative;margin:5px 0}.exmeter>i{display:block;height:100%;background:#1d963d;width:0%}
+#startupguide .exstepbar{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:9px 0 12px}.exstepbar div{font-size:10px;padding:5px;border:1px solid #2c4052;background:#111923;color:#8296aa;border-radius:4px;text-align:center}.exstepbar div.done{background:#163a27;color:#9ff2b8;border-color:#2b7550}.exstepbar div.now{background:#3a3216;color:#ffe48d;border-color:#826c24}
+#startupguide .exteach{padding:9px 11px;background:#0f1d28;border:1px solid #27445b;border-radius:6px;color:#cae6fa;font-size:11px;line-height:1.45;margin:7px 0}
+#startupguide .exactionbar{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.exactionbar button{border:1px solid #40576b;border-radius:5px;background:#172431;color:#d8ebf9;padding:7px 10px;font-weight:700;cursor:pointer}.exactionbar button.ok{background:#183b26;color:#bdf0c8;border-color:#2e6c43}.exactionbar button.reset{background:#4a2b1e;color:#ffd1bd;border-color:#80513b}
+#startupguide input.exrange{width:100%;accent-color:#2d8fd0}
+#startupguide .exscenarios{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:6px;margin:8px 0}
+#startupguide .exscenarios button{border:1px solid #526d84;border-radius:5px;background:#152433;color:#dcefff;padding:7px 6px;font-size:10px;font-weight:800;cursor:pointer}
+#startupguide .exscenarios button.active{background:#4b3c15;color:#ffe78c;border-color:#9a7d29}
+#startupguide .exscenarioflag{padding:7px 9px;border:1px solid #526d84;background:#101d28;color:#bcd8ec;border-radius:5px;font-size:10px;margin:6px 0}
+@media(max-width:900px){#startupguide .exscenarios{grid-template-columns:1fr 1fr}}
+</style>
+
+<script id="expanderTraining12CXJs">
+(function(){
+  // 12CX: completely isolated teaching simulator. Never reads/writes PLANT, EXP, QHD or real simulator controls.
+  var T;
+  var hicAutoTimer=null, hicRampTimer=null;
+  function clearHicTimers(){if(hicAutoTimer){clearTimeout(hicAutoTimer);hicAutoTimer=null;}if(hicRampTimer){clearInterval(hicRampTimer);hicRampTimer=null;}}
+  function fresh(){return {screen:'F7',caseDrains:false,fuelGas:false,sealGas:false,alarmsAck:false,tripsAck:false,p1:'HAND',p2:'AUTO',coolerFan:'AUTO',pdi106:155,ready:false,startPage:false,resetDone:false,controlRoomNotified:false,startCommand:false,hicLocal:false,igv:0,rpm:0,running:false,confirmed20:false,remote:false,walk:false,scenario:0,scenarioName:'BASELINE — one pump HAND / one AUTO, lube-oil cooler fan AUTO, seal gas open',message:'Begin with field checks, then use the HMI screens in the startup guide order.'};}
+  function reset(){clearHicTimers();T=fresh();render();}
+  function esc(x){return String(x==null?'':x).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+  function pumpLineupOk(){return (T.p1==='HAND'&&T.p2==='AUTO')||(T.p2==='HAND'&&T.p1==='AUTO');}
+  function pumpRunning(x){return x==='HAND'||x==='AUTO';}
+  function fanRunning(x){return x==='HAND'||x==='AUTO';}
+  function coolerOk(){return fanRunning(T.coolerFan);}
+  function refreshLubeDP(){var n=(pumpRunning(T.p1)?1:0)+(pumpRunning(T.p2)?1:0);T.pdi106=n===0?0:(n===1?152:155);}
+  function allPre(){refreshLubeDP();return T.caseDrains&&T.fuelGas&&T.sealGas&&T.alarmsAck&&T.tripsAck&&pumpLineupOk()&&coolerOk()&&T.pdi106>=110;}
+  function step(){if(T.running&&T.remote&&T.walk)return 5;if(T.running)return 4;if(T.startCommand||T.igv>0)return 3;if(allPre()&&T.resetDone)return 2;if(T.caseDrains||T.fuelGas||T.sealGas||T.alarmsAck||T.tripsAck||coolerOk())return 1;return 0;}
+  function cycleMode(v){return v==='OFF'?'HAND':v==='HAND'?'AUTO':'OFF';}
+  function scenarioButtons(){var names=['Lube-oil cooler fan HAND','Both lube pumps OFF','Both lube pumps HAND','P-101A AUTO / P-101B HAND','Seal gas valve CLOSED'];return '<div class="exscenarioflag"><b>Loaded scenario:</b> '+esc(T.scenarioName)+'</div><div class="exscenarios">'+names.map(function(n,i){return '<button class="'+(T.scenario===i+1?'active':'')+'" data-exscenario="'+(i+1)+'">S'+(i+1)+' — '+n+'</button>';}).join('')+'</div>'; }
+  function loadScenario(n){reset();T.scenario=n;T.caseDrains=true;T.fuelGas=true;T.alarmsAck=true;T.tripsAck=true;T.resetDone=true;T.controlRoomNotified=false;T.screen='F2';T.sealGas=true;T.p1='HAND';T.p2='AUTO';T.coolerFan='AUTO';
+    if(n===1){T.coolerFan='HAND';T.scenarioName='S1 — LUBE-OIL COOLER FAN IN HAND';T.message='Scenario loaded: the single lube-oil cooler fan is in HAND. Inspect the lineup and decide whether the startup prerequisites are satisfied.';}
+    else if(n===2){T.p1='OFF';T.p2='OFF';T.scenarioName='S2 — BOTH LUBE-OIL PUMPS OFF';T.message='Scenario loaded: both lube-oil pumps are OFF. PDI-106 has collapsed; startup must remain blocked until lube oil is established.';}
+    else if(n===3){T.p1='HAND';T.p2='HAND';T.scenarioName='S3 — BOTH LUBE-OIL PUMPS IN HAND';T.message='Scenario loaded: both lube-oil pumps are in HAND. Restore one pump to AUTO standby before startup.';}
+    else if(n===4){T.p1='AUTO';T.p2='HAND';T.scenarioName='S4 — P-101A AUTO / P-101B HAND';T.message='Scenario loaded: alternate valid duty/standby arrangement. Prove one pump HAND, the other AUTO, acceptable PDI-106, and cooler availability.';}
+    else if(n===5){T.sealGas=false;T.scenarioName='S5 — SEAL GAS VALVE CLOSED';T.message='Scenario loaded: seal gas valve is CLOSED / low differential. Startup must remain blocked until dry seal gas differential is restored.';}
+    refreshLubeDP();render();}
+  function progress(){var labs=['Field checks','Alarms/trips','Lube oil','Ready/start','20% / 9–10k','Remote / final'];var st=step();return '<div class="exstepbar">'+labs.map(function(x,i){return '<div class="'+(i<st?'done':i===st?'now':'')+'">'+x+'</div>';}).join('')+'</div>';}
+  function bottomKeys(){var labels=[];for(var i=1;i<=20;i++)labels.push('<button data-exf="F'+i+'" class="'+(T.screen==='F'+i?'active':'')+'">F'+i+'</button>');return '<div class="exfkeys">'+labels.join('')+'</div>';}
+  function sideKeys(side){var a=[];for(var i=1;i<=20;i++){var k='K'+i;a.push('<button data-exk="'+k+'" class="'+((T.screen==='K12'&&k==='K12')?'active':'')+'">'+k+'</button>');}return '<div class="exkeys">'+a.join('')+'</div>';}
+  function common(title,body){return '<div class="exsim"><div class="exsimtop"><span>ATLAS COPCO MAFI-TRENCH COMPANY — TRAINING REPLICA</span><span class="'+(T.running?'run':'stop')+'">'+(T.running?'RUNNING '+Math.round(T.rpm)+' RPM':'NOT RUNNING')+'</span></div><div class="exstage">'+sideKeys('L')+'<div class="exscreen"><div class="vendor">ATLAS COPCO MAFI-TRENCH COMPANY</div><h4>'+title+'</h4>'+body+bottomKeys()+'</div>'+sideKeys('R')+'</div></div>';}
+  function lamps(){refreshLubeDP();return '<div class="exnotice"><span class="exlamp '+(T.sealGas?'on':'amber')+'"></span>Seal gas DP &nbsp; <span class="exlamp '+(pumpLineupOk()&&T.pdi106>=110?'on':'amber')+'"></span>Lube oil pump lineup / DP &nbsp; <span class="exlamp '+(coolerOk()?'on':'amber')+'"></span>Lube-oil cooler airflow</div>';}
+  function screen(){
+    var b='';
+    if(T.screen==='F7'){
+      b='<div class="exyellow" style="padding:10px;text-align:center;font-size:18px;margin:25px 50px">FIRST-OUT ALARM IS<br><b>'+(T.alarmsAck?'NONE — ACKNOWLEDGED':'COMPRESSOR THRUST HIGH DP (training example)')+'</b></div><div class="exrow" style="justify-content:center"><button class="exbtn good" data-exact="ackAlarm">F3 ACKNOWLEDGE ALARMS</button><button class="exbtn" data-exf="F6">F6 ALARM DETAILS</button><button class="exbtn" data-exf="F2">F2 ALARM HISTORY</button></div>';
+      return common('ALARM SUMMARY',b);
+    }
+    if(T.screen==='F4'){
+      b='<div class="exred" style="padding:10px;text-align:center;font-size:18px;margin:25px 50px">FIRST-OUT TRIP IS<br><b>'+(T.tripsAck?'NONE — ACKNOWLEDGED':'ACKNOWLEDGE / RESET REQUIRED')+'</b></div><div class="exrow" style="justify-content:center"><button class="exbtn good" data-exact="ackTrip">F3 ACKNOWLEDGE TRIPS</button><button class="exbtn" data-exf="F6">F6 TRIP DETAILS</button><button class="exbtn" data-exf="F2">F2 TRIP HISTORY</button></div>';
+      return common('SHUTDOWN SUMMARY',b);
+    }
+    if(T.screen==='F2'){
+      refreshLubeDP();
+      b=lamps()+'<div class="expumpgrid"><div class="expump"><b>P-101A</b><div style="margin:7px"><span class="exlamp '+(pumpRunning(T.p1)?'on':'amber')+'"></span>'+(pumpRunning(T.p1)?'RUNNING':'OFF')+'</div><button class="exbtn '+(T.p1==='HAND'?'good':T.p1==='OFF'?'danger':'')+'" data-exact="pump1">MODE: '+T.p1+'</button></div><div class="expump"><b>P-101B</b><div style="margin:7px"><span class="exlamp '+(pumpRunning(T.p2)?'on':'amber')+'"></span>'+(pumpRunning(T.p2)?'RUNNING':'OFF')+'</div><button class="exbtn '+(T.p2==='HAND'?'good':T.p2==='OFF'?'danger':'')+'" data-exact="pump2">MODE: '+T.p2+'</button></div></div><div class="exrow"><div class="exbox">PDI-106<br>'+T.pdi106+' PSID</div></div><div class="expumpgrid"><div class="expump"><b>LUBE OIL COOLER FAN</b><div><span class="exlamp '+(fanRunning(T.coolerFan)?'on':'amber')+'"></span>'+(fanRunning(T.coolerFan)?'RUNNING':'OFF')+'</div><button class="exbtn '+(T.coolerFan==='HAND'?'good':T.coolerFan==='OFF'?'danger':'')+'" data-exact="coolerFan">MODE: '+T.coolerFan+'</button></div></div><div class="exteach">Training requirement: establish lube-oil differential with one P-101 pump in HAND and the other in AUTO standby. The single lube-oil cooler fan must be available/running. Scenario variations are operator-requested training cases; exact field fan-mode requirements remain governed by the current package procedure.</div>';
+      return common('LUBE OIL SCREEN',b);
+    }
+    if(T.screen==='F12'){
+      var ok=allPre();
+      b='<div style="margin:20px 35px;font-weight:800">EXPANDER READY SCREEN</div>'+lamps()+'<div class="exrow"><span class="exlamp '+(T.sealGas?'on':'amber')+'"></span>SEAL GAS LOW DIFFERENTIAL PRESSURE ALARM (PDAL-101)</div><div class="exrow"><span class="exlamp '+(pumpLineupOk()&&T.pdi106>=110?'on':'amber')+'"></span>LUBE OIL LOW DIFFERENTIAL PRESSURE ALARM (PDAL-106)</div><div class="exrow"><span class="exlamp '+(T.hicLocal?'on':'amber')+'"></span>INLET GUIDE VANE LOCAL MODE (PV-101)</div><div class="exrow"><span class="exlamp '+(ok?'on':'amber')+'"></span>EXPANDER COMMON SHUTDOWN / READY CONDITIONS</div><div class="exactionbar"><button class="exbtn '+(ok?'good':'')+'" data-exact="startupPage" '+(ok?'':'disabled')+'>F2 EXPANDER START UP</button><button class="exbtn warn" data-exact="resetPkg">F4 RESET EXPANDER</button></div>';
+      return common('EXPANDER READY SCREEN',b);
+    }
+    if(T.screen==='STARTUP'){
+      b='<div class="exrow"><div class="exbox">ZI-101<br>100%</div><div class="exbox">PV-101<br>'+T.igv+'%</div><div class="exbox">SPEED<br>'+Math.round(T.rpm)+' RPM</div></div><div class="exnotice">SDV-101 inlet trip valve — training indication OPEN &nbsp; | &nbsp; SDV-102 compressor inlet block valve — training indication OPEN</div><div class="exrow"><button class="exbtn '+(T.controlRoomNotified?'good':'warn')+'" data-exact="notifyControl">'+(T.controlRoomNotified?'✓ CONTROL ROOM NOTIFIED':'NOTIFY CONTROL ROOM')+'</button><button class="exbtn good" data-exact="startCmd" '+(!T.resetDone||!T.controlRoomNotified?'disabled':'')+'>START EXPANDER</button><button class="exbtn danger" data-exact="stopCmd">STOP EXPANDER</button><button class="exbtn warn" data-exact="resetAll">RESET TRAINING</button></div><div class="exteach">After this start command, go to the R/S loading screen through HIC-101 K12, place HIC-101 LOCAL, then use F18 to open the inlet guide vane to 20%.</div>';
+      return common('EXPANDER START UP',b);
+    }
+    if(T.screen==='K12'){
+      b='<div class="exrow"><div style="flex:1"><b>HIC LOADING STATION — HIC-101</b><div class="exmeter"><i style="width:'+T.igv+'%"></i></div><div class="exbox">PV-101 '+T.igv+'% OPEN</div></div><div class="exbox">SPEED<br>'+Math.round(T.rpm)+' RPM</div></div><div class="exrow"><button class="exbtn '+(T.hicLocal?'good':'')+'" data-exact="hicMode">'+(T.hicLocal?'LOCAL':'REMOTE')+'</button><button class="exbtn good" data-exact="f18open" '+(!T.hicLocal||!T.startCommand?'disabled':'')+'>F18 OPEN VALVE</button><button class="exbtn danger" data-exact="f19close" '+(!T.hicLocal?'disabled':'')+'>F19 CLOSE VALVE</button></div><label style="display:block;margin:8px 0;font-weight:700">HIC-101 valve position — 0–100%</label><input class="exrange" id="exIgvRange" type="range" min="0" max="100" step="1" value="'+T.igv+'" '+(!T.hicLocal||!T.startCommand?'disabled':'')+'><div class="exteach">Startup guide target: open to <b>20%</b>. At about 20%, this training replica accelerates toward <b>9,000–10,000 RPM</b>. Confirm the 20% opening with the control-room operator, then return HIC-101 to REMOTE.</div>';
+      return common('PID CONTROL — HIC-101 K12',b);
+    }
+    if(T.screen==='F1'){
+      b='<div class="exrow"><div class="exbox">ZI-101<br>100%</div><div class="exbox">PV-101<br>'+T.igv+'%</div><div class="exbox">PI-101<br>349 PSIG</div><div class="exbox">PI-109<br>242 PSIG</div></div><div style="text-align:center;font-size:22px;font-weight:900;margin:25px">EXP &nbsp; ═══ &nbsp; COMP<br><span style="font-size:16px">ACMTC 1039</span></div><div class="exnotice"><span class="exlamp '+(T.running?'on':'amber')+'"></span>'+(T.running?'RUNNING — '+Math.round(T.rpm)+' RPM':'NOT RUNNING')+'</div><div class="exrow"><button class="exbtn" data-exf="F12">EXPANDER READY F12</button><button class="exbtn" data-exf="F2">LUBE OIL F2</button><button class="exbtn" data-exf="F3">SEAL GAS F3</button><button class="exbtn" data-exf="F7">ALARM F7</button><button class="exbtn" data-exf="F8">TRIP F8</button></div>';
+      return common('MAIN SCREEN',b);
+    }
+    if(T.screen==='F3'){
+      b='<div class="exnotice"><span class="exlamp '+(T.sealGas?'on':'amber')+'"></span>SEAL GAS DIFFERENTIAL PRESSURE: '+(T.sealGas?'50 PSID — HEALTHY':'LOW / NOT VERIFIED')+'</div><div class="exrow"><button class="exbtn '+(T.sealGas?'good':'warn')+'" data-exact="sealGas">SEAL GAS VALVE: '+(T.sealGas?'OPEN':'CHECK / OPEN')+'</button></div>';
+      return common('SEAL GAS SCREEN',b);
+    }
+    if(T.screen==='F6'){
+      b='<div class="exrow"><div class="exbox">PI-105<br>244 PSIG</div><span>EXPANDER THRUST PRESSURE</span></div><div class="exrow"><div class="exbox">PI-104<br>349 PSIG</div><span>COMPRESSOR THRUST PRESSURE</span></div><div class="exrow"><div class="exbox">PDI-106<br>155 PSID</div><span>LUBE OIL DIFFERENTIAL PRESSURE</span></div><div class="exrow"><div class="exbox">PDI-108<br>4 PSID</div><span>LUBE OIL FILTER DIFFERENTIAL PRESSURE</span></div>';
+      return common('DATA DISPLAY',b);
+    }
+    b='<div class="exnotice">'+esc(T.screen)+' is represented because the real ACMTC has the complete function-key set. No source screenshot was supplied for this specific page, so this training replica intentionally does not invent its contents.</div>';
+    return common(T.screen+' — PAGE NOT CAPTURED',b);
+  }
+  function render(){var el=document.getElementById('startupguidecontent');if(!el||!document.querySelector('#startupguidenav button[data-sg="expander"].active'))return;var done=T.running&&T.remote&&T.walk;el.innerHTML='<h2>EX-1121 / C-1121 Interactive Start / Stop Training</h2><div class="sgsource">Source basis: operator-supplied Clear Fork EX/C-1121 Start-Up Guide, Version 2 dated 04/17/2025 + operator-supplied ACMTC 1039 screen photos. <span class="sgstatus verified">SITE GUIDE / ACTUAL HMI SCREENS</span></div><div class="sgnoact">Training-only replica. Every button below changes only this popup’s private training state; it cannot start, stop, reset, load, or otherwise change the simulator’s EX-1121.</div>'+scenarioButtons()+'<div class="extrainworkspace"><div class="extraincontrols">'+progress()+'<div class="exactionbar"><button class="ok" data-exact="caseDrains">'+(T.caseDrains?'✓ ':'')+'Drain case drains</button><button class="ok" data-exact="fuelGas">'+(T.fuelGas?'✓ ':'')+'Check fuel gas valve</button><button class="ok" data-exact="sealGas">'+(T.sealGas?'✓ ':'')+'Verify seal gas open</button><button class="reset" data-exact="resetAll">↻ Reset Training</button></div><div class="exteach"><b>Current instruction:</b> '+esc(T.message)+'</div><div class="sgsection excomplete"><h3>Completion</h3><div class="sgnote">'+(done?'✓ Startup training complete — RUNNING and HIC-101 REMOTE.':'Follow the current instruction and highlighted HMI controls.')+'</div></div></div><div class="extrainmain">'+screen()+'<div class="sgsection exsequence"><h3>Startup sequence represented</h3><ol><li>Drain case drains; walk skid for leaks, oil level and filter DP.</li><li>Verify seal gas open and check fuel-gas valve position.</li><li>F7 Alarm Screen → F3 acknowledge alarms.</li><li>F4 Trip Screen → F3 acknowledge trips.</li><li>F1 Main Screen.</li><li>F2 Lube Oil → one P-101A/P-101B HAND, other AUTO; verify PDI-106; verify cooler fan RUNNING.</li><li>F1 → F12 Ready → F2 Expander Start Up → F4 reset as required.</li><li>Notify control room; press Start Expander.</li><li>HIC-101 K12 → LOCAL → F18/open to 20%.</li><li>Confirm about 9,000–10,000 RPM and 20% with control room.</li><li>Return HIC-101 REMOTE: command ramps down to 5%, then automatically ramps to 100%; the complete transfer finishes within about 5 seconds.</li><li>Final walkaround; report abnormalities.</li></ol></div></div></div>';
+  }
+  function setScreen(x){T.screen=x;T.message='Viewing '+x+'. Follow the guide sequence; only the captured/required pages have active training controls.';render();}
+  function act(a){
+    if(a==='resetAll'){reset();return;}
+    if(a==='caseDrains'){T.caseDrains=true;T.message='Case drains completed. Continue the field walkaround and verify valve positions.';render();return;}
+    if(a==='fuelGas'){T.fuelGas=true;T.message='Fuel gas valve position checked for training. Verify the actual required position in the current field procedure.';render();return;}
+    if(a==='sealGas'){T.sealGas=true;T.message='Seal gas valve verified OPEN. Next acknowledge alarms/trips.';render();return;}
+    if(a==='ackAlarm'){T.alarmsAck=true;T.message='Alarms acknowledged. Go to the Trip Screen (F4) and acknowledge trips with F3.';render();return;}
+    if(a==='ackTrip'){T.tripsAck=true;T.message='Trips acknowledged. Return to F1, then open the Lube Oil Screen F2.';render();return;}
+    if(a==='pump1'){T.p1=cycleMode(T.p1);refreshLubeDP();T.message='P-101A mode changed to '+T.p1+'. Startup target is one lube-oil pump HAND and the other AUTO with acceptable PDI-106.';render();return;}
+    if(a==='pump2'){T.p2=cycleMode(T.p2);refreshLubeDP();T.message='P-101B mode changed to '+T.p2+'. Startup target is one lube-oil pump HAND and the other AUTO with acceptable PDI-106.';render();return;}
+    if(a==='coolerFan'){T.coolerFan=cycleMode(T.coolerFan);T.message='Lube-oil cooler fan mode changed to '+T.coolerFan+'. Verify cooler airflow/temperature response before startup.';render();return;}
+    if(a==='resetPkg'){T.resetDone=true;T.message='Expander reset completed in the training package. With all pre-start checks satisfied, use F2 Expander Start Up.';render();return;}
+    if(a==='startupPage'){T.startPage=true;T.screen='STARTUP';T.message='Expander Start Up page open. Notify the control-room operator that the expander is ready, then press Start Expander.';render();return;}
+    if(a==='notifyControl'){T.controlRoomNotified=true;T.message='Control room notified that the expander is ready for the training start. START EXPANDER is now enabled.';render();return;}
+    if(a==='startCmd'){if(!allPre()||!T.resetDone||!T.controlRoomNotified){T.message='START BLOCKED in training: complete field checks, alarms/trips, lube-oil lineup/cooler, package reset, and notify the control room first.';}else{T.startCommand=true;T.message='Start command accepted in training. Go to HIC-101 K12, select LOCAL and open to 20%.';}render();return;}
+    if(a==='stopCmd'){clearHicTimers();T.running=false;T.rpm=0;T.igv=0;T.startCommand=false;T.remote=false;T.hicLocal=false;T.message='Training stop completed. Use Reset Expander Training to run the full startup again.';render();return;}
+    if(a==='hicMode'){
+      T.hicLocal=!T.hicLocal;
+      if(!T.hicLocal&&T.running&&T.confirmed20){
+        clearHicTimers();
+        T.remote=true;
+        var remoteStart=Math.max(5,T.igv);
+        var transferStart=Date.now();
+        T.message='HIC-101 returned to REMOTE. Transfer is ramping the guide-vane command down to 5%, then up to 100%; the full transfer completes within about 5 seconds.';
+        render();
+        hicRampTimer=setInterval(function(){
+          if(!T.remote||T.hicLocal||!T.startCommand){clearHicTimers();return;}
+          var ms=Date.now()-transferStart;
+          if(ms<750){var q=ms/750;T.igv=remoteStart+(5-remoteStart)*q;}
+          else {var q2=Math.min(1,(ms-750)/4250);T.igv=5+(100-5)*q2;}
+          T.igv=Math.max(0,Math.min(100,T.igv));updateRpm();
+          if(ms>=5000){clearInterval(hicRampTimer);hicRampTimer=null;T.igv=100;updateRpm();T.message='HIC-101 REMOTE transfer complete: command reached 100% after the 5% dip. Complete the final walkaround and report abnormalities.';}
+          render();
+        },100);
+      }else{
+        if(T.hicLocal){clearHicTimers();T.remote=false;T.message='HIC-101 LOCAL. Use F18 or the valve-position slider and stop at 20%.';}else{T.message='HIC-101 REMOTE.';}
+        render();
+      }
+      return;
+    }
+    if(a==='f18open'){if(T.hicLocal&&T.startCommand){T.igv=Math.min(100,T.igv+5);updateRpm();}render();return;}
+    if(a==='f19close'){if(T.hicLocal){T.igv=Math.max(0,T.igv-5);updateRpm();}render();return;}
+    if(a==='confirm20'){T.confirmed20=true;T.message='20% opening confirmed with the control-room operator. Return HIC-101 to REMOTE.';render();return;}
+    if(a==='walk'){T.walk=true;T.message='Final walkaround complete. Startup training is complete.';render();return;}
+  }
+  function updateRpm(){if(!T.startCommand){T.rpm=0;T.running=false;return;} if(T.igv<=0){T.rpm=0;T.running=false;} else {T.rpm=Math.min(24000,Math.round(480*T.igv));T.running=T.rpm>500;} if(T.igv>=18&&T.igv<=22){T.rpm=9600;T.running=true;T.confirmed20=true;T.message='Target reached: HIC-101 about 20% and speed about 9,600 RPM. Confirm the 20% opening, then return HIC-101 to REMOTE.';} else if(T.igv>22){T.message='Training warning: startup guide calls for 20% at this stage. Reduce HIC-101 back toward 20%.';} else {T.message='HIC-101 is opening in LOCAL. Continue carefully toward the 20% startup target.';}}
+  document.addEventListener('click',function(e){
+    var sc=e.target.closest&&e.target.closest('[data-exscenario]');if(sc&&document.getElementById('startupguide')&&document.getElementById('startupguide').style.display==='block'){loadScenario(Number(sc.getAttribute('data-exscenario'))||1);return;}
+    var a=e.target.closest&&e.target.closest('[data-exact]'); if(a&&document.getElementById('startupguide')&&document.getElementById('startupguide').style.display==='block'){act(a.getAttribute('data-exact'));return;}
+    var f=e.target.closest&&e.target.closest('[data-exf]'); if(f&&document.getElementById('startupguide')&&document.getElementById('startupguide').style.display==='block'){
+      var k=f.getAttribute('data-exf');
+      if(k==='F8')k='F4';
+      setScreen(k);return;
+    }
+    var k=e.target.closest&&e.target.closest('[data-exk]'); if(k&&document.getElementById('startupguide')&&document.getElementById('startupguide').style.display==='block'){
+      if(k.getAttribute('data-exk')==='K12'){T.screen='K12';T.message='HIC-101 K12 loading station. Put HIC-101 in LOCAL before using F18/open.';render();}else{T.message=k.getAttribute('data-exk')+' is present on the real keypad, but no captured training action is assigned to it here.';render();}return;
+    }
+  });
+  document.addEventListener('input',function(e){if(e.target&&e.target.id==='exIgvRange'){T.igv=Math.max(0,Math.min(100,Number(e.target.value)||0));updateRpm();render();}});
+  // Add explicit completion actions when conditions are met.
+  document.addEventListener('click',function(e){if(e.target&&e.target.id==='startupguidebtn'){setTimeout(function(){T=fresh();render();},0);}});
+  document.querySelectorAll('#startupguidenav button[data-sg="expander"]').forEach(function(b){b.addEventListener('click',function(){setTimeout(function(){if(!T)T=fresh();render();},0);});});
+  // Keep a small observer so existing guide render cannot overwrite the interactive expander page after popup open/nav changes.
+  var c=document.getElementById('startupguidecontent'); if(c){new MutationObserver(function(){var ex=document.querySelector('#startupguidenav button[data-sg="expander"].active');if(ex&&document.getElementById('startupguide').style.display==='block'&&!c.querySelector('.exsim')&&!c.__exrendering){c.__exrendering=true;if(!T)T=fresh();render();c.__exrendering=false;}}).observe(c,{childList:true});}
+  T=fresh();
+  // Add buttons for operator confirmation/final walkaround to the instruction flow through event-safe helper.
+  var oldRender=render; render=function(){oldRender();var el=document.getElementById('startupguidecontent');if(!el||!el.querySelector('.exsim'))return;var box=el.querySelector('.exteach');if(T.running&&T.confirmed20&&T.hicLocal&&box)box.insertAdjacentHTML('afterend','<div class="exactionbar"><button class="ok" data-exact="confirm20">✓ Confirm 20% with control room</button></div>');if(T.running&&T.remote&&!T.walk&&box)box.insertAdjacentHTML('afterend','<div class="exactionbar"><button class="ok" data-exact="walk">✓ Final walkaround / report abnormalities</button></div>');};
+})();
+</script>
+
+
+<style id="residueTraining12DBCss">
+#startupguide .restrain{display:grid;grid-template-columns:minmax(250px,30%) minmax(0,1fr);gap:10px;height:calc(100vh - 225px);min-height:420px;max-height:calc(100vh - 225px)}
+#startupguide .resleft,#startupguide .resmain{min-height:0;height:100%;overflow-y:scroll;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;overflow-anchor:none;scroll-behavior:auto;border:1px solid #30465a;border-radius:8px;background:#0c141c;padding-bottom:28px}
+#startupguide .resleft{padding:10px}.resmain{padding:10px}
+#startupguide .resprogress{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:5px 0 10px}
+#startupguide .resprogress div{font-size:9px;padding:5px 3px;text-align:center;border:1px solid #2b4053;border-radius:4px;background:#111c27;color:#839bb0}
+#startupguide .resprogress .done{background:#173d29;color:#b7efc7;border-color:#31724a}.resprogress .now{background:#433718;color:#ffe78e;border-color:#846c24}
+#startupguide .respanel{background:#bfc5c8;border:5px solid #7b8184;border-radius:6px;padding:12px;color:#101417;box-shadow:inset 0 0 0 2px #e8ecee}
+#startupguide .reshmi{background:#1b2430;border:4px solid #687078;border-radius:5px;padding:8px;color:#e8f7ff;min-height:370px;position:relative}
+#startupguide .resvendor{background:#165aac;color:white;font:900 25px Arial;padding:8px;text-align:center;margin-bottom:6px}.resvendor small{display:block;font-size:12px;font-weight:700;color:#c8e4ff}
+#startupguide .resbanner{text-align:center;color:#8fff58;font:800 13px Arial;margin:4px}.resnav{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}.resnav button{background:#2468b6;color:white;border:1px solid #78a9df;padding:8px;border-radius:3px;font-weight:800;cursor:pointer}.resnav button.active{background:#ffd34b;color:#111}
+#startupguide .resgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rescard{border:1px solid #52718e;background:#202c37;padding:8px;border-radius:4px}.rescard b{color:#8ed5ff}.resbig{font:900 22px Consolas,monospace;color:#8fff58}
+#startupguide .rescontrols{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.resctl{background:#d7dadd;border:1px solid #888;border-radius:4px;padding:8px;text-align:center;color:#111}.resctl button{width:100%;margin-top:6px;padding:8px;font-weight:900;border-radius:4px;border:1px solid #47535d;cursor:pointer}.resctl .green{background:#35ad54}.resctl .red{background:#c3473f;color:white}.resctl .amber{background:#d5af37}.resctl .blue{background:#3c7eb7;color:white}
+#startupguide .resmode{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.resmode button{font-size:10px;padding:5px}.resmode button.sel{outline:3px solid #f3df55;background:#1f7f42;color:white}
+#startupguide .resdp{height:13px;background:#424950;border:1px solid #111;margin:5px 0;position:relative}.resdp i{display:block;height:100%;background:#d7a730}
+#startupguide .resprompt{position:sticky;top:0;z-index:5;background:#142433;border:1px solid #47728f;border-radius:7px;padding:9px;margin-bottom:10px;color:#e7f5ff;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#startupguide .resprompt h4{margin:0 0 4px;color:#9fd8ff}.resprompt .ok{color:#9cf0b3;font-weight:800}.resprompt .wait{color:#ffd66c;font-weight:800}
+#startupguide .reshold{position:relative;overflow:hidden}.reshold i{position:absolute;left:0;bottom:0;height:4px;width:0;background:#9cff72}.reshold.holding i{animation:reshold 1.5s linear forwards}@keyframes reshold{from{width:0}to{width:100%}}
+#startupguide .reslogin{margin-top:10px;padding:10px;border:1px solid #5b7b95;background:#111b25;border-radius:6px}.reslogin input{width:100%;box-sizing:border-box;margin:4px 0;padding:7px;background:#e9eef2;color:#111;border:1px solid #777}.reslogin .ok{color:#8fff58;font-weight:900}.reslogin .bad{color:#ff9d8d;font-weight:900}@media(max-width:900px){#startupguide .restrain{grid-template-columns:1fr;height:auto;max-height:none}.resleft{max-height:35vh}.resmain{max-height:55vh}.rescontrols{grid-template-columns:1fr 1fr}}
+</style>
+<script id="residueTraining12DBJs">
+(function(){
+ var R=null, dpTimer=null, unloadTimer=null, holdTimer=null;
+ function fresh(){return {unit:'C-6300',page:'MAIN',panelLight:true,estop:true,reset:false,oilFan:'OFF',fanA:'OFF',fanB:'OFF',fanC:'OFF',bypass:false,dp:45.0,pressure:420.0,suctionPressure:0,dischargePressure:0,rpm:0,alarmsClear:false,permissive:false,running:false,loaded:false,remote:false,ctrlMode:'AUTO',authenticated:false,loginMsg:'',loadStep:0,unload:false,hold:false,message:'Start with the local panel checks. Complete each highlighted check in order.'};}
+ function clearTimers(){if(dpTimer){clearInterval(dpTimer);dpTimer=null;}if(unloadTimer){clearInterval(unloadTimer);unloadTimer=null;}if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}}
+ function reset(){clearTimers();R=fresh();render();}
+ function esc(x){return String(x==null?'':x).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+ function fansAuto(){return R.oilFan==='AUTO'&&R.fanA==='AUTO'&&R.fanB==='AUTO'&&R.fanC==='AUTO';}
+ function ready(){return R.panelLight&&R.estop&&R.reset&&fansAuto()&&R.dp<30&&R.pressure<300&&R.alarmsClear;}
+ function stage(){if(R.remote&&R.loaded&&R.running)return 10;if(R.loaded&&R.running)return 9;if(R.running)return 8;if(R.alarmsClear&&R.pressure<300&&R.dp<30&&fansAuto()&&R.reset)return 7;if(R.pressure<300&&R.dp<30&&fansAuto()&&R.reset)return 6;if(R.dp<30&&fansAuto()&&R.reset)return 5;if(fansAuto()&&R.reset)return 4;if(R.reset)return 3;return 2;}
+ var steps=[
+  'Panel / E-stop / unit identification','LOCAL RESET','All four cooler selectors AUTO','Open bypass around XV-6100; reduce DP below 30 psid (may then close bypass)','UNLOAD / blow down trapped pressure below 300 psig','Alarms clear + permissive present','Hold LOCAL START until unit starts','COMP LOADING: verify suction/discharge PID disabled and Remote Load Capacity enabled; press LOAD','COMP SVU/FVCP CTRL: REMOTE; notify control room ready to load'];
+ function progress(){var st=stage();return '<div class="resprogress">'+steps.map(function(x,i){return '<div class="'+(i<st-1?'done':i===st-1?'now':'')+'">'+(i+1)+' '+x+'</div>';}).join('')+'</div>';}
+ function currentPrompt(){var st=stage(),complete=st>=10,shown=Math.min(st,9),txt=complete?'Startup sequence complete — unit running, loaded and SVU/FVCP control REMOTE.':steps[Math.max(0,shown-1)],done='';if(st===5)done='DP '+R.dp.toFixed(1)+' psid · bypass '+(R.bypass?'OPEN':'CLOSED')+' — criterion satisfied';if(st===6)done='Pressure '+R.pressure.toFixed(0)+' psig';if(st===7)done='Alarms '+(R.alarmsClear?'CLEAR':'ACTIVE')+' · permissive '+(ready()?'PRESENT':'NOT READY');if(complete)done='REMOTE / READY';return '<div class="resprompt"><h4>'+(complete?'Startup Complete':'Startup Check '+shown+' of 9')+'</h4><div>'+esc(txt)+'</div><div class="'+(complete||done?'ok':'wait')+'">'+(done||'Complete the highlighted control/check before advancing.')+'</div></div>';}
+ function modeBlock(name,val,key){return '<div class="resctl"><b>'+name+'</b><div class="resmode"><button data-resmode="'+key+'|HAND" class="'+(val==='HAND'?'sel':'')+'">HAND</button><button data-resmode="'+key+'|OFF" class="'+(val==='OFF'?'sel':'')+'">OFF</button><button data-resmode="'+key+'|AUTO" class="'+(val==='AUTO'?'sel':'')+'">AUTO</button></div><small>'+(val==='AUTO'?(R.running?'RUNNING / AUTO READY':'AUTO READY'):'Must be AUTO to run')+'</small></div>';}
+ function panel(){return '<div class="respanel"><div style="font-weight:900;font-size:16px;margin-bottom:6px">'+R.unit+' RESIDUE COMPRESSOR — LOCAL PANEL TRAINER</div><div class="rescontrols"><div class="resctl"><b>UNIT RUNNING</b><div style="font-size:25px;color:'+(R.running?'#0a0':'#666')+'">●</div><small style="font-weight:900;color:'+(R.running?'#087a25':'#555')+'">'+(R.running?'RUNNING · '+R.rpm.toFixed(0)+' RPM':'STOPPED · 0 RPM')+'</small></div><div class="resctl"><b>UNIT ALARM</b><div style="font-size:25px;color:'+(R.alarmsClear?'#777':'#d9a600')+'">●</div></div><div class="resctl"><b>UNIT SHUTDOWN</b><div style="font-size:25px;color:#b40000">●</div></div><div class="resctl"><b>PANEL LIGHT</b><button class="blue" data-resact="panelLight">'+(R.panelLight?'ON':'OFF')+'</button></div><div class="resctl"><b>LOCAL START</b><button class="green reshold '+(R.hold?'holding':'')+'" data-reshold="start">HOLD TO START<i></i></button></div><div class="resctl"><b>LOCAL STOP</b><button class="red" data-resact="stop">STOP</button></div><div class="resctl"><b>LOCAL RESET</b><button class="amber" data-resact="resetPanel">'+(R.reset?'RESET COMPLETE':'RESET')+'</button></div><div class="resctl"><b>EMERGENCY STOP</b><button class="red" data-resact="estop">'+(R.estop?'PULLED OUT / READY':'PUSHED / STOP')+'</button></div></div><div class="rescontrols">'+modeBlock('COMP OIL COOLER FAN',R.oilFan,'oilFan')+modeBlock('COOLER FAN A',R.fanA,'fanA')+modeBlock('COOLER FAN B',R.fanB,'fanB')+modeBlock('COOLER FAN C',R.fanC,'fanC')+'</div><div class="rescard" style="margin-top:9px"><b>PDT-XV6100 BYPASS DIFFERENTIAL</b><div class="resbig">'+R.dp.toFixed(1)+' PSID</div><div class="resdp"><i style="width:'+Math.min(100,R.dp/45*100)+'%"></i></div><button class="exbtn '+(R.bypass?'good':'warn')+'" data-resact="bypass">'+(R.bypass?'CLOSE BYPASS AROUND XV-6100':'OPEN BYPASS AROUND XV-6100')+'</button><div style="font-size:10px;margin-top:4px">Open the bypass to reduce differential from 45 psid. Once DP is below 30 psid the bypass may be closed; if left open it continues toward about 1.8 psid.</div></div></div>';}
+ function hmiMain(){return '<div class="resvendor">DEARING <small>Compressor & Pump Co. — FW Murphy Production Controls</small></div><div class="resbanner">'+(R.running?'UNIT RUNNING – LOAD CONTROL ENABLED':'UNIT STOPPED – START PERMISSIVES REQUIRED')+'</div><div class="resgrid"><div class="rescard"><b>Unit</b><div class="resbig">'+R.unit+'</div><div>Run status: <b style="color:'+(R.running?'#8fff58':'#ffb36b')+'">'+(R.running?'RUNNING':'STOPPED')+'</b></div><div>Speed: '+R.rpm.toFixed(0)+' RPM</div><div>Suction: '+(R.running?R.suctionPressure.toFixed(0):'--')+' PSIG</div><div>Discharge: '+(R.running?R.dischargePressure.toFixed(0):R.pressure.toFixed(0))+' PSIG</div></div><div class="rescard"><b>Package status</b><div>Alarms: '+(R.alarmsClear?'CLEAR':'ACTIVE / NOT ACKNOWLEDGED')+'</div><div>Permissive: '+(ready()?'PRESENT':'NOT READY')+'</div><button class="exbtn good" data-resact="clearAlarms">ACK / CLEAR TRAINING ALARMS</button></div></div>';}
+ function hmiLoading(){var enabled=R.running;return '<div class="resbanner">COMPRESSOR LOADING — '+(R.running?'UNIT RUNNING – LOAD CONTROL ENABLED':'UNIT STOPPED')+'</div><div class="resgrid"><div class="rescard"><b>DIRECT ACT — COMP LOAD SUCTION PRESS PID</b><div>PV '+(R.running?'300.7':'--')+' PSIG</div><div>SP 265.0 PSIG</div><div class="resbig">Disabled</div></div><div class="rescard"><b>REVERSE ACT — COMP LOAD DISCHARGE PRESS PID</b><div>PV '+(R.running?'992.3':'--')+' PSIG</div><div>SP 1080.0 PSIG</div><div class="resbig">Disabled</div></div><div class="rescard"><b>Remote Load Capacity Control</b><div class="resbig">80.0 %CV</div><div style="color:#8fff58;font-weight:900">Enabled</div></div><div class="rescard"><b>CURRENT LOAD STEP</b><div class="resbig">'+R.loadStep+'</div><button class="exbtn good" data-resact="load" '+(!enabled?'disabled':'')+'>'+(R.loaded?'LOADED':'LOAD')+'</button></div></div><div class="rescard" style="margin-top:8px"><b>Startup / shutdown pressure unload</b><div class="resbig">'+R.pressure.toFixed(0)+' PSIG</div><button class="exbtn warn" data-resact="unload">UNLOAD / BLOW DOWN BELOW 300 PSIG</button><div style="font-size:10px">This training button reduces trapped package pressure toward 285 psig before start or normal stop preparation. It does not vent any live simulator equipment.</div></div>';}
+ function hmiCtrl(){var mode=R.remote?'REMOTE':R.ctrlMode;return '<div class="resbanner">COMPRESSOR SVU AND FVCP CTRL</div><div class="rescard"><b>CYLINDER SVU/FVCP STATUS</b><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px"><span>CYL #1 SVU: UNLOADED</span><span>CYL #2 SVU: UNLOADED</span><span>CYL #3 SVU: '+(R.loaded?'LOADED':'UNLOADED')+'</span><span>CYL #4 SVU: '+(R.loaded?'LOADED':'UNLOADED')+'</span><span>CYL #5 SVU: '+(R.loaded?'LOADED':'UNLOADED')+'</span><span>CYL #6 SVU: '+(R.loaded?'LOADED':'UNLOADED')+'</span></div></div><div class="rescard" style="margin-top:8px"><b>COMP SVU AND FVCP CTRL MODE</b><div class="resmode" style="margin-top:8px"><button data-resact="ctrlLocal" class="'+(mode==='LOCAL'?'sel':'')+'">LOCAL</button><button data-resact="ctrlAuto" class="'+(mode==='AUTO'?'sel':'')+'">AUTO</button><button data-resact="ctrlManual" class="'+(mode==='MANUAL'?'sel':'')+'">MANUAL</button><button data-resact="ctrlRemote" class="'+(mode==='REMOTE'?'sel':'')+'">REMOTE</button></div><div class="resbig" style="margin-top:8px">CURRENT LOAD STEP: '+R.loadStep+'</div><div>Decrease settle timer: 15 sec &nbsp; | &nbsp; Increase settle timer: 30 sec</div><div class="reslogin"><b>AUTHORIZED MODE CHANGE LOGIN</b><div style="font-size:10px;margin:4px 0">Changing SVU/FVCP LOCAL/AUTO/MANUAL/REMOTE mode requires the training login from the supplied Clear Fork HMI procedure.</div><input id="resLoginUser" autocomplete="username" placeholder="User name"><input id="resLoginPass" type="password" autocomplete="current-password" placeholder="Password"><button class="exbtn good" data-resact="login">LOGIN</button><div class="'+(R.authenticated?'ok':(R.loginMsg?'bad':''))+'">'+(R.authenticated?'LOGGED IN — MODE CHANGES ENABLED':esc(R.loginMsg||'Not logged in'))+'</div></div></div>';}
+ function hmi(){var body=R.page==='LOADING'?hmiLoading():(R.page==='CTRL'?hmiCtrl():hmiMain());return '<div class="reshmi">'+body+'<div class="resnav"><button data-respage="ALARMS">ACTIVE ALARM DISPLAY</button><button data-respage="PROCESS">PROCESS OVERVIEW</button><button data-respage="MAIN" class="'+(R.page==='MAIN'?'active':'')+'">MAIN MENU</button><button data-respage="LOADING" class="'+(R.page==='LOADING'?'active':'')+'">COMP LOADING</button><button data-respage="CTRL" class="'+(R.page==='CTRL'?'active':'')+'">COMP SUCT PRESSURE & PROCESS TEMP CTRL</button></div></div>';}
+ function render(){var el=document.getElementById('startupguidecontent');var oldLeft=el&&el.querySelector('.resleft'),oldMain=el&&el.querySelector('.resmain'),leftTop=oldLeft?oldLeft.scrollTop:0,mainTop=oldMain?oldMain.scrollTop:0;if(!el||!document.querySelector('#startupguidenav button[data-sg="residue"].active'))return;if(!R)R=fresh();R.permissive=ready();el.innerHTML='<h2>'+R.unit+' Interactive Residue Compressor Start / Stop Training</h2><div class="sgsource">Source basis: operator-supplied Clear Fork C-6300 local panel photo, Dearing / FW Murphy HMI photos, visible Clear Fork Residue Compressor Start-Up Guide steps, plus operator-specified XV-6100 bypass / DP and unload behavior. <span class="sgstatus verified">ACTUAL SITE SCREENS + OPERATOR INPUT</span></div><div class="sgnoact">Training-only replica. These buttons alter private training state only; they do not start, stop, unload, reset, vent, or change C-6100/C-6200/C-6300 in the live simulator.</div><div class="restrain"><div class="resleft">'+currentPrompt()+progress()+'<div class="sgsection"><h3>Unit selection</h3><div class="resmode"><button data-resunit="C-6100" class="'+(R.unit==='C-6100'?'sel':'')+'">C-6100</button><button data-resunit="C-6200" class="'+(R.unit==='C-6200'?'sel':'')+'">C-6200</button><button data-resunit="C-6300" class="'+(R.unit==='C-6300'?'sel':'')+'">C-6300</button></div></div><div class="exteach"><b>Current instruction:</b> '+esc(R.message)+'</div><div class="exactionbar"><button class="reset" data-resact="resetTraining">↻ Reset Residue Training</button></div><div class="sgsection"><h3>Visible site-guide sequence represented</h3><ol><li>Complete local checks / bypass and depressurize to the startup condition.</li><li>Initiate Start: if alarms are clear and permissive is present, hold LOCAL START.</li><li>Wait for Load Control: once permissives are satisfied and unit is running, loading becomes available.</li><li>Verify on COMP LOADING: suction pressure PID Disabled; discharge pressure PID Disabled; Remote Load Capacity Enabled.</li><li>Initiate Load with LOAD on the HMI.</li><li>Go to COMP SVU/FVCP CTRL and place the capacity control in REMOTE when authorized; notify the control room when proper settings are ready to load.</li></ol></div></div><div class="resmain">'+panel()+'<div style="height:10px"></div>'+hmi()+'</div></div>';var newLeft=el.querySelector('.resleft'),newMain=el.querySelector('.resmain');if(newLeft)newLeft.scrollTop=leftTop;if(newMain)newMain.scrollTop=mainTop;}
+ function startDp(){if(dpTimer)clearInterval(dpTimer);dpTimer=setInterval(function(){if(!R||!R.bypass){clearInterval(dpTimer);dpTimer=null;return;}R.dp=Math.max(1.8,R.dp-(R.dp>10?2.4:0.7));if(R.dp<=1.8){R.dp=1.8;clearInterval(dpTimer);dpTimer=null;R.message='XV-6100 bypass proven: differential has stabilized near 1.8 psid. Next unload/blow down package pressure below 300 psig.';}render();},400);}
+ function startUnload(){if(unloadTimer)clearInterval(unloadTimer);R.unload=true;unloadTimer=setInterval(function(){if(!R)return;R.pressure=Math.max(285,R.pressure-12);if(R.pressure<300){clearInterval(unloadTimer);unloadTimer=null;R.message='Package pressure is below 300 psig. Clear/acknowledge alarms and verify the start permissive.';}render();},350);}
+ function act(a){if(!R)R=fresh();if(a==='resetTraining'){reset();return;}if(a==='panelLight'){R.panelLight=!R.panelLight;R.message='Panel light '+(R.panelLight?'ON':'OFF')+'.';render();return;}if(a==='estop'){R.estop=!R.estop;if(!R.estop){R.running=false;R.loaded=false;R.remote=false;R.rpm=0;R.suctionPressure=0;R.dischargePressure=0;}R.message=R.estop?'Emergency stop is pulled out / ready in the trainer.':'Emergency stop pushed — unit stopped.';render();return;}if(a==='resetPanel'){R.reset=true;R.alarmsClear=true;R.message='LOCAL RESET completed. Put compressor oil cooler and all three residue cooler fans in AUTO.';render();return;}if(a==='bypass'){if(R.bypass){if(R.dp>=30){R.message='BYPASS CLOSE BLOCKED: differential must be below 30 psid before closing around XV-6100.';}else{R.bypass=false;if(dpTimer){clearInterval(dpTimer);dpTimer=null;}R.message='Bypass around XV-6100 CLOSED at '+R.dp.toFixed(1)+' psid. DP is below the 30-psid startup criterion, so the sequence may continue.';}render();return;}R.bypass=true;R.message='Bypass around XV-6100 OPEN. Watch differential fall; once below 30 psid you may close the bypass, or leave it open to continue toward about 1.8 psid.';startDp();render();return;}if(a==='clearAlarms'){R.alarmsClear=true;R.message=ready()?'Alarms clear and all startup permissives are present. Hold LOCAL START.':'Alarms cleared. Finish any remaining startup checks before holding LOCAL START.';render();return;}if(a==='unload'){startUnload();R.message='UNLOAD selected. Training blowdown is reducing trapped compressor pressure below 300 psig.';render();return;}if(a==='load'){if(!R.running){R.message='LOAD blocked: unit is not running.';}else{R.loaded=true;R.loadStep=3;R.page='CTRL';R.message='Compressor loaded to the captured training Load Step 3. Go to COMP SVU/FVCP CTRL and place control in REMOTE when authorized.';}render();return;}if(a==='ctrlLocal'){if(!R.authenticated){R.loginMsg='Login required before changing SVU/FVCP control mode.';}else{R.remote=false;R.ctrlMode='LOCAL';R.message='SVU/FVCP capacity control is LOCAL. Login remains valid for this training session.';}render();return;}if(a==='ctrlRemote'){if(!R.authenticated){R.loginMsg='Login required before changing SVU/FVCP control mode.';}else if(!R.running||!R.loaded){R.message='REMOTE blocked: start and load the compressor first.';}else{R.remote=true;R.ctrlMode='REMOTE';R.message='SVU/FVCP capacity control is REMOTE. Notify the control room that the compressor settings are ready to load.';}render();return;}if(a==='ctrlAuto'){if(!R.authenticated){R.loginMsg='Login required before changing SVU/FVCP control mode.';}else{R.remote=false;R.ctrlMode='AUTO';R.message='Capacity control placed in AUTO for training.';}render();return;}if(a==='ctrlManual'){if(!R.authenticated){R.loginMsg='Login required before changing SVU/FVCP control mode.';}else{R.remote=false;R.ctrlMode='MANUAL';R.message='Capacity control placed in MANUAL for training.';}render();return;}if(a==='stop'){if(R.running){R.loaded=false;R.remote=false;R.loadStep=0;R.running=false;R.rpm=0;R.suctionPressure=0;R.dischargePressure=0;R.message='LOCAL STOP completed in training. Speed is 0 RPM. Use UNLOAD / blowdown if required, then Reset Training for another startup.';}else R.message='Unit is already stopped.';render();return;}}
+ function doStart(){if(!ready()){R.message='START BLOCKED: reset, fans AUTO, XV-6100 differential below 30 psid, pressure below 300 psig, alarms clear, E-stop ready and panel power are required.';}else{R.running=true;R.rpm=895;R.suctionPressure=301;R.dischargePressure=992;R.pressure=992;R.page='LOADING';R.loadStep=0;R.message='UNIT RUNNING — approximately 895 RPM, 301 psig suction and 992 psig discharge. Wait for Load Control, verify both pressure PIDs are Disabled and Remote Load Capacity is Enabled, then press LOAD.';}R.hold=false;render();}
+ document.addEventListener('click',function(e){var n=e.target.closest&&e.target.closest('#startupguidenav button[data-sg="residue"]');if(n){setTimeout(function(){if(!R)R=fresh();render();},0);return;}var a=e.target.closest&&e.target.closest('[data-resact]');if(a&&document.querySelector('#startupguidenav button[data-sg="residue"].active')){var aa=a.getAttribute('data-resact');if(aa==='login'){var u=document.getElementById('resLoginUser'),pw=document.getElementById('resLoginPass');var us=(u?u.value:'').trim().toLowerCase(),ps=pw?pw.value:'';if(!window.crypto||!crypto.subtle){R.loginMsg='Secure browser hashing unavailable; login cannot be verified in this browser.';render();return;}crypto.subtle.digest('SHA-256',new TextEncoder().encode(ps)).then(function(buf){var hx=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');R.authenticated=(us==='xclops'&&hx==='24ac4a663447e96bddd145e7ac12775c1764e439d27fd011eeb3b761204c90d1');R.loginMsg=R.authenticated?'':'Login rejected.';R.message=R.authenticated?'Training HMI login accepted. SVU/FVCP mode changes are enabled for this training session.':'Training HMI login rejected.';render();});return;}act(aa);return;}var pg=e.target.closest&&e.target.closest('[data-respage]');if(pg&&document.querySelector('#startupguidenav button[data-sg="residue"].active')){R.page=pg.getAttribute('data-respage');if(R.page==='ALARMS')R.page='MAIN';if(R.page==='PROCESS')R.page='MAIN';render();return;}var u=e.target.closest&&e.target.closest('[data-resunit]');if(u&&document.querySelector('#startupguidenav button[data-sg="residue"].active')){R.unit=u.getAttribute('data-resunit');R.message='Training unit selected: '+R.unit+'. The supplied local-panel/HMI photos are C-6300; the sequence is represented as residue-train training for all three units.';render();return;}var m=e.target.closest&&e.target.closest('[data-resmode]');if(m&&document.querySelector('#startupguidenav button[data-sg="residue"].active')){var q=m.getAttribute('data-resmode').split('|');R[q[0]]=q[1];R.message=q[0]+' set to '+q[1]+'. All four fan selectors must be AUTO for the startup permissive.';render();return;}});
+ document.addEventListener('pointerdown',function(e){var b=e.target.closest&&e.target.closest('[data-reshold="start"]');if(!b||!document.querySelector('#startupguidenav button[data-sg="residue"].active'))return;e.preventDefault();if(!R)R=fresh();R.hold=true;render();holdTimer=setTimeout(function(){holdTimer=null;doStart();},1500);});
+ function cancelHold(){if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}if(R&&R.hold){R.hold=false;render();}}
+ document.addEventListener('pointerup',cancelHold);document.addEventListener('pointercancel',cancelHold);document.addEventListener('pointerleave',function(e){if(e.buttons===0)cancelHold();});
+ var c=document.getElementById('startupguidecontent');if(c){new MutationObserver(function(){var active=document.querySelector('#startupguidenav button[data-sg="residue"].active');if(active&&document.getElementById('startupguide').style.display==='block'&&!c.querySelector('.restrain')&&!c.__resrendering){c.__resrendering=true;if(!R)R=fresh();render();c.__resrendering=false;}}).observe(c,{childList:true});}
+})();
+</script>
+
+<script id="startupEquipmentChooserJs">
+(function(){
+ function chooser(show){var c=document.getElementById('startupEquipmentChooser');if(!c)return;c.style.display=show?'flex':'none';c.setAttribute('aria-hidden',show?'false':'true');}
+ function select(key){
+   chooser(false);
+   var nav=document.querySelector('#startupguidenav button[data-sg="'+key+'"]');
+   if(nav)nav.click();
+ }
+ document.addEventListener('click',function(e){
+   var b=e.target.closest('[data-sgchoose]');
+   if(b){select(b.getAttribute('data-sgchoose'));return;}
+   if(e.target && e.target.id==='startupguideequipmentmenu'){chooser(true);}
+ });
+ var openBtn=document.getElementById('startupguidebtn');
+ if(openBtn)openBtn.addEventListener('click',function(){setTimeout(function(){chooser(true);},0);});
+})();
+
+/* BUILD 12FU-INDEX34 — Preserves 12FT Reference Library performance/Attachments work and adds source-labelled persistent operating experience from shift reports and simulator trend windows to Ryan's troubleshooting brain. Process, 3D, hunting, NGL, compressor and control logic are unchanged. */
+/* BUILD 12FP — Restored and audited V-1422 NGL outlet logic: complete two-stage pump permissives, real PY-1623/PY-1624 flow-permit behavior, 377-GPM AUTO FT-1422 envelope, inventory-priority outlet valves, minimum-flow recycle, general-ESD custody isolation, V-1422 HH pumpdown exception, and LSLL pump protection. Inlet/residue cumulative load-step and push-pull pressure logic remain unchanged. */
+/* 12EJ plantwide dynamic quality audit. Read-only diagnostics for regression testing. */
+window.CF_DYNAMIC_AUDIT_12ER=function(){
+ var V=PLANT.v||{}, L=PLANT.L||{}, pk=V.refrigPackages||{}, rd=V.recipDynamic||{}, cb=V.componentBalance||{};
+ var runPk=Object.keys(pk).filter(function(k){return pk[k]&&pk[k].run;});
+ var reversalMin=1;Object.keys(rd).forEach(function(k){if(rd[k].run)reversalMin=Math.min(reversalMin,rd[k].reversalMargin);});
+ return {build:'12FP',pic4250aPV:(L.PIC4250A?L.PIC4250A.pv:null),inletConfiguredPush:V.inletConfiguredPushMmscfd,residueConfiguredFreshPull:V.inletDownstreamPullMmscfd,inletDischargeBalanceError:V.inletDischargeBalanceErrorMmscfd,compressorSequence:{c4100:(PLANT.cmp.c41?cfCompressorSequenceLabel(PLANT.cmp.c41):null),c4200:(PLANT.cmp.c42?cfCompressorSequenceLabel(PLANT.cmp.c42):null),c6100:(PLANT.cmp.c61?cfCompressorSequenceLabel(PLANT.cmp.c61):null),c6200:(PLANT.cmp.c62?cfCompressorSequenceLabel(PLANT.cmp.c62):null),c6300:(PLANT.cmp.c63?cfCompressorSequenceLabel(PLANT.cmp.c63):null)},hotOilSingleOwner:!!(L.FIC7100A&&isFinite(L.FIC7100A.pv)),refrigRunning:runPk.length,refrigPackages:pk,refrigerantChargeError:V.refrigChargeError||0,componentClosure:(cb.closure==null?null:cb.closure),c2Ngl:V.c2ngl,c2MaterialRecoveryPct:V.c2MaterialRecoveryPct,c3MaterialRecoveryPct:V.c3MaterialRecoveryPct,gcCalibration:V.gcCalibration,dehyMTZ:V.dehyMTZ,dehyBreakthroughRisk:V.dehyBreakthroughRisk,recipMinReversalMargin:reversalMin,recip:rd,pit1000:V.pit1000,plantFlow:PLANT.in.flow};
+};
+window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDIT_12EY=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDIT_12EM=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDIT_12EL=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDIT_12EJ=window.CF_DYNAMIC_AUDIT_12ER;
+</script>
+
+<script>
+(function(){document.title='12JZ | Clearfork - Inlet Compressor Vendor Detail';var h=document.querySelector('header h1');if(h)h.textContent='Clearfork Cryo Unit #1 - 12JZ | C-4100 / C-4200 Vendor Review';window.CFRyanIndexSync12JZ=window.CFRyanIndexSync12JT;})();
+</script>
+<script>
+(function(){document.title='12KA | Clearfork - Running Shafts and Equipment Detail';var h=document.querySelector('header h1');if(h)h.textContent='Clearfork Cryo Unit #1 - 12KA | Running Shafts and Equipment Detail';window.CFRyanIndexSync12KA=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KA=window.CF_CURRENT_RELEASE_12JT;})();
+</script>
+<script>window.CFRyanIndexSync12KB=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KB=window.CF_CURRENT_RELEASE_12JT;document.title='12KB | Clearfork - Nameplate Audit and PetroSkills';var h12kb=document.querySelector('header h1');if(h12kb)h12kb.textContent='Clearfork Cryo Unit #1 - 12KB | Nameplate Audit and PetroSkills';</script>
+<script>window.CFRyanIndexSync12KC=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KC=window.CF_CURRENT_RELEASE_12JT;document.title='12KC | Clearfork - Pump References and Field Priorities';var h12kc=document.querySelector('header h1');if(h12kc)h12kc.textContent='Clearfork Cryo Unit #1 - 12KC | Pump References and Field Priorities';</script>
+
+<script>window.CFRyanIndexSync12KD=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KD=window.CF_CURRENT_RELEASE_12JT;document.title='12KD | Clearfork - Slug Catcher Plates and Compressor References';var h12kd=document.querySelector('header h1');if(h12kd)h12kd.textContent='Clearfork Cryo Unit #1 - 12KD | Slug Catcher Plates and Compressor References';</script>
+
+
+<script>window.CFRyanIndexSync12KE=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KE=window.CF_CURRENT_RELEASE_12JT;document.title="12KE | Clearfork - Filter Plates and Phase / Compressor References";var h12ke=document.querySelector("header h1");if(h12ke)h12ke.textContent="Clearfork Cryo Unit #1 - 12KE | Filter Plates and Phase / Compressor References";</script>
+
+<script>window.CFRyanIndexSync12KF=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KF=window.CF_CURRENT_RELEASE_12JT;document.title="12KF | Clearfork - E-5000 Plate and PetroSkills";var h12kf=document.querySelector("header h1");if(h12kf)h12kf.textContent="Clearfork Cryo Unit #1 - 12KF | E-5000 Plate and PetroSkills";</script>
+<script>window.CFRyanIndexSync12KG=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KG=window.CF_CURRENT_RELEASE_12JT;document.title='12KG | Clearfork - Closed Drain / Faster References';var h=document.querySelector('header h1');if(h)h.textContent='Clearfork Cryo Unit #1 - 12KG | Closed Drain / NGL References / Performance';</script><script>window.CFRyanIndexSync12KH=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KH=window.CF_CURRENT_RELEASE_12JT;document.title='12KH | Clearfork - Dryer Plate / Flare Routing / C-5700';var khHeading=document.querySelector('header h1');if(khHeading)khHeading.textContent='Clearfork Cryo Unit #1 - 12KH | Dryer Plate / Flare Routing / C-5700';</script><script>window.CFRyanIndexSync12KI=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KI=window.CF_CURRENT_RELEASE_12JT;document.title='12KI | Clearfork - Valve Positions and Plates';var kiHeading=document.querySelector('header h1');if(kiHeading)kiHeading.textContent='Clearfork Cryo Unit #1 - 12KI | Valve Positions and Plates';</script>
+<script>window.CFRyanIndexSync12KJ=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12KJ=window.CF_CURRENT_RELEASE_12JT;document.title='12KJ | Clear Fork - Live Valve Coverage and Actuator Plates';var h12kj=document.querySelector('header h1');if(h12kj)h12kj.textContent='Clearfork Cryo Unit #1 - 12KJ | Whole-model Valve Indication';</script>
+<script>(function(){document.title="12KK | Clear Fork - Mounted Instruments / PSV References";var h=document.querySelector("header h1");if(h)h.textContent="Clearfork Cryo Unit #1 - 12KK | Instrument mounts, residue PSV plates and adsorber references";window.CLEAR_FORK_REFERENCE_RELEASE="12KK";})();</script>
+<script>(function(){function badge(){document.title='12KQ | Clear Fork - Expander vendor detail';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12KQ';}badge();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge,{once:true});window.CFRyanIndexSync12KN=window.CFRyanIndexSync12JT;window.CFRyanIndexSync12KO=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KO';window.CF_CURRENT_RELEASE_12KO={frontend:'12KO',sourceIndexBuild:'12KO',backend:'RYAN-2026-10-13-12KP',referenceOnlyUpdate:true};})();</script>
+<script>(function(){document.title='12KQ | Clear Fork - Expander vendor detail';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12KQ';window.CFRyanIndexSync12KP=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KP';window.CF_CURRENT_RELEASE_12KP={frontend:'12KP',backend:'RYAN-2026-10-13-12KP',sourceIndexBuild:'12KP',referenceOnlyUpdate:false,frickVisualUpdate:true,expanderChanged:false};window.CFRyanIndexSync12KQ=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KQ';window.CF_CURRENT_RELEASE_12KQ={frontend:'12KQ',backend:'RYAN-2026-10-13-12KQ',sourceIndexBuild:'12KQ',referenceOnlyUpdate:false,expanderChanged:true,frick12KPPreserved:true};})();</script>
+</body></html>
