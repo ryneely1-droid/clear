@@ -3,8 +3,8 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
-<!-- 12LE: PSV-8220 local source completion; prior batch retained. Match complete main and Ryan 12LE. -->
-<meta name="cf-deployment-package" content="12LE-ROOT">
+<!-- 12LI: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LI. -->
+<meta name="cf-deployment-package" content="12LI-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -41,7 +41,7 @@
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12LE | Clear Fork - PSV field evidence and clearance</title>
+<title>12LI | Clear Fork - Tank and oil relief review</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -922,7 +922,7 @@
 <footer>Built from issued-for-construction P&amp;IDs 020185-AE-DW-M2150 / M2145 / M2135 / M2200 (XcL Processing Operating, LLC — Clearfork Processing Facility, Cryogenic Unit #1). Geometry is schematic; elevations, routing, valve and instrument placement are representative, not to scale. Verify all data against the stamped drawings.</footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<!-- 12LE-ROOT: cumulative 12KT plus Frick parts-reference update. Current batch request 3 of 3; root scripts required. -->
+<!-- 12LI-ROOT: cumulative 12KT plus Frick parts-reference update. Current batch request 1 of 3; root scripts required. -->
 <script id="cf12kqDeploymentBootstrap">
 (function () {
   'use strict';
@@ -931,8 +931,8 @@
   var failure = null;
   var expected = ["CF_TEXT_POOL_12KG","CF_COLOR_PLAN_12JF","CF_DRAIN_AUDIT_12JL","CF_DRAIN_AUDIT_12JN","CF_DRAIN_AUDIT_12JR","CF_SOURCE_12JV","CF_SOURCE_12JW","CF_SOURCE_12JX","CF_MODEL_12JY","CF_MODEL_12JZ","CF_TRACE_DATA_12IZ","CF_PHASE_PLAN_12JH","CF_PLATE_AUDIT_12KB","CF_SOURCE_12KO","CF_SOURCE_12KP"];
   window.CF12KQDeploymentD1 = {
-    package: '12LE-ROOT',
-    applicationRelease: '12LD',
+    package: '12LI-ROOT',
+    applicationRelease: '12LI',
     pending: pending,
     fail: function (name) {
       failure = String(name);
@@ -944,14 +944,14 @@
         box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:999999;padding:16px;border:2px solid #b64030;background:#fff2e8;color:#38150c;font:16px/1.5 Arial,sans-serif;white-space:pre-wrap';
         (document.body || document.documentElement).appendChild(box);
       }
-      box.textContent = 'Clear Fork 12LE-ROOT: a required local file did not load: ' + failure +
+      box.textContent = 'Clear Fork 12LI-ROOT: a required local file did not load: ' + failure +
         '\nKeep clearfork-main.js and all 15 data-*.js files in the SAME folder as index.html, using their original filenames. Do not upload the index alone.' +
         '\nThis message does not clear or change saved browser data.';
     },
     take: function (name) {
       if (!Object.prototype.hasOwnProperty.call(pending, name)) {
         this.fail(name);
-        throw new Error('12LE-ROOT required static data not loaded: ' + name);
+        throw new Error('12LI-ROOT required static data not loaded: ' + name);
       }
       var value = pending[name];
       delete pending[name];
@@ -959,7 +959,7 @@
       return value;
     },
     status: function () {
-      return { package: '12LE-ROOT', applicationRelease: '12LD', expectedDataAssets: expected.length,
+      return { package: '12LI-ROOT', applicationRelease: '12LI', expectedDataAssets: expected.length,
         availableDataAssets: Object.keys(pending).length, consumedDataAssets: consumed.length,
         failedAsset: failure,
         note: 'Packaging diagnostic only. Loaded files do not establish correct process behavior or field authorization.' };
@@ -982,7 +982,7 @@
 <script src="./data-13-cf_plate_audit_12kb.js" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script src="./data-14-cf_source_12ko.js" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script src="./data-15-cf_source_12kp.js" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12LD" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script src="./clearfork-main.js?v=12LI" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
@@ -1476,5 +1476,5 @@ window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDI
 <script>(function(){document.title="12KK | Clear Fork - Mounted Instruments / PSV References";var h=document.querySelector("header h1");if(h)h.textContent="Clearfork Cryo Unit #1 - 12KK | Instrument mounts, residue PSV plates and adsorber references";window.CLEAR_FORK_REFERENCE_RELEASE="12KK";})();</script>
 <script>(function(){function badge(){document.title='12KQ | Clear Fork - Expander vendor detail';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12KQ';}badge();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge,{once:true});window.CFRyanIndexSync12KN=window.CFRyanIndexSync12JT;window.CFRyanIndexSync12KO=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KO';window.CF_CURRENT_RELEASE_12KO={frontend:'12KO',sourceIndexBuild:'12KO',backend:'RYAN-2026-10-13-12KP',referenceOnlyUpdate:true};})();</script>
 <script>(function(){document.title='12KQ | Clear Fork - Expander vendor detail';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12KQ';window.CFRyanIndexSync12KP=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KP';window.CF_CURRENT_RELEASE_12KP={frontend:'12KP',backend:'RYAN-2026-10-13-12KP',sourceIndexBuild:'12KP',referenceOnlyUpdate:false,frickVisualUpdate:true,expanderChanged:false};window.CFRyanIndexSync12KQ=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KQ';window.CF_CURRENT_RELEASE_12KQ={frontend:'12KQ',backend:'RYAN-2026-10-13-12KQ',sourceIndexBuild:'12KQ',referenceOnlyUpdate:false,expanderChanged:true,frick12KPPreserved:true};})();</script>
-<script>(function(){function badge12LD(){document.title='12LE | Clear Fork - PSV field evidence and clearance';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12LD';}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LD';window.CF_CURRENT_RELEASE_12LD={frontend:'12LD',backend:'RYAN-2026-10-14-12LD',sourceIndexBuild:'12LD',deploymentPackage:'12LE-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:3,batchSize:3,deployedByThisUpdate:false};})();</script>
+<script>(function(){function badge12LD(){document.title='12LI | Clear Fork - Tank and oil relief review';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12LI';}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LI';window.CF_CURRENT_RELEASE_12LD={frontend:'12LI',backend:'RYAN-2026-10-14-12LI',sourceIndexBuild:'12LI',deploymentPackage:'12LI-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:1,batchSize:3,deployedByThisUpdate:false};})();</script>
 </body></html>
