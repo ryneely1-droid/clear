@@ -3,8 +3,12 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!--12LO: cumulative 12LN preservation; source-local pump supports and instrument-air readback corrections.-->
+<!-- 12LM: cumulative hot-oil, seal-gas and refrigeration source-local correction; paired main and Ryan required. -->
+<!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
+<!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12LJ-ROOT">
+<meta name="cf-deployment-package" content="12LO-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -41,7 +45,7 @@
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12LJ | Clear Fork - Dashboard and valve visuals</title>
+<title>12LO | Clear Fork - Pump supports and instrument air</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -388,17 +392,17 @@
 @media print{body:has(#plateAuditDialog12KB)>*:not(#plateAuditDialog12KB){display:none!important}#plateAuditDialog12KB{position:static!important;inset:auto!important;display:block!important;border:0!important;box-shadow:none!important;height:auto!important;max-height:none!important}#plateAuditDialog12KB>div:first-child{display:none!important}#plateAuditDialog12KB>div:last-child{overflow:visible!important}#plateAuditDialog12KB .audit-tablewrap{overflow:visible!important}}
 </style>
 <style id="readableStatus12LJ">#startupState12LJ{margin:4px 0!important}header{position:relative}#toolDeck12KL .deck-cell12kl{max-width:100%}@media(max-width:700px){#weatherPanel{position:static!important;inset:auto!important;margin:8px 12px 0!important;max-width:calc(100% - 24px)!important;width:auto!important}header h1{overflow-wrap:anywhere;line-height:1.4}#startupState12LJ{overflow-wrap:anywhere}#toolDeck12KL{max-width:100%}}</style>
-</head>
+<style id="navigationLayout12LL">header{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,550px);gap:4px 18px;align-items:start}header h1{grid-column:1;grid-row:1}#startupState12LJ{grid-column:1;grid-row:2}#weatherPanel{position:static!important;inset:auto!important;grid-column:2;grid-row:1/span 2;min-width:0!important;max-width:100%!important;width:auto!important;margin:0!important;overflow-wrap:anywhere;white-space:normal}#weatherPanel div{white-space:normal!important}@media(max-width:900px){header{display:block}#weatherPanel{margin-top:8px!important}header h1{overflow-wrap:anywhere}}</style></head>
 <body>
 <!-- 12JK: source-supported NGL pig-launcher station. Existing controls and12JJ flow-popup fix preserved. -->
 <!-- 12JJ: repaired flow popup application scope; separate exchanger circuits and qualified phase changes. No operating algorithm or physical piping changed. Backend 12JD unchanged. -->
 <!-- 12JI: retired V-1441 remnant removed; researched cold-surface frost and flow/pilot-linked flare visuals. Existing 12JD backend unchanged. -->
 <!-- 12JH: source-preserving in-pipe phase visual + schematic flare rack alignment. Backend remains 12JD. -->
-<div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather...</div>
+
 <header>
   <h1>Clear Fork / Cryogenic Unit #1 - 12LJ</h1>
   <p>Sheets in model: M2150 (T-1521) · M2145 (EX/C-1121, A-1321) · M2135 (V-1421) · M2200 (E-1241, V-1443) · M2165 (reboiler) · M2155 (gas/gas reflux, surge tank) · M2160 (booster pumps) · M2175 (pipeline pumps) · M2610/M2615 (residue compressors) · M2110 (V-1413/14/15 dehy adsorbers) · M2105 (F-1412 coalescer, F-1416/17 dust filters) · refrigeration (V-1441/1442/1444, C-1140/41/42, A-1343). Click any component for line numbers, service and set points. Toggle manual valves, instruments/flow meters, and the site environment below.</p>
-</header>
+<div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather...</div></header>
 <div class="bar">
   <button id="walkbtn">&#9658; Walk mode</button>
   <button id="rodbtn">Fishing pole</button>
@@ -924,13 +928,13 @@
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12LJ',problems=[],loaded=false;
+ 'use strict';var expected='12LO',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
- var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
+ var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
-  document.title=expected+' | Clear Fork - Dashboard and valve visuals';
+  document.title=expected+' | Clear Fork - Complete visual startup restoration';
   var s=api.snapshot(),b=document.getElementById('startupState12LJ');if(!b){b=document.createElement('div');b.id='startupState12LJ';b.style.cssText='margin:5px 22px;color:#adc9d8;font:12px Segoe UI,Arial,sans-serif';var hdr=document.querySelector('header');if(hdr)hdr.appendChild(b);}
-  if(b){b.textContent='Index '+expected+' | Main '+(s.main||'waiting')+' | '+(s.mainFinished?'Initialization completed':loaded?'Initialization incomplete - open Startup check':'Loading');b.style.color=s.mainFinished&&!problems.length?'#a3d7bd':loaded?'#ffcf78':'#adc9d8';}
+  if(b){b.textContent='Index '+expected+' | Main '+(s.main||'waiting')+' | '+(s.mainFinished?(problems.length?'Initialization completed - review Startup check':'Initialization completed'):loaded?'Initialization incomplete - open Startup check':'Loading');b.style.color=s.mainFinished&&!problems.length?'#a3d7bd':loaded?'#ffcf78':'#adc9d8';}
  },open:function(){var old=document.getElementById('startupCheck12LJ');if(old)old.remove();var box=document.createElement('section');box.id='startupCheck12LJ';box.setAttribute('role','dialog');box.setAttribute('aria-label','Simulator startup check');box.style.cssText='position:fixed;inset:8vh 4vw auto;max-height:82vh;overflow:auto;z-index:999990;background:#122531;border:1px solid #66879b;border-radius:10px;padding:20px;color:#e8f3fa';var close=document.createElement('button');close.textContent='Close';close.style.float='right';close.onclick=function(){box.remove();};box.appendChild(close);var h=document.createElement('h2');h.textContent='Startup / feature check';box.appendChild(h);var p=document.createElement('p');p.textContent='A version label alone is not proof that all modules initialized. This read-only report never clears your saved data.';box.appendChild(p);var pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';pre.textContent=JSON.stringify(api.snapshot(),null,2);box.appendChild(pre);document.body.appendChild(box);}};
  window.CFStartup12LJ=api;
  window.addEventListener('error',function(e){if(e.message)api.note('JavaScript',e.message+' '+(e.filename||'')+':'+(e.lineno||''));});
@@ -957,7 +961,7 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
  var deck=el('section',null,root);deck.id='toolDeck12KL';deck.setAttribute('aria-label','Organized 3D tools');var head=el('div',null,deck,'deck-head12kl');el('span','3D WORKSPACE',head,'deck-title12kl');var form=el('div',null,head,'deck-search12kl');var search=el('input',null,form);search.type='search';search.placeholder='Find a tool, area or plate...';search.setAttribute('aria-label','Search all dashboard tools');var clear=el('button','Clear',form);clear.type='button';var nav=el('div',null,deck,'deck-nav12kl');nav.setAttribute('aria-label','3D tool categories');
  categories.forEach(function(c){var b=el('button',c[1],nav);b.type='button';b.dataset.toolCategory=c[0];b.id='deckTab12KL_'+c[0];b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','deckPanel12KL_'+c[0]);buttons[c[0]]=b;var p=el('section',null,deck,'deck-panel12kl');p.id='deckPanel12KL_'+c[0];p.setAttribute('aria-labelledby',b.id);p.hidden=true;el('h3',c[2],p);panels[c[0]]={root:p,grid:el('div',null,p,'deck-grid12kl')};b.addEventListener('click',function(){search.value='';searchText='';active=active===c[0]?'':c[0];save();paint();});});
  var foot=el('div',null,deck,'deck-foot12kl'),count=el('span','',foot);count.setAttribute('aria-live','polite');var collapse=el('button','Collapse tools',foot);collapse.type='button';collapse.onclick=function(){active='';searchText='';search.value='';save();paint();};
- function classify(n){var id=n.id||'',t=norm(n.textContent),ids=id+' '+Array.from(n.querySelectorAll('[id]')).map(function(x){return x.id;}).join(' ');
+ function classify(n){if(n.dataset.toolGroup==='display')return 'display';var id=n.id||'',t=norm(n.textContent),ids=id+' '+Array.from(n.querySelectorAll('[id]')).map(function(x){return x.id;}).join(' ');
   if(/vendorUnit12J[YZ]|frickUnit|heaterUnit/.test(ids)||/vendor info|vendor notebook|view compressor|view expander|frick|expander vendor|c-5700|quantum|acmtc/i.test(t+' '+id))return 'compressors';
   if(/quiz|official test|training|startup|study/i.test(t+' '+id))return 'training';
   if(/plate|audit|valve.position|all valve coverage/i.test(t+' '+id)||/valvePositions12KI/.test(ids))return 'valves';
@@ -1053,7 +1057,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
 <script src="./data-13-cf_plate_audit_12kb.js" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script src="./data-14-cf_source_12ko.js" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script src="./data-15-cf_source_12kp.js" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12LJ" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script src="./clearfork-main.js?v=12LO" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
@@ -1547,5 +1551,6 @@ window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDI
 <script>(function(){var h=document.querySelector("header h1");window.CLEAR_FORK_REFERENCE_RELEASE="12KK";})();</script>
 <script>(function(){function badge(){var h=document.querySelector('header h1');}badge();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge,{once:true});window.CFRyanIndexSync12KN=window.CFRyanIndexSync12JT;window.CFRyanIndexSync12KO=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KO';window.CF_CURRENT_RELEASE_12KO={frontend:'12KO',sourceIndexBuild:'12KO',backend:'RYAN-2026-10-13-12KP',referenceOnlyUpdate:true};})();</script>
 <script>(function(){var h=document.querySelector('header h1');window.CFRyanIndexSync12KP=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KP';window.CF_CURRENT_RELEASE_12KP={frontend:'12KP',backend:'RYAN-2026-10-13-12KP',sourceIndexBuild:'12KP',referenceOnlyUpdate:false,frickVisualUpdate:true,expanderChanged:false};window.CFRyanIndexSync12KQ=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KQ';window.CF_CURRENT_RELEASE_12KQ={frontend:'12KQ',backend:'RYAN-2026-10-13-12KQ',sourceIndexBuild:'12KQ',referenceOnlyUpdate:false,expanderChanged:true,frick12KPPreserved:true};})();</script>
-<script>(function(){function badge12LD(){var h=document.querySelector('header h1');}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LJ';window.CF_CURRENT_RELEASE_12LD={frontend:'12LJ',backend:'RYAN-2026-10-14-12LJ',sourceIndexBuild:'12LJ',deploymentPackage:'12LJ-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:1,batchSize:3,deployedByThisUpdate:false};})();</script>
+<script>(function(){function badge12LD(){var h=document.querySelector('header h1');}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LL';window.CF_CURRENT_RELEASE_12LD={frontend:'12LL',backend:'RYAN-2026-10-14-12LL',sourceIndexBuild:'12LL',deploymentPackage:'12LL-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:3,batchSize:3,deployedByThisUpdate:false};})();</script>
+<script id="finalBuildStamp12LK">(function(){function stamp(){if(window.CFStartup12LJ)window.CFStartup12LJ.paint();}stamp();document.addEventListener('DOMContentLoaded',stamp,{once:true});})();</script>
 </body></html>
