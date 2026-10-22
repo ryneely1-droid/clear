@@ -3,6 +3,11 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!-- 12MI: retained PetroSkills pump source reused,20 practical questions; no plant control/geometry/storage changes. -->
+<!-- 12MH: cumulative 12MG; nonredundant PWH reference, existing PetroSkills source reuse and new practice; no controls/geometry/storage changes. -->
+<!-- 12MG: cumulative 12MF; SN55 reference-only delta, six-unit alarm source audit, practical quiz. -->
+<!-- 12MF: inlet-only 5-point capacity trim and manual shutdown preparation. Cumulative 12ME information restoration retained. -->
+<!-- 12ME: retained compressor identification/specification links in primary cards, Finder and Library; source owners, controls and geometry preserved. -->
 <!-- 12MD: plant-wide retained equipment information and source-link restoration; geometry and controls unchanged. -->
 <!-- 12LX: V-1443 individual reclaimer plate; previous chiller and M2820 review retained. Geometry, controls and all prior evidence retained. -->
 <!-- 12LQ: Clearfork P&IDs learned index, full reference filing audit, equipment-specific evidence requests. No geometry/control changes. -->
@@ -11,7 +16,7 @@
 <!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
 <!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12MD-ROOT">
+<meta name="cf-deployment-package" content="12MI-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -48,7 +53,7 @@
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12MD | Clear Fork - Plant-wide equipment information audit</title>
+<title>12MI | Clear Fork - PetroSkills pump practice</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -395,7 +400,14 @@
 @media print{body:has(#plateAuditDialog12KB)>*:not(#plateAuditDialog12KB){display:none!important}#plateAuditDialog12KB{position:static!important;inset:auto!important;display:block!important;border:0!important;box-shadow:none!important;height:auto!important;max-height:none!important}#plateAuditDialog12KB>div:first-child{display:none!important}#plateAuditDialog12KB>div:last-child{overflow:visible!important}#plateAuditDialog12KB .audit-tablewrap{overflow:visible!important}}
 </style>
 <style id="readableStatus12LJ">#startupState12LJ{margin:4px 0!important}header{position:relative}#toolDeck12KL .deck-cell12kl{max-width:100%}@media(max-width:700px){#weatherPanel{position:static!important;inset:auto!important;margin:8px 12px 0!important;max-width:calc(100% - 24px)!important;width:auto!important}header h1{overflow-wrap:anywhere;line-height:1.4}#startupState12LJ{overflow-wrap:anywhere}#toolDeck12KL{max-width:100%}}</style>
-<style id="navigationLayout12LL">header{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,550px);gap:4px 18px;align-items:start}header h1{grid-column:1;grid-row:1}#startupState12LJ{grid-column:1;grid-row:2}#weatherPanel{position:static!important;inset:auto!important;grid-column:2;grid-row:1/span 2;min-width:0!important;max-width:100%!important;width:auto!important;margin:0!important;overflow-wrap:anywhere;white-space:normal}#weatherPanel div{white-space:normal!important}@media(max-width:900px){header{display:block}#weatherPanel{margin-top:8px!important}header h1{overflow-wrap:anywhere}}</style></head>
+<style id="navigationLayout12LL">header{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,550px);gap:4px 18px;align-items:start}header h1{grid-column:1;grid-row:1}#startupState12LJ{grid-column:1;grid-row:2}#weatherPanel{position:static!important;inset:auto!important;grid-column:2;grid-row:1/span 2;min-width:0!important;max-width:100%!important;width:auto!important;margin:0!important;overflow-wrap:anywhere;white-space:normal}#weatherPanel div{white-space:normal!important}@media(max-width:900px){header{display:block}#weatherPanel{margin-top:8px!important}header h1{overflow-wrap:anywhere}}</style><style id="compressorSourceReview12MG">/* Source panels reuse the existing controls and Library; no new toolbar or scene. */
+.cf-alarm12mg,.cf-reference12mg{margin:12px 0;padding:12px;border:1px solid #698492;border-radius:6px;font:12px/1.5 'Segoe UI',Arial,sans-serif;background:#f4f7fa;color:#193346;box-sizing:border-box;max-width:100%;min-width:0}
+.cf-alarm12mg summary,.cf-reference12mg summary{cursor:pointer;font-weight:700;font-size:13px}.cf-alarm12mg p,.cf-reference12mg p{margin:8px 0;overflow-wrap:anywhere}.cf-alarm-scroll12mg{overflow-x:auto;max-width:100%;min-width:0}.cf-alarm12mg table{border-collapse:collapse;min-width:700px;width:100%;font-size:11px}.cf-alarm12mg th,.cf-alarm12mg td{padding:7px;border:1px solid #b3c5cf;text-align:left;vertical-align:top}.cf-alarm12mg th{background:#dce7ee}.cf-alarm12mg small{display:block;font-size:10px;margin-top:4px}.cf-alarm12mg .cf-alarm-gap12mg{background:#fff1d0}.cf-alarm-note12mg{font-size:10.5px}.cf-reference12mg section{border-top:1px solid #c5d3dc;padding:8px 0}.cf-reference12mg h4{margin:6px 0;font-size:13px}.cf-reference12mg button{font-size:12px;min-height:30px;margin:6px;padding:6px 9px;color:#193346;background:#e2ecf2;border-color:#91a9b9}.cf-review-alert12mg{padding:12px;background:#fff0ce;color:#513d1e;border-left:4px solid #a17728;font:12px/1.5 'Segoe UI',Arial,sans-serif;white-space:pre-wrap}.cp .cf-alarm12mg{max-width:365px}.pop .cf-alarm12mg{margin:10px 14px}.cf-eq12md .cf-reference12mg h4,.cf-eq12md .cf-reference12mg p,.cf-eq12md .cf-reference12mg summary{color:#193346}
+/* Higher specificity than the retained dark equipment-details theme. */
+.cf-eq12md details.cf-alarm12mg,.cf-eq12md details.cf-reference12mg{background:#f4f7fa;color:#193346;border-color:#698492}
+.cf-eq12md .cf-alarm12mg td,.cf-eq12md .cf-alarm12mg th,.cf-eq12md .cf-alarm12mg p,.cf-eq12md .cf-alarm12mg small,.cf-eq12md .cf-alarm12mg summary,.cf-eq12md .cf-reference12mg small,.cf-eq12md .cf-reference12mg summary{color:#193346}
+.cf-eq12md .cf-alarm12mg th{background:#dce7ee}.cf-inspection-card12mc p.cf-review-alert12mg{color:#513d1e}
+</style></head>
 <body>
 <!-- 12JK: source-supported NGL pig-launcher station. Existing controls and12JJ flow-popup fix preserved. -->
 <!-- 12JJ: repaired flow popup application scope; separate exchanger circuits and qualified phase changes. No operating algorithm or physical piping changed. Backend 12JD unchanged. -->
@@ -403,7 +415,7 @@
 <!-- 12JH: source-preserving in-pipe phase visual + schematic flare rack alignment. Backend remains 12JD. -->
 
 <header>
-  <h1>Clear Fork / Cryogenic Unit #1 - 12MD</h1>
+  <h1>Clear Fork / Cryogenic Unit #1 - 12MI</h1>
   <p>Sheets in model: M2150 (T-1521) · M2145 (EX/C-1121, A-1321) · M2135 (V-1421) · M2200 (E-1241, V-1443) · M2165 (reboiler) · M2155 (gas/gas reflux, surge tank) · M2160 (booster pumps) · M2175 (pipeline pumps) · M2610/M2615 (residue compressors) · M2110 (V-1413/14/15 dehy adsorbers) · M2105 (F-1412 coalescer, F-1416/17 dust filters) · refrigeration (V-1441/1442/1444, C-1140/41/42, A-1343). Click any component for line numbers, service and set points. Toggle manual valves, instruments/flow meters, and the site environment below.</p>
 <div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather...</div></header>
 <div class="bar">
@@ -931,7 +943,7 @@
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12MD',problems=[],loaded=false;
+ 'use strict';var expected='12MI',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
  var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MD?window.CFInspection12MD.audit():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
@@ -1060,7 +1072,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
 <script src="./data-13-cf_plate_audit_12kb.js" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script src="./data-14-cf_source_12ko.js" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script src="./data-15-cf_source_12kp.js" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12MD" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script src="./clearfork-main.js?v=12MI" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
@@ -1143,8 +1155,8 @@ window.PETROSKILLS_12BX_REFERENCE = {
   },
   inlet:{
    title:'Inlet Compressor — Ariel KBZ/6 Frame',
-   source:'Ariel KBU/KBZ maintenance/startup guidance + Clear Fork inlet-compressor control-board knowledge',
-   status:'OEM FAMILY VERIFIED / EXACT SITE PACKAGE SEQUENCE PENDING', cls:'observed',
+   source:'Ariel KBU/KBZ family guidance plus operator-provided C-4100/C-4200 capacity/shutdown correction, 2026-10-22',
+   status:'OPERATOR CAPACITY/STOP SEQUENCE / OTHER FIELD DETAILS STILL QUALIFIED', cls:'observed',
    before:[
     'Confirm the compressor/driver are released for operation and all maintenance, LOTO, red tags and open work are cleared by the authorized process.',
     'Walk the package. Inspect crankcase/frame oil level, force-feed lubricator condition, cylinder/packing lubrication, guards, drains, coolers and visible leakage.',
@@ -1162,11 +1174,14 @@ window.PETROSKILLS_12BX_REFERENCE = {
    ],
    run:[
     'Trend suction/discharge pressure, frame oil pressure/temp, cylinder discharge temperatures, bearing temperatures, vibration and lubrication status.',
-    'Check liquid handling at compressor scrubbers/catch bottles and confirm recycle is not masking a downstream restriction or capacity problem.'
+    'Check liquid handling at compressor scrubbers/catch bottles and confirm recycle is not masking a downstream restriction or capacity problem.',
+    'Remote Capacity uses 5-point commands such as 75/80/85%; 80% is normal. The operator estimates a slight 1-3 MMSCFD flow change per step while loaded; this is approximate and actual response depends on process conditions.'
    ],
    stop:[
-    'Unload/recycle the compressor using the approved package sequence before a normal stop.',
-    'Stop the driver from the authorized control and verify the machine reaches zero speed without reverse rotation or abnormal coastdown.',
+    'Operator-described control sequence: from normal 80% Remote Capacity, remove all load steps to Step 0 first.',
+    'Then use the Remote Capacity minus control in 5-percentage-point steps: 80, 75, 70, 65, 60, 55, 50%.',
+    'At Step 0 / 50%, press SHUTDOWN. Reaching 50% alone does not stop the simulator driver. Any actual trip/ESD remains immediate, with Remote Capacity returning to 50%.',
+    'Verify stopped state using the approved field procedure; the simulator training sequence is not operating authorization.',
     'Maintain required post-lube/auxiliary lubrication if the package procedure calls for it.',
     'Record the reason for shutdown and preserve first-out/alarm information before resetting. For maintenance, isolate, vent and verify zero residual cylinder pressure under LOTO.'
    ],
@@ -1556,5 +1571,5 @@ window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDI
 <script>(function(){var h=document.querySelector('header h1');window.CFRyanIndexSync12KP=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KP';window.CF_CURRENT_RELEASE_12KP={frontend:'12KP',backend:'RYAN-2026-10-13-12KP',sourceIndexBuild:'12KP',referenceOnlyUpdate:false,frickVisualUpdate:true,expanderChanged:false};window.CFRyanIndexSync12KQ=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KQ';window.CF_CURRENT_RELEASE_12KQ={frontend:'12KQ',backend:'RYAN-2026-10-13-12KQ',sourceIndexBuild:'12KQ',referenceOnlyUpdate:false,expanderChanged:true,frick12KPPreserved:true};})();</script>
 <script>(function(){function badge12LD(){var h=document.querySelector('header h1');}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LL';window.CF_CURRENT_RELEASE_12LD={frontend:'12LL',backend:'RYAN-2026-10-14-12LL',sourceIndexBuild:'12LL',deploymentPackage:'12LL-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:3,batchSize:3,deployedByThisUpdate:false};})();</script>
 <script id="finalBuildStamp12LK">(function(){function stamp(){if(window.CFStartup12LJ)window.CFStartup12LJ.paint();}stamp();document.addEventListener('DOMContentLoaded',stamp,{once:true});})();</script>
-<script id="libraryFilingRelease12LQ">(function(){window.CLEAR_FORK_REFERENCE_RELEASE="12MD";window.CF_CURRENT_RELEASE_12LQ=window.CF_CURRENT_RELEASE_12JT;if(window.CFStartup12LJ)window.CFStartup12LJ.paint();})();</script>
+<script id="libraryFilingRelease12LQ">(function(){window.CLEAR_FORK_REFERENCE_RELEASE="12MI";window.CF_CURRENT_RELEASE_12LQ=window.CF_CURRENT_RELEASE_12JT;if(window.CFStartup12LJ)window.CFStartup12LJ.paint();})();</script>
 </body></html>
