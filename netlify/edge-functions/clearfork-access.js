@@ -1,5 +1,8 @@
 /**
- * Clear Fork access add-on v1.0, 2026-10-22.
+ * Clear Fork access add-on v1.1, 2026-10-22.
+ * Repairs native form POST origin suppressed by the former no-referrer policy.
+ * Strict same-origin, CSRF and password checks remain required.
+ * Diagnostics log only fixed event/reason codes, never submitted values.
  * No simulator source, plant state, localStorage or IndexedDB is modified.
  * Configure ONLY in Netlify UI, Functions scope:
  *   CLEARFORK_SITE_PASSWORD   (case-sensitive; do not put its value in this file)
@@ -10,7 +13,7 @@
  * Apply through Git-connected Netlify builds, not static file drag-and-drop.
  * Test the deployed gate, direct files, function endpoints and old deploy URLs.
  */
-const VERSION = 'clearfork-access-v1';
+const VERSION = 'clearfork-access-v1.1';
 const PREFIX = '/__clearfork';
 const SESSION = '__Host-clearfork_access';
 const ENTRY = '__Host-clearfork_entry';
@@ -72,13 +75,15 @@ function reply(text,status=200,type='text/plain; charset=utf-8') {
   const headers = noStore();
   headers.set('Content-Type',type);
   headers.set('X-Content-Type-Options','nosniff');
-  headers.set('Referrer-Policy','no-referrer');
+  // Native form navigation under no-referrer sends Origin: null in browsers.
+  // Keep same-site origin validation enabled; suppress referrers only cross-origin.
+  headers.set('Referrer-Policy','same-origin');
   headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
   return new Response(text,{status,headers});
 }
 function page(content,status=200,script='') {
   const nonce = randomToken();
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clear Fork | Authorized access</title><style nonce="${nonce}">${CSS}</style></head><body><main><p class="brand">CLEAR FORK CRYOGENIC UNIT #1</p><h1>Authorized employee access</h1>${content}<p class="footer">Access add-on v1.0 | Employee acknowledgement and shared password</p></main>${script ? `<script nonce="${nonce}">${script}</script>` : ''}</body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>Clear Fork | Authorized access</title><style nonce="${nonce}">${CSS}</style></head><body><main><p class="brand">CLEAR FORK CRYOGENIC UNIT #1</p><h1>Authorized employee access</h1>${content}<p class="footer">Access add-on v1.1 | Employee acknowledgement and shared password</p></main>${script ? `<script nonce="${nonce}">${script}</script>` : ''}</body></html>`;
   const res = reply(html,status,'text/html; charset=utf-8');
   res.headers.set('Content-Security-Policy',`default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`);
   res.headers.set('X-Frame-Options','DENY');
@@ -132,6 +137,35 @@ async function verifyToken(value,key,audience,type,maxLifetime) {
     return p;
   }catch{return null;}
 }
+const FORM_REASONS = new Set(['origin','type','size','body','csrf_missing','csrf_mismatch','duplicate']);
+function accessDiagnostic(event,reason='') {
+  // Fixed allowlist only: never log an exception message, URL, password, body or cookie.
+  const events=new Set(['form_rejected','password_rejected','login_accepted','configuration_missing','runtime_failure']);
+  const safeEvent=events.has(event)?event:'runtime_failure';
+  const safeReason=FORM_REASONS.has(reason)?reason:(reason==='unknown'?'unknown':'');
+  try { console.info(JSON.stringify({component:'clearfork-access',version:VERSION,event:safeEvent,reason:safeReason})); } catch { /* Logging must never change access decisions. */ }
+}
+function invalidForm(error,to='/',signOut=false) {
+  const reason=FORM_REASONS.has(error?.message)?error.message:'unknown';
+  accessDiagnostic('form_rejected',reason);
+  const messages={
+    origin:'The browser did not send a valid same-site page origin. Open the published HTTPS site directly in a new tab and try again.',
+    csrf_missing:'The login security cookie is missing or expired. Open the site homepage again and allow cookies for this site. Do not clear saved simulator data.',
+    csrf_mismatch:'This form no longer matches the browser security cookie. Close older login tabs, reopen the homepage and try again.',
+    size:'The submitted form is too large. Open the site homepage and try again.',
+    type:'This request was not a supported login form. Open the site homepage and try again.',
+    body:'The submitted form was empty. Open the site homepage and try again.',
+    duplicate:'The submitted form contained repeated fields. Open the site homepage and try again.',
+    unknown:'The login form could not be verified. Open the site homepage and try again.'
+  };
+  const message=messages[reason]+' Reference: CF-AUTH-'+reason.toUpperCase()+'.';
+  const res=signOut
+    ? page('<h2>Sign-out form could not be verified</h2><p class="error" role="alert">'+escapeHTML(message)+'</p><p><a href="'+PREFIX+'/logout">Reload sign-out form</a></p>',403)
+    : loginPage(to,message,false,403);
+  res.headers.set('X-Clearfork-Access-Reason',reason);
+  return res;
+}
+
 async function readForm(request,url) {
   // Origin plus host-only double-submit token; not merely a visual Yes button.
   if(request.headers.get('origin')!==url.origin)throw new Error('origin');
@@ -144,7 +178,8 @@ async function readForm(request,url) {
   const bytes=new Uint8Array(total);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}
   const form=new URLSearchParams(dec.decode(bytes));
   const csrf=form.get('csrf')||'', expected=cookies(request)[CSRF]||'';
-  if(!expected||csrf.length>128||!await equalText(csrf,expected))throw new Error('csrf');
+  if(!expected)throw new Error('csrf_missing');
+  if(csrf.length>128||!await equalText(csrf,expected))throw new Error('csrf_mismatch');
   for(const k of ['csrf','password','employee','returnTo'])if(form.getAll(k).length>1)throw new Error('duplicate');
   return form;
 }
@@ -164,6 +199,7 @@ async function handle(request,context) {
   const password=Netlify.env.get('CLEARFORK_SITE_PASSWORD');
   const secret=Netlify.env.get('CLEARFORK_SESSION_SECRET');
   if(typeof password!=='string'||password.length<1||password.length>256||typeof secret!=='string'||secret.length<32){
+    accessDiagnostic('configuration_missing');
     return page('<h2>Access protection is not configured</h2><p>The site owner must set the Clear Fork password and session secret in Netlify, then redeploy. The simulator remains locked.</p>',503);
   }
   const audience=VERSION+'|'+url.origin;
@@ -171,10 +207,13 @@ async function handle(request,context) {
   if(path===PREFIX+'/login') {
     if(request.method==='GET')return loginPage();
     if(request.method!=='POST')return reply('Method not allowed',405);
-    let form;try{form=await readForm(request,url);}catch{return loginPage('/','This form expired or could not be verified. Please start again.',false,403);}
+    let form;try{form=await readForm(request,url);}catch(error){return invalidForm(error);}
     if(form.get('employee')!=='yes')return denied();
     const supplied=form.get('password')||'',to=validReturn(form.get('returnTo'),url.origin);
-    if(!supplied||supplied.length>256||!await equalText(supplied,password))return loginPage(to,'Incorrect password. Passwords are case-sensitive.',true,401);
+    if(!supplied||supplied.length>256||!await equalText(supplied,password)){
+      accessDiagnostic('password_rejected');
+      return loginPage(to,'Incorrect password. Passwords are case-sensitive.',true,401);
+    }
     const now=Math.floor(Date.now()/1000),sid=randomToken();
     const session=await signToken({v:1,type:'session',aud:audience,iat:now,exp:now+SESSION_SECONDS,sid},key);
     const entry=await signToken({v:1,type:'entry',aud:audience,iat:now,exp:now+90,to,sid},key);
@@ -182,16 +221,17 @@ async function handle(request,context) {
     res.headers.append('Set-Cookie',cookie(SESSION,session));
     res.headers.append('Set-Cookie',cookie(ENTRY,entry,90));
     res.headers.append('Set-Cookie',cookie(CSRF,'',0));
+    accessDiagnostic('login_accepted');
     return res;
   }
   if(path===PREFIX+'/deny') {
     if(request.method!=='POST')return reply('Method not allowed',405);
-    try{await readForm(request,url);}catch{return reply('Invalid form. Return to the site entrance.',403);}
+    try{await readForm(request,url);}catch(error){return invalidForm(error);}
     return denied();
   }
   if(path===PREFIX+'/logout') {
     if(request.method==='POST'){
-      try{await readForm(request,url);}catch{return reply('Invalid sign-out form. Reload the sign-out page.',403);}
+      try{await readForm(request,url);}catch(error){return invalidForm(error,'/',true);}
       return clearCookies(page('<h2>Signed out</h2><p>Server access has been locked. Close any other open simulator tabs on this computer. Saved plant history and settings have not been deleted.</p><p><a href="/">Return to the access screen</a></p>'));
     }
     if(request.method!=='GET')return reply('Method not allowed',405);
@@ -219,6 +259,6 @@ async function handle(request,context) {
 }
 export default async function clearforkAccess(request,context) {
   try { return await handle(request,context); }
-  catch { return page('<h2>Access is temporarily unavailable</h2><p>The simulator remains locked. The site owner should review the access configuration and deployment.</p>',503); }
+  catch { accessDiagnostic('runtime_failure'); return page('<h2>Access is temporarily unavailable</h2><p>The simulator remains locked. The site owner should review the access configuration and deployment.</p>',503); }
 }
 export const config = {path:'/*',onError:'fail'};
