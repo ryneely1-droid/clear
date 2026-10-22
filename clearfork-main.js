@@ -1,6 +1,6 @@
 
 (function(){
-window.CFMainScript12LJ={build:"12MA",phase:"starting"};
+window.CFMainScript12LJ={build:"12MD",phase:"starting"};
 /*12KG lossless static string interning. Decoding restores independent objects; no data loss.*/
 var CF_TEXT_POOL_12KG=window.CF12KQDeploymentD1.take("CF_TEXT_POOL_12KG");
 function cfUnpackStatic12KG(value){
@@ -5027,48 +5027,512 @@ function cf3dFunctionDescription12GY(r,host){
  (d.sourceIds||[]).forEach(function(id){var src=CF3D_DESCRIPTION_SOURCES[id];if(!src)return;var p=document.createElement('p');p.style.cssText='margin:5px 0;font-size:11px;';var a=document.createElement('a');a.textContent=src.title;a.style.color='#9ad4ff';if(src.libraryKey){a.href='#reference-library';a.onclick=function(e){e.preventDefault();cf3dInspectLibrary(src.librarySearch||src.libraryKey);};}else if(/^https:\/\//i.test(src.url)){a.href=src.url;a.target='_blank';a.rel='noopener noreferrer';}p.appendChild(a);if(src.sourceFile){var locator=document.createElement('span');locator.textContent=' | '+src.sourceFile+' | '+(src.sourcePages||'');p.appendChild(locator);}details.appendChild(p);});
  sec.appendChild(details);host.appendChild(sec);
 }
-function cf3dInspectDevice(k,host){
- var r=cf3dDeviceRecord(k);if(!r)return false;
- if(r.fieldDevice)return cf3dInspectField(r,host);
- // Same record/card in the model and Library; never maintain a duplicate PSV record.
- var title,list;
- if(host){host.textContent='';title=document.createElement('h2');list=document.createElement('ul');list.style.cssText='list-style:none;margin:0;padding:0;';host.appendChild(title);host.appendChild(list);}
- else{title=document.getElementById('ptitle');list=document.getElementById('plist');}
- if(!title||!list)return false;
- var names={modulating:'CONTROL VALVE',shutdown:'ESD / SHUTDOWN',sequence:'AUTOMATIC SEQUENCE',psv:'PRESSURE SAFETY VALVE',reducer:'PIPE SIZE TRANSITION',regulator:'PRESSURE REGULATOR',instrument:'INSTRUMENT',restriction:'RESTRICTION ORIFICE',equipment:'EQUIPMENT'};
- var accent=r.kind==='psv'?'#63d6df':r.kind==='shutdown'?'#ffac78':r.kind==='modulating'?'#bcaeff':'#f0d06b';
- title.textContent=r.tag+' - '+(names[r.kind]||'VALVE');list.innerHTML='';
- var li=document.createElement('li');li.style.cssText='list-style:none;';list.appendChild(li);
- var card=document.createElement('section');card.setAttribute('data-device-record',r.assetId);card.style.cssText='border:1px solid #344557;border-radius:8px;padding:12px;background:#101820;color:#dce6ef;';li.appendChild(card);
- var banner=document.createElement('div');banner.style.cssText='font-weight:700;color:'+accent+';font-size:12px;margin-bottom:9px;';banner.textContent=(r.kind==='psv'?'PSV RECORD':r.kind==='reducer'||r.kind==='restriction'?'PIPE FITTING RECORD':r.kind==='instrument'?'INSTRUMENT RECORD':r.kind==='regulator'?'REGULATOR RECORD':'VALVE RECORD')+' | Read-only inspection';card.appendChild(banner);
- cf3dFunctionDescription12GY(r,card);
- var grid=document.createElement('dl');grid.style.cssText='display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:6px 12px;margin:0;font-size:12px;';card.appendChild(grid);
- function field(label,value,key){var dt=document.createElement('dt');dt.textContent=label;dt.style.color='#96aabc';var dd=document.createElement('dd');dd.style.cssText='margin:0;overflow-wrap:anywhere;white-space:pre-wrap;';dd.textContent=String(value||'Pending source / valve upload');if(key)dd.setAttribute('data-device-field',key);grid.appendChild(dt);grid.appendChild(dd);}
- field(r.kind==='reducer'||r.kind==='restriction'?'Fitting / model identity':r.kind==='instrument'?'Instrument tag':'Valve number / tag',r.valveNumber||(r.tag+(r.kind==='reducer'?'':' - exact number pending')),'tag');
- field('Service',r.service,'service');if(r.equipment)field('Protected equipment',r.equipment,'equipment');
- field('Physical location / placement',r.location||r.placement,'physicalLocation');
- field('P&ID reference(s)',r.drawings.join(' | '),'drawing');
- field('Sheet / page',r.page,'page');field('Drawing revision',r.revision,'revision');field('P&ID location / grid',r.drawingLocation,'location');
- field('Manufacturer / model',[r.manufacturer,r.model].filter(Boolean).join(' / '),'manufacturer');
- field('Serial number',r.serial,'serial');field('Size / end ratings',r.connections,'connections');
- (r.specifications||[]).forEach(function(p){field(p[0],p[1]);});
- if(r.kind==='psv'){field('PSV set pressure',r.setPressure,'setPressure');field('DISCHARGE',r.discharge,'discharge');field('Destination basis',r.dischargeStatus);field('ISOLATION',r.isolation);}
- else if(r.kind!=='reducer')field('Fail position',r.failPosition,'failPosition');
- field('Stable model ID',r.assetId,'assetId');field('SOURCE',r.source,'source');field('Verification status',r.status,'status');field('PLACEMENT',r.placement,'placement');
- if(r.conflict){var conflict=document.createElement('div');conflict.style.cssText='margin-top:10px;padding:8px;border:1px solid #84662d;color:#ffe0a1;';conflict.textContent='SOURCE CONFLICT: '+r.conflict;card.appendChild(conflict);}
- var live=document.createElement('div');live.style.cssText='padding:8px;margin-top:9px;background:#192734;color:#c9dbea;font-size:11.5px;';
- var reading=r.kind!=='psv'?cf3dValveReading(r.sourceRecord):null;
- live.setAttribute('data-valve-live-inline',r.assetId||r.key||k);
- live.textContent=reading?reading.text+' This is controller demand, not independent valve-position feedback.':'No position feedback is asserted by this record. Geometry does not operate the valve or change a trip setting.';card.appendChild(live);
- var actions=document.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;';card.appendChild(actions);
- function button(text,handler){var b=document.createElement('button');b.type='button';b.textContent=text;b.style.cssText='padding:7px 11px;font-size:11px;min-height:30px;';b.onclick=handler;actions.appendChild(b);return b;}
- button('Find component documents',function(){cf3dInspectLibrary(r.tagConfirmed?r.tag:r.assetId);});
- if(['reducer','restriction','instrument'].indexOf(r.kind)<0&&typeof cfDeviceListOpen==='function')button(r.kind==='psv'?'Open PSV List':'Open Valve List',function(){cfDeviceListOpen(r.kind==='psv'?'psv':'valve',r.assetId);});
- r.drawings.slice(0,4).forEach(function(d){button(CF3D_SOURCE_DRAWINGS[d]?'Open '+d:'Find '+d,function(){cf3dOpenSourceDrawing(d);});});
- cf3dPhotoGallery12GI(r,card);
- // 12GS: sources are linked once by the shared component reference panel.
- return true;
+/* 12MD: exact-identity evidence projection. No new plant facts or operating writes. */
+function cfCreateEquipmentEvidenceIndex12MD(dataset) {
+ 'use strict';
+ var data=dataset||{},records=Object.create(null),sources=Object.create(null),tags=Object.create(null),
+  notes=data.referenceNotes||{},byAsset=Object.create(null),children=Object.create(null),problems=[],problemSet=new Set(),
+  drawingMap=Object.create(null),routeMap=Object.create(null),photoRoots=[],manualOwners=Object.create(null),sourceSeen=new Set();
+ function arr(v){return Array.isArray(v)?v:[];}
+ function list(v){return v===undefined||v===null?[]:Array.isArray(v)?v:[v];}
+ function norm(v){return String(v==null?'':v).toUpperCase().replace(/[^A-Z0-9]/g,'');}
+ function text(v){return v==null?'':typeof v==='string'?v:typeof v==='object'?JSON.stringify(v):String(v);}
+ function unique(a){return Array.from(new Set(a.filter(function(v){return v!==undefined&&v!==null&&v!=='';})));}
+ function problem(type,value,owner,candidates){var p={type:type,value:String(value),owner:owner||'',candidates:candidates||[]},sig=JSON.stringify(p);if(!problemSet.has(sig)){problemSet.add(sig);problems.push(p);}}
+ function atom(v){return typeof v==='string'||typeof v==='number';}
+ function pairs(v){return arr(v).map(function(f){return Array.isArray(f)?[f[0],f[1]]:f&&[f.label||f.name,f.value];}).filter(function(f){return f&&f[0]!=null&&f[1]!=null;});}
+ function refFor(k){return byAsset[k]||(byAsset[k]={reviews:[],drawingFacts:[],drawingRefs:[],sourceRecords:[],links:[],manuals:[],rootPlates:[],related:[],routeReferences:[]});}
+ var all=Array.isArray(data.components)?data.components:Object.keys(data.components||{}).map(function(k){return Object.assign({assetId:k},data.components[k]);});
+ all.forEach(function(r){var k=r.assetId||r.key;if(k){records[k]=r;refFor(k);}});
+ arr(data.pipes).forEach(function(p){if(p.id)routeMap[p.id]=p;if(p.key)routeMap[p.key]=p;});
+ Object.keys(records).forEach(function(k){var r=records[k], compound=String(r.tag||'').match(/^([A-Z]+)-(\d+[A-Z]?)\/(?:(?:[A-Z]+)-)?(\d+[A-Z]?)$/), expanded=compound?[compound[1]+'-'+compound[2],compound[1]+'-'+compound[3]]:[];unique([r.tag,r.displayTag].concat(arr(r.aliases),expanded)).forEach(function(t){
+  if(typeof t!=='string'||!(/^[A-Z][A-Z0-9/]*[- ]?\d+[A-Z0-9-]*$/i.test(t)||/^\d{4,}[A-Z]?$/.test(t)))return;
+  var n=norm(t);if(n)(tags[n]||(tags[n]=[])).push(k);
+ });});
+ Object.keys(tags).forEach(function(k){tags[k]=unique(tags[k]);});
+ function ids(value,owner,report){
+  if(!atom(value))return [];var s=String(value);if(records[s])return [s];
+  var found=tags[norm(s)]||[];
+  // A canonical tag has priority over a different component's historical alias.
+  var exact=found.filter(function(k){return norm(records[k].tag)===norm(s);});if(exact.length)found=exact;
+  if(found.length===1)return found;
+  if(owner&&found.indexOf(owner)>=0)return [owner];
+  if(found.length>1&&report)problem('AMBIGUOUS_EXACT_TAG',s,owner,found);
+  return [];
+ }
+ function owners(obj,fallback){
+  obj=obj||{};var explicit=unique(list(obj.ownerKeys).concat(list(obj.ownerKey),list(obj.assetId),list(obj.assetIds),list(obj.key)));
+  var out=[];explicit.forEach(function(v){out=out.concat(ids(v,null,true));});
+  list(obj.owner).forEach(function(v){out=out.concat(ids(v,null,true));});
+  if(!out.length)list(obj.equipmentIds).forEach(function(v){out=out.concat(ids(v,null,true));});
+  if(!out.length)list(obj.tags).concat(list(obj.tag),list(obj.canonicalTag)).forEach(function(v){out=out.concat(ids(v,null,true));});
+  return unique(out.length?out:fallback||[]);
+ }
+ function pointer(o,path){return (Array.isArray(path)?path:String(path||'').split('.').filter(Boolean)).reduce(function(v,p){return v&&v[p];},o);}
+ function addUnique(target,value,sig){if(!target.some(function(v){return sig(v)===sig(value);}))target.push(value);}
+ function addLink(k,key,basis){if(!key||typeof key!=='string')return;
+  if(notes[key])addUnique(refFor(k).links,{key:key,basis:basis},function(x){return x.key;});
+  else if(records[key]&&key!==k)addUnique(refFor(k).related,{key:key,relation:'Explicit retained record link',basis:basis},function(x){return x.key+'|'+x.relation;});
+  else if(!records[key])problem('UNRESOLVED_NOTE_REFERENCE',key,k);
+ }
+ function addReview(k,entry,meta){if(!records[k]||!entry||typeof entry!=='object')return;
+  var content=entry.text||entry.description||entry.basis||'',fields=pairs(entry.fields||entry.specifications);
+  if(!content&&!fields.length&&entry.key&&notes[entry.key]){addLink(k,entry.key,meta.definition);return;}
+  if(!content&&!fields.length)return;
+  var r={definition:meta.definition,path:meta.path||'',id:entry.id||entry.key||meta.path,title:entry.title||entry.name||entry.id||'Source review',
+   text:content,fields:fields,build:entry.reviewBuild||meta.build||'',authority:entry.authority||entry.status||meta.authority||'Retained source review; not an installed or live-state verification',
+   drawing:entry.drawing||meta.drawing||'',revision:entry.revision||meta.revision||'',pages:list(entry.pdfPages||entry.sourcePDFPage||entry.sourcePage||meta.pages),
+   location:entry.sourceLocation||entry.location||'',sourceFile:entry.sourceFile||meta.sourceFile||'',referenceKey:entry.key&&notes[entry.key]?entry.key:meta.referenceKey||'',
+   tags:arr(entry.tags),qualifiedGroup:arr(entry.tags).length>1};
+  addUnique(refFor(k).reviews,r,function(x){return x.definition+'|'+x.path+'|'+x.id;});
+ }
+ function addDrawing(doc,definition){if(!doc||typeof doc!=='object'||!doc.number)return;
+  var number=String(doc.number),n=norm(number.replace(/^020185-AE-DW-/i,''));
+  if(!/^M\d{4}[A-Z]?$/.test(n))return;
+  var key=[number,doc.revision||'',doc.sha256||doc.sourceFile||''].join('|');
+  if(sourceSeen.has('drawing:'+key))return;sourceSeen.add('drawing:'+key);
+  var info={number:number,revision:doc.revision||'',pages:list(doc.pages||doc.page),sourceFile:doc.sourceFile||'',status:doc.status||doc.issueMarking||'',title:doc.title||'',definition:definition||'',key:key,scope:doc.scope||''};
+  (drawingMap[n]||(drawingMap[n]=[])).push(info);
+  arr(doc.facts).forEach(function(f,ix){owners(f).forEach(function(k){addUnique(refFor(k).drawingFacts,{document:info,id:f.id||String(ix),text:f.text||f.description||'',fields:pairs(f.fields),location:f.location||'',status:f.status||doc.status||'',tags:arr(f.tags)},function(x){return x.document.key+'|'+x.id;});});});
+ }
+ arr(data.drawings).forEach(function(d){addDrawing(d,'Drawing register');});
+ arr(data.sourceDefinitions).forEach(function(d){if(d&&d.name)sources[d.name]=d.value;});
+ // Older supplements are also retained sources. Do not overwrite the canonical definition.
+ arr(data.sourceSupplements).forEach(function(s){if(s.definition&&!sources[s.definition])sources[s.definition]=s.data;});
+ Object.keys(sources).forEach(function(def){
+  var s=sources[def];if(!s||typeof s!=='object')return;
+  if(Array.isArray(s)){s.forEach(function(x){addDrawing(x,def);});return;}
+  addDrawing(s,def);arr(s.drawings).forEach(function(d){addDrawing(d,def);});
+  var own=owners({ownerKeys:s.ownerKeys,ownerKey:s.ownerKey,owner:s.owner,equipmentIds:s.equipmentIds});
+  var meta={definition:def,build:s.build||'',sourceFile:typeof s.sourceFile==='string'?s.sourceFile:(s.source||{}).name||'',referenceKey:s.notebookKey||s.reviewKey||s.referenceKey||''};
+  arr(s.newEntries).forEach(function(e,i){var m=Object.assign({},meta,{path:'newEntries.'+i});owners(e,s.manual?own:[]).forEach(function(k){addReview(k,e,m);});});
+  if(s.manual){own.forEach(function(k){refFor(k).manuals.push({definition:def,manual:s.manual,applicability:s.applicability||s.policy||'',referenceKey:s.notebookKey||'',sourceFile:s.sourceFile||'',sections:arr(s.sections),reviewScope:s.reviewScope||'',build:s.build||''});if(s.notebookKey)addLink(k,s.notebookKey,def+' explicit manual owner');});}
+  if(s.notebookKey&&own.length)own.forEach(function(k){addLink(k,s.notebookKey,def+' explicit source owner');});
+  Object.keys(s.recordLinks||{}).forEach(function(k){if(!records[k])return;arr(s.recordLinks[k]).forEach(function(id){var ix=arr(s.newEntries).findIndex(function(e){return e.id===id;});if(ix>=0)addReview(k,s.newEntries[ix],Object.assign({},meta,{path:'newEntries.'+ix}));else problem('UNRESOLVED_FACT_REFERENCE',def+':'+id,k);});});
+  // Root photo definitions predate the newer .plate schema. Only exact owners can acquire their fields.
+  // Source component records may hold retained sizes, service and drawing facts that never reached flat cards.
+  var traversed=new Set();
+  function sourceRecords(o,path,depth){
+   if(!o||typeof o!=='object'||depth>9||traversed.has(o))return;traversed.add(o);
+   if(!Array.isArray(o)){
+    var candidate=o.assetId||o.key||o.modelKey;
+    if(candidate&&records[candidate]&&Object.keys(o).some(function(n){return /^(service|specifications|fields|manufacturer|model|source|nominalInches|size|description|drawing|drawings|design|connections|equipment)$/.test(n);})){
+     addUnique(refFor(candidate).sourceRecords,{definition:def,path:path,build:s.build||'',record:o,sourceFile:s.sourceFile||(s.source||{}).name||'',title:o.tag||o.name||candidate},function(x){return x.definition+'|'+x.path;});
+    }
+   }
+   Object.keys(o).forEach(function(n){if(/^(prior|previous|history|pre\d)|^(points|routes|newRoutes|routeUpdates|meshUpdates|meshTranslations|coordinates|images|bytes|pdfBytes|src|b64|base64)$/i.test(n))return;sourceRecords(o[n],path?path+'.'+n:n,depth+1);});
+  }
+  sourceRecords(s,'',0);
+  if((s.specifications||s.fields)&&(/PHOTO|PLATE|NAMEPLATE/.test(def)||s.mime==='image/jpeg')){
+   var pOwners=owners({assetId:s.assetId,canonicalTag:s.canonicalTag||s.operatorTag,tag:s.tag});
+   pOwners.forEach(function(k){refFor(k).rootPlates.push({definition:def,plate:s,path:'',basis:'Exact source-owned photo definition; original qualifications retained'});});
+  }
+ });
+ function scanLinks(value,k,label,depth){if(depth>4||!value||typeof value!=='object')return;
+  Object.keys(value).forEach(function(name){if(/^(prior|previous|history|pre\d)|audit|specifications|ports|geometry/i.test(name))return;
+   var v=value[name],p=label+'.'+name;
+   if(/(?:referenceLinks|sourceLinks)/i.test(name)&&Array.isArray(v))v.forEach(function(x){if(typeof x==='string')addLink(k,x,p);});
+   if(v&&typeof v==='object'&&!Array.isArray(v)){
+    var def=v.definition||v.sourceDefinition;
+    if(def&&sources[def]){
+     list(v.factIds||v.factId).forEach(function(id){var s=sources[def],ix=arr(s.newEntries).findIndex(function(e){return e.id===id;});if(ix>=0)addReview(k,s.newEntries[ix],{definition:def,path:'newEntries.'+ix,build:s.build,sourceFile:typeof s.sourceFile==='string'?s.sourceFile:'',referenceKey:s.notebookKey||s.plateKey||''});else problem('UNRESOLVED_FACT_REFERENCE',def+':'+id,k);});
+     [v.referenceKey,v.sourceKey,v.notebookKey].forEach(function(ref){if(ref)addLink(k,ref,p);});
+    }
+    scanLinks(v,k,p,depth+1);
+   }
+  });
+ }
+ Object.keys(records).forEach(function(k){var r=records[k],entry=refFor(k);
+  unique([r.assetId,r.key].concat(arr(r.aliases))).forEach(function(alias){if(routeMap[alias])addUnique(entry.routeReferences,routeMap[alias],function(x){return x.id||x.key;});});
+  scanLinks(r,k,'component',0);scanLinks(notes[k],k,'INFO',0);
+  var explicitParent=r.parentAssetId||r.parent||r.equipment;
+  if(explicitParent&&typeof explicitParent==='string'){
+   var p=ids(explicitParent);if(!p.length&&/^([A-Z][A-Z0-9]*-\d+[A-Z]?)\s[-/]/.test(explicitParent))p=ids(explicitParent.match(/^([A-Z][A-Z0-9]*-\d+[A-Z]?)/)[1]);
+   p.forEach(function(parent){if(parent!==k)(children[parent]||(children[parent]=[])).push({key:k,tag:r.tag,kind:r.kind,service:r.service,relation:'Associated component',basis:r.parentAssetId?'Explicit parentAssetId':r.parent?'Explicit parent':'Existing equipment association'});});
+  }
+  [['reliefChoices','Relief record'],['drainChoices','Drain / vent record']].forEach(function(pair){arr(r[pair[0]]).forEach(function(target){var to=records[target];if(to)addUnique(entry.related,{key:target,tag:to.tag,kind:to.kind,relation:pair[1],basis:'Existing '+pair[0]},function(x){return x.key+'|'+x.relation;});else {var alias=(data.traceAliases||{})[target], linked=alias&&records[alias];if(linked)addUnique(entry.related,{key:alias,tag:linked.tag,kind:linked.kind,relation:pair[1],basis:'Exact retained trace alias '+target},function(x){return x.key+'|'+x.relation;});else if(routeMap[target])addUnique(entry.related,{key:target,tag:routeMap[target].title||target,kind:'route',relation:pair[1],basis:'Retained route identity',route:routeMap[target]},function(x){return x.key+'|'+x.relation;});else problem('UNRESOLVED_COMPONENT_LINK',target,k);}});});
+  var drefs=arr(r.drawings).slice(),serviceText=String(r.service||'');
+  // Only direct record/service refs. No drawing-number borrowing from the parent or another component.
+  drefs=drefs.concat(serviceText.match(/\b(?:020185-AE-DW-)?M\d{4}[A-Z]?\b/g)||[]);
+  entry.reviews.forEach(function(x){if(x.drawing)drefs.push(x.drawing);});entry.drawingFacts.forEach(function(x){drefs.push(x.document.number);});
+  unique(drefs).forEach(function(d){var n=norm(String(d).replace(/^020185-AE-DW-/i,''));var found=drawingMap[n]||[];
+   if(found.length)found.forEach(function(doc){addUnique(entry.drawingRefs,doc,function(x){return x.key;});});
+   else entry.drawingRefs.push({number:d,revision:'',sourceFile:'',pages:[],status:'Retained drawing reference; no matching reviewed sheet in this index',key:String(d)});
+  });
+  entry.reviews.sort(function(a,b){return String(b.build).localeCompare(String(a.build),undefined,{numeric:true});});
+ });
+ function notesFor(k){var i=notes[k]||{};return arr(i.d).map(function(v,n){return {index:n,text:text(v),source:'INFO.'+k+'.d['+n+']',title:i.t||k};});}
+ function dossier(k,view){
+  var raw=records[k];if(!raw){var match=ids(k);if(match.length===1){k=match[0];raw=records[k];}}if(!raw)return null;
+  var ref=refFor(k),ownNotes=notesFor(k),legacyPlate=ownNotes.filter(function(x){return /(?:^Nameplate\s*[:(]|direct data plate photos|confirmed real, (?:second )?nameplate:)/i.test(x.text)&&!/(?:unassigned|ownership unresolved|not copied|group reference only|requires .*confirmation|not given|off the drawing)/i.test(x.text);});
+  var rawAudit=raw.nameplateAudit12KB||{},stale=legacyPlate.length>0&&/NO_ASSIGNED_INSTALLED_PLATE|NO_.*PLATE/.test(String(rawAudit.status||''));
+  var top={key:k,tag:raw.displayTag||raw.tag||k,kind:raw.kind||'component',service:raw.service||'',majorEquipment:/^(equipment|vessel|filter|pump|compressor|motor|heater|exchanger|tank|blower|cooler|assembly|panel)$/.test(raw.kind||''),
+   ownNotes:ownNotes,earlierPlateNotes:legacyPlate,qualifiedLegacyPlate:stale,
+   sourceReviews:ref.reviews,drawingFacts:ref.drawingFacts,drawingReferences:ref.drawingRefs,sourceRecords:ref.sourceRecords,
+   linkedNotes:ref.links.map(function(x){return {key:x.key,basis:x.basis,title:(notes[x.key]||{}).t||x.key,notes:notesFor(x.key)};}),
+   manuals:ref.manuals,rootPlates:ref.rootPlates,
+   related:ref.related.concat(children[k]||[]),routeReferences:ref.routeReferences,
+   record:raw,info:notes[k]||null,
+   issues:problems.filter(function(p){return p.owner===k;}),
+   missing:arr(rawAudit.missing),auditRetained:arr(rawAudit.retained),
+   evidenceStatus:ref.routeReferences.length&&ref.routeReferences.every(function(p){return p.notInstalled12LS===true;})?'NOT_INSTALLED_OPERATOR_CONFIRMED - historical candidate route only':stale?'Earlier plate transcription exists in retained equipment notes; original evidence has not been re-reviewed in this audit.':raw.nameplateStatus||rawAudit.status||raw.status||'Retained source record; no field verification added',
+   coverageScope:'Retained source-to-component information availability, not field completeness or permission to operate.'};
+  return top;
+ }
+ function audit(){var rows=[],counts={records:0,majorEquipment:0,withOwnNotes:0,withDrawingFacts:0,withSourceRecords:0,withSourceReviews:0,withLinkedNotes:0,withVendorManuals:0,withRootPhotoFields:0,qualifiedLegacyPlateStatus:0,withRelatedComponents:0,withCurrentRouteData:0,withRetainedInformation:0},errors=[];
+  Object.keys(records).forEach(function(k){try{var d=dossier(k);counts.records++;if(d.majorEquipment)counts.majorEquipment++;
+   var row={key:k,tag:d.tag,kind:d.kind,service:d.service,equipment:d.majorEquipment,ownNotes:d.ownNotes.length,drawingFacts:d.drawingFacts.length,sourceReviews:d.sourceReviews.length,sourceRecords:d.sourceRecords.length,linkedNotes:d.linkedNotes.length,vendorManuals:d.manuals.length,rootPhotoSources:d.rootPlates.length,relatedComponents:d.related.length,currentRouteRecords:d.routeReferences.length,drawings:d.drawingReferences.map(function(x){return x.number+' rev '+(x.revision||'?');}),qualifiedLegacyPlateStatus:d.qualifiedLegacyPlate,unresolvedLinks:d.issues.length,status:d.evidenceStatus};
+   if(row.ownNotes)counts.withOwnNotes++;if(row.drawingFacts)counts.withDrawingFacts++;if(row.sourceReviews)counts.withSourceReviews++;if(row.sourceRecords)counts.withSourceRecords++;if(row.linkedNotes)counts.withLinkedNotes++;if(row.vendorManuals)counts.withVendorManuals++;if(row.rootPhotoSources)counts.withRootPhotoFields++;if(row.qualifiedLegacyPlateStatus)counts.qualifiedLegacyPlateStatus++;if(row.relatedComponents)counts.withRelatedComponents++;if(row.currentRouteRecords)counts.withCurrentRouteData++;
+   if(row.ownNotes+row.drawingFacts+row.sourceReviews+row.sourceRecords+row.linkedNotes+row.vendorManuals+row.rootPhotoSources+row.currentRouteRecords)counts.withRetainedInformation++;
+   rows.push(row);
+  }catch(e){errors.push({key:k,error:String(e.message||e)});}});
+  return {build:'12MD',ok:!errors.length,counts:counts,errors:errors,rows:rows,unresolvedLinks:problems,sourceDefinitions:Object.keys(sources).length,drawingVersions:Object.keys(drawingMap).reduce(function(n,k){return n+drawingMap[k].length;},0),referenceNoteEntries:Object.keys(notes).length,
+   limitations:['Only exact retained identities and explicit links are used; ambiguous source owners remain unassigned.','Earlier notes, source reviews and drawing revisions retain their original wording. They are not converted into current live readings or procedures.','No geometry, controls, physical installed verification or browser-private archive inspection is included.']};
+ }
+ return {build:'12MD',records:records,sources:sources,notes:notes,byAsset:byAsset,resolve:ids,dossier:dossier,audit:audit,issues:problems,pairs:pairs,unique:unique,text:text};
 }
+
+/* 12MD: cached equipment dossiers for the existing main inspector and Library. */
+var CF_EQUIPMENT_INFORMATION_12MD={build:'12MD',installed:false,index:null,lastAudit:null};
+function cfEquipmentIndex12MD(refresh){
+ if(refresh)CF_EQUIPMENT_INFORMATION_12MD.index=null;
+ if(!CF_EQUIPMENT_INFORMATION_12MD.index){
+  var sync=window.CFRyanIndexSync12JT,data=sync&&sync.dataset?sync.dataset():null;
+  if(!data)throw new Error('Retained equipment dataset is not ready');
+  var t=typeof CF_TRACE_DATA_12IZ==='undefined'?{}:CF_TRACE_DATA_12IZ;
+  data.traceAliases=t.aliases||data.traceAliases||{};
+  CF_EQUIPMENT_INFORMATION_12MD.index=cfCreateEquipmentEvidenceIndex12MD(data);
+ }
+ return CF_EQUIPMENT_INFORMATION_12MD.index;
+}
+function cfEnrichEquipmentRecord12MD(r,raw,index){
+ if(!r)return r;var d=index.dossier(r.assetId||r.key);if(!d)return r;
+ r.equipmentDossier12MD=d;
+ // A pipe search alias may predate the operator's explicit not-installed closure.
+ // Display the current, exact route disposition without changing or rebuilding its historical geometry.
+ if(d.routeReferences.length&&d.routeReferences.every(function(p){return p.notInstalled12LS===true;})){
+  r.status='NOT INSTALLED - operator confirmed; historical candidate route only';
+  r.placement='Excluded from physical model; no plate, set pressure or existence verification requested';
+  r.remainingEvidence12MC=[];
+ }
+ // Do not say the manufacturer is absent when its retained identification is in a qualified earlier plate note.
+ // This is a display pointer, not an inferred manufacturer assignment or a change to the source record.
+ if(!r.manufacturer&&d.earlierPlateNotes.length)r.manufacturer='Recorded in the earlier plate transcription below (not re-verified in this audit)';
+ var seen=new Set((r.plateSections12MC||[]).map(function(s){return s.definition;}));
+ d.rootPlates.forEach(function(s){if(seen.has(s.definition))return;var p=s.plate,fields=index.pairs(p.fields||p.specifications);if(!fields.length)return;
+  seen.add(s.definition);r.plateSections12MC.push({id:s.definition+':root:'+r.assetId,title:r.tag+' - retained source-owned plate fields',evidence:p.status||p.relationship||s.basis,fields:fields,limits:[p.identityConflict,p.associationProvisional?'Equipment association remains provisional. No other component inherits this identity.':''].concat(Array.isArray(p.limits)?p.limits:[]).filter(Boolean),definition:s.definition,referenceKey:p.referenceKey||'',source:p.name||p.source||'',shared:false,qualification:p.identityConflict||''});
+ });
+ if(!r.drawings.length)r.drawings=index.unique(d.drawingReferences.map(function(x){return x.number;}));
+ if(d.qualifiedLegacyPlate){
+  r.status=d.evidenceStatus;
+  r.remainingEvidence12MC=['Earlier plate transcription is available below. Any original-photo identity, unreadable marking, revision or current installed applicability remains qualified; this audit has not independently re-verified it.'];
+ }
+ // Evidence status is separate from source-only/model presence. Never mark a whole machine verified from one plate.
+ var printed=new Set(r.plateSections12MC.flatMap(function(s){return s.fields.map(function(f){return JSON.stringify(f);});}));r.specifications=r.specifications.filter(function(f){return !printed.has(JSON.stringify(f));});
+ r.informationCoverage12MD={build:'12MD',ownNotes:d.ownNotes.length,drawingFacts:d.drawingFacts.length,sourceRecords:d.sourceRecords.length,sourceReviews:d.sourceReviews.length,manuals:d.manuals.length,linkedNotes:d.linkedNotes.length,related:d.related.length,unresolvedLinks:d.issues.length};
+ return r;
+}
+function cfEquipmentInformationStyle12MD(doc){
+ if(doc.getElementById('cfEquipmentStyle12MD'))return;
+ var st=doc.createElement('style');st.id='cfEquipmentStyle12MD';st.textContent=
+ '.cf-eq12md{margin-top:16px;border-top:1px solid #385260;padding-top:12px;overflow-wrap:anywhere;font:13px/1.6 Segoe UI,Arial,sans-serif}.cf-eq12md h3{color:#a9e4de;font-size:15px}.cf-eq12md h4{font-size:13px;margin:8px 0;color:#daedf3}.cf-eq12md details{margin:9px 0;padding:10px;border:1px solid #354e5c;border-radius:7px;background:#14212b}.cf-eq12md details details{background:#111b25}.cf-eq12md summary{cursor:pointer;min-height:28px;font-weight:600;color:#c7e4ef}.cf-eq12md p{margin:8px 0;color:#e3edf2;white-space:pre-wrap}.cf-eq12md small{display:block;color:#a5bdcb;font-size:11px;white-space:pre-wrap}.cf-eq12md button{font:12px Segoe UI,Arial,sans-serif;min-height:32px;padding:5px 10px;margin:5px 5px 0 0}.cf-eq12md .source-note12md{padding:10px 0;border-bottom:1px solid #263d4b}.cf-eq12md .source-alert12md{padding:10px;border-left:3px solid #cfad62;background:#29271f}.cf-eq12md table{border-collapse:collapse;width:100%;font-size:12px}.cf-eq12md td,.cf-eq12md th{padding:8px;text-align:left;border-bottom:1px solid #344954;vertical-align:top}.cf-eq12md .table-scroll12md{overflow:auto}.cf-eq12md input,.cf-eq12md select{font:14px Segoe UI,Arial,sans-serif;max-width:100%;min-width:0;background:#172934;border:1px solid #517080;border-radius:5px;color:#eef5f8;padding:9px}.cf-eq12md .audit-controls12md{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.cf-eq12md .audit-count12md{padding:9px;background:#18343c;border-radius:5px}.cf-eq12md a{color:#96ccea}@media(max-width:550px){.cf-eq12md table{font-size:11px}.cf-eq12md details{padding:8px}.cf-eq12md td,.cf-eq12md th{padding:6px}.cf-eq12md .audit-controls12md>*{flex:1 1 100%}}';(doc.head||doc.documentElement).appendChild(st);
+}
+function cfEvidenceTree12MD(host,value,label,ancestors){
+ var doc=host.ownerDocument,parents=ancestors||new Set();
+ function el(tag,t,h){var e=doc.createElement(tag);if(t!==null&&t!==undefined)e.textContent=String(t);if(h)h.appendChild(e);return e;}
+ if(value===undefined)return;
+ if(value===null||typeof value!=='object'){var p=el('p',null,host);el('strong',(label||'Value')+': ',p);p.appendChild(doc.createTextNode(value===null?'Not recorded':String(value)));return;}
+ if(parents.has(value)){el('small',(label||'Record')+': circular object reference; source owner retained.',host);return;}
+ var det=el('details',null,host),name=label||'Retained fields',keys=Object.keys(value);el('summary',name+' ('+keys.length+')',det);
+ var done=false;det.addEventListener('toggle',function(){if(!det.open||done)return;done=true;var seen=new Set(parents);seen.add(value);
+  keys.forEach(function(k){var v=value[k],title=Array.isArray(value)?'Item '+(Number(k)+1):k.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,' ');if(typeof v==='function'){el('small',title+': existing application function (not a field value)',det);return;}cfEvidenceTree12MD(det,v,title,seen);});
+ });
+}
+function cfRenderEquipmentDossier12MD(r,host){
+ if(!r||!host||!r.equipmentDossier12MD)return;var d=r.equipmentDossier12MD,doc=host.ownerDocument;cfEquipmentInformationStyle12MD(doc);
+ var existing=host.querySelector('[data-equipment-dossier12md]');if(existing)existing.remove();
+ function el(t,txt,p){var x=doc.createElement(t);if(txt!=null)x.textContent=String(txt);if(p)p.appendChild(x);return x;}
+ function block(label,count,render,open){var det=el('details',null,box);el('summary',label+(count===null?'':' ('+count+')'),det);var filled=false;function fill(){if(filled)return;filled=true;render(det);}det.addEventListener('toggle',function(){if(det.open)fill();});if(open){fill();det.open=true;}return det;}
+ function action(text,fn,parent){var b=el('button',text,parent);b.type='button';b.onclick=fn;return b;}
+ function openInfo(key){if(typeof cfRefOpenSource==='function')cfRefOpenSource({type:'info',key:key});}
+ function sourceNote(parent,title,body,source,fields){var sec=el('div',null,parent);sec.className='source-note12md';if(title)el('h4',title,sec);if(body)el('p',typeof body==='string'?body:JSON.stringify(body),sec);if(fields&&fields.length)cfInspectionGrid12MC(sec,fields);if(source)el('small',source,sec);return sec;}
+ var box=el('section',null,host);box.className='cf-eq12md';box.setAttribute('data-equipment-dossier12md',d.key);
+ el('h3','Equipment information and retained sources',box);
+ el('small','Existing component '+d.key+' | Information restored from exact-owner records and explicit source links. Earlier observations are not live values; no ratings become operating commands.',box);
+ if(d.sourceReviews.length)block('Source corrections and reviewed findings',d.sourceReviews.length,function(h){
+  el('small','Newer reviews are listed first. Multi-equipment findings are context, not permission to copy another asset\'s identifiers or ratings.',h);
+  d.sourceReviews.forEach(function(s){var p=sourceNote(h,s.title,s.text,[s.definition,s.build,s.drawing,s.revision?'revision '+s.revision:'',s.sourceFile,s.pages.length?'PDF page(s) '+s.pages.join(', '):'',s.location,s.authority].filter(Boolean).join(' | '),s.fields);if(s.build&&d.sourceReviews[0].build&&s.build!==d.sourceReviews[0].build)el('small','Earlier linked review ('+s.build+'). Retained as dated source history; its requests do not reopen items closed by newer evidence.',p);if(s.referenceKey)action('Open source record',function(){openInfo(s.referenceKey);},p);});
+ },d.sourceReviews.length<=4);
+ if(d.earlierPlateNotes.length){var p=el('section',null,box);p.setAttribute('data-earlier-plate12md',d.key);p.className='source-alert12md';el('h4','Earlier plate transcription retained in equipment notes',p);el('small','This transcription already existed in the program. The original photograph is not newly verified by this audit; wording and qualifications are retained.',p);d.earlierPlateNotes.forEach(function(n){sourceNote(p,'',n.text,n.source);});}
+ var plateNoteIds=new Set(d.earlierPlateNotes.map(function(n){return n.index;}));
+ var own=d.ownNotes.filter(function(n){return !plateNoteIds.has(n.index);});
+ if(own.length)block('Equipment notes, service and retained observations',own.length,function(h){el('small','Source: the existing INFO entry for this exact component. Any historical values, interpretations or procedures retain their original scope; review newer source findings below where they differ.',h);own.forEach(function(n){sourceNote(h,'',n.text,n.source);});},true);
+ if(d.routeReferences.length)block('Current linked pipe-route information',d.routeReferences.length,function(h){
+  d.routeReferences.forEach(function(p){sourceNote(h,p.title||p.key||p.id,p.status||p.service||'',p.source||'',[['Route identity',p.id||p.key],['Nominal marking',p.nominal||'Not recorded'],['Current disposition',p.notInstalled12LS?'NOT INSTALLED - operator confirmed. Historical candidate only; no field-verification task.':p.status||'Retained route record']]);cfEvidenceTree12MD(h,p,'Complete retained route data');});
+ },false);
+ if(d.drawingReferences.length)block('P&ID references and retained revisions',d.drawingReferences.length,function(h){
+  d.drawingReferences.forEach(function(s){var p=sourceNote(h,s.number+(s.revision?' - revision '+s.revision:''),s.title,[s.sourceFile,s.pages.length?'PDF page(s) '+s.pages.join(', '):'',s.status,s.scope].filter(Boolean).join(' | '));if(typeof cf3dOpenSourceDrawing==='function')action('Open in Clearfork P&IDs',function(){cf3dOpenSourceDrawing(s.number);},p);});
+ },false);
+ if(d.drawingFacts.length)block('Equipment-matched P&ID findings',d.drawingFacts.length,function(h){d.drawingFacts.forEach(function(f){sourceNote(h,f.document.number+' | revision '+(f.document.revision||'not recorded')+' | '+f.id,f.text,[f.document.sourceFile,f.document.pages.length?'PDF page(s) '+f.document.pages.join(', '):'',f.location,f.status,f.tags.length>1?'Group context: '+f.tags.join(', '):''].filter(Boolean).join(' | '),f.fields);});},false);
+ if(d.manuals.length)block('Applicable vendor-manual references',d.manuals.length,function(h){d.manuals.forEach(function(m){sourceNote(h,typeof m.manual==='string'?m.manual:m.manual.title||m.sourceFile,'Applicability: '+(typeof m.applicability==='string'?m.applicability:JSON.stringify(m.applicability)),m.definition+' | '+m.sourceFile);el('small','Manual specifications do not by themselves establish installed options, individual serials or approved operating settings.',h);if(m.referenceKey)action('Open retained manual findings',function(){openInfo(m.referenceKey);},h);cfEvidenceTree12MD(h,m.manual,'Manual source metadata');cfEvidenceTree12MD(h,m.sections,'Reviewed sections');});},false);
+ if(d.linkedNotes.length)block('Explicitly linked reference notes',d.linkedNotes.length,function(h){d.linkedNotes.forEach(function(n){var det=el('details',null,h);el('summary',n.title,det);el('small','Link basis: '+n.basis+' | INFO.'+n.key,det);var filled=false;det.addEventListener('toggle',function(){if(!det.open||filled)return;filled=true;n.notes.forEach(function(x){sourceNote(det,'',x.text,x.source);});});action('Open reference entry',function(){openInfo(n.key);},det);});},false);
+ if(d.sourceRecords.length)block('Source-owned component records',d.sourceRecords.length,function(h){el('small','Original source component records retain their own revision and qualifications. The current component summary above is not overwritten by an older source.',h);d.sourceRecords.forEach(function(s){var sec=el('div',null,h);el('small',s.definition+' | '+s.path+' | '+s.build,sec);cfEvidenceTree12MD(sec,s.record,s.title);});},false);
+ if(d.related.length)block('Associated equipment, reliefs and drain records',d.related.length,function(h){var sc=el('div',null,h);sc.className='table-scroll12md';var table=el('table',null,sc),thead=el('thead',null,table),tr=el('tr',null,thead);['Component','Relationship','Basis'].forEach(function(t){el('th',t,tr);});var tb=el('tbody',null,table);d.related.forEach(function(s){var tr=el('tr',null,tb),td=el('td',null,tr);if(s.route){el('span',s.tag||s.key,td);cfEvidenceTree12MD(td,s.route,'Retained route');}else action(s.tag||s.key,function(){if(typeof show==='function')show(s.key);},td);el('td',s.relation,tr);el('td',s.basis,tr);});el('small','These are existing record relationships. They are not a verified isolation boundary or current valve lineup.',h);},false);
+ if(d.auditRetained.length)block('Previously retained audit evidence',d.auditRetained.length,function(h){d.auditRetained.forEach(function(t){el('p',t,h);});},false);
+ if(d.issues.length)block('Unresolved reference links',d.issues.length,function(h){d.issues.forEach(function(p){sourceNote(h,p.type,p.value,p.owner);});},false);
+ block('Complete retained component metadata and history',null,function(h){el('small','All retained fields are accessible here, including prior interpretations. Historical metadata is not promoted to current field verification.',h);cfEvidenceTree12MD(h,d.record,'Component record');if(d.info)cfEvidenceTree12MD(h,d.info,'Equipment reference entry');},false);
+ return box;
+}
+function cfRenderEquipmentInformationAudit12MD(host,index){
+ if(!host)return;var doc=host.ownerDocument;cfEquipmentInformationStyle12MD(doc);var old=host.querySelector('[data-equipment-audit12md]');if(old)old.remove();
+ function el(t,txt,h){var e=doc.createElement(t);if(txt!=null)e.textContent=String(txt);if(h)h.appendChild(e);return e;}
+ var box=el('section',null,host);box.className='cf-eq12md';box.setAttribute('data-equipment-audit12md','12MD');var report=index.audit();CF_EQUIPMENT_INFORMATION_12MD.lastAudit=report;
+ el('h3','Plant-wide equipment information audit - 12MD',box);el('p','This audit checks access to retained records, not physical completeness. Component entries include equipment, valves, instruments, lines, aliases and reference-only items.',box);
+ var cnt=el('p',report.counts.records+' record entries checked | '+report.counts.majorEquipment+' equipment-class entries | '+report.counts.withRetainedInformation+' entries with additional source information',box);cnt.className='audit-count12md';
+ var controls=el('div',null,box);controls.className='audit-controls12md';var input=el('input',null,controls);input.type='search';input.placeholder='Search equipment, tag, drawing, source status';input.setAttribute('aria-label','Search equipment information audit');
+ var select=el('select',null,controls);select.setAttribute('aria-label','Audit record filter');[['equipment','Equipment-class entries'],['all','All component entries'],['legacy','Earlier plate transcription in notes'],['links','Records with unresolved links']].forEach(function(p){var o=el('option',p[1],select);o.value=p[0];});
+ var status=el('p','',box),sc=el('div',null,box);sc.className='table-scroll12md';var table=el('table',null,sc),head=el('thead',null,table),hr=el('tr',null,head);['Component','Type','Notes','P&ID facts','Source records / reviews','Manuals','Plate/source status'].forEach(function(s){el('th',s,hr);});var body=el('tbody',null,table),more=el('button','Show next 100',box);more.type='button';var limit=100;
+ function paint(reset){if(reset)limit=100;var q=input.value.toLowerCase(),mode=select.value,rows=report.rows.filter(function(r){return (mode!=='equipment'||r.equipment)&&(mode!=='legacy'||r.qualifiedLegacyPlateStatus)&&(mode!=='links'||r.unresolvedLinks)&&(!q||[r.key,r.tag,r.kind,r.status,r.drawings.join(' ')].join(' ').toLowerCase().includes(q));});body.textContent='';rows.slice(0,limit).forEach(function(r){var tr=el('tr',null,body),td=el('td',null,tr),b=el('button',r.tag,td);b.type='button';b.onclick=function(){if(typeof cfRefOpenSource==='function')cfRefOpenSource({type:'info',key:r.key});else if(typeof show==='function')show(r.key);};el('small',r.key,td);if(r.service)el('small',r.service,td);[r.kind,r.ownNotes,r.drawingFacts,r.sourceRecords+' / '+r.sourceReviews,r.vendorManuals,r.status].forEach(function(v){el('td',v,tr);});});status.textContent=rows.length+' matching records; '+Math.min(limit,rows.length)+' shown. No records are removed by this filter.';more.hidden=limit>=rows.length;}
+ input.oninput=function(){paint(true);};select.onchange=function(){paint(true);};more.onclick=function(){limit+=100;paint(false);};paint(true);
+ var dl=el('button','Export information audit JSON',controls);dl.type='button';dl.onclick=function(){var blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=el('a',null,null);a.href=u;a.download='ClearFork_12MD_Equipment_Information_Audit.json';a.click();setTimeout(function(){URL.revokeObjectURL(u);},1000);};
+ el('small',report.unresolvedLinks.length+' context-free tag ambiguities are retained in the exported audit. Repeated vendor template tags require an owning-unit context; they are not new physical equipment requests.',box);
+ return report;
+}
+function cfInstallEquipmentInformation12MD(){
+ if(window.CFEquipmentInformation12MD)return window.CFEquipmentInformation12MD;
+ CF_EQUIPMENT_INFORMATION_12MD.installed=true;var index=cfEquipmentIndex12MD(true),audit=index.audit();CF_EQUIPMENT_INFORMATION_12MD.lastAudit=audit;
+ var key='equipment_information_audit_12md';
+ INFO[key]={t:'Plant-wide equipment information audit',d:['Read-only audit of retained equipment notes, source component records, P&ID facts, vendor manuals, nameplate evidence and exact component relationships. No new plant facts, equipment, geometry or operating limits.','Source findings stay in Clearfork P&IDs; nameplates keep their individual owners. A missing source remains missing rather than being guessed.']};
+ var cat=LIB_CATS.find(function(c){return c[0]==='Equipment information / Audit';});if(!cat){cat=['Equipment information / Audit',[]];LIB_CATS.push(cat);}if(cat[1].indexOf(key)<0)cat[1].push(key);
+ var previousLibrary=libRenderDetail;libRenderDetail=function(){var result=previousLibrary.apply(this,arguments);if(libSel&&libSel.key===key)cfRenderEquipmentInformationAudit12MD(document.getElementById('libDetail'),cfEquipmentIndex12MD());return result;};
+ var api={build:'12MD',status:function(){var a=CF_EQUIPMENT_INFORMATION_12MD.lastAudit||cfEquipmentIndex12MD().audit();return {build:'12MD',ok:a.ok,counts:a.counts,errors:a.errors,unresolvedContextIdentifiers:a.unresolvedLinks.length,scope:a.limitations};},audit:function(){return cfEquipmentIndex12MD().audit();},dossier:function(k){return cfEquipmentIndex12MD().dossier(k);},refresh:function(){CF_EQUIPMENT_INFORMATION_12MD.lastAudit=cfEquipmentIndex12MD(true).audit();return CF_EQUIPMENT_INFORMATION_12MD.lastAudit;},open:function(){cfRefOpenSource({type:'info',key:key});},render:cfRenderEquipmentInformationAudit12MD};window.CFEquipmentInformation12MD=api;
+ if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;if(typeof LIB_STATIC_TAG_CACHE!=='undefined')LIB_STATIC_TAG_CACHE=null;
+ if(typeof CF3D_ASSOC!=='undefined')CF3D_ASSOC.dirty=true;
+ if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();
+ return api;
+}
+
+/* 12MC: render existing source-owned plate facts in the primary component card.
+ * No stored plate copies, operating-state writes, or equipment creation. */
+var CF_INSPECTION_STATE_12MC={build:'12MD',sources:null,lastAudit:null,errors:[]};
+function cfInspectionSources12MC(){
+ if(!CF_INSPECTION_STATE_12MC.sources){
+  var data=window.CFRyanIndexSync12JT&&window.CFRyanIndexSync12JT.dataset();
+  var map={};((data&&data.sourceDefinitions)||[]).forEach(function(s){map[s.name]=s.value;});
+  if(Object.keys(map).length)CF_INSPECTION_STATE_12MC.sources=map;
+  return map;
+ }
+ return CF_INSPECTION_STATE_12MC.sources;
+}
+function cfBuildInspectionRecord12MC(key,record,context){
+ 'use strict';if(!record)return null;context=context||{};
+ var sources=context.sources||{},info=context.info||{},components=context.components||{},eqp=context.eqp||{};
+ var r=Object.assign({},record),id=record.assetId||record.key||key,t=components[id]||{},i=info[id]||{},e=eqp[id]||{};
+ var sections=[],seen=new Set(),notes=[];
+ function array(a){return Array.isArray(a)?a:[];}
+ function nonblank(v){return v!==undefined&&v!==null&&v!=='';}
+ function unique(a){return Array.from(new Set(a.filter(nonblank)));}
+ function fieldPairs(p){return array(p).filter(Boolean).map(function(f){return Array.isArray(f)?[f[0],f[1]]:[f.label||f.name,f.value];}).filter(function(f){return nonblank(f[0])&&nonblank(f[1]);});}
+ function walk(o,path){return (Array.isArray(path)?path:String(path||'').split('.').filter(Boolean)).reduce(function(v,p){return v&&v[p];},o);}
+ function add(p,meta){
+  if(!p)return;meta=meta||{};var fields=fieldPairs(p.fields||p.specifications);
+  if(!fields.length)return;
+  var sectionId=meta.id||p.id||p.plateId||p.key||meta.definition+':'+meta.path;
+  if(seen.has(sectionId))return;seen.add(sectionId);
+  sections.push({id:sectionId,title:meta.title||p.equipmentName||p.caption||'Recorded nameplate information',
+   evidence:meta.evidence||p.authority||r.nameplateStatus||'Source-linked field evidence',
+   fields:fields,limits:array(p.limits).slice(),definition:meta.definition||'',referenceKey:meta.referenceKey||p.referenceKey||p.key||'',
+   source:meta.source||p.sourcePhoto||p.source||p.name||'',shared:!!meta.shared,qualification:meta.qualification||p.association||''});
+ }
+ r.assetId=id;r.key=record.key||id;r.tag=record.displayTag||record.tag||t.tag||e.tag||id;
+ r.kind=record.kind||t.kind||'equipment';
+ r.inspectionEquipment12MC=/^(equipment|vessel|filter|pump|compressor|motor|heater|exchanger|tank|blower|cooler)$/.test(r.kind);
+ var safeTag=/^[A-Z][A-Z0-9]*-\d+[A-Z0-9-]*$/.test(r.tag)&&!/pending|unknown/i.test(r.tag);
+ r.tagConfirmed=record.tagConfirmed===true||(safeTag&&[record.tag,t.tag,e.tag].indexOf(r.tag)>=0);
+ r.valveNumber=record.valveNumber||(r.tagConfirmed?r.tag:'');
+ r.service=record.service||t.service||i.t||'';
+ r.drawings=unique(array(record.drawings).concat(array(t.drawings),record.pidDrawing?[record.pidDrawing]:[]));
+ if(!r.drawings.length){
+  var ownText=[r.service,i.t,record.source].filter(function(v){return typeof v==='string';}).join(' ');
+  r.drawings=unique(ownText.match(/\b(?:020185-AE-DW-)?M\d{4}[A-Z]?\b/g)||[]).map(function(x){return x.indexOf('020185-')===0?x:'020185-AE-DW-'+x;});
+ }
+ r.page=record.page||record.pidPage||'';r.revision=record.revision||record.pidRevision||'';
+ if(!r.revision&&r.drawings.length===1){var rev=[record.service,i.t].join(' ').match(/\bRev\s*([0-9]+[A-Z]?)/i);if(rev)r.revision=rev[1]+' (retained equipment reference)';}
+ r.drawingLocation=record.drawingLocation||record.pidLocation||'';
+ r.location=record.location||record.placement||record.placementStatus||'';
+ r.placement=record.placement||record.placementStatus||(record.modelKey||t.modelKey?'Existing schematic model; field coordinates not surveyed':'Model placement not established');
+ r.status=record.nameplateStatus||record.status||(record.nameplateAudit12KB||{}).status||'Source record; field verification not established';
+ r.specifications=fieldPairs(record.specifications);
+ // Shared dehydration specifications and individual identity are deliberately separate.
+ if(record.sharedPlateSpecifications12LZ&&sources.CF_SOURCE_12LZ){
+  var ds=sources.CF_SOURCE_12LZ;
+  add(ds.shared,{id:ds.plate.id+':shared',title:'Dehydration vessel - common plate specifications',definition:'CF_SOURCE_12LZ',path:'shared',referenceKey:ds.plateKey,source:ds.photo.name,shared:true,
+   evidence:'Common specifications confirmed by operator for V-1413, V-1414 and V-1415. Individual identifiers are not shared.'});
+  if(id===ds.plate.operatorAssociatedAssetId)add(ds.plate,{id:ds.plate.id+':identity',title:'Photographed individual identifiers - ownership qualification',definition:'CF_SOURCE_12LZ',path:'plate',referenceKey:ds.plateKey,source:ds.photo.name,
+   evidence:'Photograph supplied as V-1414; printed serial ends V415. No confirmed serial/NB assignment is inferred.'});
+ }
+ // Frick package, compressor element, motor and separator fields retain their owner/role scopes.
+ if(record.fieldPlateLinks12LG&&sources.CF_SOURCE_12LG){
+  var fl=record.fieldPlateLinks12LG,fs=sources.CF_SOURCE_12LG,own=fl.unit==='C-1141';
+  array(fs.photoSources).filter(function(p){return !fl.role||p.role===fl.role;}).forEach(function(p){
+   var pp=Object.assign({},p,{fields:array(p.fields).filter(function(f){return own||f.scope==='shared';})});
+   add(pp,{id:p.id+':'+fl.unit,title:(own?'C-1141 ':'Shared ')+p.role+' plate',definition:'CF_SOURCE_12LG',source:p.name,referenceKey:fs.notebookKey,shared:!own,
+    evidence:own?'Individual C-1141 photograph; component roles and qualifications preserved.':'Common technical fields linked from C-1141 under operator confirmation; no individual identifiers transferred.'});
+  });
+ }
+ // Fan and motor plates are not interchangeable. The unassigned motor serial is never an asset serial.
+ if(record.fieldEvidenceLinks12LF&&sources.CF_SOURCE_12LF){
+  var bs=sources.CF_SOURCE_12LF,fanA=id==='jw_bl9155a';
+  array(bs.plates).forEach(function(p){
+   var motor=p.id==='lf_motor_teco';var f=fieldPairs(p.fields).filter(function(row){return motor?!/serial|visible.*tag/i.test(row[0]):fanA||!/serial|visible.*tag|additional stamp/i.test(row[0]);});
+   var limits=array(p.limits).filter(function(x){return !/crosswalk.*needs|crosswalk.*confirmation|remain distinct.*confirmation/i.test(x);});
+   add({id:p.id,fields:f,limits:limits},{id:p.id+':'+id,title:motor?'Blower driver - shared motor ratings':fanA?'A-side blower - individual fan plate':'B-side blower - shared fan specifications',definition:'CF_SOURCE_12LF',source:p.name,referenceKey:bs.notebookKey,shared:motor||!fanA,
+    evidence:motor?'Shared ratings per operator. A/B assignment of the photographed motor remains pending.':fanA?'Individual A-side fan plate; plant/vendor tag crosswalk retained.':'Shared specifications only; the A-side fan serial is not assigned to this blower.'});
+  });
+ }
+ // Resolve modern source links; these are references, not copied plate tables.
+ Object.keys(record).filter(function(k){return /plate/i.test(k)&&!/^(prior|previous|history)|audit|status|Ids|Corroboration/i.test(k);}).forEach(function(k){
+  if(k==='fieldPlate12LZ'||k==='sharedPlateSpecifications12LZ'||k==='fieldPlateLinks12LG')return;
+  var link=record[k];if(!link||typeof link!=='object')return;
+  var def=link.definition||link.sourceDefinition,source=def&&sources[def];
+  if(source){
+   var p=walk(source,link.path||'plate');
+   if(!p&&link.plateId)p=array(source.nameplates).concat(array(source.plates)).find(function(p){return p.id===link.plateId||p.plateId===link.plateId;});
+   if(p&&def==='CF_SOURCE_12LT'&&id==='v1418'&&sources.CF_SOURCE_12LU&&typeof cfEffectiveRegenPlate12LU==='function')p=cfEffectiveRegenPlate12LU(p,sources.CF_SOURCE_12LU);
+   add(p,{id:link.plateId||p&&p.id,title:r.tag+' - individual field plate',definition:def,path:link.path||'plate',source:link.sourcePhoto||link.photo||(source.photo||{}).name,referenceKey:link.referenceKey||link.sourceKey||source.plateKey||source.notebookKey,
+    evidence:link.authority||r.nameplateStatus||'Individual source record; see qualifications'});
+  }else if(Array.isArray(link.fields))add(link,{definition:k,source:link.sourcePhoto,title:r.tag+' - retained plate fields'});
+ });
+ // Exact-owner fallback for earlier source-owned plates without a modern link. Never use a parent ID or a substring tag match.
+ Object.keys(sources).forEach(function(def){var s=sources[def];if(!s||typeof s!=='object')return;
+  array(s.nameplates).concat(array(s.plates),s.plate?[s.plate]:[],s.nameplate?[s.nameplate]:[]).forEach(function(p){
+   if(!p||typeof p!=='object')return;
+   var matches=p.assetId===id||p.key===id||p.primaryTag===r.tag||p.tag===r.tag;
+   if(!matches||p.operatorAssociatedAssetId||p.sharedTags&&p.primaryTag!==r.tag)return;
+   if(def==='CF_SOURCE_12LT'&&id==='v1418'&&sources.CF_SOURCE_12LU&&typeof cfEffectiveRegenPlate12LU==='function')p=cfEffectiveRegenPlate12LU(p,sources.CF_SOURCE_12LU);
+   add(p,{id:p.id||p.plateId||def+':'+id,definition:def,title:r.tag+' - individual field plate',source:p.photo||p.sourcePhoto||(s.photo||{}).name,referenceKey:p.referenceKey||s.plateKey||s.notebookKey,evidence:r.nameplateStatus||p.authority});
+  });
+ });
+ // Preserve legacy flat specification rows not already expanded by a canonical plate.
+ var printed=new Set();sections.forEach(function(s){s.fields.forEach(function(f){printed.add(JSON.stringify(f));});});
+ r.specifications=r.specifications.filter(function(f){return !printed.has(JSON.stringify(f))&&!(sections.length&&/^12[A-Z0-9]+ (?:individual plate|field plate)/i.test(f[0]));});
+ r.plateSections12MC=sections;
+ r.photoIds=unique(array(record.photoIds));
+ r.source=typeof record.source==='string'?record.source:'';
+ if(!r.source&&sections.length)r.source=unique(sections.map(function(s){return s.source;}).filter(function(v){return typeof v==='string';})).join(' | ');
+ r.remainingEvidence12MC=unique(array((record.nameplateAudit12KB||{}).missing));
+ r.inspectionMetadata12MC={key:id,plateCount:sections.length,renderOnly:true};
+ return r;
+}
+function cfInspectionRecord12MC(key,record){
+ var raw=record||cf3dDeviceRecord(key);if(!raw)return null;
+ var view=cfBuildInspectionRecord12MC(key,raw,{sources:cfInspectionSources12MC(),info:INFO,components:typeof CF_TRACE_DATA_12IZ==='undefined'?{}:CF_TRACE_DATA_12IZ.components,eqp:typeof EQP==='undefined'?{}:EQP});
+ return CF_EQUIPMENT_INFORMATION_12MD.installed?cfEnrichEquipmentRecord12MD(view,raw,cfEquipmentIndex12MD()):view;
+}
+function cfInspectionGrid12MC(host,fields){
+ var doc=host.ownerDocument,dl=doc.createElement('dl');dl.className='cf-inspection-grid12mc';host.appendChild(dl);
+ (fields||[]).forEach(function(f){var dt=doc.createElement('dt'),dd=doc.createElement('dd');dt.textContent=f[0];dd.textContent=f[1]===undefined||f[1]===null||f[1]===''?'Not recorded':String(f[1]);if(f[2])dd.setAttribute('data-device-field',f[2]);dl.appendChild(dt);dl.appendChild(dd);});return dl;
+}
+function cfInspectionStyle12MC(doc){
+ if(doc.getElementById('cfInspectionStyle12MC'))return;
+ var st=doc.createElement('style');st.id='cfInspectionStyle12MC';st.textContent='.cf-inspection-grid12mc{display:grid;grid-template-columns:minmax(130px,220px) minmax(0,1fr);gap:8px 18px;margin:12px 0;font:13px/1.55 Segoe UI,Arial,sans-serif}.cf-inspection-grid12mc dt{color:#a8c5d8}.cf-inspection-grid12mc dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap;color:#edf4f8}.cf-inspection-evidence12mc{margin:14px 0;padding:14px;border:1px solid #406374;border-radius:8px;background:#142531;overflow-wrap:anywhere}.cf-inspection-evidence12mc h3{font:600 15px Segoe UI,Arial,sans-serif;margin:0 0 8px;color:#d9f1ef}.cf-inspection-evidence12mc p{font:12px/1.55 Segoe UI,Arial,sans-serif;color:#bed4dc}.cf-inspection-evidence12mc details{font:12px/1.5 Segoe UI,Arial,sans-serif}.cf-inspection-evidence12mc small{display:block;color:#a9c1cf;overflow-wrap:anywhere}.cf-inspection-evidence12mc button{min-height:32px;font-size:12px;margin-top:10px}.cf-inspection-card12mc{border:1px solid #344557;border-radius:9px;padding:16px;background:#101820;color:#dce6ef;max-width:100%;box-sizing:border-box}.cf-inspection-card12mc summary{cursor:pointer;font-weight:600;color:#c5dce8}.cf-inspection-card12mc .record-note12mc{font:12px/1.5 Segoe UI,Arial,sans-serif;color:#c7d6e1}@media(max-width:550px){.cf-inspection-grid12mc{grid-template-columns:1fr;gap:3px;margin:10px 0}.cf-inspection-grid12mc dd{margin-bottom:9px}.cf-inspection-evidence12mc,.cf-inspection-card12mc{padding:11px}}';(doc.head||doc.documentElement).appendChild(st);
+}
+function cfRenderInspectionEvidence12MC(r,host){
+ if(!host)return;var doc=host.ownerDocument;cfInspectionStyle12MC(doc);
+ (r.plateSections12MC||[]).forEach(function(s){
+  var box=doc.createElement('section');box.className='cf-inspection-evidence12mc';box.setAttribute('data-current-plate12mc',s.id);box.setAttribute('data-source-definition',s.definition);box.dataset.shared=String(s.shared);host.appendChild(box);
+  var h=doc.createElement('h3');h.textContent=s.title;box.appendChild(h);
+  var status=doc.createElement('p');status.textContent=s.evidence;box.appendChild(status);
+  cfInspectionGrid12MC(box,s.fields);
+  if(s.qualification){var p=doc.createElement('p');p.textContent=s.qualification;box.appendChild(p);}
+  if(s.limits.length){var det=doc.createElement('details'),sum=doc.createElement('summary');sum.textContent='Source qualifications';det.appendChild(sum);s.limits.forEach(function(t){var p=doc.createElement('p');p.textContent=t;det.appendChild(p);});box.appendChild(det);}
+  var src=doc.createElement('small');src.textContent='Source: '+(typeof s.source==='string'?s.source:'retained source record')+(s.definition?' | '+s.definition:'');box.appendChild(src);
+  if(s.referenceKey&&typeof cfRefOpenSource==='function'){var b=doc.createElement('button');b.type='button';b.textContent='Open full source record';b.onclick=function(){cfRefOpenSource({type:'info',key:s.referenceKey});};box.appendChild(b);}
+ });
+}
+function cfNormalizeInspectionIds12MC(records,trace){
+ var changed=[];Object.keys(records||{}).forEach(function(k){var r=records[k];if(!r||typeof r!=='object')return;
+  if(!r.assetId&&(r.key===k||(trace&&trace[k])||r.modelKey===k)){r.assetId=k;changed.push(k);}
+ });return changed;
+}
+function cfInspectionAudit12MC(){
+ var sources=cfInspectionSources12MC(),targets=['v1413','v1414','v1415','v1650','v1418','v1460','v1444','e1241','v1443','f7600','v8110','v7500','v8100','c1140','c1141','c1142','kp_c1141_m14','kp_c1141_pw1101','jw_bl9155a','jw_bl9155b','cf3d_esd_esd1000d'],rows=[],errors=[];
+ targets.forEach(function(k){var raw=cf3dDeviceRecord(k)||CF_TRACE_DATA_12IZ.components[k];if(!raw){errors.push(k+': missing component');return;}var r=cfBuildInspectionRecord12MC(k,raw,{sources:sources,info:INFO,components:CF_TRACE_DATA_12IZ.components,eqp:EQP});var text=r.plateSections12MC.map(function(s){return s.fields.map(function(f){return f.join(': ');}).join('\n');}).join('\n');if(!r.plateSections12MC.length)errors.push(k+': plate facts not available to primary inspector');rows.push({key:k,tag:r.tag,sections:r.plateSections12MC.length,fields:r.plateSections12MC.reduce(function(n,s){return n+s.fields.length;},0),assetId:r.assetId,drawings:r.drawings,shared:r.plateSections12MC.some(function(s){return s.shared;})});
+ if(/^v141[345]$/.test(k)&&(!text.includes('1100 PSI at 595')||!text.includes('1,475')||!text.includes('96-inch')))errors.push(k+': dehydration fields missing');
+ if((k==='v1413'||k==='v1415')&&text.includes('US-107468-107.53-BA-04-V415'))errors.push(k+': wrong individual serial transferred');
+ if(k==='v1418'&&!text.includes('+20 deg F'))errors.push(k+': confirmed MDMT not applied');
+ });
+ return {build:'12MD',ok:errors.length===0,errors:errors,rows:rows,scope:'Primary inspection evidence availability; not full plant operation or field certification'};
+}
+function cfInstallInspection12MC(){
+ if(window.CFInspection12MC)return window.CFInspection12MC;
+ var repaired=cfNormalizeInspectionIds12MC(CF3D_DEVICE_RECORDS,CF_TRACE_DATA_12IZ.components);
+ CF_INSPECTION_STATE_12MC.sources=null;cfInspectionSources12MC();
+ var api={build:'12MD',view:cfInspectionRecord12MC,render:cf3dInspectDevice,audit:cfInspectionAudit12MC,metadataIdsRepaired:repaired,refresh:function(){CF_INSPECTION_STATE_12MC.sources=null;return cfInspectionSources12MC();}};
+ window.CFInspection12MC=api;
+ // The Library equipment entry uses the same primary card; retain its old notes and event handlers below.
+ var oldLibrary=libRenderDetail;
+ libRenderDetail=function(){
+  var result=oldLibrary.apply(this,arguments),key=libSel&&libSel.key,view=key&&cfInspectionRecord12MC(key),host=document.getElementById('libDetail');
+  if(!host||!view||(!view.plateSections12MC.length&&!view.equipmentDossier12MD))return result;
+  var history=document.createElement('details');history.setAttribute('data-retained-context12mc',key);
+  var summary=document.createElement('summary');summary.textContent='Additional equipment notes, linked documents and source history';history.appendChild(summary);
+  while(host.firstChild)history.appendChild(host.firstChild);
+  var primary=document.createElement('div');primary.setAttribute('data-primary-library-record12mc',key);host.appendChild(primary);
+  (typeof cfRefOriginalInspect==='function'?cfRefOriginalInspect:cf3dInspectDevice)(key,primary);
+  host.appendChild(history);return result;
+ };
+ CF_INSPECTION_STATE_12MC.lastAudit=cfInspectionAudit12MC();
+ if(typeof CF3D_ASSOC!=='undefined')CF3D_ASSOC.dirty=true;
+ if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();
+ return api;
+}
+
+function cf3dInspectDevice(k,host){
+ var r=cfInspectionRecord12MC(k);if(!r)return false;
+ if(r.fieldDevice&&!r.inspectionEquipment12MC)return cf3dInspectField(r,host);
+ var title,list,doc=host&&host.ownerDocument||document;
+ if(host){host.textContent='';title=doc.createElement('h2');list=doc.createElement('ul');list.style.cssText='list-style:none;margin:0;padding:0';host.appendChild(title);host.appendChild(list);}
+ else{title=doc.getElementById('ptitle');list=doc.getElementById('plist');}
+ if(!title||!list)return false;cfInspectionStyle12MC(doc);
+ var names={modulating:'CONTROL VALVE',shutdown:'ESD / SHUTDOWN',sequence:'AUTOMATIC SEQUENCE',psv:'PRESSURE SAFETY VALVE',reducer:'PIPE SIZE TRANSITION',regulator:'PRESSURE REGULATOR',instrument:'INSTRUMENT',restriction:'RESTRICTION ORIFICE',manual:'MANUAL VALVE',check:'CHECK VALVE',equipment:'EQUIPMENT',vessel:'VESSEL',filter:'FILTER',pump:'PUMP',compressor:'COMPRESSOR',motor:'MOTOR',heater:'HEATER',tank:'TANK',blower:'BLOWER',reference:'REFERENCE',exchanger:'HEAT EXCHANGER'};
+ var isEquipment=r.inspectionEquipment12MC,isValve=!isEquipment&&['modulating','shutdown','sequence','regulator','manual','check','psv'].indexOf(r.kind)>=0;
+ title.textContent=r.tag+' - '+(names[r.kind]||'COMPONENT');list.textContent='';
+ var li=doc.createElement('li');li.style.listStyle='none';list.appendChild(li);
+ var card=doc.createElement('section');card.className='cf-inspection-card12mc';card.setAttribute('data-device-record',r.assetId);card.setAttribute('data-inspection-version','12MD');li.appendChild(card);
+ var banner=doc.createElement('div');banner.style.cssText='font-weight:700;color:#8fddd4;font-size:13px;margin-bottom:10px';banner.textContent=(isEquipment?'EQUIPMENT RECORD':r.kind==='psv'?'PSV RECORD':isValve?'VALVE RECORD':'COMPONENT RECORD')+' | Read-only inspection';card.appendChild(banner);
+ cf3dFunctionDescription12GY(r,card);
+ if(isEquipment){var descTitle=card.querySelector('[data-device-description] strong');if(descTitle)descTitle.textContent='Equipment purpose';}
+ var summary=[[isEquipment?'Equipment tag':isValve?'Valve number / tag':'Component tag',r.tag,'tag'],['Service',r.service,'service'],['Manufacturer / model',[r.manufacturer,r.model].filter(Boolean).join(' / '),'manufacturer'],['Stable model ID',r.assetId,'assetId']];
+ if(r.equipment&&r.equipment!==r.tag&&!isEquipment)summary.push(['Associated equipment',r.equipment,'equipment']);
+ if(r.drawings.length)summary.push(['P&ID reference(s)',r.drawings.join(' | '),'drawing']);
+ summary.push(['Field-plate / source status',r.status,'status']);
+ if(r.serial)summary.push(['Individual serial number',r.serial,'serial']);
+ else if(r.sharedPlateSpecifications12LZ)summary.push(['Individual serial / NB',r.fieldPlate12LZ?'Photograph received; V-1414 / printed V415 correspondence pending. See source-owned identifiers below.':'Not supplied for this individual bed. Common specifications are recorded below.','serial']);
+ cfInspectionGrid12MC(card,summary);
+ // Put actual rating and identification tables in the primary record, not only a closed details panel.
+ cfRenderInspectionEvidence12MC(r,card);
+ if(r.specifications.length){var spec=doc.createElement(r.plateSections12MC.length?'details':'section');card.appendChild(spec);if(spec.tagName==='DETAILS'){var sm=doc.createElement('summary');sm.textContent='Additional retained component specifications';spec.appendChild(sm);}cfInspectionGrid12MC(spec,r.specifications);}
+ cfRenderEquipmentDossier12MD(r,card);
+ if(r.kind==='psv')cfInspectionGrid12MC(card,[['PSV set pressure',r.setPressure,'setPressure'],['Discharge',r.discharge,'discharge'],['Destination basis',r.dischargeStatus],['Isolation',r.isolation]]);
+ var meta=doc.createElement('details');card.appendChild(meta);var sm=doc.createElement('summary');sm.textContent='Drawing, placement and source details';meta.appendChild(sm);
+ var rows=[['P&ID reference(s)',r.drawings.join(' | ')],['Drawing revision',r.revision,'revision'],['Source sheet / page',r.page,'page'],['Drawing grid / location',r.drawingLocation,'location'],['Physical placement',r.location||r.placement,'physicalLocation'],['Source',r.source,'source']];
+ if(isValve)rows.push(['Size / end ratings',r.connections,'connections'],['Fail position',r.failPosition,'failPosition']);
+ cfInspectionGrid12MC(meta,rows);
+ if(r.remainingEvidence12MC.length){var rem=doc.createElement('details');card.appendChild(rem);var sh=doc.createElement('summary');sh.textContent='Specific remaining field evidence';rem.appendChild(sh);r.remainingEvidence12MC.forEach(function(t){var p=doc.createElement('p');p.className='record-note12mc';p.textContent=t;rem.appendChild(p);});}
+ if(r.conflict){var cf=doc.createElement('p');cf.className='record-note12mc';cf.textContent='Source qualification: '+r.conflict;card.appendChild(cf);}
+ var live=doc.createElement('div');live.className='record-note12mc';
+ if(isValve&&r.kind!=='psv'){var reading=cf3dValveReading(r.sourceRecord);live.setAttribute('data-valve-live-inline',r.assetId);live.textContent=reading?reading.text+' This is controller demand, not independent valve-position feedback.':'No live valve-position feedback is asserted by this record.';}
+ else live.textContent='Recorded source and nameplate information only. Ratings do not change operating setpoints, trips, valve states or model geometry.';
+ card.appendChild(live);
+ var actions=doc.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin-top:12px';card.appendChild(actions);
+ function button(text,handler){var b=doc.createElement('button');b.type='button';b.textContent=text;b.style.cssText='padding:7px 11px;font-size:12px;min-height:32px';b.onclick=handler;actions.appendChild(b);}
+ button('Find component documents',function(){cf3dInspectLibrary(r.tagConfirmed?r.tag:r.assetId);});
+ if(isValve&&typeof cfDeviceListOpen==='function')button(r.kind==='psv'?'Open PSV List':'Open Valve List',function(){cfDeviceListOpen(r.kind==='psv'?'psv':'valve',r.assetId);});
+ r.drawings.slice(0,4).forEach(function(d){button('Open '+d,function(){cf3dOpenSourceDrawing(d);});});
+ cf3dPhotoGallery12GI(r,card);return true;
+}
+
 /* 12GI: source-labelled valve records are shared by 3D inspection, the Library
    and Ryan request context. Images remain local embedded evidence and are never
    sent in an ordinary text Q&A. No API call occurs when opening these records. */
@@ -5300,6 +5764,7 @@ CF3D_FIELD_AUDIT.deferred=CF3D_FIELD_AUDIT.deferred.concat([{"tag":"FT-1421A","k
 CF3D_FIELD_AUDIT.legacyRetired={transmitterDetails:4,leadRuns:5,removedConstructors:["mvalve","instr","meter"]};
 CF3D_FIELD_DEVICES.forEach(cf3dInstallField);
 function cf3dInspectField(r,host){
+ r=cfInspectionRecord12MC(r.assetId||r.key,r)||r;
  var title,list;if(host){host.textContent='';title=document.createElement('h2');list=document.createElement('div');host.appendChild(title);host.appendChild(list);}else{title=document.getElementById('ptitle');list=document.getElementById('plist');}
  if(!title||!list)return false;title.textContent=r.tag+' - '+(r.kind==='manual'?'MANUAL VALVE':r.kind==='check'?'CHECK VALVE':r.kind==='flowmeter'?'FLOW METER':'INSTRUMENT');list.textContent='';
  var card=document.createElement('li');card.style.cssText='list-style:none;border:1px solid #344557;border-radius:8px;padding:12px;background:#101820;color:#dce6ef;';card.setAttribute('data-device-record',r.assetId);list.appendChild(card);
@@ -5307,6 +5772,8 @@ function cf3dInspectField(r,host){
  function field(name,value,id){var dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=value==null||value===''?'Pending source / field verification':String(value);dd.style.cssText='margin:0;overflow-wrap:anywhere;white-space:pre-wrap';if(id)dd.setAttribute('data-device-field',id);dl.appendChild(dt);dl.appendChild(dd);}
  field('Number / instrument tag',r.tagConfirmed?r.tag:'Pending - '+r.tag,'tag');field('Equipment / service',r.equipment+' / '+r.service,'equipment');field('P&ID',r.drawings.join(' | '),'drawing');field('Page / revision',[r.page,r.revision].filter(Boolean).join(' / '));field('Drawing location / grid',r.drawingLocation);field('Model location',r.location,'physicalLocation');field('Source',r.source,'source');field('Verification status',r.status,'status');field('Stable model ID',r.assetId,'assetId');
  r.specifications.forEach(function(p){field(p[0],p[1]);});
+ cfRenderInspectionEvidence12MC(r,card);
+ cfRenderEquipmentDossier12MD(r,card);
  if(r.kind!=='manual'&&r.kind!=='check'){var reading=document.createElement('div');reading.setAttribute('data-cf-field-live',r.assetId);reading.style.cssText='padding:8px;background:#192734;color:#9fdfed;margin:8px 0;font:12px Consolas,monospace;';card.appendChild(reading);}
  var warning=document.createElement('p');warning.style.cssText='font-size:11px;color:#d7c7a1';warning.textContent='Schematic geometry, not surveyed Navisworks coordinates. Read-only: no change to valve lineup, flow, equipment state, alarm limits or safety protection.';card.appendChild(warning);
  var actions=document.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;';card.appendChild(actions);
@@ -7324,10 +7791,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID="RYAN-2026-10-15-12MA";
+var RYAN_BUILD_ID="RYAN-2026-10-15-12MD";
 var CLEAR_FORK_FRONTEND_BUILD='12LM'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE="CF-RYAN-V8110-PLATE-12MA-20261015";
+var RYAN_EXPECTED_SIGNATURE="CF-RYAN-EQUIPMENT-INFORMATION-AUDIT-12MD-20261015";
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -24296,7 +24763,15 @@ var CF_COMPONENT_SUPPLEMENTS_12IK=[];
   el('div','CSO/CSC = drawing car-seal positions. LO/LC = documented locked positions. Field locks and current position remain unverified unless a tag-specific source records them. An unmarked bypass is not assumed closed.',ov,'cf-finder-notice');
   var grid=el('div',null,ov,'cf-finder-grid'),list=el('div',null,grid,'cf-finder-list'),detail=el('div',null,grid,'cf-finder-detail');list.setAttribute('aria-label','Search results');detail.setAttribute('aria-live','polite');
   var active=null,limit=80;
-  function describe(row){clear(detail);active=row.key;el('h2',row.tag,detail);el('div',row.area+' / '+row.kind,detail,'cf-finder-eyebrow');el('p',row.description,detail);var dl=el('dl',null,detail);
+  function describe(row){clear(detail);active=row.key;
+   var current12mc=cfInspectionRecord12MC(row.key);
+   if(current12mc&&current12mc.plateSections12MC.length){
+    cf3dInspectDevice(row.key,detail);
+    var nav12mc=el('div',null,detail,'cf-finder-actions');
+    if(row.modeled)button('View component in 3D',nav12mc,function(){fly(row);}).setAttribute('data-component-go',row.key);
+    if(window.CFComponentTrace12IZ)button('Trace this component',nav12mc,function(){window.CFComponentTrace12IZ.open(row.key);}).setAttribute('data-component-trace',row.key);
+    return;
+   }el('h2',row.tag,detail);el('div',row.area+' / '+row.kind,detail,'cf-finder-eyebrow');el('p',row.description,detail);var dl=el('dl',null,detail);
    function field(n,v){el('dt',n,dl);el('dd',v||'Pending',dl);}
    field('Equipment',row.equipment+(row.equipmentName?' - '+row.equipmentName:''));field('Service',row.service);field('P&ID',row.drawings.join(' / '));field('Source location / page',row.sourceLocation+(row.page?' | page '+row.page:'')+(row.revision?' | revision '+row.revision:''));field('3D representation',row.modeled?'Existing schematic model object':'Reference only / exact placement pending');
    if(row.kind==='manual'){field('Required / normal source position',row.secured.required);field('Physical lock',row.secured.fieldLockStatus);row.secured.basis.forEach(function(s){field('Position source',s.source+' | '+s.marking);});row.secured.review.forEach(function(s){el('p',s,detail,'cf-finder-warning');});}
@@ -34386,7 +34861,7 @@ function cfInstallPumpAirReference12LO(S){
 }
 /* END 12LO */
 
-var CF_RYAN_INDEX_MANIFEST_12JT={"build":"12MA","backendBuild":"RYAN-2026-10-15-12MA","signature":"CF-RYAN-V8110-PLATE-12MA-20261015","referenceDigest":"87d4317c5088dbf37c56696d4e1e4c94740f41d7ec466afdd6d1483b51a04a43","sourceSHA256":"76185e6fda5238eaa75059a893fc44c4ab5bb82089fdfa8e47916400bd21985c","sourceHashBasis":"SHA256 of baseline12LZ main SHA256 text concatenated with canonical12MA source JSON; not a hash of the final self-referencing main file","vendorSourceSHA256":["357fae6004302ad7988bc3c7316124f50cc92e64b19e6106922a9ac3b9c280bd","c76b05c3fe68ca7434fdf4014c64ed7d03a6ab27109eee2e6d0a2bb01dfedb8d"],"summary":{"sourceIndexBuild":"12MA","components":7695,"pids":108,"drawingVersions":129,"pidFacts":1097,"drawingEntries":3631,"pipeRoutes":2070,"physicalRoutes":2027,"psvRecords":100,"referenceNotes":3735,"nameplateSourceRecords":83,"sourceDefinitionBlocks":126,"sourceMediaBundled":false,"allCountsMeaning":"Retained simulator/source-index records, not certified installed equipment counts.","currentReviewedDrawingEntries":4,"drawingEntryCountBasis":"Current reviewed drawing entry arrays; older aggregates remain in prior manifests.","quizQuestions":344,"newPetroSkillsQuestions":30,"newPetroSkillsDetails":37,"nameplates":83,"sourceDefinitions":126,"newOEMQuestions":10,"newOEMDetails":23,"frickVendorRecords":234,"frickVendorDrawingIdentities":7,"frickUnitsUpdated":3,"expanderChanges":1,"expanderVendorDrawingIdentities":4,"expanderNewCanonicalFacts":16,"expanderCorroborationsLinked":8,"expanderSourceRecords":36,"newQuizQuestions":0,"c5700NewCanonicalFacts":17,"c5700CorroborationsLinked":7,"c5700VendorComponentRecords":30,"c5700VendorDrawingIdentities":2,"heaterVendorFacts":21,"newArielFacts":40,"arielExistingInformationLinks":12,"arielManualEdition":"04/20/2026","manualFamiliesAdded":0,"manualDetailPassesAdded":1,"batchRequest":1,"batchSize":3,"newFrickPartsFacts":26,"frickExistingInformationLinks":8,"frickPartsEdition":"JUL 2013","psvInfoFinderRestored":true,"psvModelInfoGapCorrection":true,"newJgqManualFacts":19,"jgqSharedTopicLinks":12,"newInletPsvFacts":6,"inletPsvExistingBodiesRebuilt":2,"newPSVs":0,"newResiduePsvFacts":11,"residuePSVsUpdated":9,"newReliefCompletionFacts":7,"newPumpHosts":1,"newAirNglReviewFacts":5,"airNglPreviousFactLinks":6,"airNglReliefsReviewed":3,"separatorExistenceCandidates":2,"newPhysicalPSVs":0,"correctedLocalItemLabels":15,"newSmallAirPsvFacts":6,"smallAirPSVsReviewed":12,"suctionControlsRelocated":6,"newInletAirPsvFacts":4,"inletAirPSVsReviewed":6,"nglRoutesRelocated":49,"newLocalSourceFacts":2,"corroboratedInletAirPSVs":6,"newLocalRouteRecords":0,"newFieldPlateSources":1,"speciesVisuals":13,"fishPopulation":300,"plantRoutesChanged12LF":0,"cadGeometryDecoded":false,"frickPlateLinksUpdated":9,"plantRoutesChanged12LG":0,"plantRoutesChanged12LH":7,"priorSourceDefinitionsPreserved":113,"dashboardRestored":true,"valvePositionRefreshRepaired":true,"newNglReviewFacts":5,"libraryFilingBuild":"12LQ","equipmentEvidenceRequests":7,"geometryChanged12LQ":false,"pipes":2070,"activeReliefRecords":98,"closedNotInstalledReliefCandidates":2,"newNameplateSources":1,"newComponents":0,"update12LS":{"build":"12LS","plateOwner":"v1650","platePhotoSourcesAdded":1,"closedCandidates":["jv_c9210_relief","jv_c9220_relief"],"newPhysicalComponents":0,"pipeGeometryChanges":0,"operatingChanges":0,"storageWrites":0,"sourcePhoto":"IMG_0751.jpeg","sourceSHA256":"d08def81c76e3fe65b17c7ec1ccb8246a182744880a55b911761febb5f75975c","priorDefinitionCount":117,"priorPlateSourceCount":74,"canonicalDrawingDefinitionsChanged":0},"update12LT":{"baseline":"12LS","sourceReviewFacts":8,"pdfViews":12,"drawingIdentities":5,"newFieldPlateSources":1,"plateOwner":"v1418","existingComponentsPlaced":9,"newComponentRecords":0,"existingPipeCenterlinesChanged":0,"routeLabelsCorrected":["pipeTo_v1421in"],"routesAdded":9,"currentChillerOutlet":"466","mdmtSign":"NOT_ESTABLISHED","operatingChanges":0,"storageWrites":0},"latestUpdate":"12LY","currentRegenMDMTF":20,"update12LU":{"baseline":"12LT","newFieldPlateSources":1,"plateOwner":"v1460","regenMDMTF":20,"regenMDMTAuthority":"EXPLICIT_OPERATOR_CONFIRMATION","newComponentRecords":0,"newPipeRoutes":0,"pipeCenterlinesChanged":0,"sourceReviewFacts":5,"sourcePDFViews":4,"drawingIdentities":2,"existingRecordUpdates":["h7100","cf3d_pcv7100a","cf3d_m2700_pcv7100a","ks_h7100_pcv_100","ks_h7100_pcv_105","ks_h7100_pcv_107","v1418","v1460"],"reviewedFuelRouteIds":["pipe12hn_195","route12jd_jd_fuel1218","route12jr_jr_1218_interface"],"operatingChanges":0,"geometryChanged":false},"update12LV":{"baseline":"12LU","newPlateSources":1,"plateOwner":"v1444","newComponentRecords":0,"newPipeRoutes":0,"pipeCenterlinesChanged":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["V-1444 individual vessel plate"],"sourcePhoto":"IMG_0758.jpeg","sourcePhotoSHA256":"da89593f16c99cd747854ceddf05b44019dd62a3b37d94e813d1c2e33823affe"},"update12LW":{"baseline":"12LV","newPlateSources":1,"plateOwner":"e1241","recordsUpdated":["e1241","lh_282037_supply","le_282037"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["E-1241 missing individual plate"],"m2820NewRevision":"2","m2820RetainedRevision":"4","duplicateValveNumberResolved":false},"update12LX":{"baseline":"12LW","newPlateSources":1,"plateOwner":"v1443","recordsUpdated":["v1443"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["V-1443 missing individual plate"],"remaining":["Faint NB readback only"],"nationalBoardNumberConfirmed":false},"newPlateSources":1,"newComponentRecords":0,"update12LY":{"baseline":"12LX","newPlateSources":1,"plateOwner":"f7600","recordsUpdated":["f7600"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"storageWrites":0,"fieldRequestsClosed":["F-7600 individual plate"],"remaining":[{"tags":["F-7600"],"need":"Readable individual plate received; do not resend it. Optional wider plant-tag view. Confirm only the PTS fourth character (0/O) if the PTS identifier is needed; separate vendor documentation is needed only for unshown filter elements, maximum differential pressure, materials or dimensions."}],"sourcePhoto":"IMG_0761.jpeg","externalRatingEstablished":false,"ptsCodeConfirmed":false}},"sourceMediaBundled":false,"batch":{"deploymentStatus":"PREPARED_NOT_DEPLOYED","baseline":"12LZ","release":"12MA"},"update":{"sourceDefinition":"CF_SOURCE_12MA","recordsUpdated":["v8110"],"newPlateSources":1,"newComponentIdentities":0,"geometryChanges":0,"operatingChanges":0,"storageWrites":0,"nbNumberConfirmed":false},"baseline":"12LZ","update12LM":{"baseline":"12LL","sourceReviewFacts":15,"sourceViews":10,"drawingIdentities":8,"routeUpdates":15,"routesAdded":29,"physicalLocalComponents":38,"existingSourceRecordsReused":8,"newReliefAssemblies":2,"newHeaterAssemblies":1,"controlsMoved":2,"controlsRefittedInPlace":1,"graphChecks":{"routes":2001,"edges":7512,"paths":530,"bad":[]},"scope":"Source-supported schematic model changes; no operating-control or storage-schema changes; full integrated GPU runtime untested"},"update12LN":{"baseline":"12LM","sourceReviewFacts":11,"sourceViews":7,"drawingIdentities":4,"routeUpdates":0,"routesAdded":23,"localComponentsPlaced":34,"newComponentRecords":11,"existingSourceRecordsReused":24,"existingFilterIdentityPlaced":"f1411","temperatureGraphicsReassigned":2,"liveInstrumentChannelsChanged":false,"controlsChanged":false,"sourceMediaBundled":false,"graphCheck":{"paths":534,"bad":[],"nodes":8408,"edges":7623,"routes":2024,"scope":"Reconstructed cumulative graph with retained route coordinates; unrelated prior control spool anchors approximated from authored centres."},"scope":"Source-local schematic completion. Whole-plant GPU rendering, surveyed clearance and live deployment not tested."},"update12LO":{"baseline":"12LN","sourceReviewFacts":11,"technicalPageViews":7,"ignoredPage":4,"drawingIdentities":4,"existingRoutesGeometryChanged":0,"routeLabelsUpdated":10,"routesAdded":37,"localItemsPlaced":35,"supportReservoirsPlaced":4,"newComponentRecords":9,"existingSourceRecordsReused":30,"currentRecordReadbacksUpdated":32,"operatingControlsChanged":false,"newNameplateSources":0,"newPSVs":0,"sourceMediaBundled":false,"scope":"Local source-connected schematic. Structural fixture is not full GPU, field or plant collision verification."},"update12LS":{"build":"12LS","plateOwner":"v1650","platePhotoSourcesAdded":1,"closedCandidates":["jv_c9210_relief","jv_c9220_relief"],"newPhysicalComponents":0,"pipeGeometryChanges":0,"operatingChanges":0,"storageWrites":0,"sourcePhoto":"IMG_0751.jpeg","sourceSHA256":"d08def81c76e3fe65b17c7ec1ccb8246a182744880a55b911761febb5f75975c","priorDefinitionCount":117,"priorPlateSourceCount":74,"canonicalDrawingDefinitionsChanged":0},"update12LT":{"baseline":"12LS","sourceReviewFacts":8,"pdfViews":12,"drawingIdentities":5,"newFieldPlateSources":1,"plateOwner":"v1418","existingComponentsPlaced":9,"newComponentRecords":0,"existingPipeCenterlinesChanged":0,"routeLabelsCorrected":["pipeTo_v1421in"],"routesAdded":9,"currentChillerOutlet":"466","mdmtSign":"NOT_ESTABLISHED","operatingChanges":0,"storageWrites":0},"update12LZ":{"sourceDefinition":"CF_SOURCE_12LZ","recordsUpdated":["v1413","v1414","v1415"],"newPlateSources":1,"sharedSpecificationLinks":3,"individualIdentifierTransfer":false,"assetAssociationConfirmed":false,"geometryChanges":0,"operatingChanges":0,"storageWrites":0},"update12MA":{"sourceDefinition":"CF_SOURCE_12MA","recordsUpdated":["v8110"],"newPlateSources":1,"newComponentIdentities":0,"geometryChanges":0,"operatingChanges":0,"storageWrites":0,"nbNumberConfirmed":false}};
+var CF_RYAN_INDEX_MANIFEST_12JT={"build":"12MD","backendBuild":"RYAN-2026-10-15-12MD","signature":"CF-RYAN-EQUIPMENT-INFORMATION-AUDIT-12MD-20261015","referenceDigest":"28a2a14acb36a49aa171e2fd3f4ee5fcd0ad19f04e82e30a9d1967864aff1af6","sourceSHA256":"3dbac3f487db93f4b74ce90a4f0321123ffe28e602744bf2f894478c7a3700cb","sourceHashBasis":"SHA256 of baseline12MA main SHA256 text concatenated with canonical12MB source JSON; not a hash of the final self-referencing main file","vendorSourceSHA256":["357fae6004302ad7988bc3c7316124f50cc92e64b19e6106922a9ac3b9c280bd","c76b05c3fe68ca7434fdf4014c64ed7d03a6ab27109eee2e6d0a2bb01dfedb8d"],"summary":{"sourceIndexBuild":"12MD","components":7695,"pids":108,"drawingVersions":129,"pidFacts":1097,"drawingEntries":3631,"pipeRoutes":2070,"physicalRoutes":2027,"psvRecords":100,"referenceNotes":3737,"nameplateSourceRecords":84,"sourceDefinitionBlocks":127,"sourceMediaBundled":false,"allCountsMeaning":"Retained simulator/source-index records, not certified installed equipment counts.","currentReviewedDrawingEntries":4,"drawingEntryCountBasis":"Current reviewed drawing entry arrays; older aggregates remain in prior manifests.","quizQuestions":344,"newPetroSkillsQuestions":30,"newPetroSkillsDetails":37,"nameplates":84,"sourceDefinitions":127,"newOEMQuestions":10,"newOEMDetails":23,"frickVendorRecords":234,"frickVendorDrawingIdentities":7,"frickUnitsUpdated":3,"expanderChanges":1,"expanderVendorDrawingIdentities":4,"expanderNewCanonicalFacts":16,"expanderCorroborationsLinked":8,"expanderSourceRecords":36,"newQuizQuestions":0,"c5700NewCanonicalFacts":17,"c5700CorroborationsLinked":7,"c5700VendorComponentRecords":30,"c5700VendorDrawingIdentities":2,"heaterVendorFacts":21,"newArielFacts":40,"arielExistingInformationLinks":12,"arielManualEdition":"04/20/2026","manualFamiliesAdded":0,"manualDetailPassesAdded":1,"batchRequest":1,"batchSize":3,"newFrickPartsFacts":26,"frickExistingInformationLinks":8,"frickPartsEdition":"JUL 2013","psvInfoFinderRestored":true,"psvModelInfoGapCorrection":true,"newJgqManualFacts":19,"jgqSharedTopicLinks":12,"newInletPsvFacts":6,"inletPsvExistingBodiesRebuilt":2,"newPSVs":0,"newResiduePsvFacts":11,"residuePSVsUpdated":9,"newReliefCompletionFacts":7,"newPumpHosts":1,"newAirNglReviewFacts":5,"airNglPreviousFactLinks":6,"airNglReliefsReviewed":3,"separatorExistenceCandidates":2,"newPhysicalPSVs":0,"correctedLocalItemLabels":15,"newSmallAirPsvFacts":6,"smallAirPSVsReviewed":12,"suctionControlsRelocated":6,"newInletAirPsvFacts":4,"inletAirPSVsReviewed":6,"nglRoutesRelocated":49,"newLocalSourceFacts":2,"corroboratedInletAirPSVs":6,"newLocalRouteRecords":0,"newFieldPlateSources":1,"speciesVisuals":13,"fishPopulation":300,"plantRoutesChanged12LF":0,"cadGeometryDecoded":false,"frickPlateLinksUpdated":9,"plantRoutesChanged12LG":0,"plantRoutesChanged12LH":7,"priorSourceDefinitionsPreserved":113,"dashboardRestored":true,"valvePositionRefreshRepaired":true,"newNglReviewFacts":5,"libraryFilingBuild":"12LQ","equipmentEvidenceRequests":7,"geometryChanged12LQ":false,"pipes":2070,"activeReliefRecords":98,"closedNotInstalledReliefCandidates":2,"newNameplateSources":1,"newComponents":0,"update12LS":{"build":"12LS","plateOwner":"v1650","platePhotoSourcesAdded":1,"closedCandidates":["jv_c9210_relief","jv_c9220_relief"],"newPhysicalComponents":0,"pipeGeometryChanges":0,"operatingChanges":0,"storageWrites":0,"sourcePhoto":"IMG_0751.jpeg","sourceSHA256":"d08def81c76e3fe65b17c7ec1ccb8246a182744880a55b911761febb5f75975c","priorDefinitionCount":117,"priorPlateSourceCount":74,"canonicalDrawingDefinitionsChanged":0},"update12LT":{"baseline":"12LS","sourceReviewFacts":8,"pdfViews":12,"drawingIdentities":5,"newFieldPlateSources":1,"plateOwner":"v1418","existingComponentsPlaced":9,"newComponentRecords":0,"existingPipeCenterlinesChanged":0,"routeLabelsCorrected":["pipeTo_v1421in"],"routesAdded":9,"currentChillerOutlet":"466","mdmtSign":"NOT_ESTABLISHED","operatingChanges":0,"storageWrites":0},"latestUpdate":"12MD","currentRegenMDMTF":20,"update12LU":{"baseline":"12LT","newFieldPlateSources":1,"plateOwner":"v1460","regenMDMTF":20,"regenMDMTAuthority":"EXPLICIT_OPERATOR_CONFIRMATION","newComponentRecords":0,"newPipeRoutes":0,"pipeCenterlinesChanged":0,"sourceReviewFacts":5,"sourcePDFViews":4,"drawingIdentities":2,"existingRecordUpdates":["h7100","cf3d_pcv7100a","cf3d_m2700_pcv7100a","ks_h7100_pcv_100","ks_h7100_pcv_105","ks_h7100_pcv_107","v1418","v1460"],"reviewedFuelRouteIds":["pipe12hn_195","route12jd_jd_fuel1218","route12jr_jr_1218_interface"],"operatingChanges":0,"geometryChanged":false},"update12LV":{"baseline":"12LU","newPlateSources":1,"plateOwner":"v1444","newComponentRecords":0,"newPipeRoutes":0,"pipeCenterlinesChanged":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["V-1444 individual vessel plate"],"sourcePhoto":"IMG_0758.jpeg","sourcePhotoSHA256":"da89593f16c99cd747854ceddf05b44019dd62a3b37d94e813d1c2e33823affe"},"update12LW":{"baseline":"12LV","newPlateSources":1,"plateOwner":"e1241","recordsUpdated":["e1241","lh_282037_supply","le_282037"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["E-1241 missing individual plate"],"m2820NewRevision":"2","m2820RetainedRevision":"4","duplicateValveNumberResolved":false},"update12LX":{"baseline":"12LW","newPlateSources":1,"plateOwner":"v1443","recordsUpdated":["v1443"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"fieldRequestsClosed":["V-1443 missing individual plate"],"remaining":["Faint NB readback only"],"nationalBoardNumberConfirmed":false},"newPlateSources":1,"newComponentRecords":0,"update12LY":{"baseline":"12LX","newPlateSources":1,"plateOwner":"f7600","recordsUpdated":["f7600"],"newComponentRecords":0,"newPipeRoutes":0,"geometryChanged":false,"operatingChanges":0,"storageWrites":0,"fieldRequestsClosed":["F-7600 individual plate"],"remaining":[{"tags":["F-7600"],"need":"Readable individual plate received; do not resend it. Optional wider plant-tag view. Confirm only the PTS fourth character (0/O) if the PTS identifier is needed; separate vendor documentation is needed only for unshown filter elements, maximum differential pressure, materials or dimensions."}],"sourcePhoto":"IMG_0761.jpeg","externalRatingEstablished":false,"ptsCodeConfirmed":false},"update12MB":{"baseline":"12MA","sourceDefinition":"CF_SOURCE_12MB","recordsUpdated":["v7500"],"newPlateSources":1,"newComponentIdentities":0,"geometryChanges":0,"operatingChanges":0,"storageWrites":0,"pairedPressureInterpretationEstablished":false,"jacketRatingEstablished":false},"informationAudit12MD":{"records":7695,"equipmentClassEntries":427,"engineeringFactsChanged":false,"geometryChanged":false,"operatingChanges":false}},"sourceMediaBundled":false,"batch":{"baseline":"12MC","release":"12MD","deploymentStatus":"PREPARED_NOT_DEPLOYED"},"update":{"baseline":"12MC","purpose":"Plant-wide equipment source information availability","newEngineeringFacts":0,"newPhysicalComponents":0,"geometryChanged":false,"controlsChanged":false},"baseline":"12MC","update12LM":{"baseline":"12LL","sourceReviewFacts":15,"sourceViews":10,"drawingIdentities":8,"routeUpdates":15,"routesAdded":29,"physicalLocalComponents":38,"existingSourceRecordsReused":8,"newReliefAssemblies":2,"newHeaterAssemblies":1,"controlsMoved":2,"controlsRefittedInPlace":1,"graphChecks":{"routes":2001,"edges":7512,"paths":530,"bad":[]},"scope":"Source-supported schematic model changes; no operating-control or storage-schema changes; full integrated GPU runtime untested"},"update12LN":{"baseline":"12LM","sourceReviewFacts":11,"sourceViews":7,"drawingIdentities":4,"routeUpdates":0,"routesAdded":23,"localComponentsPlaced":34,"newComponentRecords":11,"existingSourceRecordsReused":24,"existingFilterIdentityPlaced":"f1411","temperatureGraphicsReassigned":2,"liveInstrumentChannelsChanged":false,"controlsChanged":false,"sourceMediaBundled":false,"graphCheck":{"paths":534,"bad":[],"nodes":8408,"edges":7623,"routes":2024,"scope":"Reconstructed cumulative graph with retained route coordinates; unrelated prior control spool anchors approximated from authored centres."},"scope":"Source-local schematic completion. Whole-plant GPU rendering, surveyed clearance and live deployment not tested."},"update12LO":{"baseline":"12LN","sourceReviewFacts":11,"technicalPageViews":7,"ignoredPage":4,"drawingIdentities":4,"existingRoutesGeometryChanged":0,"routeLabelsUpdated":10,"routesAdded":37,"localItemsPlaced":35,"supportReservoirsPlaced":4,"newComponentRecords":9,"existingSourceRecordsReused":30,"currentRecordReadbacksUpdated":32,"operatingControlsChanged":false,"newNameplateSources":0,"newPSVs":0,"sourceMediaBundled":false,"scope":"Local source-connected schematic. Structural fixture is not full GPU, field or plant collision verification."},"update12LS":{"build":"12LS","plateOwner":"v1650","platePhotoSourcesAdded":1,"closedCandidates":["jv_c9210_relief","jv_c9220_relief"],"newPhysicalComponents":0,"pipeGeometryChanges":0,"operatingChanges":0,"storageWrites":0,"sourcePhoto":"IMG_0751.jpeg","sourceSHA256":"d08def81c76e3fe65b17c7ec1ccb8246a182744880a55b911761febb5f75975c","priorDefinitionCount":117,"priorPlateSourceCount":74,"canonicalDrawingDefinitionsChanged":0},"update12LT":{"baseline":"12LS","sourceReviewFacts":8,"pdfViews":12,"drawingIdentities":5,"newFieldPlateSources":1,"plateOwner":"v1418","existingComponentsPlaced":9,"newComponentRecords":0,"existingPipeCenterlinesChanged":0,"routeLabelsCorrected":["pipeTo_v1421in"],"routesAdded":9,"currentChillerOutlet":"466","mdmtSign":"NOT_ESTABLISHED","operatingChanges":0,"storageWrites":0},"update12LZ":{"sourceDefinition":"CF_SOURCE_12LZ","recordsUpdated":["v1413","v1414","v1415"],"newPlateSources":1,"sharedSpecificationLinks":3,"individualIdentifierTransfer":false,"assetAssociationConfirmed":false,"geometryChanges":0,"operatingChanges":0,"storageWrites":0},"update12MA":{"sourceDefinition":"CF_SOURCE_12MA","recordsUpdated":["v8110"],"newPlateSources":1,"newComponentIdentities":0,"geometryChanges":0,"operatingChanges":0,"storageWrites":0,"nbNumberConfirmed":false},"update12MB":{"baseline":"12MA","sourceDefinition":"CF_SOURCE_12MB","recordsUpdated":["v7500"],"newPlateSources":1,"newComponentIdentities":0,"geometryChanges":0,"operatingChanges":0,"storageWrites":0,"pairedPressureInterpretationEstablished":false,"jacketRatingEstablished":false},"referenceDigestBasis":"SHA256 of sorted canonical JSON for components, drawings, sourceDefinitions, nameplates, pipes, reliefs and referenceNotes including the single 12MD audit-navigation note; computed during packaging."};
 /* 12JT: shared, read-only, source-preserving reference retrieval.
  * No plant writes, network calls, storage writes, fuzzy tag reassignment or
  * numerical conversion of schematic pipe radii into purported field NPS.
@@ -34481,8 +34956,11 @@ function createRyanIndexEngine12JT(dataset) {
   var currentLYActive=(data.sourceDefinitions||[]).some(function(s){return s.name==='CF_SOURCE_12LY';});
   var currentLZActive=(data.sourceDefinitions||[]).some(function(s){return s.name==='CF_SOURCE_12LZ';});
   var currentMAActive=(data.sourceDefinitions||[]).some(function(s){return s.name==='CF_SOURCE_12MA';});
+  var currentMBActive=(data.sourceDefinitions||[]).some(function(s){return s.name==='CF_SOURCE_12MB';});
 
   function add(type, id, title, body, provenance, priority, identity) {
+    if(currentMBActive&&String(id).indexOf('CF_SOURCE_12MB:')===0){priority=Math.max(priority||0,500);provenance=Object.assign({},provenance,{authority:'CURRENT_HOT_OIL_EXPANSION_TANK_INDIVIDUAL_PLATE'});}
+    if(currentMBActive&&type==='field_evidence_request'&&body&&Array.isArray(body.items)&&body.items.some(function(x){return x.tag==='V-7500';})&&body.id!=='v7500_identity_followup_12mb'){body=Object.assign({},body,{items:body.items.filter(function(x){return x.tag!=='V-7500';}),currentCorrection:'V-7500 individual plate received in12MB; no repeat of the readable plate needed.'});if(!body.items.length)return;}
     if(currentMAActive&&String(id).indexOf('CF_SOURCE_12MA:')===0){priority=Math.max(priority||0,480);provenance=Object.assign({},provenance,{authority:'CURRENT_COMPRESSOR_BUILDING_KO_INDIVIDUAL_PLATE'});}
     if(currentMAActive&&type==='field_evidence_request'&&body&&Array.isArray(body.items)&&body.items.some(function(x){return x.tag==='V-8110';})&&body.id!=='v8110_identity_followup_12ma'){
       body=Object.assign({},body,{items:body.items.filter(function(x){return x.tag!=='V-8110';}),currentCorrection:'V-8110 plate IMG_8516.jpg received in12MA; ask only for faint NB readback or optional tag context, not the whole plate again.'});if(!body.items.length)return;
@@ -34572,6 +35050,7 @@ function createRyanIndexEngine12JT(dataset) {
     if(s.name==='CF_SOURCE_12LW')add('nameplate',s.name+':plate',v.plate.tag+' - individual chiller shell/tube plate',v.plate,meta,400,[v.plate.tag,v.plate.serial,v.plate.nationalBoardNumber,'chiller','CMS']);
     if(s.name==='CF_SOURCE_12LX')add('nameplate',s.name+':plate',v.plate.tag+' - individual reclaimer plate',v.plate,meta,420,[v.plate.tag,v.plate.serial,'reclaimer','Exterran','0760']);
     if(s.name==='CF_SOURCE_12LY')add('nameplate',s.name+':plate',v.plate.tag+' - individual hot-oil filter plate',v.plate,meta,440,[v.plate.tag,v.plate.serial,v.plate.model,v.plate.nationalBoardNumber,'Parker','Peco','0761']);
+    if(s.name==='CF_SOURCE_12MB'){add('nameplate',s.name+':plate','V-7500 - Sistersville individual hot-oil expansion-tank plate',v.plate,meta,500,['V-7500','hot oil expansion tank','hot oil surge tank','Sistersville',v.plate.serial,'8514']);}
     if(s.name==='CF_SOURCE_12MA'){
       add('nameplate',s.name+':plate','V-8110 - compressor-building Highland Tank individual plate',v.plate,meta,480,['V-8110','compressor building KO','Highland Tank',v.plate.serial,'8516']);
     }
@@ -34790,8 +35269,9 @@ function createRyanIndexEngine12JT(dataset) {
   if(typeof CF_SOURCE_12LY!=='undefined')definitions.push({name:'CF_SOURCE_12LY',value:CF_SOURCE_12LY});
   if(typeof CF_SOURCE_12LZ!=='undefined')definitions.push({name:'CF_SOURCE_12LZ',value:CF_SOURCE_12LZ});
   if(typeof CF_SOURCE_12MA!=='undefined')definitions.push({name:'CF_SOURCE_12MA',value:CF_SOURCE_12MA});
+  if(typeof CF_SOURCE_12MB!=='undefined')definitions.push({name:'CF_SOURCE_12MB',value:CF_SOURCE_12MB});
     return {
-      build:'12MA',sourceIndexBuild:'12MA',sourceSHA256:CF_RYAN_INDEX_MANIFEST_12JT.sourceSHA256,
+      build:'12MD',sourceIndexBuild:'12MD',sourceSHA256:CF_RYAN_INDEX_MANIFEST_12JT.sourceSHA256,
       summary:CF_RYAN_INDEX_MANIFEST_12JT.summary,components:Object.values(components),
       drawings:typeof cfSourceDrawings12HO==='function'?cfSourceDrawings12HO():[],
       sourceDefinitions:definitions,nameplates:typeof CF3D_DEVICE_PHOTOS!=='undefined'?CF3D_DEVICE_PHOTOS:[],
@@ -34814,18 +35294,18 @@ function createRyanIndexEngine12JT(dataset) {
   var previousFetch=ryanFetch;
   ryanFetch=function(body){
     body=Object.assign({},body||{});
-    body.clientReferenceBuild='12MA';body.referenceSnapshotDigest=CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest;
+    body.clientReferenceBuild='12MD';body.referenceSnapshotDigest=CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest;
     var mode=String(body.mode||'qa').toLowerCase();
     var skip=['auth','health','reference_search','digest','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','image_learn','learn','ingest','memory_extract','operating_memory_extract','shift_report_chunk'];
     if(skip.indexOf(mode)<0){
       try{body.indexReferenceContext=select(requestQuestion(body),{limit:22,maxChars:24000});}
-      catch(e){body.indexReferenceContext={build:'12MA',records:[],warnings:['Current index reference selection failed: '+String(e.message||e)+'. Server fallback remains available.']};console.error('12JT Ryan reference selection',e);}
+      catch(e){body.indexReferenceContext={build:'12MD',records:[],warnings:['Current index reference selection failed: '+String(e.message||e)+'. Server fallback remains available.']};console.error('12JT Ryan reference selection',e);}
     }
     // Existing auth, history, live context, ingestion and transport remain intact.
     return previousFetch(body);
   };
   window.CFRyanIndexSync12JT={dataset:currentDataset,manifest:CF_RYAN_INDEX_MANIFEST_12JT,search:select,refresh:function(){engine=null;return getEngine().summary;},
-    status:function(){return {build:'12MA',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,referenceDigest:CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest,
+    status:function(){return {build:'12MD',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,referenceDigest:CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest,
       staticCoverage:CF_RYAN_INDEX_MANIFEST_12JT.summary,lastSelection:lastSelection?{query:lastSelection.query,shown:lastSelection.shown,totalMatches:lastSelection.totalMatches,nextOffset:lastSelection.nextOffset}:null,
       sourceMediaBundled:false,privateBrowserDataBundled:false,plantControlsChanged:false};}};
   INFO.ryan_index_sync_12jt={t:'Ryan - full index knowledge sync12JT',d:[
@@ -34837,8 +35317,8 @@ function createRyanIndexEngine12JT(dataset) {
     'Local diagnostics: window.CFRyanIndexSync12JT.status(). Backend health reports the same reference digest. These checks are not field-operating authorization.'
   ]};
   var category=libEnsureCategory('Release reviews /12JT');if(LIB_CATS[category][1].indexOf('ryan_index_sync_12jt')<0)LIB_CATS[category][1].push('ryan_index_sync_12jt');LIB_STATIC_SEARCH_CACHE=null;
-  if(typeof CF_SOURCE_POLICY_12HO!=='undefined'){CF_SOURCE_POLICY_12HO.build='12MA';CF_SOURCE_POLICY_12HO.backend='12MA';}
-  window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MA',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MA',sourceStorageMode:'learn-only',referenceDigest:CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest});
+  if(typeof CF_SOURCE_POLICY_12HO!=='undefined'){CF_SOURCE_POLICY_12HO.build='12MD';CF_SOURCE_POLICY_12HO.backend='12MD';}
+  window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MD',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MD',sourceStorageMode:'learn-only',referenceDigest:CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest});
   window.CFRyanIndexSync12JU=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12JU=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12KZ=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12KZ=window.CFRyanIndexSync12JT;
   INFO.release12ju={t:'12JU - TK-9300 horizontal elevated tank and oil distribution',d:[CF_SOURCE_12JU.operatorConfirmation,CF_SOURCE_12JU.policy].concat(CF_SOURCE_12JU.limits)};
   window.CFRyanIndexSync12JV=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12JV=window.CF_CURRENT_RELEASE_12JT;
@@ -34847,8 +35327,8 @@ function createRyanIndexEngine12JT(dataset) {
   if(window.CFReference12JX)window.CFReference12JX.refreshFinder();
   INFO.release12jv={"t":"12JV - Air package and distribution","d":["12JV instrument-air package and distribution; baseline12JU retained.","Source-supported air-system geometry and reference update, continuing12JU in place. Preserve operating algorithms, interlocks, historical data, source knowledge and storage keys. All coordinates, enclosure internals and equipment dimensions are schematic. No invented field lineups, limits, capacities, relief destinations or unshown vendor internals.","M2920 receiver nozzles, PSV, drain, vessel dimensions and pressure ratings are not reverified by this upload.","Package detailed vendor drawings02250218-394 / EA50-761 are referenced but not included; no automatic bed sequence, purge rate or settings inferred.","Unnumbered local valves/instruments keep package-specific descriptive identities; no invented numbered field tags.","Faded M2922 remote suffixes, some item characters and exact revision stamp require a clearer original.","CWS1 final discharge, unknown air drops, unassigned terminals, and flare ignition-air internals remain pending.","All final actuator ports except explicitly matched source stubs are separately marked pneumatic package boundaries, not verified complete field tubing.","No current open/closed status or dry-air availability follows from visual pipes. Existing pressure dynamics and75/90/160psig historical HMI settings are not changed or reverified from these P&IDs.","PK-9200 ->V-9241 remains an inherited model service association, not a newly verified receiver fabrication/nozzle drawing.","No original PDF or image is embedded in the deployment. Prior12JU tank and oil changes remain intact.","591 is a source four-inch branch. Package internal line bores and the local sensing/drain bores not printed in source remain unspecified.","Source supports nested1326,1447,1448,1476 branches and two half-inch6810 supplies to a common continuation; model physical station dimensions are illustrative.","CWS1 receives only resolved source condensate paths. F9225 remote timer-drain destination remains unresolved.","PD indication tubing is separate from the treatment bypass. DP484 source single-tap instrument type is not inferred."]};
   window.CFRyanIndexSync12JY=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12JY=window.CF_CURRENT_RELEASE_12JT;
-  document.title='12MA | Clear Fork - Compressor building KO plate';
-  var heading=document.querySelector('header h1');if(heading)heading.textContent='Clear Fork / Cryogenic Unit #1 - 12MA';
+  document.title='12MC | Clear Fork - Primary equipment plate records';
+  var heading=document.querySelector('header h1');if(heading)heading.textContent='Clear Fork / Cryogenic Unit #1 - 12MC';
 })();
 /* END 12JT RYAN INDEX BRIDGE */
 window.CFRyanIndexSync12LA=window.CFRyanIndexSync12JT;window.CF_CURRENT_RELEASE_12LA=window.CF_CURRENT_RELEASE_12JT;
@@ -34863,9 +35343,9 @@ window.CF_CURRENT_RELEASE_12LD=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndex
 window.CF_CURRENT_RELEASE_12LE=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LE=window.CFRyanIndexSync12JT;
 window.CF_CURRENT_RELEASE_12LF=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LF=window.CFRyanIndexSync12JT;
 window.CF_CURRENT_RELEASE_12LG=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LG=window.CFRyanIndexSync12JT;
-window.CLEAR_FORK_REFERENCE_RELEASE='12MA';
-document.title='12MA | Clear Fork - Compressor building KO plate';
-var _lgHeading=document.querySelector('header h1');if(_lgHeading)_lgHeading.textContent='Clear Fork / Cryogenic Unit #1 - 12MA';
+window.CLEAR_FORK_REFERENCE_RELEASE='12MD';
+document.title='12MC | Clear Fork - Primary equipment plate records';
+var _lgHeading=document.querySelector('header h1');if(_lgHeading)_lgHeading.textContent='Clear Fork / Cryogenic Unit #1 - 12MC';
 window.CF_CURRENT_RELEASE_12LI=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LH=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LH=window.CFRyanIndexSync12JT;
 /* 12LJ final pass: run after all new source-local geometry has been installed. */
 function cfFinalizeVisual12LJ(){
@@ -34874,7 +35354,7 @@ function cfFinalizeVisual12LJ(){
  step('valve positions',function(){if(!window.CFValvePositions12KI)cfInstallValveUpdate12KI();if(!window.CFValvePositions12KI)throw Error('Valve-position reader did not initialize.');window.CFValvePositions12KI.refresh();window.CFValvePositions12KI.setEnabled(true);window.CFValvePositions12KI.update(0);window.CFValvePositions12KJ=window.CFValvePositions12KI;});
  var features={dashboard:!!window.CFDashboard12KL,valvePositions:!!window.CFValvePositions12KI,referenceLibrary:typeof openLibrary==='function',componentFinder:!!window.CFComponentFinder12IK,componentTrace:!!window.CFComponentTrace12IZ,psvGapFinder:!!window.CFReference12KV,frickVendor:!!window.CFReference12KP,expanderVendor:!!window.CFReference12KQ,c5700Vendor:!!window.CFReference12KR,heaters:!!window.CFReference12KS,arielQuiz:!!window.CFReference12KT,frickParts:!!window.CFReference12KU,latestOilReview:!!window.CFReference12LI,esdBodyPlate:!!window.CFReference12LJ,quizBank:typeof QUIZ_BANK!=='undefined'?QUIZ_BANK.length:null};
  if(!features.dashboard||!features.valvePositions){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Feature restoration','Dashboard or valve-position subsystem requires review.');}
- window.CFAppReady12LJ={build:'12MA',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
+ window.CFAppReady12LJ={build:'12MD',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
  window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LJ=window.CFRyanIndexSync12JT;
  if(window.CFStartup12LJ)window.CFStartup12LJ.paint();
  return window.CFAppReady12LJ;
@@ -34930,7 +35410,8 @@ function cfCheckVisualIntegrity12LK(){
   var filterPlateEvidence=window.CFReference12LY&&window.CFReference12LY.status();add('F-7600 hot-oil filter individual plate reference',!!(filterPlateEvidence&&filterPlateEvidence.audit.ok),filterPlateEvidence);
   var dehyPlateEvidence=window.CFReference12LZ&&window.CFReference12LZ.status();add('Dehydration-bed shared specifications and individual identity reference',!!(dehyPlateEvidence&&dehyPlateEvidence.audit.ok),dehyPlateEvidence);
   var compressorKOPlate=window.CFReference12MA&&window.CFReference12MA.status();add('V-8110 compressor-building knockout individual plate reference',!!(compressorKOPlate&&compressorKOPlate.audit.ok),compressorKOPlate);
-  var report={build:'12MA',baseline:'12LZ',ok:checks.every(function(c){return c.ok;}),checks:checks,
+  var expansionPlate=window.CFReference12MB&&window.CFReference12MB.status();add('V-7500 hot-oil expansion tank individual plate reference',!!(expansionPlate&&expansionPlate.audit.ok),expansionPlate);
+  var report={build:'12MB',baseline:'12MA',ok:checks.every(function(c){return c.ok;}),checks:checks,
   mainInitializationComplete:true,scope:'Live browser initialization/attachment checks; not an engineering, collision, field or exhaustive visual acceptance certification.',
   preservedWithholding:['V-1421 unverified relief placeholder','C-9210/C-9220 separator relief candidates: operator-confirmed not installed'],
   batch:{requestNumber:1,requestCount:3,readyForUserPush:true,deployedByAssistant:false,correctiveRelease:true}};
@@ -36112,6 +36593,91 @@ function cfInstallCompressorKOPlate12MA(S){
 }
 
 try{cfInstallCompressorKOPlate12MA(CF_SOURCE_12MA);}catch(e){console.error('12MA compressor-building KO plate',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('12MA compressor-building KO plate',e);}
+
+var CF_SOURCE_12MB={"build":"12MB","baseline":"12MA","date":"2026-10-15","id":"v7500_hot_oil_expansion_tank_plate","plateKey":"v7500_plate_12mb","photo":{"name":"IMG_8514.jpg","file":"IMG_8514.jpg","sha256":"3d52715ee32fe7144cd4d95327014192ccbdd05aa15ae574a2f1b0ca246b3ab1","bytes":736520,"mime":"image/jpeg","caption":"Sistersville Tank Works plate; operator identifies V-7500 hot-oil expansion tank","operatorTag":"V-7500","visibleTag":null,"sourceClass":"INDIVIDUAL_FIELD_PLATE_OPERATOR_ASSOCIATED","reviewBuild":"12MB","referenceKey":"v7500_plate_12mb","plateId":"PLATE-V7500-IMG8514-12MB","sourceMediaRetained":false,"sourceStorageMode":"learn-only","mediaBundled":false},"plate":{"id":"PLATE-V7500-IMG8514-12MB","assetId":"v7500","tag":"V-7500","equipmentName":"Hot-oil expansion tank","manufacturer":"Sistersville Tank Works, Inc.","serial":"19-191","nationalBoardNumber":"32","yearBuilt":2020,"plantTagVisible":false,"authority":"PHOTO_READBACK_WITH_OPERATOR_EQUIPMENT_ASSOCIATION","shellMAWPRaw":"-15/300 PSI at 500 deg F","shellPressureMarking":"-15/300","shellMAWPPSI":null,"shellMAWPTemperatureF":500,"mdmtF":-20,"mdmtPressureRaw":"-15/300 PSI","mdmtPressurePSI":null,"jacketMAWPRaw":"XX PSI at XX deg F","jacketMDMTRaw":"XX deg F at XX PSI","jacketMAWPPSI":null,"jacketMAWPTemperatureF":null,"jacketMDMTF":null,"jacketMDMTPressurePSI":null,"testPressurePSI":null,"fields":[["Equipment association","V-7500 hot-oil expansion tank - operator identified; full plant tag not visible in the close-up"],["Manufacturer / certifier","Sistersville Tank Works, Inc."],["Manufacturer serial","19-191"],["Number in NB-marked field","32"],["Year built","2020"],["Shell maximum allowable working pressure - literal marking","-15/300 PSI at 500 deg F"],["Shell minimum design metal temperature - literal marking","-20 deg F at -15/300 PSI"],["Jacket maximum allowable working pressure","XX PSI at XX deg F - no numerical rating established"],["Jacket minimum design metal temperature","XX deg F at XX PSI - no numerical rating established"],["Other visible markings","ASME symbol; U; RT-1"],["Test pressure / dimensions / capacity","Not shown in this photograph"]],"limits":["The operator identifies the hot-oil expansion tank. Link this photograph to existing V-7500; the close-up does not show a full plant tag. Do not create a second tank.","The shell pressure text is retained literally as -15/300 PSI in both the MAWP and MDMT rows. The photograph does not explain this paired notation. No single numerical MAWP, separate vacuum rating, operating pressure range, or PSV setting is inferred from it. Manufacturer documentation may clarify the notation if needed.","Shell MAWP temperature 500 F and MDMT -20 F are vessel reference markings, not hot-oil setpoints, alarms, trips or instructions to change plant operation.","Jacket fields read XX. They do not establish a numerical jacket rating, zero pressure, full vacuum, or that a functional jacket is installed.","The serial19-191 and NB-marked number32 belong only to this photographed vessel. They are not assigned to H-7100, F-7600, PSV-7500A, TK-8100 or any other item.","No test pressure, capacity, shell dimensions, material grade, wall thickness, nozzle or support arrangement is established by this photograph. No geometry or protection settings change.","One source photograph and one canonical transcription. Existing learned P&IDs remain under Clearfork P&IDs; this source belongs under Field plates / Hot-oil equipment. Original image bytes are not embedded."]},"policy":["Reuse existing v7500 identity and existing connections. No new vessel, valve, pipe or duplicate plate.","Preserve shell and jacket terminology and literal pressure markings; do not silently normalize paired values.","Only reference metadata and collection status change; operating logic, storage schemas and geometry are preserved."],"newEntries":[{"id":"expansion_tank.plate","title":"V-7500 individual Sistersville Tank Works plate received","text":"IMG_8514.jpg is associated with V-7500 hot-oil expansion tank by the operator. Serial19-191, NB-marked number32 and2020 are individual vessel evidence. Current plate fields are in CF_SOURCE_12MB.plate. The missing-entire-plate request is closed.","tags":["V-7500","Sistersville Tank Works","hot oil expansion tank","19-191","32"],"authority":"PHOTO_READBACK_WITH_OPERATOR_EQUIPMENT_ASSOCIATION"},{"id":"expansion_tank.literal_ratings","title":"Retain shell paired pressure and jacket XX markings","text":"The shell MAWP row reads -15/300 PSI at500F; shell MDMT reads -20F at -15/300 PSI. Keep paired notation literal and the numerical single-pressure fields unset. Jacket rows are XX. Do not convert these into operating or relief settings or borrow ratings from H-7100/F-7600.","tags":["V-7500","MAWP","MDMT","shell","jacket"],"authority":"SOURCE_LITERAL_READBACK_NOT_OPERATING_SETTINGS"}],"pending":[{"tags":["V-7500"],"need":"Individual plate received; no repeat of readable fields needed. Optional wider plant-tag-to-plate view. A matching manufacturer/vessel record is useful only to explain the paired -15/300 shell notation or supply unshown dimensions/nozzles/capacity; it is not a request for another complete plate photograph."}]};
+/* 12MB: individual hot-oil expansion-tank plate; no geometry or process writes. */
+function cfCurrentExpansionTankRequests12MB(old,S){
+ 'use strict';var out=Object.assign({},old);out.build=S.build;
+ out.fieldRequests=(old.fieldRequests||[]).filter(function(g){return g.id!=='v7500_identity_followup_12mb';}).map(function(g){var q=Object.assign({},g);q.items=(g.items||[]).filter(function(x){return x.tag!=='V-7500';});return q;}).filter(function(g){return g.items.length;});
+ out.fieldRequests.push({id:'v7500_identity_followup_12mb',group:'V-7500 - plate received; optional context and notation follow-up',items:[{tag:'V-7500',name:'Hot-oil expansion tank - individual plate recorded'}],needed:S.pending[0].need,already:'IMG_8514.jpg; Sistersville Tank Works; serial19-191; NB-marked32; built2020. Shell -15/300 PSI at500F and MDMT-20F at -15/300 PSI retained literally. Jacket XX is nonnumeric.'});
+ out.doNotResend=Array.from(new Set((old.doNotResend||[]).concat(['V-7500 hot-oil expansion tank plate IMG_8514.jpg is recorded. Do not request all readable plate fields again; optional tag context and a manufacturer explanation of -15/300 are separate follow-ups.'])));return out;
+}
+function cfCurrentExpansionTankPumpRequests12MB(old,S){
+ 'use strict';var out=Object.assign({},old);if(!old.nextEvidenceReview)return out;out.nextEvidenceReview=Object.assign({},old.nextEvidenceReview);
+ out.nextEvidenceReview.fieldRequests=(old.nextEvidenceReview.fieldRequests||[]).map(function(x){var y=Object.assign({},x);y.tags=(x.tags||[]).filter(function(t){return t!=='V-7500';});return y;}).filter(function(x){return !x.tags||x.tags.length;});return out;
+}
+function cfApplyExpansionTankPlate12MB(H,S){
+ 'use strict';var R=H.records||{},T=H.trace||{},D=H.deviceData||{},I=H.info||{},A=H.audit||{},P=H.photos||[],C=H.categories||[],p=S.plate,k=p.assetId,r=R[k]||(T.components&&T.components[k]);
+ function cp(x){return JSON.parse(JSON.stringify(x));}function uq(x){return Array.from(new Set(x));}
+ if(!r)throw Error('12MB requires existing v7500 identity; no duplicate tank created');
+ if(r.serial&&r.serial!==p.serial)throw Error('12MB V-7500 serial conflict; existing evidence not overwritten');
+ if(r.nationalBoardNumber&&String(r.nationalBoardNumber)!==p.nationalBoardNumber)throw Error('12MB V-7500 NB conflict; existing evidence not overwritten');
+ var result={build:S.build,recordsUpdated:[k],plateSourcesAdded:0,componentIdentitiesAdded:0,geometryChanged:false,operatingChanges:0,storageWrites:0};R[k]=r;
+ if(!r.priorReference12MB)r.priorReference12MB={manufacturer:r.manufacturer||null,serial:r.serial||null,nationalBoardNumber:r.nationalBoardNumber||null,nameplateAudit12KB:cp(r.nameplateAudit12KB||{}),referenceNotes:cp(I[k]||null)};
+ var link={definition:'CF_SOURCE_12MB',path:'plate',plateId:p.id,sourcePhoto:S.photo.name,sha256:S.photo.sha256,operatorAssociated:true,plantTagVisible:false};
+ Object.assign(r,{manufacturer:p.manufacturer,serial:p.serial,nationalBoardNumber:p.nationalBoardNumber,yearBuilt:p.yearBuilt,latestReferenceBuild:S.build,nameplateStatus:'INDIVIDUAL_FIELD_PLATE_OPERATOR_ASSOCIATED',fieldPlate12MB:link,sourceReview12MB:{definition:'CF_SOURCE_12MB',factIds:['expansion_tank.plate','expansion_tank.literal_ratings']},mawpReference12MB:{value:null,unit:'PSI',temperatureF:p.shellMAWPTemperatureF,raw:p.shellMAWPRaw,pairedPressureText:p.shellPressureMarking,authority:p.authority,notOperatingLimit:true},mdmtReference12MB:{valueF:p.mdmtF,pressurePSI:null,pressureRaw:p.mdmtPressureRaw,authority:p.authority,notOperatingLimit:true},jacketReference12MB:{mawpPSI:null,mawpTemperatureF:null,mdmtF:null,mdmtPressurePSI:null,mawpRaw:p.jacketMAWPRaw,mdmtRaw:p.jacketMDMTRaw,notOperatingLimit:true}});
+ r.photoIds=uq((r.photoIds||[]).concat([S.photo.name]));r.nameplateIds=uq((r.nameplateIds||[]).concat([p.id]));r.aliases=uq((r.aliases||[]).concat([p.tag,p.serial,'Sistersville hot-oil expansion tank','Hot-oil surge tank']));
+ if(String(r.source||'').indexOf(S.photo.name)<0)r.source=(r.source?r.source+' | ':'')+S.photo.name+' - operator-associated individual expansion-tank plate';
+ r.specifications=(r.specifications||[]).filter(function(f){return f[0]!=='12MB individual plate';});r.specifications.push(['12MB individual plate','See CF_SOURCE_12MB.plate; shell -15/300 PSI at500F and MDMT-20F at -15/300 PSI kept literal; jacket XX. Not operating settings.']);
+ r.nameplateAudit12KB=Object.assign({},r.nameplateAudit12KB||{},{tag:p.tag,status:'PLATE_TRANSCRIPTION_OPERATOR_ASSOCIATED',category:'Vessel / equipment',retained:p.fields.map(function(f){return f[0]+': '+f[1];}),missing:[S.pending[0].need],conflicts:[],photoIds:r.photoIds.slice(),referenceOnly:false,build:S.build,latestReviewBuild:S.build});
+ D[k]=Object.assign(D[k]||{},r);if(T.components)T.components[k]=Object.assign(T.components[k]||{},r);
+ var info=I[k]=I[k]||{t:p.tag+' - '+p.equipmentName,d:[]};info.t=p.tag+' - '+p.equipmentName;info.fieldPlate12MB=link;info.referenceLinks12MB=uq((info.referenceLinks12MB||[]).concat([S.plateKey]));
+ info.d=uq((info.d||[]).concat(['12MB: Sistersville Tank Works individual plate received; open the linked record for literal shell/jacket ratings. Prior process references and separate PSV-7500A evidence are retained.']));
+ I[S.plateKey]={t:'V-7500 - Sistersville individual hot-oil expansion-tank plate',sourcePhoto:S.photo.name,canonicalPlateReference:'CF_SOURCE_12MB.plate',fieldPlateNotPID:true};
+ Object.defineProperty(I[S.plateKey],'d',{enumerable:true,configurable:true,get:function(){return p.fields.map(function(f){return f[0]+': '+f[1];}).concat(p.limits);}});
+ if(!P.some(function(x){var v=x.data||x;return v.sha256===S.photo.sha256||v.plateId===p.id;})){P.push(cp(S.photo));result.plateSourcesAdded++;}
+ (A.rows||[]).forEach(function(row){if([row.key,row.assetId,row.modelKey].concat(row.assetIds||[]).indexOf(k)>=0||row.tag===p.tag)Object.assign(row,cp(r.nameplateAudit12KB));});
+ if(A.summary){A.summary.statuses={};(A.rows||[]).forEach(function(row){A.summary.statuses[row.status]=(A.summary.statuses[row.status]||0)+1;});}A.latestReferenceUpdateBuild=S.build;
+ var cat=C.find(function(c){return c[0]==='Field plates / Hot-oil equipment';});if(!cat){cat=['Field plates / Hot-oil equipment',[]];C.push(cat);}cat[1]=uq(cat[1].concat([k,S.plateKey]));
+ if(H.aliases)[p.tag,p.serial].forEach(function(t){var n=t.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!H.aliases[n]||H.aliases[n]===k)H.aliases[n]=k;});return result;
+}
+function cfExpansionTankPlateAudit12MB(H,S){
+ 'use strict';var p=S.plate,r=H.records[p.assetId],errors=[],n=(H.photos||[]).filter(function(x){return (x.data||x).sha256===S.photo.sha256;}).length;
+ if(!r||r.serial!==p.serial||r.manufacturer!==p.manufacturer||r.nationalBoardNumber!=='32')errors.push('V-7500 individual identification mismatch');
+ if(!r||!r.mawpReference12MB||r.mawpReference12MB.value!==null||r.mawpReference12MB.raw!==p.shellMAWPRaw||r.mawpReference12MB.temperatureF!==500)errors.push('Paired shell pressure must remain literal');
+ if(!r||!r.mdmtReference12MB||r.mdmtReference12MB.valueF!==-20||r.mdmtReference12MB.pressurePSI!==null||r.mdmtReference12MB.pressureRaw!==p.mdmtPressureRaw)errors.push('MDMT reference mismatch');
+ if(!r||!r.jacketReference12MB||[r.jacketReference12MB.mawpPSI,r.jacketReference12MB.mawpTemperatureF,r.jacketReference12MB.mdmtF,r.jacketReference12MB.mdmtPressurePSI].some(function(v){return v!==null;}))errors.push('Jacket XX values must remain nonnumeric');
+ if(n!==1)errors.push('Expected exactly one V-7500 plate-photo source');
+ return {build:S.build,ok:!errors.length,errors:errors,plateSources:n,geometryChanged:false,operatingChanges:false,pairedPressureInterpretationEstablished:false,jacketRatingEstablished:false,scope:'Reference registration only; no field certification or GPU test'};
+}
+function cfRenderExpansionTankPlate12MB(host,S,key,hooks){
+ 'use strict';if(!host||(key!==S.plate.assetId&&key!==S.plateKey))return null;hooks=hooks||{};
+ var old=host.querySelector('[data-plate-12mb]');if(old)old.remove();var doc=host.ownerDocument;
+ function el(t,text,parent){var x=doc.createElement(t);if(text!=null)x.textContent=text;if(parent)parent.appendChild(x);return x;}
+ var box=el('details',null,host);box.setAttribute('data-plate-12mb',key);box.open=key===S.plateKey;
+ box.style.cssText='margin:12px 0;padding:16px;border:1px solid #53798a;border-radius:10px;background:#142632;color:#ecf3f7;overflow-wrap:anywhere;font:14px/1.6 Segoe UI,Arial,sans-serif';
+ el('summary','V-7500 - hot-oil expansion tank individual plate',box).style.fontWeight='700';
+ el('p','Individual Sistersville Tank Works plate received. Shell paired pressure markings stay literal; jacket XX fields stay nonnumeric. Reference data only, not operating or PSV settings.',box);
+ var dl=el('dl',null,box);dl.style.cssText='display:grid;grid-template-columns:minmax(86px,1fr) minmax(0,1.6fr);gap:8px 14px';
+ S.plate.fields.forEach(function(f){el('dt',f[0],dl);el('dd',f[1],dl).style.margin='0';});
+ var lim=el('details',null,box);el('summary','Source qualifications and optional follow-up',lim);S.plate.limits.forEach(function(t){el('p',t,lim);});
+ el('small','Source: '+S.photo.name+'; one retained transcription. No original photograph embedded.',box);
+ if(hooks.open&&key!==S.plateKey){var b=el('button','Open full V-7500 plate record',box);b.type='button';b.onclick=function(){hooks.open(S.plateKey);};}return box;
+}
+function cfInstallExpansionTankPlate12MB(S){
+ 'use strict';if(window.CFReference12MB)return window.CFReference12MB;
+ var H={records:CF3D_DEVICE_RECORDS,deviceData:CF3D_DEVICE_DATA,trace:CF_TRACE_DATA_12IZ,info:INFO,audit:CF_PLATE_AUDIT_12KB,photos:CF3D_DEVICE_PHOTOS,categories:LIB_CATS,aliases:CF3D_DEVICE_ALIASES};
+ var report=cfApplyExpansionTankPlate12MB(H,S);
+ function open(k){openLibrary();libSel.key=k||S.plateKey;var ci=LIB_CATS.findIndex(function(c){return c[1].indexOf(libSel.key)>=0;});if(ci>=0)libSel.cat=ci;var q=document.getElementById('libSearch');if(q)q.value='';libPaint();}
+ function panel(h,k){return cfRenderExpansionTankPlate12MB(h,S,k,{open:open});}
+ var prevShow=show;show=function(k){var a=prevShow.apply(this,arguments);panel(document.getElementById('panel'),k);return a;};
+ var prevLib=libRenderDetail;libRenderDetail=function(){var a=prevLib.apply(this,arguments);panel(document.getElementById('libDetail'),libSel.key);return a;};
+ var prevInspect=cf3dInspectDevice;cf3dInspectDevice=function(k,h){var a=prevInspect.apply(this,arguments),r=cf3dDeviceRecord(k),key=r&&(r.key||r.assetId)||k;if(a)panel(h&&h.id!=='plist'?h:document.getElementById('panel'),key);return a;};
+ var prevReq=cfCurrentFieldRequests12LS;cfCurrentFieldRequests12LS=function(old){return cfCurrentExpansionTankRequests12MB(prevReq(old),S);};
+ var prevPump=cfCurrentPumpAirRequests12LS;cfCurrentPumpAirRequests12LS=function(old){return cfCurrentExpansionTankPumpRequests12MB(prevPump(old),S);};
+ var prevSearch=libStaticSearchIndex;libStaticSearchIndex=function(){var ix=prevSearch.apply(this,arguments);if(String(ix.v7500||'').indexOf('field-reference-12mb')<0)ix.v7500=(ix.v7500||'')+' field-reference-12mb '+JSON.stringify(S.plate).toLowerCase();return ix;};
+ LIB_STATIC_SEARCH_CACHE=null;LIB_STATIC_TAG_CACHE=null;if(typeof CF3D_ASSOC!=='undefined')CF3D_ASSOC.dirty=true;if(typeof cfRefBuildComponents==='function')cfRefBuildComponents();if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();
+ var api={source:S,render:panel,open:open,status:function(){return {build:S.build,reference:report,audit:cfExpansionTankPlateAudit12MB(H,S)};}};window.CFReference12MB=api;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();if(window.CFLibraryFiling12LQ)window.CFLibraryFiling12LQ.refresh(true);return api;
+}
+
+try{cfInstallExpansionTankPlate12MB(CF_SOURCE_12MB);}catch(e){console.error('12MB hot-oil expansion tank plate',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('12MB hot-oil expansion tank plate',e);}
+
+/* 12MC: after all existing plate installers, before final startup readiness. */
+try{cfInstallInspection12MC();}catch(e){console.error('12MC primary inspection repair',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('12MC primary inspection repair',e);}
+
+/* 12MD: restore source information to every exact component after all prior installers. */
+try{cfInstallEquipmentInformation12MD();}catch(e){console.error('12MD equipment information audit',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('12MD equipment information audit',e);}
 
 cfMountComponentTrace12LK();
 cfMountPhaseFlow12LK();
