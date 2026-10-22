@@ -3,6 +3,7 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!-- 12MJ: shared Fly To repair, primary-card navigation and scoped visibility; no process/storage/geometry changes. -->
 <!-- 12MI: retained PetroSkills pump source reused,20 practical questions; no plant control/geometry/storage changes. -->
 <!-- 12MH: cumulative 12MG; nonredundant PWH reference, existing PetroSkills source reuse and new practice; no controls/geometry/storage changes. -->
 <!-- 12MG: cumulative 12MF; SN55 reference-only delta, six-unit alarm source audit, practical quiz. -->
@@ -16,7 +17,7 @@
 <!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
 <!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12MI-ROOT">
+<meta name="cf-deployment-package" content="12MK-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -53,7 +54,7 @@
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12MI | Clear Fork - PetroSkills pump practice</title>
+<title>12MK | Clear Fork - Ryan and workspace repairs</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -407,7 +408,30 @@
 .cf-eq12md details.cf-alarm12mg,.cf-eq12md details.cf-reference12mg{background:#f4f7fa;color:#193346;border-color:#698492}
 .cf-eq12md .cf-alarm12mg td,.cf-eq12md .cf-alarm12mg th,.cf-eq12md .cf-alarm12mg p,.cf-eq12md .cf-alarm12mg small,.cf-eq12md .cf-alarm12mg summary,.cf-eq12md .cf-reference12mg small,.cf-eq12md .cf-reference12mg summary{color:#193346}
 .cf-eq12md .cf-alarm12mg th{background:#dce7ee}.cf-inspection-card12mc p.cf-review-alert12mg{color:#513d1e}
-</style></head>
+</style>
+<style id="workspace12MK">
+.cf-disclosure12mk{border:1px solid #314b5b;border-radius:9px;background:#101b24;margin:10px 0;overflow:hidden;min-width:0}
+.cf-disclosure12mk>summary{cursor:pointer;list-style-position:inside;padding:12px 14px;font:600 13px/1.45 "Segoe UI",sans-serif;color:#d3ecfa;background:#182a37;overflow-wrap:anywhere}
+.cf-disclosure12mk>summary:focus-visible{outline:2px solid #81cde9;outline-offset:-3px}
+.cf-disclosure12mk[open]>summary{border-bottom:1px solid #314b5b}
+.cf-disclosure12mk.cf-eq12md{padding:0!important}.cf-disclosure12mk.cf-eq12md>*:not(summary){margin:10px 12px!important;max-width:calc(100% - 24px)}
+.cf-ryan-workspace12mk{display:grid;gap:10px;margin:12px 0}.cf-ryan-group12mk{min-width:0;margin:0}.cf-ryan-group12mk h3{font-size:12px;margin:0 0 8px;color:#bad6e6}
+.cf-ryan-grid12mk{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;padding:10px;align-items:stretch}
+.cf-ryan-grid12mk button{min-width:0!important;min-height:46px!important;height:auto!important;margin:0!important;white-space:normal;text-align:left;font-size:12px!important;line-height:1.45!important;padding:10px 12px!important}
+.cf-ryan-tabs12mk{display:flex!important;flex-wrap:wrap;gap:4px!important;margin-top:12px!important}.cf-ryan-tabs12mk button{flex:1;min-width:125px;min-height:40px!important}
+.cf-ryan-question12mk{position:sticky;top:0;z-index:2;background:#101820;padding:9px;border:1px solid #355266;border-radius:8px}
+.cf-ryan-attachment12mk{padding:12px;margin:0!important}.cf-ryan-secondary12mk{display:flex;flex-wrap:wrap;gap:8px;margin:5px 0}
+.cf-ryan-error12mk{padding:12px;background:#351f23;border:1px solid #9d555a;border-radius:8px;color:#ffd0d0;overflow-wrap:anywhere}.cf-ryan-error12mk p{margin:7px 0}.cf-ryan-error12mk small{display:block;line-height:1.5}
+#askryanBody{padding:15px!important;overflow-wrap:anywhere}#askryanBody input,#askryanBody select,#askryanBody textarea{max-width:100%;min-width:0!important}#askRyanFollowupWrap{margin-top:14px!important}
+#toolDeck12KL .deck-grid12kl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;align-items:stretch}
+#toolDeck12KL .deck-cell12kl{min-width:0;padding:7px;align-items:center;border:1px solid #2c4052}
+#toolDeck12KL .deck-cell12kl>button,#toolDeck12KL .deck-cell12kl>label{width:100%;text-align:left;justify-content:flex-start}
+#toolDeck12KL .deck-cell12kl>div{max-width:100%;min-width:0;flex-wrap:wrap}#toolDeck12KL .deck-cell12kl select{max-width:100%!important;min-width:0!important}
+#toolDeck12KL .deck-cell12kl:has(select),#toolDeck12KL .deck-cell12kl:has(details),#toolDeck12KL .deck-cell12kl:has(.legend){grid-column:1/-1}
+@media(max-width:650px){.cf-ryan-grid12mk{grid-template-columns:repeat(2,minmax(0,1fr))}#askryanBody{padding:10px!important}.cf-ryan-question12mk{position:static;flex-wrap:wrap!important}.cf-ryan-question12mk input{flex:1 1 100%!important}.cf-ryan-question12mk button{flex:1 1 auto!important}.cf-ryan-tabs12mk button{min-width:40%;padding:8px!important}.cf-disclosure12mk>summary{padding:10px;font-size:12px}.cf-ryan-grid12mk button{font-size:11.5px!important;padding:9px!important}}
+@media(max-width:390px){.cf-ryan-grid12mk{grid-template-columns:1fr}}
+</style>
+</head>
 <body>
 <!-- 12JK: source-supported NGL pig-launcher station. Existing controls and12JJ flow-popup fix preserved. -->
 <!-- 12JJ: repaired flow popup application scope; separate exchanger circuits and qualified phase changes. No operating algorithm or physical piping changed. Backend 12JD unchanged. -->
@@ -415,7 +439,7 @@
 <!-- 12JH: source-preserving in-pipe phase visual + schematic flare rack alignment. Backend remains 12JD. -->
 
 <header>
-  <h1>Clear Fork / Cryogenic Unit #1 - 12MI</h1>
+  <h1>Clear Fork / Cryogenic Unit #1 - 12MK</h1>
   <p>Sheets in model: M2150 (T-1521) · M2145 (EX/C-1121, A-1321) · M2135 (V-1421) · M2200 (E-1241, V-1443) · M2165 (reboiler) · M2155 (gas/gas reflux, surge tank) · M2160 (booster pumps) · M2175 (pipeline pumps) · M2610/M2615 (residue compressors) · M2110 (V-1413/14/15 dehy adsorbers) · M2105 (F-1412 coalescer, F-1416/17 dust filters) · refrigeration (V-1441/1442/1444, C-1140/41/42, A-1343). Click any component for line numbers, service and set points. Toggle manual valves, instruments/flow meters, and the site environment below.</p>
 <div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather...</div></header>
 <div class="bar">
@@ -943,9 +967,9 @@
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12MI',problems=[],loaded=false;
+ 'use strict';var expected='12MK',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
- var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MD?window.CFInspection12MD.audit():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
+ var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MC?window.CFInspection12MC.audit():null,navigation:window.CFNavigation12MJ?window.CFNavigation12MJ.status():null,workspace:window.CFWorkspace12MK?window.CFWorkspace12MK.status():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
   document.title=expected+' | Clear Fork - Equipment records and visible plate information';
   var s=api.snapshot(),b=document.getElementById('startupState12LJ');if(!b){b=document.createElement('div');b.id='startupState12LJ';b.style.cssText='margin:5px 22px;color:#adc9d8;font:12px Segoe UI,Arial,sans-serif';var hdr=document.querySelector('header');if(hdr)hdr.appendChild(b);}
@@ -1072,7 +1096,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
 <script src="./data-13-cf_plate_audit_12kb.js" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script src="./data-14-cf_source_12ko.js" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script src="./data-15-cf_source_12kp.js" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12MI" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script src="./clearfork-main.js?v=12MK" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
@@ -1571,5 +1595,5 @@ window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDI
 <script>(function(){var h=document.querySelector('header h1');window.CFRyanIndexSync12KP=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KP';window.CF_CURRENT_RELEASE_12KP={frontend:'12KP',backend:'RYAN-2026-10-13-12KP',sourceIndexBuild:'12KP',referenceOnlyUpdate:false,frickVisualUpdate:true,expanderChanged:false};window.CFRyanIndexSync12KQ=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12KQ';window.CF_CURRENT_RELEASE_12KQ={frontend:'12KQ',backend:'RYAN-2026-10-13-12KQ',sourceIndexBuild:'12KQ',referenceOnlyUpdate:false,expanderChanged:true,frick12KPPreserved:true};})();</script>
 <script>(function(){function badge12LD(){var h=document.querySelector('header h1');}badge12LD();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',badge12LD,{once:true});window.CFRyanIndexSync12LD=window.CFRyanIndexSync12JT;window.CLEAR_FORK_REFERENCE_RELEASE='12LL';window.CF_CURRENT_RELEASE_12LD={frontend:'12LL',backend:'RYAN-2026-10-14-12LL',sourceIndexBuild:'12LL',deploymentPackage:'12LL-ROOT',sourceStorageMode:'learn-only',inletPsvSourceModelUpdate:true,residuePsvSourceModelUpdate:true,methanolTankReliefUpdate:true,all12KZWorkPreserved:true,newPracticalQuestions:0,batchRequest:3,batchSize:3,deployedByThisUpdate:false};})();</script>
 <script id="finalBuildStamp12LK">(function(){function stamp(){if(window.CFStartup12LJ)window.CFStartup12LJ.paint();}stamp();document.addEventListener('DOMContentLoaded',stamp,{once:true});})();</script>
-<script id="libraryFilingRelease12LQ">(function(){window.CLEAR_FORK_REFERENCE_RELEASE="12MI";window.CF_CURRENT_RELEASE_12LQ=window.CF_CURRENT_RELEASE_12JT;if(window.CFStartup12LJ)window.CFStartup12LJ.paint();})();</script>
+<script id="libraryFilingRelease12LQ">(function(){window.CLEAR_FORK_REFERENCE_RELEASE="12MJ";window.CF_CURRENT_RELEASE_12LQ=window.CF_CURRENT_RELEASE_12JT;if(window.CFStartup12LJ)window.CFStartup12LJ.paint();})();</script>
 </body></html>
