@@ -1,5 +1,191 @@
 
 (function(){
+var CF_SOURCE_12NA={"build":"12NA","baseline":"12MZ","date":"2026-10-25","id":"controlled_rundown_jt_linkage_12na","title":"Controlled rundown / EX to JT / shared control-screen process","notebookKey":"compression_balance_review_12mt","ownerKeys":["c1121","c4100","c4200","c6100","c6200","c6300","e1221","e1241","t1521","cf3d_cv_pcv1121a","cf3d_fcv1211a","cf3d_cv_pcv1121e"],"sourceClass":"OPERATOR_DESCRIPTION_OEM_GENERAL_SHUTDOWN_AND_DISCLOSED_MODEL_REPAIRS","sourceStorageMode":"learn-only","sourceMediaRetained":false,"newEntries":[{"id":"na.milestone","title":"Approximate rundown milestone, not automatic trip","text":"The operator describes taking one inlet compressor, one residue compressor and the expander out of service in a controlled rundown near FIT-1045A 150 MMSCFD. This does not establish particular units, a mandatory order between those three stops, an automatic shutdown at 150, or a guaranteed 150-MMSCFD capacity for the remaining inlet compressor. Existing individual unloading and protective-trip logic remains.","authority":"OPERATOR_PROVIDED_2026-10-25"},{"id":"na.transfer","title":"JT above EX transfers duty; actual feedback establishes readiness","text":"Operator description: with EX in REMOTE and the pressure loops in AUTO, raise JT pressure SP above EX pressure SP until JT takes the letdown feed and actual IGV is below 5%; then issue normal stop. The simulator also checks negligible calculated EX flow and unpassed flow (0.1 MMSCFD numerical tolerance), or no feed. This is a training guard, not a verified PLC interlock. No automatic stop or prescribed SP offset is added. Protective trips and ESD do not wait for this preparation.","authority":"OPERATOR_DESCRIPTION_PLUS_SIMULATOR_GUARD"},{"id":"na.oem","title":"OEM general instruction retained separately","text":"Atlas Copco Order 1039, D15, PDF pages 71-72 calls for closing the IGVs as JT takes flow before normal stop, and says the owner/operator must develop the exact plant procedure. E2, PDF75 says IGVs do not seal gas-tight. Below 5% is the current operator-described preparation, not an OEM limit. The stopped surge-control valve is to open fully. Oil and seal-gas support may remain during a short outage under the approved procedure.","authority":"RETAINED_OEM_MANUAL_NOT_NEW_FIELD_SOP"},{"id":"na.physics","title":"JT-only and fewer running compressors","text":"JT throttling is approximately constant-enthalpy and recovers no shaft work. An operating expander removes work from the gas and powers the separate booster on the common shaft. At comparable conditions, replacing that expansion with throttling generally reduces refrigeration and NGL recovery; exact changes require composition and thermodynamic/performance data. Reduced total throughput lowers flow-related filter and exchanger DP and changes heat duties. Pressure direction depends on inlet supply, residue withdrawal, recycle and controller authority, not solely the number of running machines.","authority":"OEM_MANUFACTURER_RESEARCH_AND_ENGINEERING_INTERPRETATION"},{"id":"na.repairs","title":"Shared-state linkage repairs","text":"When higher JT SP has AUTO authority, actual JT valve travel now reduces EX AUTO demand rather than leaving a fixed 94-percent EX opening bias. LOCAL and MANUAL remain independent. FCV-1121A uses the existing fcv1221a state for screen, popup and booster models; PIC-1121E remains the separate blowdown loop. The visit-dependent display filter is removed so screens do not retain obsolete readings or add independent jitter; original process fluctuations remain. A-1321 pressure/temperature now use existing residue-suction and cooler-outlet states. Rotor stop no longer sets support commands or retained casing pressures to zero. Unpowered booster heat addition no longer contains a fixed 38-F increment. Process discharge temperature is not the bearing-temperature channel. A stopped EX outlet has no forward-flow measurement validity.","authority":"PROGRAM_REPAIR_WITH_DISCLOSED_ASSUMPTIONS"},{"id":"na.limits","title":"Model and verification boundaries","text":"The existing two-inventory pressure model and empirical temperature/recovery correlations remain reduced-order training assumptions, not a field-validated transient or phase-equilibrium model. No compressor surge map is implemented: full-open recycle demand on stop/start preparation, three-second illustrative valve response, and release to retained running demand are disclosed approximations. The OEM 10-15-second near-zero coastdown reference remains source information, not certification of the current speed lag. The low-side gas inventory is not a solved pressure network: if its residue suction exceeds the modeled booster/bypass outlet, a visible limitation warns that the combined pressure/flow state is not physically validated. Existing C3 recovery ranges (77-85% JT-only; 95-98% normal EX) are operator observations, not guarantees. No alarm limits, training geometry or storage schemas change.","authority":"EXPLICIT_LIMITATION"}],"research":[{"title":"Atlas Copco Order1039 D15 general shutdown","source":"1039_Instruction Manual(4).pdf","pages":[71,72,75],"existingOwner":"CF_SOURCE_12KO"},{"title":"Emerson Fisher AD122 J-T Expander Bypass","url":"https://www.documentation.emersonprocess.com/groups/publicreadonly/documents/webpage/ad122_gtp.hcsp","accessed":"2026-10-25"},{"title":"Atlas Copco compressor-loaded expanders","url":"https://www.atlascopco.com/gas-and-process/en/products/turboexpanders/ec-series","accessed":"2026-10-25"}],"qualification":"Operator description, retained OEM general guidance and disclosed simulator corrections; not an approved field shutdown procedure, certified capacity or complete operating model. Preserve original source history and unresolved limits."};
+/*12NA: operator-described controlled rundown and shared EX/JT state.
+ * Training guards/timing are not a field PLC interlock or approved shutdown procedure.
+ * No machine automatically stops at 150 MMSCFD. No new letdown route is created.
+ */
+function cfRundownStatus12NA(){
+ var P=PLANT,V=P.v,L=P.L,C=P.cmp,vs=P.valves||{},r=V.expanderJtRouting||{},d=Number(r.demand),ef=Number(r.expander),jf=Number(r.jt),un=Number(r.unpassed);
+ var valid=[d,ef,jf,un,Number(EXP.igv)].every(Number.isFinite),tol=.1;
+ var noFeed=valid&&d<=tol,available=vs.xv1121a==null||vs.xv1121a>0;
+ var transfer=valid&&available&&d>tol&&jf>tol&&ef<=tol&&un<=tol;
+ var ready=!!EXP.run&&valid&&Number(EXP.igv)<5&&(transfer||noFeed);
+ var reasons=[];if(!valid)reasons.push('routing/IGV feedback not available');if(EXP.igv>=5)reasons.push('actual IGV must be below 5%');if(!noFeed&&!available)reasons.push('JT path is isolated');if(valid&&!noFeed&&ef>tol)reasons.push('EX still carries '+ef.toFixed(2)+' MMSCFD');if(valid&&!noFeed&&un>tol)reasons.push('letdown shortfall '+un.toFixed(2)+' MMSCFD');if(!noFeed&&!(jf>tol))reasons.push('JT forward flow not established');
+ return {build:'12NA',inletFlow:P.in.flow,inletRunning:['c41','c42'].filter(function(k){return C[k].run;}).length,residueRunning:['c61','c62','c63'].filter(function(k){return C[k].run;}).length,expanderRunning:!!EXP.run,igv:EXP.igv,jtTravel:vs.pcv1121a_bypass,jtSP:L.PIC1521DJT.sp,exSP:L.PIC1521DEX.sp,towerP:L.PIC1521.pv,flowValid:valid,expanderFlow:valid?ef:null,jtFlow:valid?jf:null,demand:valid?d:null,unpassed:valid?un:null,transferComplete:transfer,noFeed:noFeed,normalStopReady:ready,reasons:reasons,mode:!EXP.run?'STOPPED - JT ONLY WHEN FLOWING':ready?'NORMAL STOP READY':((L.PIC1521DJT.sp>L.PIC1521DEX.sp&&EXP.remote&&!L.PIC1521DEX.man&&!L.PIC1521DJT.man)?'TRANSFERRING TO JT':'EX / JT CONTROL'),flowToleranceMmscfd:tol,hydraulicOrderQualified:!(Number.isFinite(V.c1121BoostDischargeP)&&Number.isFinite(V.residueSuctionPressure)&&V.c1121BoostDischargeP+1<V.residueSuctionPressure),qualification:'150 MMSCFD is an operator-observed rundown milestone, not a trip or guaranteed remaining-unit capacity. Below 5% is operator-described preparation; 0.1 MMSCFD numerical tolerance is simulator-only. No automatic machine selection or unloading.'};
+}
+function cfExpanderRecycle12NA(){
+ var v=PLANT.v;return clmp(Number.isFinite(v.fcv1221a)?v.fcv1221a:0,0,100);
+}
+function cfExpanderAuxStep12NA(){
+ var V=PLANT.v;
+ // FCV-1121A uses its existing legacy state key fcv1221a. PIC1121E is separate blowdown.
+ if(!Number.isFinite(EXP.recycleRunDemand12NA))EXP.recycleRunDemand12NA=Number.isFinite(V.fcv1221a)?clmp(V.fcv1221a,0,100):0;
+ if(!Number.isFinite(V.fcv1221a))V.fcv1221a=EXP.recycleRunDemand12NA;
+ var target=(!EXP.run||EXP.startupPending)?100:EXP.recycleRunDemand12NA;
+ V.fcv1121aDemand12NA=target;V.fcv1221a+=(target-V.fcv1221a)*(1-Math.exp(-1/3));if(Math.abs(target-V.fcv1221a)<.03)V.fcv1221a=target;
+ V.fcv1121aModelBasis12NA='Shared FCV-1121A state; full-open stopped/start-preparation demand from OEM. Three-second travel and release to retained running demand after startup handover are simulator assumptions; NOT a calculated surge map.';
+ V.expanderOutletFlowValid12NA=!!EXP.run&&(V.expanderCalcFlow||0)>.1;
+}
+function cfRundownPanel12NA(){
+ var s=cfRundownStatus12NA(),V=PLANT.v;function f(x,d){return Number.isFinite(x)?x.toFixed(d==null?2:d):'--';}
+ function m(t,x,u,key){return '<button type="button" class="cf-balance-meter12mt" data-act="trend" data-key="'+key+'" data-label="'+t+'" data-unit="'+u+'"><span>'+t+'</span><strong>'+f(x)+' <small>'+u+'</small></strong></button>';}
+ return '<section class="cf-rundown12na cf-balance12mt" aria-label="Controlled rundown and JT transfer"><h3>Controlled rundown / EX to JT</h3><p><b>'+s.mode+'</b> | Inlet units running: '+s.inletRunning+'/2 | Residue: '+s.residueRunning+'/3</p><div class="cf-balance-grid12mt">'+m('FIT-1045A',s.inletFlow,'MMSCFD','fit1045a')+m('Actual IGV',s.igv,'%','igv12na')+m('EX calculated flow',s.expanderFlow,'MMSCFD','exflow12na')+m('JT calculated flow',s.jtFlow,'MMSCFD','jtflow12na')+'</div><p>EX SP <b>'+f(s.exSP)+'</b> / JT SP <b>'+f(s.jtSP)+'</b> / shared tower PV <b>'+f(s.towerP)+' psig</b>. JT travel <b>'+f(s.jtTravel,1)+'%</b>; letdown shortfall <b>'+f(s.unpassed)+' MMSCFD</b>.</p><p>'+(!s.expanderRunning?'Expander forward flow is zero. An isolated/unavailable JT path does not become a third path.':s.normalStopReady?'Normal STOP preparation is satisfied in this simulation. Stop still requires an operator command.':ryanEscape(s.reasons.join('; ')||'Continue monitoring shared feedback.'))+'</p>'+(!s.hydraulicOrderQualified?'<p class="record-note12mc"><b>Model limitation:</b> the simplified low-side inventory currently predicts residue suction above the modeled booster/bypass outlet. This pressure/flow combination is not hydraulically validated; do not use it to infer an operating margin or steady-state capacity.</p>':'')+'<details><summary>Operator rundown context and shared process effects</summary><p>Near 150 MMSCFD on FIT-1045A, the operator describes a controlled rundown taking one inlet unit, one residue unit and EX out of service. This is NOT an automatic threshold or a promise that one inlet holds 150 MMSCFD. Individual unload sequences and existing protection remain active; no units are selected or stopped for you.</p><p>With both pressure loops in AUTO and EX in REMOTE, raising JT SP above EX SP transfers pressure-control duty to JT. Confirm actual takeover and actual IGV below 5%, not only a commanded position. The OEM general description instead says close IGVs before stop; its exact sequence depends on the plant procedure. IGVs are not gas-tight. The 0.1 MMSCFD routing tolerance and actuator timing are simulation assumptions.</p><p>Mixed tower-feed temperature <b>'+f(V.expDemethFeedTemp)+' F</b>; booster suction/discharge <b>'+f(V.c1121BoostSuctionP)+' / '+f(V.c1121BoostDischargeP)+' psig</b>; residue suction <b>'+f(V.residueSuctionPressure)+' psig</b>; C3 recovered to NGL <b>'+f(V.c3MaterialRecoveryPct)+'%</b>. JT throttling recovers no shaft work; at comparable inlet/outlet conditions less refrigeration and no powered booster head generally reduce liquid recovery. Reduced total flow also reduces filter/core DP and changes cooling and reboil loads. Existing empirical thermal/recovery models are not field-calibrated phase-equilibrium predictions.</p><p>FCV-1121A recycle <b>'+f(V.fcv1221a,1)+'%</b> is separate from PIC-1121E blowdown. Oil pumps and seal-gas commands are not switched off by normal rotor stop. Stopped outlet-temperature values are retained model states, not valid flowing outlet measurements. See the current source review for qualifications.</p></details></section>';
+}
+function cfApplyRundown12NA(H,S){
+ var I=H.info||{},sets=[H.records,H.deviceData,H.trace],found=[],missing=[];function get(a,k){return Array.isArray(a)?a.find(function(r){return (r.assetId||r.key)===k;}):a&&a[k];}
+ S.ownerKeys.forEach(function(k){var yes=false,link={definition:'CF_SOURCE_12NA',notebookKey:S.notebookKey,factIds:S.newEntries.map(function(e){return e.id;})};sets.forEach(function(a){var r=get(a,k);if(r){r.sourceReview12NA=JSON.parse(JSON.stringify(link));yes=true;}});if(I[k]){I[k].sourceReview12NA=JSON.parse(JSON.stringify(link));yes=true;}(yes?found:missing).push(k);});
+ var n=I[S.notebookKey];if(n){n.currentRundown12NA={definition:'CF_SOURCE_12NA',entries:S.newEntries.map(function(e){return e.title+': '+e.text;})};if(Array.isArray(n.d)&&!n.d.some(function(t){return String(t).indexOf('CURRENT 12NA:')===0;}))n.d.push('CURRENT 12NA: Controlled rundown near150 MMSCFD; operator-described JT-above-EX takeover and actual IGV below 5%; no automatic 150 trip. Sharedscreen/anti-surge/support repairs and research qualifications in CF_SOURCE_12NA.');}
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12NA';}))H.sourceDefinitions.push({name:'CF_SOURCE_12NA',value:S});
+ return {build:'12NA',owners:found,missing:missing,newPhysicalEquipment:0,newReferenceNotes:0,newDrawings:0,alarmLimitsChanged:false,storageSchemasChanged:false};
+}
+function cfAppendRundownReview12NA(r,host){
+ if(!r||!host||host.querySelector('[data-rundown-review12na]'))return;var k=r.assetId||r.key,S=CF_SOURCE_12NA;if(S.ownerKeys.indexOf(k)<0)return;var d=host.ownerDocument,b=d.createElement('details');b.dataset.rundownReview12na=k;b.className='cf-inspection-evidence12mc';var h=d.createElement('summary');h.textContent='Controlled rundown / EX-JT process linkage - current review';b.appendChild(h);S.newEntries.forEach(function(e){var p=d.createElement('p');p.textContent=e.title+': '+e.text;b.appendChild(p);});host.appendChild(b);
+}
+function cfInstallRundown12NA(){
+ if(window.CFRundown12NA)return window.CFRundown12NA;
+ var prior=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=prior.apply(this,arguments).slice();if(!a.some(function(d){return d.name==='CF_SOURCE_12NA';}))a.push({name:'CF_SOURCE_12NA',value:CF_SOURCE_12NA});return a;};
+ var report=cfApplyRundown12NA({info:INFO,records:CF3D_DEVICE_RECORDS,deviceData:CF3D_DEVICE_DATA,trace:CF_TRACE_DATA_12IZ.components,sourceDefinitions:cfSourceDefinitions12HO()},CF_SOURCE_12NA);
+ ['expander','inlcomp','rescomp','demeth'].forEach(function(k){var before=SCR[k];if(typeof before==='function')SCR[k]=function(){return before.apply(this,arguments)+cfRundownPanel12NA();};});
+ CF_INSPECTION_STATE_12MC.sources=null;CF_EQUIPMENT_INFORMATION_12MD.index=null;LIB_STATIC_SEARCH_CACHE=null;LIB_STATIC_TAG_CACHE=null;CF3D_ASSOC.dirty=true;
+ if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();if(window.CFLibraryFiling12LQ)window.CFLibraryFiling12LQ.refresh(true);
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();return window.CFRundown12NA={build:'12NA',source:CF_SOURCE_12NA,report:report,status:cfRundownStatus12NA};
+}
+
+
+var CF_SOURCE_12MZ={"build":"12MZ","baseline":"12MY","date":"2026-10-25","id":"throughput_dp_heat_split_12mz","title":"Throughput / pressure loss / TIC-1224B heat split","notebookKey":"compression_balance_review_12mt","ownerKeys":["e1221","e1223","e1241","f1412","f1416","f1417","f6800","f1438","f7600","f1050","f1055","f5015","f5016","cf3d_cv_tcv1223","cf3d_m2130_pdt1221","cf3d_m2165_tic1224b","cf3d_m2165_tdic1224b","cf3d_m2165_fy1224b"],"sourceClass":"OPERATOR_CORRECTION_RETAINED_SOURCE_TOPOLOGY_AND_QUALIFIED_RESEARCH","sourceStorageMode":"learn-only","sourceMediaRetained":false,"newEntries":[{"id":"mz.flowdp","title":"Operating differential versus retained restriction","text":"Operating DP responds to the actual modeled branch/service flow and approximate gas density, while the saved filter dp field retains reference-flow resistance/fouling. Less flow can lower DP without cleaning the element. Standby/no-flow operating DP is zero; the reference resistance is preserved. Liquid-filter and hot-oil flows use their existing circulation proxies. No filter-element vendor curve is asserted.","authority":"RESEARCH_AND_MODEL_ASSUMPTION"},{"id":"mz.alarm","title":"Gas/gas warning is 20 PSID, not a throughput trip","text":"Operator confirms gas/gas HIGH at20 PSID, commonly near FIT-1045A223-230MMSCFD under then-current split/condition. Nominal mapping uses226.5MMSCFD total,60% gas/gas,930psig/84F and20PSID. Flow exponent1.85 and0.5PSID reset hysteresis are disclosed assumptions. No new gas/gas shutdown is introduced; the existing reboiler H15/HH20 and other protections remain separate.","authority":"OPERATOR_CORRECTION_PLUS_DISCLOSED_NUMERICS"},{"id":"mz.loop","title":"TIC-1224B AUTO acts through TCV-1223","text":"Raising temperature SP in AUTO requests more TCV-1223 travel, more dry feed toward E-1223/E-1224 bottom/side reboilers, and less gas/gas branch flow at fixed total. The controlled temperature rises, the valve settles near SP and responds again to disturbances. MANUAL SP alone does not move the valve. Existing TCV-1221/TDIC-1224B, high-range cross-limit and minimum travel remain. Valve travel is not branch-flow percent.","authority":"CURRENT_OPERATOR_CONTROL_DESCRIPTION"},{"id":"mz.thermal","title":"Thermal and hydraulic consequences must both remain visible","text":"More gas/gas flow raises gas/gas DP; more reboiler flow raises reboiler DP and available heat input. Heat recovered from feed changes each outlet temperature, their mixed chiller inlet and refrigeration burden. Pressure controls and machine loading can oppose simple whole-plant pressure predictions. The reduced-order thermal model is not a rigorous multistream enthalpy or phase calculation; no exact temperature gain or field PID tuning was supplied.","authority":"RESEARCH_AND_MODEL_LIMIT"},{"id":"mz.faults","title":"Increased throughput does not prove fouling; reducing flow does not clear it","text":"At unchanged resistance and state, increased flow raises operating loss. Inspect flow-normalized trends before calling high DP dirty. Moisture, sieve dust, oil, hydrates and other restriction can raise DP independently; loss of UA affects cooling. Redistribution is not a repair for plugging and cannot guarantee safe continued production.","authority":"GENERIC_MANUFACTURER_GUIDANCE_NOT_NEW_SITE_LIMITS"},{"id":"mz.repairs","title":"Single process owners and shared indications","text":"Removed a competing legacy gas/gas DP update; branch flow now owns PDT-1221. TIC-1224B PV and the existing TE-1224B state no longer have competing temperature targets. Live filter readouts, alarms and trends share the same flow-conditioned function. Existing historical keys and source evidence remain. Removed the competing older20F TE-1241A update: its display now follows the existing mixed-feed model state. Corrected the gas/gas hot-pass load-response sign and cold-return heat-load sign; thermal gains remain empirical.","authority":"SOFTWARE_REPAIR"},{"id":"mz.assumptions","title":"Explicit candidate calculation assumptions","text":"Gas density scales with absolute pressure and temperature at fixed composition/Z; no real-gas property fit. Filter flow multiplier0.35r+0.65r^2; reference flows222.38feed/dust,242grossresidue,33RSV MMSCFD;40GPM liquid and164.1GPM hot-oil proxy. Core coefficients: gas/gas20PSID at135.9MMSCFD; reboiler5.06 at88.8 with exponent1.78; chiller8 at223.37 exponent1.85. Common parallel pressure drop uses largest core loss plus shared-line loss; balancing valve losses are unresolved, not a Cv solution. Dynamic gains, thermal lags and reference temperatures are unverified training calibration. Retained slow hxRestriction adds0.4 times its state to the gas/gas resistance multiplier. RSV pass2.2PSID at33MMSCFD uses exponent1.82. Shared piping loss1.6r+2r^1.78. Controller proportional increment0.8 and integral0.025 per process scan,0.02F integral deadband,5-s actuator lag and0.7percentage-point/scan slew are simulator choices;48-s temperature lag is retained. Existing CV/travel offset12.03points remains; actual TCV travel is separately displayed. Some other legacy pass differentials remain display proxies and are not certified individual pressure measurements.","authority":"EXPLICIT_MODEL_ASSUMPTION"}],"research":[{"title":"Campbell - gas/liquid friction pressure loss","url":"https://www.jmcampbell.com/tip-of-the-month/2009/03/how-sensitive-is-pressure-drop-due-to-friction-with-roughness-factor/","accessed":"2026-10-25","use":"Density/Re/roughness dependence, no site-specific coefficient."},{"title":"Chart BAHX operations checklist January2024","url":"https://files.chartindustries.com/BAHXoperationschecklist.pdf","accessed":"2026-10-25","pages":"1-2","use":"All-stream DP, temperature-change, fouling and oscillation diagnostics; generic limits are not installed plant trips."},{"title":"Spirax Sarco - Heat transfer","url":"https://www.spiraxsarco.com/Learn-about-steam/Steam-Engineering-Principles-and-Heat-Transfer/Heat-Transfer","accessed":"2026-10-25","use":"Heat balance, UA and driving temperature; steam-specific equipment not applied to this gas plant."}],"existingSourceRefs":["CF_SOURCE_12MY","CF_SOURCE_12MT","CF_SOURCE_12MU","CF_SOURCE_12MV"],"qualification":"Candidate simulator model only. No field calibration, new approved operating procedure, automatic DP-to-SP intervention, or equipment rating. No questionable historical values used for fitting. Cold-box temperatures and chiller duty remain reduced empirical models, not an enthalpy-conserving multistream/EOS solution. This pass does not certify every plant DP signal.","pending":["Validated branch-flow/Cv curves and fast time-aligned trends with TIC SP/PV, both valve travels, both core DPs and temperatures.","Filter curves and exact per-service reference conditions; actual cold-box multistream enthalpy/UA/phase model."]};
+/*12MZ: flow-conditioned differential pressure and source-qualified split response.
+  Generic hydraulic coefficients and controller timing are training assumptions,
+  not element curves, approved operating limits, or field PID settings. */
+function cfDensityRatio12MZ(p,t,pr,tr){
+ // rho(reference)/rho(actual), fixed composition and Z. Absolute P and T only.
+ var pa=Math.max(14.7,Number.isFinite(p)?p+14.7:pr+14.7);
+ var ta=Math.max(180,Number.isFinite(t)?t+459.67:tr+459.67);
+ return clmp(((pr+14.7)/pa)*(ta/(tr+459.67)),.25,4);
+}
+function cfFilterOperating12MZ(key){
+ var r=filterRec(key),rule=FILTER_RULES[key],V=PLANT.v||{},L=PLANT.L||{},I=PLANT.in||{},q=0,qr=1,d=1,kind='liquid',basis='';
+ if(!r||!rule)return {dp:0,referenceDP:0,flow:0,referenceFlow:1,factor:0,service:false};
+ var service=filterInService(key),finite=function(v,f){return Number.isFinite(v)?v:f;};
+ switch(rule.group){
+ case 'inlet':q=finite(V.flowDehy,finite(I.flow,0));qr=222.38;d=cfDensityRatio12MZ(V.p1410,V.t1400,940,85);kind='gas';basis='dehydration feed';break;
+ case 'dust':q=finite(V.dehyDryFlow,finite(V.flowDehy,finite(I.flow,0)));qr=222.38;d=cfDensityRatio12MZ(V.pt1416,V.ti1416,935,85);kind='gas';basis='dry gas before split';break;
+ case 'residue':q=finite(V.f6800GrossFlow,finite(V.residueCompressorFlow,finite(V.resRate,0)));qr=242;d=cfDensityRatio12MZ(V.resHdr,V.f6800OutletTemperature,984.35,95);kind='gas';basis='filtered common residue header';break;
+ case 'rsv':q=finite(V.rsvFlow,finite(V.ft1438,0));if(PLANT.valves&&PLANT.valves.xv1438b===0)q=0;qr=33;d=cfDensityRatio12MZ(V.pt1438,V.tt1438,955,80);kind='gas';basis='RSV branch, not total feed';break;
+ case 'stab':q=Math.max(0,finite(V.fit5000a,0));qr=40;basis='stabilizer liquid flow proxy';break;
+ case 'slug':q=Math.max(0,finite(V.slugDrainFlow,finite(V.fit5000a,0)));qr=40;basis='slug liquid transfer proxy';break;
+ case 'hotoil':q=finite(L.FIC7100A&&L.FIC7100A.pv,0)/1550*164.1;qr=164.1;basis='existing sidestream circulation proxy';break;
+ }
+ if(!service)q=0;q=Math.max(0,q);var ratio=q/qr;
+ // Viscous plus inertial contributions. No exact element curve or changing mu/Z is claimed.
+ var factor=(.35*ratio+.65*ratio*ratio)*d,base=Math.max(0,Number(r.dp)||0);
+ return {dp:base*factor,referenceDP:base,flow:q,referenceFlow:qr,factor:factor,densityRatio:d,service:service,kind:kind,basis:basis,unit:kind==='gas'?'MMSCFD':'GPM'};
+}
+function cfCorePressureDrop12MZ(q,qr,dpr,p,t,pr,tr,exponent,restriction){
+ return Math.max(0,dpr)*Math.pow(Math.max(0,Number(q)||0)/qr,exponent)*cfDensityRatio12MZ(p,t,pr,tr)*Math.max(1,restriction||1);
+}
+function cfAdvanceSplitControl12MZ(Tic,PI,V,flow){
+ if(!Tic)return;
+ // One temperature owner: the TE-1224B state advanced in the reboiler process block.
+ if(Number.isFinite(V.te1224b))Tic.pv=V.te1224b;
+ var v=clmp(Number(PI.tcv1223==null?25:PI.tcv1223),0,100),s=Tic._tracking12MZ;
+ if(!s||!Number.isFinite(s.demand)){s={demand:v,lastPV:Tic.pv,lastSP:Tic.sp,lastOut:Tic.out,manual:!!Tic.man};Tic._tracking12MZ=s;}
+ var error=Tic.sp-Tic.pv;
+ if(Tic.man){
+  // Direct valve buttons remain actual percent travel. Only a changed manual CV
+  // command invokes its retained CV-to-travel offset; SP alone never moves the valve.
+  if(!s.manual)s.demand=v;
+  if(Math.abs(Tic.out-s.lastOut)>.00001)s.demand=clmp(12.03+Tic.out,0,100);
+  s.manual=true;
+ }else{
+  if(s.manual){s.demand=v;s.lastPV=Tic.pv;s.lastSP=Tic.sp;s.manual=false;}
+  var increment=.8*((Tic.sp-s.lastSP)-(Tic.pv-s.lastPV))+(Math.abs(error)>.02?.025*error:0);
+  s.demand=clmp(s.demand+increment,0,100); // bounded demand prevents hidden integral windup
+  Tic.out=clmp(s.demand-12.03,0,100); // existing display scaling; valve travel shown separately
+ }
+ var movement=clmp((s.demand-v)*(1-Math.exp(-1/5)),-.7,.7);
+ // No sustained travel when the target is reached; sensor disturbance may request adjustment.
+ PI.tcv1223=clmp(v+movement,0,100);s.lastPV=Tic.pv;s.lastSP=Tic.sp;s.lastOut=Tic.out;
+ V.splitControlError12MZ=error;V.splitControlDemand12MZ=s.demand;
+ V.splitControlStatus12MZ=Tic.man?'MANUAL - SP does not position valve':Math.abs(error)<=.05&&Math.abs(s.demand-PI.tcv1223)<.05?'AUTO - holding temperature':(s.demand>=99.9&&error>0||s.demand<=.1&&error<0)?'AUTO - travel limit / SP not achieved':error>0?'AUTO - more reboiler heat requested':'AUTO - reducing reboiler heat';
+}
+function cfGasGasAlarm12MZ(){
+ var V=PLANT.v,dp=V.pdt1221;if(!Number.isFinite(dp))return;
+ var old=!!V.gasGasHighDP12MZ;
+ V.gasGasHighDP12MZ=dp>=20||(old&&dp>19.5); // 0.5psid reset hysteresis is a disclosed simulation assumption
+ if(V.gasGasHighDP12MZ&&!old)alarm('PDT-1221 GAS/GAS HIGH DP - 20 PSID alarm. Check branch flow, TIC-1224B / TCV-1223, reboiler DP and thermal trends. Alarm only; no new gas/gas trip.');
+ if(!V.gasGasHighDP12MZ&&old)alarm('PDT-1221 gas/gas HIGH DP returned below reset band (19.5 PSID simulation hysteresis).');
+}
+function cfThroughputPanel12MZ(){
+ var V=PLANT.v,L=PLANT.L,T=L.TIC1224B,PI=PLANT.in;
+ function f(x,n){return Number.isFinite(x)?x.toFixed(n==null?2:n):'--';}
+ function meter(tag,key,value,unit,extra){return '<button type="button" data-act="trend" data-key="'+key+'" data-label="'+tag+'" data-unit="'+unit+'" class="cf-dp-meter12mz"><span>'+tag+'</span><b>'+f(value)+' <small>'+unit+'</small></b><em>'+extra+'</em></button>';}
+ var high=V.gasGasHighDP12MZ;
+ var html='<section class="cf-dp12mz" aria-label="Throughput pressure drop and heat split"><h3>Throughput / pressure drop / heat split</h3><div class="cf-dp-grid12mz">'+meter('PDT-1221','pdt1221',V.pdt1221,'PSID',high?'HIGH - alarm 20 PSID':'Gas/gas feed pass - HIGH at 20 PSID')+meter('PDT-1223A','pdt1223a',V.pdt1223a,'PSID','Reboiler pass - existing H15 / HH20')+meter('TCV-1221 branch','tcv1221flow',V.tcv1221Flow,'MMSCFD',f((V.tcv1221Share||0)*100,1)+'% of modeled dry-gas split')+meter('TCV-1223 branch','tcv1223flow',V.tcv1223Flow,'MMSCFD',f((V.tcv1223Share||0)*100,1)+'% toward bottom/side reboilers')+'</div>';
+ html+='<p class="'+(high?'cf-dp-alert12mz':'cf-dp-note12mz')+'">'+(high?'GAS/GAS HIGH DP ACTIVE. ':'')+'TIC-1224B '+(T.man?'MANUAL':'AUTO')+' | SP '+f(T.sp)+' F / PV '+f(T.pv)+' F | TCV-1223 '+f(PI.tcv1223,1)+'% open | '+(T.man?'MANUAL - SP does not position valve':(V.splitControlStatus12MZ||'Waiting for process tick'))+'</p>';
+ html+='<div class="cf-dp-controls12mz">'+LP('TIC1224B')+'</div><details><summary>Filter DP and pressure / temperature response</summary><div class="cf-dp-grid12mz">';
+ ['f1412',(PLANT.filterHealth.dust.service||'f1416'),'f6800','f1438','f7600'].forEach(function(k){var s=cfFilterOperating12MZ(k);html+=meter(k.toUpperCase(),'filterdp_'+k,s.dp,'PSID',f(s.flow)+' '+s.unit+'; reference resistance '+f(s.referenceDP)+' PSID');});
+ html+='</div><p>Gas/gas outlet TE-1221B <b>'+f(V.te1221b)+' F</b> | Reboiler gas outlet TE-1224C <b>'+f(V.te1224c)+' F</b> | Controlled TE-1224B <b>'+f(V.te1224b)+' F</b><br>Chiller inlet TE-1241A <b>'+f(V.te1241a)+' F</b> / outlet TE-1241C <b>'+f(V.te1241c)+' F</b> | Chiller gas-side estimated loss <b>'+f(V.chillerGasDP12MZ)+' PSID</b> (derived model value; not a new transmitter)</p><p>Dry header '+f(V.dehyToCryoP)+' psig; chiller inlet '+f(V.e1241FeedP)+' psig. Parallel cores can have different measured core DP because valves/connecting piping also consume pressure; total branch endpoint pressure loss is shared. Exchanger process streams remain separate across their walls.</p></details>';
+ html+='<details><summary>Why increasing throughput and changing the split affect the plant</summary><p>At unchanged gas state and restriction, more branch flow raises DP. Fixed standard gas flow at lower absolute pressure or higher absolute temperature gives more actual volume and greater hydraulic loss. Filter resistance is retained when flow is reduced: lowering DP is not cleaning the element.</p><p>Operator observation: gas/gas HIGH often occurs around 223-230 MMSCFD fresh inlet at the then-current split and condition. It is a 20-PSID alarm, not a fixed-flow trip. Raising TIC-1224B SP in AUTO requests more TCV-1223 opening and heat to the bottom/side reboilers. Gas/gas branch DP falls at fixed total flow, while reboiler branch DP and heat load rise. The valve holds near achieved SP and adjusts again with disturbances; MANUAL SP changes do not move it.</p><p>More flow does not guarantee all plant pressures or temperatures rise. Compressor supply/withdrawal, pressure control, refrigeration, fouling and heat recovery interact. Reduced gas/gas load can cool that pass more per unit gas; greater reboiler duty raises the controlled temperature but changes outlet mixing and chiller burden. Watch measured trends and both DP limits together. Redistribution cannot cure blockage or guarantee continued throughput.</p><p>Approximate density, pressure-loss exponents, heat-response gains and PI timing are candidate training assumptions. This is not an exchanger rating, field calibration, prescribed SP change or approved plant procedure. Keep the existing protections and plant instructions.</p></details></section>';
+ return html;
+}
+function cfPressureLossSnapshot12MZ(){
+ var V=PLANT.v;return {build:'12MZ',gasGasHigh:!!V.gasGasHighDP12MZ,gasGasDP:V.pdt1221,reboilerDP:V.pdt1223a,chillerGasDP:V.chillerGasDP12MZ,split:[V.tcv1221Share,V.tcv1223Share],branchFlows:[V.tcv1221Flow,V.tcv1223Flow],controller:{sp:PLANT.L.TIC1224B.sp,pv:PLANT.L.TIC1224B.pv,manual:PLANT.L.TIC1224B.man,valve:PLANT.in.tcv1223,status:V.splitControlStatus12MZ},filters:Object.keys(FILTER_RULES).map(function(k){return Object.assign({key:k},cfFilterOperating12MZ(k));})};
+}
+
+function cfApplyDpReview12MZ(H,S){
+ var I=H.info||{},sets=[H.records,H.deviceData,H.trace],found=[],missing=[];
+ function get(a,k){return Array.isArray(a)?a.find(function(r){return (r.assetId||r.key)===k;}):a&&a[k];}
+ S.ownerKeys.forEach(function(k){var yes=false,link={definition:'CF_SOURCE_12MZ',notebookKey:S.notebookKey,factIds:S.newEntries.map(function(e){return e.id;})};sets.forEach(function(a){var r=get(a,k);if(r){r.sourceReview12MZ=JSON.parse(JSON.stringify(link));yes=true;}});if(I[k]){I[k].sourceReview12MZ=JSON.parse(JSON.stringify(link));yes=true;}(yes?found:missing).push(k);});
+ var n=I[S.notebookKey];if(n){n.currentDpReview12MZ={definition:'CF_SOURCE_12MZ',entries:S.newEntries.map(function(e){return e.title+': '+e.text;})};if(Array.isArray(n.d)&&!n.d.some(function(t){return String(t).indexOf('CURRENT 12MZ:')===0;}))n.d.push('CURRENT 12MZ: Flow-conditioned filter and exchanger DP; gas/gas20PSID warning; TIC-1224B / TCV-1223 AUTO heat-split response. See current source for assumptions. Reboiler15/20 limits and prior inlet/residue loading correction remain.');}
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12MZ';}))H.sourceDefinitions.push({name:'CF_SOURCE_12MZ',value:S});
+ return {build:'12MZ',owners:found,missing:missing,newPhysicalEquipment:0,newReferenceNotes:0,newDrawings:0,gasGasHighAlarmPSID:20,otherAlarmLimitsChanged:false,storageSchemasChanged:false};
+}
+function cfRenderDpReview12MZ(r,host){
+ if(!r||!host||host.querySelector('[data-dp-review12mz]'))return;var k=r.assetId||r.key,S=CF_SOURCE_12MZ;if(S.ownerKeys.indexOf(k)<0)return;
+ var d=host.ownerDocument,box=d.createElement('details');box.dataset.dpReview12mz=k;box.dataset.sourceDefinition='CF_SOURCE_12MZ';box.className='cf-inspection-evidence12mc';var h=d.createElement('summary');h.textContent='Throughput / DP / heat-split response - current review';box.appendChild(h);S.newEntries.forEach(function(e){var p=d.createElement('p');p.textContent=e.title+': '+e.text;box.appendChild(p);});host.appendChild(box);
+}
+function cfInstallDpReview12MZ(){
+ if(window.CFDpReview12MZ)return window.CFDpReview12MZ;
+ var prior=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=prior.apply(this,arguments).slice();if(!a.some(function(d){return d.name==='CF_SOURCE_12MZ';}))a.push({name:'CF_SOURCE_12MZ',value:CF_SOURCE_12MZ});return a;};
+ var report=cfApplyDpReview12MZ({info:INFO,records:CF3D_DEVICE_RECORDS,deviceData:CF3D_DEVICE_DATA,trace:CF_TRACE_DATA_12IZ.components,sourceDefinitions:cfSourceDefinitions12HO()},CF_SOURCE_12MZ);
+ ['gasgas','reb','inlcomp','rescomp','inlsys','dehy'].forEach(function(k){var before=SCR[k];if(typeof before==='function')SCR[k]=function(){return before.apply(this,arguments)+cfThroughputPanel12MZ();};});
+ CF_INSPECTION_STATE_12MC.sources=null;CF_EQUIPMENT_INFORMATION_12MD.index=null;LIB_STATIC_SEARCH_CACHE=null;LIB_STATIC_TAG_CACHE=null;CF3D_ASSOC.dirty=true;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();if(window.CFLibraryFiling12LQ)window.CFLibraryFiling12LQ.refresh(true);
+ return window.CFDpReview12MZ={build:'12MZ',source:CF_SOURCE_12MZ,report:report,status:cfPressureLossSnapshot12MZ};
+}
+
+/*12MY: opposing inlet/residue load response; current operator correction.*/
+var CF_SOURCE_12MY={"build":"12MY","baseline":"12MX","date":"2026-10-25","id":"inlet_residue_opposing_load_effects_12my","title":"Inlet and residue load steps - coupled pressure correction","notebookKey":"compression_balance_review_12mt","ownerKeys":["c4100","c4200","c6100","c6200","c6300","cf3d_hn_pit4250a","cf3d_inst_fit1045a","cf3d_inst_fit8210a","cf3d_inst_pit8210a"],"sourceClass":"OPERATOR_CORRECTION_WITH_RETAINED_REPORT_CONTEXT_AND_EXPLICIT_MODEL_ASSUMPTIONS","sourceStorageMode":"learn-only","sourceMediaRetained":false,"operatorCorrection":{"scope":"C-4100 / C-4200 inlet compressor added-load increments; not residue hardware mapping","incrementRanking":"Step 1 > Step 3 > Step 2 = Step 4 = Step 5 = Step 6","direction":"Adding inlet loading tends to raise PIT-4250A, opposing residue-loading drawdown. A smaller inlet addition leaves less drawdown if residue withdrawal still dominates. Removing that inlet step reverses its added supply.","authority":"Current operator observation; not an OEM quantitative performance guarantee."},"preservedNominalInletAdd80":[0,24,10.560952358320584,16,10.560952358320584,10.560952358320584,10.560952358320584],"newEntries":[{"id":"my.step.order","title":"Cumulative inlet-step ordering","text":"The inlet added-capacity increments are ordered 1 largest, 3 second-largest, and 2/4/5/6 equal smaller. These are increments between consecutive commanded load states, not the total capacity of a state. Existing numerical capacity-table values are retained as provisional model calibration; the reports do not identify exact MMSCFD increments.","authority":"OPERATOR_CORRECTION"},{"id":"my.balance","title":"Opposing inlet push and residue pull","text":"Adding inlet loading increases available fresh supply and creates positive upstream accumulation until downstream response, recycle or unloading balances it. Adding residue loading increases downstream withdrawal and pulls pressure down. Their simultaneous effect is a net inventory balance, not two prescribed psi kicks. A smaller inlet addition can reduce but not eliminate drawdown; a larger addition may arrest or reverse it. No forced always-down rule or automatic load redistribution.","authority":"OPERATOR_OBSERVATION_AND_CONSERVATION_MODEL"},{"id":"my.cap.fix","title":"Artificial 225-MMSCFD clip removed from normal-80% physics","text":"The prior normal-80% fresh-flow cap at225 prevented added inlet displacement from entering the balance near full throughput. 225 remains the normal-reference indicator; the prior absolute237-MMSCFD numerical model guard remains and is not a new site rating or authorization. Existing inlet valve feed availability, pressure-dependent machine flow, EX/JT availability, recycle and protection still constrain actual flow.","authority":"SOFTWARE_CORRECTION_NOT_FIELD_LIMIT_CHANGE"},{"id":"my.transport","title":"Finite downstream transport response","text":"High-to-low transfer previously followed a fresh-inlet change immediately, cancelling its initial contribution to high-header accumulation. A compatible lazy-initialized transport-demand state now responds over 18 simulated seconds, using the existing model transport timescale as an explicit assumption. Both inventory equations remain conservative; no new measured holdup or response-time claim.","authority":"EXPLICIT_MODEL_ASSUMPTION"},{"id":"my.reports","title":"Reports rechecked without inventing isolated gains","text":"Within-workbook load comparisons were re-reviewed with existing questionable-value exclusions. Original cached workbook cells were rechecked where available. Two-hour readings lack recycle positions, per-unit flows, remote capacities and exact change times. They can illustrate context but cannot prove a universal psi-per-step or identify a complete dynamic model. Directionally conflicting comparisons are not silently deleted merely because they oppose a preferred model.","authority":"SOURCE_OWNED_HISTORICAL_CONTEXT"},{"id":"my.safety","title":"Preserved control and protection boundaries","text":"Inlet remote capacity remains5 percentage points per click,80% normal and50% stopped. Controlled shutdown still removes steps, reduces capacity to50%, then requires SHUTDOWN; trips/ESD remain immediate. Alarm values, residue step map, JT/EX routing, UI features, trainer geometry and storage formats are unchanged. Persistent pressure bias may settle at a different equilibrium or be limited by recycle; never promise unlimited pressure rise.","authority":"PRESERVATION_AND_MODEL_LIMITS"}],"research":[{"title":"Ariel Capacity and Load Control","url":"https://www.arielcorp.com/support/application-manual/capacity_control.html","accessed":"2026-10-25","use":"Capacity manages flow and suction/discharge pressure; clearance and bypass affect delivered flow. No installed actuator or fixed gain assigned."},{"title":"Ariel Calculation Method","url":"https://www.arielcorp.com/support/application-manual/calculations/ariel_calculation_method.html","accessed":"2026-10-25","use":"Absolute-pressure ratios, flow balancing, displacement and volumetric efficiency. This reduced simulator is not Ariel performance software."},{"title":"Ariel Compressor Theory","url":"https://www.arielcorp.com/support/application-manual/calculations/compressor_theory.html","accessed":"2026-10-25","use":"Clearance-gas re-expansion reduces filling; response depends on conditions."}],"existingSourceRefs":["CF_SOURCE_12MT","CF_SOURCE_12MU","CF_SOURCE_12MV","CF_SOURCE_12MF","CF_SOURCE_12MG","CF_SOURCE_12KT"],"pending":["Exact per-unit step displacement from approved package load map/performance data.","Time-aligned rapid trends with remote capacities, recycle positions, pressures and both flowmeters to identify quantitative transient response."],"qualification":"Training model only. No live controls, field verification, new alarm settings or approved plant operating procedure.","trendRecheckSummary":{"sourceIntakes":3,"storedObservationRecords":117,"screenedRowsForComparisons":84,"excludedRows":33,"withinWorkbookChangingLoadComparisons":29,"recheckedComparisons":7,"calibrationFitPerformed":false,"newFieldCoefficients":false},"reportComparisons":[{"dataset":"12MT","source":"2hr Report 6pm EOS(4).xlsx","sha256":"375f2591166ca92b2bf969c18cd68f2d575f5143a5d18321032537af23643308","times":["12 PM","2 PM"],"columns":["H","I"],"stepsBefore":[5,4,2,3,4],"stepsAfter":[5,4,2,2,4],"stepChanges":{"c41":0,"c42":0,"c61":0,"c62":-1,"c63":0},"values":{"inlet":[221.35,220.11],"residue":[205.08,204.99],"dischargeP":[966.9,953.73],"suctionP":[446.38,446.95],"exportP":[948.51,949.44]},"cells":[{"c41":"H14","c42":"H15","c61":"H16","c62":"H17","c63":"H18","inlet":"H7","residue":"H10","dischargeP":"H26","suctionP":"H25","exportP":"H12"},{"c41":"I14","c42":"I15","c61":"I16","c62":"I17","c63":"I18","inlet":"I7","residue":"I10","dischargeP":"I26","suctionP":"I25","exportP":"I12"}],"classification":"TWO_HOUR_CONFOUNDED_COMPARISON_NOT_CAUSAL_GAIN","originalCachedCellsRechecked":true},{"dataset":"12MT","source":"2hr Report 6pm EOS__0__2hr Report 6pm EOS.xlsx","sha256":"f3cdb2a4a822746ddb76a911cfc110d4dab811113ddccd0190d51bf0222b0bc7","times":["2 PM","4 PM"],"columns":["I","J"],"stepsBefore":[5,4,1,2,3],"stepsAfter":[5,4,1,3,3],"stepChanges":{"c41":0,"c42":0,"c61":0,"c62":1,"c63":0},"values":{"inlet":[218.61,220.9],"residue":[203.46,204.97],"dischargeP":[971.5,937.38],"suctionP":[445.94,445.8],"exportP":[949.2,947.96]},"cells":[{"c41":"I14","c42":"I15","c61":"I16","c62":"I17","c63":"I18","inlet":"I7","residue":"I10","dischargeP":"I26","suctionP":"I25","exportP":"I12"},{"c41":"J14","c42":"J15","c61":"J16","c62":"J17","c63":"J18","inlet":"J7","residue":"J10","dischargeP":"J26","suctionP":"J25","exportP":"J12"}],"classification":"TWO_HOUR_CONFOUNDED_COMPARISON_NOT_CAUSAL_GAIN","originalCachedCellsRechecked":false},{"dataset":"12MU","source":"2hr Report 6am EOS(1).xlsx","sha256":"4432946937881833f2185af480ae54919ff23f3845c7b8ecef1c037a8b298a4e","times":["12 AM","2 AM"],"columns":["G","H"],"stepsBefore":[5,5,2,3,3],"stepsAfter":[5,4,2,3,3],"stepChanges":{"c41":0,"c42":-1,"c61":0,"c62":0,"c63":0},"values":{"inlet":[225.49,222.33],"residue":[206.32,207.27],"dischargeP":[958.5,954.22],"suctionP":[441.18,435.56],"exportP":[950.09,949.27]},"cells":[{"c41":"G12","c42":"G13","c61":"G14","c62":"G15","c63":"G16","inlet":"G6","residue":"G9","dischargeP":"G23","suctionP":"G22","exportP":"G11"},{"c41":"H12","c42":"H13","c61":"H14","c62":"H15","c63":"H16","inlet":"H6","residue":"H9","dischargeP":"H23","suctionP":"H22","exportP":"H11"}],"classification":"TWO_HOUR_CONFOUNDED_COMPARISON_NOT_CAUSAL_GAIN","originalCachedCellsRechecked":true},{"dataset":"12MU","source":"2hr Report 6am EOS(1).xlsx","sha256":"4432946937881833f2185af480ae54919ff23f3845c7b8ecef1c037a8b298a4e","times":["2 AM","4 AM"],"columns":["H","I"],"stepsBefore":[5,4,2,3,3],"stepsAfter":[5,4,1,3,3],"stepChanges":{"c41":0,"c42":0,"c61":-1,"c62":0,"c63":0},"values":{"inlet":[222.33,221.51],"residue":[207.27,207.81],"dischargeP":[954.22,961.42],"suctionP":[435.56,436.66],"exportP":[949.27,949.58]},"cells":[{"c41":"H12","c42":"H13","c61":"H14","c62":"H15","c63":"H16","inlet":"H6","residue":"H9","dischargeP":"H23","suctionP":"H22","exportP":"H11"},{"c41":"I12","c42":"I13","c61":"I14","c62":"I15","c63":"I16","inlet":"I6","residue":"I9","dischargeP":"I23","suctionP":"I22","exportP":"I11"}],"classification":"TWO_HOUR_CONFOUNDED_COMPARISON_NOT_CAUSAL_GAIN","originalCachedCellsRechecked":true}]};
+
+function cfApplyLoadInteraction12MY(H,S){
+ var I=H.info||{},sets=[H.records,H.deviceData,H.trace],found=[],missing=[];
+ function get(set,k){return Array.isArray(set)?set.find(function(r){return(r.assetId||r.key)===k;}):set&&set[k];}
+ S.ownerKeys.forEach(function(k){var yes=false,link={definition:'CF_SOURCE_12MY',notebookKey:S.notebookKey,factIds:S.newEntries.map(function(e){return e.id;})};sets.forEach(function(set){var r=get(set,k);if(r){r.sourceReview12MY=JSON.parse(JSON.stringify(link));yes=true;}});if(I[k]){I[k].sourceReview12MY=JSON.parse(JSON.stringify(link));yes=true;}(yes?found:missing).push(k);});
+ var note=I[S.notebookKey];if(note){note.currentLoadInteraction12MY={definition:'CF_SOURCE_12MY',status:'CURRENT_OPERATOR_CORRECTION_WITH_PROVISIONAL_NUMERICS',entries:S.newEntries.map(function(e){return e.title+': '+e.text;})}; if(Array.isArray(note.d)&&!note.d.some(function(t){return String(t).indexOf('CURRENT 12MY:')===0;}))note.d.push('CURRENT 12MY: '+S.operatorCorrection.incrementRanking+'. '+S.operatorCorrection.direction+' Nominal increments remain provisional; the normal 225-flow clip and instantaneous transport cancellation are corrected. See current CF_SOURCE_12MY for assumptions and retained-report comparisons.');}
+ ['operating_point_12fz','inlet_capacity_12mf','compressor_internals_training_12mo'].forEach(function(k){if(I[k])I[k].currentReview12MY={definition:'CF_SOURCE_12MY',notebookKey:S.notebookKey,qualification:'Current inlet-step ranking and coupled pressure response; older numerical calibration remains explicitly provisional.'};});
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12MY';}))H.sourceDefinitions.push({name:'CF_SOURCE_12MY',value:S});
+ return {build:'12MY',owners:found,missing:missing,newPhysicalEquipment:0,newReferenceNotes:0,newDrawings:0,alarmLimitsChanged:false,stepTableChanged:false,storageSchemasChanged:false};
+}
+
+function cfLoadInteractionText12MY(){return 'Inlet load + raises inlet discharge pressure; residue load + pulls it down. Inlet increments: 1 largest, 3 next, 2/4/5/6 equal smaller. A paired change leaves the net supply-minus-withdrawal response; equal step numbers are not equal flow.';}
+function cfLoadInteractionPanel12MY(){
+ var warning=PLANT.in.flow>225?' Above the 225-MMSCFD normal reference; this is not authorization to exceed plant limits.':'';
+ return '<details class="cf-load-interaction12my"><summary>How inlet and residue load steps oppose each other</summary><p>'+cfLoadInteractionText12MY()+'</p><p>Load states are cumulative. The preserved nominal inlet additions at 80% are Step 1: 24; Step 3: 16; Steps 2/4/5/6: 10.56 MMSCFD each, before pressure effects. These numbers are <b>provisional simulator coefficients, not field-measured increments</b>.</p><p>Adding an inlet step alone leaves a higher pressure bias until the process balances at a different operating point, load is removed, downstream withdrawal increases, or recycle/protection intervenes. Pressure does not have to rise without bound.</p><p>Finite downstream transport response: 18 simulated seconds, not a measured plant delay. The225 normal reference no longer clips fresh gas simply because capacity is 80%; the inherited 237 numerical guard and actual feed/letdown/recycle constraints remain.'+warning+'</p></details>';
+}
+function cfRenderLoadInteraction12MY(r,host){
+ if(!r||!host||host.querySelector('[data-load-interaction12my]'))return;var k=r.assetId||r.key,S=CF_SOURCE_12MY;if(S.ownerKeys.indexOf(k)<0)return;
+ var d=host.ownerDocument,box=d.createElement('details');box.dataset.loadInteraction12my=k;box.dataset.sourceDefinition='CF_SOURCE_12MY';box.className='cf-inspection-evidence12mc';var h=d.createElement('summary');h.textContent='Load-step / pressure interaction - current operator correction';box.appendChild(h);S.newEntries.forEach(function(e){var p=d.createElement('p');p.textContent=e.title+': '+e.text;box.appendChild(p);});host.appendChild(box);
+}
+function cfInstallLoadInteraction12MY(){
+ if(window.CFLoadInteraction12MY)return window.CFLoadInteraction12MY;
+ var prior=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=prior.apply(this,arguments).slice();if(!a.some(function(d){return d.name==='CF_SOURCE_12MY';}))a.push({name:'CF_SOURCE_12MY',value:CF_SOURCE_12MY});return a;};
+ var report=cfApplyLoadInteraction12MY({info:INFO,records:CF3D_DEVICE_RECORDS,deviceData:CF3D_DEVICE_DATA,trace:CF_TRACE_DATA_12IZ.components,sourceDefinitions:cfSourceDefinitions12HO()},CF_SOURCE_12MY);
+ CF_INSPECTION_STATE_12MC.sources=null;CF_EQUIPMENT_INFORMATION_12MD.index=null;LIB_STATIC_SEARCH_CACHE=null;LIB_STATIC_TAG_CACHE=null;CF3D_ASSOC.dirty=true;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();if(window.CFLibraryFiling12LQ)window.CFLibraryFiling12LQ.refresh(true);
+ return window.CFLoadInteraction12MY={build:'12MY',source:CF_SOURCE_12MY,report:report,status:function(){return {build:'12MY',stepAdd80:INLET_STEP_ADD80.slice(),balance:PLANT.v.compressionBalance12MT||null,qualification:CF_SOURCE_12MY.qualification};}};
+}
+
 /* 12MX: chiller training, definitions and owner-qualified identity recovery. */
 var CF_SOURCE_12MX={"build":"12MX","baseline":"12MW","date":"2026-10-24","id":"chiller_definitions_equipment_recovery_12mx","title":"E-1241 chiller training, process definitions and retained equipment identities","notebookKey":"compressor_internals_training_12mo","ownerKeys":["e1241","v1441","v1442","v1443","cf3d_cv_lcv1241","cf3d_cv_pcv1441b","p1619","p1620","p7410","p7420","c9210","c9220","c4100","c4200","c6100","c6200","c6300","c5700","c1140","c1141","c1142","c1121","e1221","e1223","f6800"],"models":[{"id":"chiller","kind":"chiller","owner":"e1241","tag":"E-1241","title":"Gas chiller","family":"CMS / separate process tubes and propane shell","throws":0,"stages":0,"cylinderKeys":["e1241","e1241","e1241","e1241","e1241"],"cylinderLabels":["Process U-tube bundles","Propane shell and vapor space","Feed and outlet headers","Level / pressure / temperature","Reclaimer and support boundaries"],"stageMap":[0,0,0,0,0],"flowSummary":"Process461 ->462/463 ->U-tubes ->464/465 ->466 toV-1421. Propane fromV-1442 viaLCV-1241 ->shell ->V-1441 suction scrubber.","qualification":"Source routes and side ownership retained. Tube count, dimensions and pass distribution illustrative; no installed duty, flow split, pressure drop or liquid yield inferred.","sourceRefs":["CF_SOURCE_12LT","CF_SOURCE_12LW","CF_SOURCE_12LM"],"dimensionBasis":"Schematic two-head U-bundle illustration; exact tube schedule, bundle geometry and internals require the manufacturer drawing."}],"restorations":[{"key":"p1619","manufacturer":"PumpWorks 610","model":"PWH / API 610 OH2","referenceKey":"p1619","sourcePointers":["OEM_MANUAL_KNOWLEDGE.pwhPumps","CF_PWH_SOURCE_12MH"],"basis":"Retained operator-confirmed PWH family applicability. Not a new installed plate, size, impeller selection, serial, driver identity or current rating.","fields":[]},{"key":"p1620","manufacturer":"PumpWorks 610","model":"PWH / API 610 OH2","referenceKey":"p1620","sourcePointers":["OEM_MANUAL_KNOWLEDGE.pwhPumps","CF_PWH_SOURCE_12MH"],"basis":"Retained operator-confirmed PWH family applicability. Not a new installed plate, size, impeller selection, serial, driver identity or current rating.","fields":[]},{"key":"p7410","manufacturer":"PumpWorks 610","model":"PWH / API 610 OH2","referenceKey":"p7410","sourcePointers":["OEM_MANUAL_KNOWLEDGE.pwhPumps","CF_PWH_SOURCE_12MH"],"basis":"Retained operator-confirmed PWH family applicability. Not a new installed plate, size, impeller selection, serial, driver identity or current rating.","fields":[]},{"key":"p7420","manufacturer":"PumpWorks 610","model":"PWH / API 610 OH2","referenceKey":"p7420","sourcePointers":["OEM_MANUAL_KNOWLEDGE.pwhPumps","CF_PWH_SOURCE_12MH"],"basis":"Retained operator-confirmed PWH family applicability. Not a new installed plate, size, impeller selection, serial, driver identity or current rating.","fields":[]},{"key":"c9210","manufacturer":"Sullair","model":"SN55","referenceKey":"c9210","sourcePointers":["OEM_MANUAL_KNOWLEDGE.airCompressors","CF_SOURCE_12MG"],"basis":"Retained operator-confirmed SN55 family. No serial, compressor option or generic manual relief copied. Closed separator PSV candidates stay NOT INSTALLED.","fields":[]},{"key":"c9220","manufacturer":"Sullair","model":"SN55","referenceKey":"c9220","sourcePointers":["OEM_MANUAL_KNOWLEDGE.airCompressors","CF_SOURCE_12MG"],"basis":"Retained operator-confirmed SN55 family. No serial, compressor option or generic manual relief copied. Closed separator PSV candidates stay NOT INSTALLED.","fields":[]},{"key":"c4100","manufacturer":"Ariel Corporation","model":"KBZ/6","referenceKey":"c4100","sourcePointers":["OEM_MANUAL_KNOWLEDGE.residueAndInletCompressors","CF_SOURCE_12KT"],"basis":"Existing operator-confirmed frame family now populates main manufacturer/model fields; the 12ME summary already retained it. Separate Hyundai driver records are unchanged.","fields":[]},{"key":"c4200","manufacturer":"Ariel Corporation","model":"KBZ/6","referenceKey":"c4200","sourcePointers":["OEM_MANUAL_KNOWLEDGE.residueAndInletCompressors","CF_SOURCE_12KT"],"basis":"Existing operator-confirmed frame family now populates main manufacturer/model fields; the 12ME summary already retained it. Separate Hyundai driver records are unchanged.","fields":[]},{"key":"c6100","manufacturer":"Ariel Corporation","model":"KBZ/6","referenceKey":"c6100","sourcePointers":["OEM_MANUAL_KNOWLEDGE.residueAndInletCompressors","CF_SOURCE_12KT"],"basis":"Existing operator-confirmed frame family now populates main manufacturer/model fields; the 12ME summary already retained it. Separate Hyundai driver records are unchanged.","fields":[]},{"key":"c6200","manufacturer":"Ariel Corporation","model":"KBZ/6","referenceKey":"c6200","sourcePointers":["OEM_MANUAL_KNOWLEDGE.residueAndInletCompressors","CF_SOURCE_12KT"],"basis":"Existing operator-confirmed frame family now populates main manufacturer/model fields; the 12ME summary already retained it. Separate Hyundai driver records are unchanged.","fields":[]},{"key":"c6300","manufacturer":"Ariel Corporation","model":"KBZ/6","referenceKey":"c6300","sourcePointers":["OEM_MANUAL_KNOWLEDGE.residueAndInletCompressors","CF_SOURCE_12KT"],"basis":"Existing operator-confirmed frame family now populates main manufacturer/model fields; the 12ME summary already retained it. Separate Hyundai driver records are unchanged.","fields":[]},{"key":"c5700","manufacturer":"Ariel Corporation","model":"JGQ/2","referenceKey":"c5700","sourcePointers":["OEM_MANUAL_KNOWLEDGE.overheadCompressorManual","CF_SOURCE_12KR"],"basis":"Retained operator-confirmed JGQ/2, one stage with two parallel cylinders. Does not restore obsolete two-stage or generic relief-setting text.","fields":[]},{"key":"c1140","manufacturer":"Frick by Johnson Controls","model":"RWF-546E","referenceKey":"c1140","sourcePointers":["OEM_MANUAL_KNOWLEDGE.refrigerationCompressors","CF_SOURCE_12KU","CF_SOURCE_12LG"],"basis":"Existing operator-confirmed package model only. SGC element, Siemens motor, separator and their individual identifiers remain separate.","fields":[]},{"key":"c1141","manufacturer":"Frick by Johnson Controls","model":"RWF-546E","referenceKey":"c1141","sourcePointers":["OEM_MANUAL_KNOWLEDGE.refrigerationCompressors","CF_SOURCE_12KU","CF_SOURCE_12LG"],"basis":"Existing operator-confirmed package model only. SGC element, Siemens motor, separator and their individual identifiers remain separate.","fields":[]},{"key":"c1142","manufacturer":"Frick by Johnson Controls","model":"RWF-546E","referenceKey":"c1142","sourcePointers":["OEM_MANUAL_KNOWLEDGE.refrigerationCompressors","CF_SOURCE_12KU","CF_SOURCE_12LG"],"basis":"Existing operator-confirmed package model only. SGC element, Siemens motor, separator and their individual identifiers remain separate.","fields":[]},{"key":"c1121","manufacturer":"Atlas Copco Gas and Process / Mafi-Trench","model":"Expander Compressor (Oil Bearing), Frame 3.0","referenceKey":"c1121","sourcePointers":["OEM_MANUAL_KNOWLEDGE.expanderBooster","CF_SOURCE_12KO"],"basis":"Existing Order1039 package mapping. Oil-bearing package, no new nameplate or serial assignment.","fields":[]},{"key":"e1221","manufacturer":"Chart Energy & Chemicals, Inc.","model":null,"referenceKey":"e1221","sourcePointers":["INFO.e1221","CF_EQUIPMENT_INFORMATION_12MD"],"basis":"Retained exact combined-assembly plate transcription, not a new source-image review. Individual combined exchanger identities remain unchanged; no serial or National Board transfer.","fields":[]},{"key":"e1223","manufacturer":"Chart Energy & Chemicals, Inc.","model":null,"referenceKey":"e1223","sourcePointers":["INFO.e1223","CF_EQUIPMENT_INFORMATION_12MD"],"basis":"Retained exact combined-assembly plate transcription, not a new source-image review. Individual combined exchanger identities remain unchanged; no serial or National Board transfer.","fields":[]},{"key":"f6800","manufacturer":"Peerless Mfg. Co.","model":null,"referenceKey":"f6800","sourcePointers":["INFO.f6800","CF_EQUIPMENT_INFORMATION_12MD"],"basis":"Retained plate transcription: built for Peerless by Myriad Fabrication LLC. No new plate reading or reassignment of serial or element data.","fields":[]}],"research":[{"id":"mx-chiller-owner","title":"E-1241 retained M2200/M2135 and CMS individual plate","url":"https://www.cmsheattransfer.com/heat-exchanger-services.asp","scope":"Installed identity and routes come from INFO.e1241, CF_SOURCE_12LT and CF_SOURCE_12LW; website only confirms manufacturer family capability. No OEM drawing is invented."},{"id":"mx-nist-propane","title":"NIST Chemistry WebBook: pure-propane saturation-pressure correlation","url":"https://webbook.nist.gov/cgi/cbook.cgi?ID=C74986&Mask=4&Type=ANTOINE","scope":"Rips coefficients 230.6-320.7 K, pressure bar absolute. Teaching inverse uses only this interval. No mixture flash, propane purity or installed setpoint is established."},{"id":"mx-heat-balance","title":"Spirax Sarco: heat transfer and heat-load relationships","url":"https://www.spiraxsarco.com/learn-about-steam/steam-engineering-principles-and-heat-transfer/heat-transfer","scope":"General energy balance and heat-transfer principles. Geometry, UA, cp, molecular weight and latent heat inputs are illustrative assumptions, not Clear Fork measurements."},{"id":"mx-refrig-process","title":"Campbell: mechanical refrigeration process and approach temperature","url":"https://www.jmcampbell.com/tip-of-the-month/2019/01/optimizing-performance-of-refrigeration-system-with-an-external-sub-cool-economizer/","scope":"Generic propane-evaporator/process-gas cooling explanation; its example plant numbers are not copied as Clear Fork settings."}],"glossary":[{"id":"pressure","term":"Pressure, psig, psia and psid","text":"Pressure is force per area. psig is relative to local atmosphere; psia is absolute; psid is a difference between two measured pressures. Ratios and saturation equations require absolute pressure.","group":"all","sourceId":"mx-heat-balance"},{"id":"temperature","term":"Temperature versus heat duty","text":"Temperature describes thermal state. Heat duty is energy transferred per unit time. A boiling liquid can absorb substantial heat with little temperature change at nearly constant pressure.","group":"all","sourceId":"mx-heat-balance"},{"id":"sensible","term":"Sensible heat","text":"Heat transfer that changes temperature without a phase change. For an approximately constant heat capacity, Qdot = mdot x cp x temperature change.","group":"all","sourceId":"mx-heat-balance"},{"id":"latent","term":"Latent heat","text":"Energy associated with phase change. Evaporation absorbs energy; condensation releases it. A mixture can change phase over a temperature range.","group":"all","sourceId":"mx-heat-balance"},{"id":"phase","term":"Vapor, liquid and two-phase flow","text":"Vapor and liquid are different phases. Two-phase flow contains both; droplet count in this trainer is not a measured mass or volume fraction.","group":"all","sourceId":"mx-refrig-process"},{"id":"enthalpy","term":"Enthalpy and energy balance","text":"Specific enthalpy is energy per unit mass used in flowing-stream balances. Qdot = mdot x (h_in - h_out) for a cooled stream when shaft work and kinetic/potential changes are negligible.","group":"all","sourceId":"mx-heat-balance"},{"id":"differential","term":"Pressure loss versus compression","text":"Friction and restrictions consume pressure. A compressor or pump adds mechanical energy; an exchanger transfers heat. Heating or cooling is not the same operation as compression.","group":"all","sourceId":"mx-heat-balance"},{"id":"standard-flow","term":"Standard flow versus actual flow","text":"MMSCFD is million standard cubic feet per day, not volume through the tubes at operating pressure. Standard temperature, pressure and compressibility must be declared before converting it to mass.","group":"all","sourceId":"mx-heat-balance"},{"id":"boundary","term":"Evidence and model boundary","text":"An installed fact, historical observation, generic manufacturer explanation and teaching assumption are different. A design rating is not a normal value or an automatic alarm setting.","group":"all","sourceId":"mx-chiller-owner"},{"id":"compression","term":"Compression and clearance re-expansion","text":"A piston traps gas and reduces its volume. Suction and discharge valves respond to pressure differences; clearance gas left after discharge expands before fresh suction enters.","group":"recip","sourceId":"ariel-cycle"},{"id":"clearance","term":"Clearance volume","text":"Residual volume remains when the piston reaches the end of its stroke. It contains gas that re-expands. An illustrated clearance region does not establish an installed adjustable pocket.","group":"recip","sourceId":"ariel-cycle"},{"id":"crosshead","term":"Crosshead and rod motion","text":"The crank and connecting rod convert rotation into reciprocation. The crosshead guides the piston rod so the rod moves approximately straight.","group":"recip","sourceId":"ariel-crosshead"},{"id":"lubrication","term":"Frame oil versus force-feed lubrication","text":"Circulating frame oil supplies journals and guides and returns to its sump. Cylinder/packing force-feed oil is a distinct metered service; its exact installed arrangement is source-dependent.","group":"recip","sourceId":"ariel-divider"},{"id":"head-end","term":"Head end and crank end","text":"The head end is opposite the rod entry; the crank end contains the rod. The rod reduces crank-end swept volume. Pressure-driven valve action is shown independently at both ends.","group":"recip","sourceId":"ariel-cycle"},{"id":"interstage","term":"Interstage cooling","text":"Removing compression heat before a later stage can reduce its inlet temperature. Liquid may condense if the gas crosses its dew point; a separator removes droplets, not individual vapor molecules.","group":"recip","sourceId":"mr-ariel-thermal"},{"id":"capacity-slide","term":"Capacity slide versus Vi","text":"The Frick capacity slide changes effective compression capacity by bypassing gas. The separate volume-ratio stop changes the built-in volume ratio. Neither teaching position is a plant load command.","group":"screw","sourceId":"frick-capacity"},{"id":"oil-separation","term":"Oil separation versus propane condensation","text":"A coalescer collects entrained oil droplets from refrigerant vapor. This is not the same as condensing the propane vapor into liquid in a condenser.","group":"screw","sourceId":"frick-oil"},{"id":"head","term":"Pump head and volute","text":"Head is mechanical energy per unit liquid weight. The impeller supplies energy; the volute collects flow and recovers part of its velocity as pressure. Liquid does not normally become vapor in a healthy pump.","group":"pump","sourceId":"pwh-retained"},{"id":"cavitation","term":"Cavitation","text":"Vapor cavities form where local liquid pressure becomes too low and can collapse as pressure recovers. This is an abnormal mechanism, not the normal pump-flow animation.","group":"pump","sourceId":"mr-pump-cavitation"},{"id":"npsh","term":"NPSH","text":"Net positive suction head describes liquid suction-pressure margin above vapor pressure in head units. Available NPSH and required NPSH are different and need actual fluid/system and pump data.","group":"pump","sourceId":"mr-pump-npsh"},{"id":"seal-buffer","term":"Plan 52 buffer liquid","text":"An unpressurized buffer system serves a dual mechanical seal. It is separate from the pumped NGL and bearing oil, and is not a pressurized barrier system by assumption.","group":"pump","sourceId":"mr-plan52"},{"id":"centrifugal","term":"Impeller and diffuser","text":"The rotating impeller transfers shaft work to gas. A stationary diffuser slows part of that velocity and recovers static pressure. Exact performance requires the machine curve and gas conditions.","group":"centrifugal","sourceId":"sundyne-lmc-12ms"},{"id":"surge","term":"Surge and recycle","text":"Insufficient stable compressor flow can lead to aerodynamic instability. Recycle increases flow through the compressor without being the same as net exported product. No safe surge margin is calculated in this trainer.","group":"centrifugal","sourceId":"atlas-1039-12mu"},{"id":"expansion","term":"Expansion work and JT throttling","text":"The expander extracts shaft work as pressure falls and drives the booster. A JT valve throttles without useful shaft work. Their actual outlet states require thermodynamic calculations for the mixture.","group":"turboexpander","sourceId":"atlas-1039-12mu"},{"id":"igv","term":"Inlet guide vanes","text":"The seven source-owned guide vanes regulate and direct expander flow. The illustrated mechanism percentage is not percent flow and minimum opening is not gas-tight isolation.","group":"turboexpander","sourceId":"atlas-1039-12mu"},{"id":"ate","term":"Automatic Thrust Equalizer","text":"Opposing thrust signals act on a spool arrangement that regulates pressure behind the compressor wheel. Its sensing differential is not the process pressure drop across the expander.","group":"turboexpander","sourceId":"atlas-1039-12mu"},{"id":"radiation","term":"Radiation and convection","text":"Radiation transfers energy from hot surfaces/flame without a flowing material connection. Convection transfers heat between moving fluid and a surface. Conduction carries heat through the solid tube wall.","group":"heater","sourceId":"thm-coil-care12mw"},{"id":"combustion","term":"Combustion versus phase change","text":"Burning fuel is a chemical reaction. Vaporizing or condensing a material is a physical phase change. Process HMO/gas stays inside the coil, separate from flame and flue gas.","group":"heater","sourceId":"thm-heater-family12mw"},{"id":"tube-film","term":"Tube wall, film and bulk temperature","text":"The tube metal and adjacent fluid film can be hotter than the average process stream. Outlet bulk temperature alone does not establish maximum metal or film temperature.","group":"heater","sourceId":"thm-coil-care12mw"},{"id":"bms","term":"Burner-management boundary","text":"Flame proof, purge, ignition and trips belong to the approved burner-management system. The trainer illustrates established states and does not supply or operate that sequence.","group":"heater","sourceId":"thm-retained12mw"},{"id":"tube-shell","term":"Tube side and shell side","text":"Process gas flows inside the U-tubes. Propane liquid surrounds their outside in the shell. An intact tube wall transfers heat but prevents intentional mixing of the streams.","group":"chiller","sourceId":"mx-chiller-owner"},{"id":"boiling","term":"Saturation and boiling","text":"At a specified pressure, pure propane has a saturation temperature. Adding heat to saturated liquid converts some of it to vapor rather than simply making the entire liquid warmer.","group":"chiller","sourceId":"mx-nist-propane"},{"id":"flash","term":"Flashing versus evaporative heat pickup","text":"Pressure reduction can flash part of incoming liquid propane before useful chiller heat pickup. Further boiling at the tube surface absorbs heat from the gas. These are distinct energy-balance steps.","group":"chiller","sourceId":"mx-refrig-process"},{"id":"approach","term":"Temperature approach","text":"The cooled gas outlet normally remains warmer than the local boiling refrigerant by a finite approach. This driving difference allows heat transfer; it is not the same as total gas cooling.","group":"chiller","sourceId":"mx-refrig-process"},{"id":"ua","term":"UA and fouling","text":"UA is overall thermal conductance: heat-transfer coefficient multiplied by area. Fouling or poor wetting can reduce effective UA. The interactive value is assumed, not an installed exchanger rating.","group":"chiller","sourceId":"mx-heat-balance"},{"id":"dewpoint","term":"Dew point and gas condensation","text":"Cooling a gas mixture can form liquid if its dew point is crossed. Actual liquid yield needs composition, pressure and a phase-equilibrium calculation; a single temperature does not establish it.","group":"chiller","sourceId":"mx-refrig-process"}],"policy":["Actual cumulative12MW continued; no plant exterior, operating equation, calibration, protection, history, password or storage-schema changes.","Tube-side gas461 splits462/463, returns464/465 and combines466 towardV1421. U-return at each head; illustrative tube count and equal branch split are not field facts.","Propane feed fromV1442 throughLCV1241 remains separate from612/PCV1441B/613 hot-vapor recycle, the shell liquid/vapor and V1443 reclaimer624/625.","The chiller teaching math is a single-phase sensible-gas, constant cp, constant UA, pure-propane isothermal boiling example. Standard conditions and every input are explicit assumptions. No live value is read or changed.","Gas condensation is a qualitative conditional lesson only; its latent load is not included in the sensible-only numerical example. No EOS, flash fraction, flow capacity or installed rating is calculated.","Pressure is converted to absolute before NIST Antoine inversion. Rips230.6-320.7K only; no extrapolation. Assumed latent heat is user-visible, not sourced as a NIST result.","Restored maker/model fields reuse exact current OEM/operator or retained combined-plate owners. No new serial, National Board, rating, physical identity, original media or source duplication."],"pending":["Exact E1241 tube count/ID/length/pass allocation, shell internals and local feed-distribution geometry are not established.","Actual gas composition/cp/phase envelope and propane composition/enthalpies, UA, pressure drops and current duty must be provided for calibrated engineering results.","All restored older notes retain their original verification classes; uncertain F5015/F5016/F1055 plate ownership remains unresolved."],"newEntries":[{"id":"mx.chiller","title":"Separate chiller product and propane training","text":"New independent E-1241 U-tube/shell cutaway with visible gas and propane paths, boiling, heat arrows, current source-owner records and clearly bounded thermal teaching math."},{"id":"mx.definitions","title":"Definitions and explanations across all equipment lessons","text":"Each active module has a searchable contextual Definitions panel and its existing process-step explanations. No repeated reference notebook or installed part is created."},{"id":"mx.recovery","title":"Recover retained manufacturer/model fields","text":"Main fields are reconciled from exact existing operator/OEM mappings and combined-assembly plate notes. Prior compressor summaries remain intact; unresolved owners are not assigned by proximity."}]};
 function cfExtendChillerCatalog12MX(s){var S=CF_SOURCE_12MX;s.build='12MX';s.title='Equipment Internal Training';S.models.forEach(function(m){if(!s.models.some(function(x){return x.id===m.id;}))s.models.push(JSON.parse(JSON.stringify(m)));});s.available=s.models.map(function(m){return m.id;});s.future=s.future.filter(function(x){return x!=='chiller';});s.policy=s.policy.concat(S.policy);s.pending=s.pending.concat(S.pending);s.newEntries=s.newEntries.concat(S.newEntries);S.research.forEach(function(r){if(!s.research.some(function(x){return x.id===r.id;}))s.research.push(r);});s.glossary12MX=JSON.parse(JSON.stringify(S.glossary));s.ownerKeys=Array.from(new Set(s.ownerKeys.concat(S.ownerKeys)));s.currentScope12MX='Ten modules, isolated chiller teaching balance and contextual definitions. General exchangers remain future, separate from E-1241.';return s;}
@@ -138,7 +324,7 @@ function cfInstallEquipmentTraining12MQ(){
  return window.CFEquipmentTrainingReference12MQ={build:'12MQ',report:report,source:CF_SOURCE_12MQ};
 }
 
-window.CFMainScript12LJ={build:"12MX",phase:"starting"};
+window.CFMainScript12LJ={build:"12NA",phase:"starting"};
 var CF_SOURCE_12MP={"build":"12MP","baseline":"12MO","date":"2026-10-23","id":"equipment_internal_detail_12mp","title":"Equipment Internal Training","notebookKey":"compressor_internals_training_12mo","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["c4100","c6100","c5700"],"equipmentIds":["C-4100","C-6100","C-5700"],"sourceClass":"OPERATOR_REQUEST_WITH_OEM_FAMILY_RESEARCH_AND_EXISTING_PLANT_SOURCE","existingSourceRefs":["CF_SOURCE_12MO","CF_SOURCE_12KR (history only where superseded)","CF_SOURCE_12LI (current C-5700 oil topology)","CF_SOURCE_12KT (KBZ manual)","CF_SOURCE_12KX (JGQ manual)","CF_PWH_SOURCE_12MH (future NGL only)"],"research":[{"id":"ariel-frame-oil","title":"Ariel / frame-driven oil pumps","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/frame_driven_lube_oil_pumps.html","scope":"OEM family mechanism. Auxiliary-end chain drive and distinct KBZ regulation, not installed piping or a new pressure setting.","reviewed":"2026-10-23"},{"id":"ariel-divider","title":"Ariel / common-supply cylinder lubrication diagram","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","scope":"Generic vendor explanatory diagram. Metered quantities depend on the selected blocks; exact installed injection points are not established.","reviewed":"2026-10-23"},{"id":"ariel-filter","title":"Ariel / frame oil filters","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/lube_oil_filter.html","scope":"Family filter construction and differential-pressure indication. No installed element or trip change.","reviewed":"2026-10-23"},{"id":"ariel-crosshead","title":"Ariel / crossheads","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/crossheads.html","scope":"Generic pin/bushing and top/bottom lubrication; no serial balance weights or rod-load certification.","reviewed":"2026-10-23"},{"id":"ariel-rod","title":"Ariel / connecting rods","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/connecting_rods.html","scope":"Forged-rod family reference, not a serial parts drawing.","reviewed":"2026-10-23"},{"id":"ariel-jgq-detail","title":"Ariel / JGN-JGQ frame standard features","url":"https://www.arielcorp.com/support/application-manual/frame-class-equipment/jgn_jgq_frames.html","scope":"JGQ family exterior, short integral guide, filter/gauges and tubing. Actual installed source records remain controlling.","reviewed":"2026-10-23"}],"newEntries":[{"id":"equipment_training_name","title":"Equipment Internal Training / future pump category","tags":["C-4100","C-6100","C-5700"],"text":"The existing trainer is renamed Equipment Internal Training. Inlet, residue and overhead are active; expander, refrigeration, regeneration and NGL pumps are future categories. Existing training IDs, unit source ownership and future part fields are preserved.","authority":"OPERATOR_REQUEST"},{"id":"detailed_lube_reference","title":"Separate lubrication duties and source boundary","tags":["C-4100","C-6100","C-5700"],"text":"Training adds distinct circulating frame-oil, cylinder/packing force-feed, and unassigned packing vent/drain views. Tubing bends, unions, point counts, marker timing, chain ratio and microgeometry remain schematic. No feed rates, material ratings, pressures or installed parts are inferred.","authority":"OEM_GUIDED_TRAINING_GEOMETRY"},{"id":"frame_oil_detail","title":"Frame oil and auxiliary-end mechanism","tags":["C-4100","C-6100","C-5700"],"text":"Source-linked oil teaching objects include sump, suction strainer, auxiliary-end pump/chain drive, cooler/bypass, full-flow filter and two pressure indications, gallery/bearing feeds, pre-lube, frame-side wiper return, breather and oil level. KBZ downstream-filter external regulation is distinguished from small-frame pump-head regulation.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"forcefeed_detail","title":"Application-selected metering and individual tube identification","tags":["C-4100","C-6100","C-5700"],"text":"Ariel common-supply diagram supplies the explanatory metering path: checked supply, force-feed pump, overpressure device alternative, pressure indication, progressive divider, cycle/no-flow monitor and checked injection points. Divider proportions are application-selected, not automatically equal. Drive-box oil remains separate from the injection supply. This is not a confirmed installed BOM or real shutdown channel.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"c5700_preserve_correction","title":"C-5700 oil topology remains owner-specific","tags":["C-5700","PSV-1005","PSV-1042"],"text":"Retain 12LI: 1024 is circulation/heater assembly (1017/1019/1021, TC1025, FSLL1023), not a cylinder lubricator. PSV1005 branches from pump1003 before check1004 and returns before strainer1001. PSV1042 protects the separate circulation/heater loop; both settings remain unestablished. Generic force-feed detail does not restore retired false plant feeds.","authority":"RETAINED_SOURCE_CROSSLINK_12LI"},{"id":"jgq_exterior_detail","title":"C-5700 current model exterior refined","tags":["C-5700"],"text":"Refined the active 12KR JGQ/2 exterior: ribbed crankcase, silver removable top and side covers, short guide housing, cylinder casting ribs, head flange/studs and valve access caps. Existing two cylinder identities, motor/shaft, nozzles, boundaries and later corrected oil connections remain. Blue/silver finish and fine dimensions are visual references, not a paint survey or installed parts catalog.","authority":"OEM_APPEARANCE_WITH_RETAINED_PLANT_TOPOLOGY"},{"id":"mechanism_detail","title":"Selectable small moving components","tags":["C-4100","C-6100","C-5700"],"text":"Added crosshead-pin bushing, rod-attachment and connecting-rod cap-fastener groups, enlarged guide oil-film overlays, and schematic moving chain/gear/metering elements. Existing slider-crank and ideal gas-cycle equations are retained; this is not a rod-load, lubrication-rate or valve-impact calculation.","authority":"TRAINING_ONLY"}],"policy":["No claim of all installed internal parts: serial-specific assembly drawings, tube schedules, injection sheets, approved BOM and field configuration are not complete.","All existing part IDs and owner links retained. Added training subparts do not create physical plant equipment. Manufacturer part numbers and installed ratings remain blank until source evidence is supplied.","Frame returns, process gas, packing leakage and force-feed oil are separate. Unestablished vent/drain receiving destinations are not connected to a convenient header.","Shared source references do not copy serial/National Board identifiers. No alarms, operating equations, settings, gate files or browser-storage schema are changed.","Generic lube diagram is filed once in Clearfork P&IDs as an OEM explanatory reference, not an issued plant drawing.","NGL pump category is a future placeholder only. PWH and NGL evidence already retained is not duplicated or converted to a new model."],"pending":["Exact serial-specific lubrication tube schedule, fitted injection count, divider configuration, metering quantities, oil source variants and installed part/rating selection.","Full native GPU and integrated plant rendering validation, final site collisions and real equipment field verification are separate tasks."],"drawings":[{"number":"ARIEL-APP-COMMON-OIL-FIGURE","revision":"Web page updated 09/07/2001","title":"Ariel force-feed lubrication / common oil supply - generic explanatory figure","pages":[1],"sourceFile":"Ariel application manual - Cylinder Lube Oil Distribution Block System","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","referenceKey":"ariel_common_lube_diagram_12mp","sourceClass":"GENERIC_VENDOR_EXPLANATORY_DIAGRAM_NOT_PLANT_PID","scope":"Catalog locator only, not an Ariel issued drawing number. Generic common-supply example; exact installed variants and injection-point count not established.","sourceStorageMode":"learn-only","sourceRetained":false,"sha256":null}]};
 function cfApplyEquipmentDetail12MP(H,S){
  'use strict';var I=H.info||{},sets=[H.records,H.deviceData,H.trace],ids=S.newEntries.map(function(f){return f.id;}),key=S.notebookKey;
@@ -6778,10 +6964,11 @@ function cf3dConsolidatePipes(){
 }
 cf3dConsolidatePipes();
 function cf3dValveReading(v){
- if(typeof PLANT==='undefined'||!PLANT)return null;
+ if(!v||typeof PLANT==='undefined'||!PLANT)return null;
  if(v.loop&&PLANT.L&&PLANT.L[v.loop]&&PLANT.L[v.loop].out!=null&&Number.isFinite(Number(PLANT.L[v.loop].out))){var l=PLANT.L[v.loop];return {value:Number(l.out),text:'Controller '+v.loop+': output '+Number(l.out).toFixed(1)+'%; '+(l.man?'MANUAL':'AUTO')+'; SP '+l.sp+' / PV '+l.pv+' '+(l.u||'')};}
  if(v.valueKey&&PLANT.v&&Number.isFinite(PLANT.v[v.valueKey]))return {value:Number(PLANT.v[v.valueKey]),text:'Existing HMI valve demand '+Number(PLANT.v[v.valueKey]).toFixed(1)+'%; not independent position feedback.'};
  if(v.compressor&&PLANT.cmp&&PLANT.cmp[v.compressor]&&v.readSuctionDemand){var c=PLANT.cmp[v.compressor];if(c.sctrl==null||!Number.isFinite(Number(c.sctrl)))return null;return {value:Number(c.sctrl),text:'Existing package Suction Control Valve demand '+Number(c.sctrl).toFixed(1)+'%; source identity: '+(v.packagePending?'tag pending':v.tag)+'. Not independent position feedback.'};}
+ if(v.tag&&typeof CF_SOURCE_12KI!=='undefined'){var binding=cfValveBinding12KI(v,v,PLANT,CF_SOURCE_12KI),state=cfReadValvePosition12KI(binding,PLANT);if(state.known&&state.value!=null)return {value:state.value,text:state.label+' | '+state.source+' | simulated control-state indication, not independent field feedback.'};}
  return null; /* Do not fabricate position feedback for a sequence/ESD valve. */
 }
 /* 12GE: validate the live host straight BEFORE cutting a spool. Never draw a
@@ -7686,7 +7873,7 @@ function cfInspectionStyle12MC(doc){
  var st=doc.createElement('style');st.id='cfInspectionStyle12MC';st.textContent='.cf-inspection-grid12mc{display:grid;grid-template-columns:minmax(130px,220px) minmax(0,1fr);gap:8px 18px;margin:12px 0;font:13px/1.55 Segoe UI,Arial,sans-serif}.cf-inspection-grid12mc dt{color:#a8c5d8}.cf-inspection-grid12mc dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap;color:#edf4f8}.cf-inspection-evidence12mc{margin:14px 0;padding:14px;border:1px solid #406374;border-radius:8px;background:#142531;overflow-wrap:anywhere}.cf-inspection-evidence12mc h3{font:600 15px Segoe UI,Arial,sans-serif;margin:0 0 8px;color:#d9f1ef}.cf-inspection-evidence12mc p{font:12px/1.55 Segoe UI,Arial,sans-serif;color:#bed4dc}.cf-inspection-evidence12mc details{font:12px/1.5 Segoe UI,Arial,sans-serif}.cf-inspection-evidence12mc small{display:block;color:#a9c1cf;overflow-wrap:anywhere}.cf-inspection-evidence12mc button{min-height:32px;font-size:12px;margin-top:10px}.cf-inspection-card12mc{border:1px solid #344557;border-radius:9px;padding:16px;background:#101820;color:#dce6ef;max-width:100%;box-sizing:border-box}.cf-inspection-card12mc summary{cursor:pointer;font-weight:600;color:#c5dce8}.cf-inspection-card12mc .record-note12mc{font:12px/1.5 Segoe UI,Arial,sans-serif;color:#c7d6e1}@media(max-width:550px){.cf-inspection-grid12mc{grid-template-columns:1fr;gap:3px;margin:10px 0}.cf-inspection-grid12mc dd{margin-bottom:9px}.cf-inspection-evidence12mc,.cf-inspection-card12mc{padding:11px}}';(doc.head||doc.documentElement).appendChild(st);
 }
 function cfRenderInspectionEvidence12MC(r,host){
- if(!host)return;var doc=host.ownerDocument;cfInspectionStyle12MC(doc);cfRenderRecoveredIdentity12MW(r,host);cfRenderRecoveredIdentity12MX(r,host);
+ if(!host)return;var doc=host.ownerDocument;cfInspectionStyle12MC(doc);cfRenderRecoveredIdentity12MW(r,host);cfRenderRecoveredIdentity12MX(r,host);cfRenderLoadInteraction12MY(r,host);cfRenderDpReview12MZ(r,host);
  (r.plateSections12MC||[]).forEach(function(s){
   var box=doc.createElement('section');box.className='cf-inspection-evidence12mc';box.setAttribute('data-current-plate12mc',s.id);box.setAttribute('data-source-definition',s.definition);box.dataset.shared=String(s.shared);host.appendChild(box);
   var h=doc.createElement('h3');h.textContent=s.title;box.appendChild(h);
@@ -7773,7 +7960,7 @@ function cf3dInspectDevice(k,host){
  if(r.remainingEvidence12MC.length){var rem=doc.createElement('details');card.appendChild(rem);var sh=doc.createElement('summary');sh.textContent='Specific remaining field evidence';rem.appendChild(sh);r.remainingEvidence12MC.forEach(function(t){var p=doc.createElement('p');p.className='record-note12mc';p.textContent=t;rem.appendChild(p);});}
  if(r.conflict){var cf=doc.createElement('p');cf.className='record-note12mc';cf.textContent='Source qualification: '+r.conflict;card.appendChild(cf);}
  var live=doc.createElement('div');live.className='record-note12mc';
- if(isValve&&r.kind!=='psv'){var reading=cf3dValveReading(r.sourceRecord);live.setAttribute('data-valve-live-inline',r.assetId);live.textContent=reading?reading.text+' This is controller demand, not independent valve-position feedback.':'No live valve-position feedback is asserted by this record.';}
+ if(isValve&&r.kind!=='psv'){var reading=cf3dValveReading(r.sourceRecord||r);live.setAttribute('data-valve-live-inline',r.assetId);live.textContent=reading?reading.text+' This is controller demand, not independent valve-position feedback.':'No live valve-position feedback is asserted by this record.';}
  else live.textContent='Recorded source and nameplate information only. Ratings do not change operating setpoints, trips, valve states or model geometry.';
  card.appendChild(live);
  var actions=doc.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin-top:12px';card.appendChild(actions);
@@ -10042,10 +10229,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-10-24-12MX';
-var CLEAR_FORK_FRONTEND_BUILD='12LM'; /* Preserves 12FW library stability and Questions Asked. */
+var RYAN_BUILD_ID='RYAN-2026-10-25-12NA';
+var CLEAR_FORK_FRONTEND_BUILD='12MZ'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-CHILLER-DEFINITIONS-IDENTITY-12MX-20261024';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-RUNDOWN-LINKAGE-12NA-20261025';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -13318,7 +13505,7 @@ function expModel(igv,run){
     expander, expansion work is recovered through the common shaft to C-1121, and the
     JT valve is the parallel pressure-letdown path. JT cooling is modeled separately
     from the true expander outlet temperature so the two paths cannot contaminate one another. */
- if(!run){return {rpm:0,acfm:0,pi101:0,expIn:0,expOutT:60,compSuc:0,compDis:0,pdi:0,hp:0,thrust:0,lubeDP:0,sealDP:0,expBrgT:60,compBrgT:60,expVibX:0,expVibY:0,compVibX:0,compVibY:0,compThrustDP:0,expThrustDP:0,lubeFilterDP:0,compThrustP:0,compWheelP:0,expWheelP:0,lubeFilterP:0,lubeResP:0,lubeSupplyP:0,sealSupplyP:0,sealSupplyT:60,lubeSupplyT:60,lubeDrainT:60,lubeResT:60,surgePV:0};}
+ if(!run){var v=(typeof PLANT!=='undefined'&&PLANT.v)||{},e=typeof EXP!=='undefined'?EXP:{};var pp=PLANT.L.PIC1521.pv;return Object.assign({},e,{rpm:0,acfm:0,pi101:Number.isFinite(e.pi101)?e.pi101:pp,expIn:Number.isFinite(e.expIn)?e.expIn:0,expOutT:Number.isFinite(e.expOutT)?e.expOutT:60,compSuc:Number.isFinite(v.c1121BoostSuctionP)?v.c1121BoostSuctionP:pp,compDis:Number.isFinite(v.c1121BoostDischargeP)?v.c1121BoostDischargeP:pp,pdi:0,hp:0,thrust:0,lubeDP:(e.pump101||e.pump102)?152:0,sealDP:Number.isFinite(v.pt1227)?50*clmp(v.pt1227/550.19,0,1.05):50,expBrgT:Math.max(60,Number(e.lubeSupplyT)||105),compBrgT:Math.max(60,Number(e.lubeSupplyT)||105),expVibX:0,expVibY:0,compVibX:0,compVibY:0,expThrustDP:0,compThrustDP:0,surgePV:0});} /*12NA no flow is not zero pressure or automatic oil/seal shutdown; last EX T is not a flowing measurement.*/
  var flowNow=(typeof PLANT!=='undefined'&&PLANT.v&&PLANT.v.expanderInletFlow!=null)?PLANT.v.expanderInletFlow:((typeof PLANT!=='undefined'&&PLANT.in)?(PLANT.in.flow||222)*0.82:182);
  var g=clmp(igv/100,0,1.25);
  /* 12BS researched cryogenic audit: turboexpander speed is a dependent result of
@@ -13341,7 +13528,7 @@ function expModel(igv,run){
     forces more of the pressure-control duty toward the parallel JT route. */
  var acfm=clmp(7889*_flowRatio,0,9800), pi101=clmp(_demP-16+(flowNow-152)*0.035,180,360);
  var expIn=_expInEst; /* PT-1121B: cold-separator pressure less inlet-strainer DP */
- var recyclePct=(typeof PLANT!=='undefined'&&PLANT.L&&PLANT.L.PIC1121E)?clmp(PLANT.L.PIC1121E.out||0,0,100):0;
+ var recyclePct=cfExpanderRecycle12NA();
  var _expTin=(typeof PLANT!=='undefined'&&PLANT.v&&PLANT.v.expanderFeedTemp!=null)?PLANT.v.expanderFeedTemp:((typeof PLANT!=='undefined'&&PLANT.v&&PLANT.v.te1421a!=null)?PLANT.v.te1421a:-7.0);
  /* 12DL: outlet temperature follows the real thermodynamic drivers: inlet temperature,
     expansion pressure ratio, flow/efficiency and booster recycle. IGV primarily meters
@@ -13530,10 +13717,11 @@ function expSetRunning(run){
   if(PLANT.esd){expControlMessage('START blocked: facility ESD active; use the existing reset/permissive checks.');return false;}
   if(PLANT.redtag&&PLANT.redtag.ex1121){expControlMessage('START blocked: EX-1121/C-1121 is RED TAGGED.');return false;}
   /* Existing plant tick still enforces package interlocks. No protection is bypassed. */
-  EXP.run=true;EXP.remote=false;EXP.auto=false;EXP.cascade=false;EXP.localDemand=0;EXP.igvSP=0;s.ex.out=0;s.ex.man=true;EXP.startupPending=true;
+  EXP.run=true;PLANT.valves.xv1121b=1;EXP.remote=false;EXP.auto=false;EXP.cascade=false;EXP.localDemand=0;EXP.igvSP=0;s.ex.out=0;s.ex.man=true;EXP.startupPending=true;
   expControlMessage('START accepted in simulator, LOCAL / board MANUAL. Open local IGVs to 20%, match the board to 20%, then transfer REMOTE.');
  }else{
-  EXP.run=false;EXP.remote=false;EXP.auto=false;EXP.cascade=false;EXP.localDemand=0;EXP.igvSP=0;s.ex.out=0;s.ex.man=true;EXP.startupPending=true;
+  cfUpdateExpanderRouting12FY();var prep=cfRundownStatus12NA();if(!prep.normalStopReady){expControlMessage('NORMAL STOP NOT READY (training guard): '+prep.reasons.join('; ')+'. Protective trips/ESD remain immediate.');return false;}
+  PLANT.v._normalExpStop12NA=true;PLANT.valves.xv1121b=0;EXP.run=false;EXP.remote=false;EXP.auto=false;EXP.cascade=false;EXP.localDemand=0;EXP.igvSP=0;s.ex.out=0;s.ex.man=true;EXP.startupPending=true;
   cfUpdateExpanderRouting12FY();
   expControlMessage('STOP: EX forward flow is zero. Continuing main gas uses JT only; JT control and isolation remain authoritative.');
  }
@@ -13576,7 +13764,7 @@ function expAdvanceControls(){
  if(V._expWasRunning===undefined)V._expWasRunning=EXP.run;
  if(V._expWasRunning&&!EXP.run){
   EXP.remote=false;EXP.auto=false;EXP.cascade=false;EXP.localDemand=0;EXP.igvSP=0;ex.man=true;ex.out=0;EXP.startupPending=true;
-  V._jtTripAssistTicks=10;expControlMessage('Expander lost: IGV closing; JT AUTO backup is taking pressure-control duty.');
+  V._jtTripAssistTicks=V._normalExpStop12NA?0:10;if(!V._normalExpStop12NA)expControlMessage('Expander lost: IGV closing; JT AUTO backup is taking pressure-control duty.');V._normalExpStop12NA=false;PLANT.valves.xv1121b=0;
  }
  if(!V._expWasRunning&&EXP.run)V._expRunTicks=0;
  V._expRunTicks=EXP.run?((V._expRunTicks||0)+1):0;V._expWasRunning=EXP.run;
@@ -13586,7 +13774,9 @@ function expAdvanceControls(){
   if(EXP.remote){
    if(!ex.man){
     /* Empirical controller tuning; not a site gain. Lower PV opens the feed path. */
-    var exTarget=clmp(94+2.0*(ex.sp-pv),0,100);
+    var jtPriority=jtPath&&!jt.man&&jt.sp>ex.sp;
+    var jtActual=clmp(Number(PLANT.valves.pcv1121a_bypass)||0,0,100);
+    var exTarget=jtPriority?clmp(94*Math.max(0,1-jtActual/80),0,100):clmp(94+2.0*(ex.sp-pv),0,100); /*12NA complementary transfer; nominal80% JT capacity remains model calibration.*/
     ex.out+=clmp(exTarget-ex.out,-3,3); /* bumpless MAN -> AUTO, no immediate 20 -> 100 jump */
    }
    EXP.igvSP=clmp(ex.out,0,100);
@@ -13597,7 +13787,8 @@ function expAdvanceControls(){
  /* Feedforward shares the same letdown duty; feedback trims against tower PV.
     Nominal full-flow openings (EX 94%, JT 80%) are simulator calibration ONLY. */
  var expCapacity=expPath?clmp(EXP.igv/94,0,1.064):0;
- var jtNeed=clmp(80*Math.max(0,1-expCapacity)+2.0*(jt.sp-pv),0,100);
+ var jtPriority=jtPath&&!jt.man&&(!expPath||(EXP.remote&&!ex.man&&jt.sp>ex.sp));
+ var jtNeed=clmp((jtPriority?80:80*Math.max(0,1-expCapacity))+2.0*(jt.sp-pv),0,100);
  if(EXP.remote&&!ex.man&&expPath&&ex.sp>jt.sp&&expCapacity>=1)jtNeed=clmp(2.0*(jt.sp-pv),0,100);
  if(!jt.man)jt.out=jtNeed;
  var cur=clmp(Number(PLANT.valves.pcv1121a_bypass)||0,0,100),target=jtPath?jt.out:0;
@@ -13773,14 +13964,14 @@ var FILTER_RULES={
  f1416:{name:'F-1416 Dehy Dust Filter',group:'dust',change:15,trip:20,unit:'PSID',shutdownChange:false,frequency:'Normally infrequent; operator reports roughly twice per year at most'},
  f1417:{name:'F-1417 Dehy Dust Filter',group:'dust',change:15,trip:20,unit:'PSID',shutdownChange:false,frequency:'Normally infrequent; operator reports roughly twice per year at most'},
  f1412:{name:'F-1412 Dehy Inlet Filter/Coalescer',group:'inlet',change:15,trip:20,unit:'PSID',shutdownChange:true,frequency:'Operator reports roughly 1-2 changes per year; replacement requires total facility shutdown'},
- f6800:{name:'F-6800 Residue Filter',group:'residue',change:10,trip:null,unit:'PSIG',shutdownChange:true,frequency:'Operator reports roughly 1-2 changes per year; replacement requires total facility shutdown'},
+ f6800:{name:'F-6800 Residue Filter',group:'residue',change:10,trip:null,unit:'PSID',shutdownChange:true,frequency:'Operator reports roughly 1-2 changes per year; replacement requires total facility shutdown'},
  f1050:{name:'F-1050 Slug-Catcher Liquid Filter',group:'slug',change:8,trip:12,unit:'PSID',shutdownChange:false,frequency:'Duty/standby pair; swap at 8 PSID and change the dirty housing. At 12 PSID the dirty in-service housing stops liquid flow until swapped or changed.'},
  f1055:{name:'F-1055 Slug-Catcher Liquid Filter',group:'slug',change:8,trip:12,unit:'PSID',shutdownChange:false,frequency:'Duty/standby pair; swap at 8 PSID and change the dirty housing. At 12 PSID the dirty in-service housing stops liquid flow until swapped or changed.'},
  f1438:{name:'F-1438 RSV Filter/Coalescer',group:'rsv',change:10,trip:15,unit:'PSID',shutdownChange:false,frequency:'Operator rule: alarm/change at 10 PSID; 15 PSID shuts down the RSV filter/recycle path (XV-1438B closes), not the entire facility.'},
  f7600:{name:'F-7600 Hot Oil Filter',group:'hotoil',change:8,trip:null,unit:'PSID',shutdownChange:false,frequency:'Operator rule: alarm/change element at 8 PSID.'}
 };
 function filterRec(key){var r=FILTER_RULES[key],g=r&&PLANT.filterHealth[r.group];return r&&g&&g[key]?g[key]:null;}
-function filterDP(key){var q=filterRec(key);return q?Number(q.dp||0):0;}
+function filterDP(key){return cfFilterOperating12MZ(key).dp;}
 function filterInService(key){var r=FILTER_RULES[key],g=r&&PLANT.filterHealth[r.group];return !!(g&&(!g.service||g.service===key));}
 function filterStatus(key){var r=FILTER_RULES[key],dp=filterDP(key);if(!r)return 'UNKNOWN';if(r.trip!=null&&dp>=r.trip)return 'TRIP';if(r.change!=null&&dp>=r.change)return 'CHANGE';return filterInService(key)?'IN SERVICE':'STANDBY';}
 function filterColor(key){var st=filterStatus(key);return st==='TRIP'?'#d7191c':st==='CHANGE'?'#ff9a2f':st==='IN SERVICE'?'#1ea84a':'#6d7f90';}
@@ -13796,8 +13987,8 @@ function tickFilterHealth(dt){
  var sgk=F.slug.service||'f1050',sgr=F.slug[sgk];
  var slugLevel=((PLANT.L.LIC1020&&PLANT.L.LIC1020.pv)||0)+((PLANT.L.LIC1025&&PLANT.L.LIC1025.pv)||0)+((PLANT.L.LIC1030&&PLANT.L.LIC1030.pv)||0);
  if(running&&sgr){var slugLoad=(PLANT.in.pigActive?0.00018:0)+(slugLevel/300)*0.000018; sgr.dp=clmp(sgr.dp+dt*(0.000010+slugLoad),0.05,14);}
- PLANT.in.slugFilterBlocked=!!(sgr&&sgr.dp>=12);
- PLANT.v.pdt1051=sgr?sgr.dp:0;
+ PLANT.in.slugFilterBlocked=!!(sgr&&filterDP(sgk)>=12);
+ PLANT.v.pdt1051=sgr?filterDP(sgk):0;
  /* Very slow condition-based fouling for long-life filters. Rates are simulator scaling,
     not claimed real calendar predictions; operator frequency notes are displayed separately. */
  var dk=F.dust.service||'f1416';if(F.dust[dk])F.dust[dk].dp=clmp(F.dust[dk].dp+dt*(flow>20?0.000004:0),0.05,25);
@@ -13807,7 +13998,7 @@ function tickFilterHealth(dt){
  if(F.hotoil.f7600)F.hotoil.f7600.dp=clmp(F.hotoil.f7600.dp+dt*((PLANT.in.heaterRun!==false)?0.0000025:0),0.05,10);
  if(F.rsv.f1438&&F.rsv.f1438.changeCount&&((PLANT.simSeconds||0)%60===0)&&!IS_CLIENT)cfRsvServicePersist12GA();
  /* Existing process variables now read the common filter model. */
- PLANT.v.pdt1412=F.inlet.f1412.dp;PLANT.v.pdt1416a=F.dust[dk].dp;PLANT.v.pdt1438=F.rsv.f1438.dp;PLANT.v.pdit7600a=F.hotoil.f7600.dp;
+ PLANT.v.pdt1412=filterDP('f1412');PLANT.v.pdt1416a=filterDP(dk);PLANT.v.pdt1438=filterDP('f1438');PLANT.v.pdit7600a=filterDP('f7600');
  /* Operator-facing alarms and shutdowns. */
  Object.keys(FILTER_RULES).forEach(function(k){var r=FILTER_RULES[k],dp=filterDP(k),svc=filterInService(k);if(!svc&&r.group!=='inlet'&&r.group!=='residue'&&r.group!=='rsv'&&r.group!=='hotoil')return;
   if(r.change!=null&&dp>=r.change){filterAlarmOnce(k,'change','FILTER HIGH DP — '+r.name+' '+dp.toFixed(1)+' '+r.unit+' (change/swap threshold '+r.change+'). Send operator to change filter.');}
@@ -13915,7 +14106,11 @@ function cfAdvanceCompressionBalance12MT(V,input){
  var dt=clmp(Number(input.dt)||1,.01,5),yieldFrac=clmp(Number(input.yieldFraction)||p.residueReference/p.inletReference,.70,1),qi=Math.max(0,Number(input.inletFresh)||0),gross=Math.max(0,Number(input.residueGross)||0);
  var recycle=Math.min(gross,Math.max(0,Number(input.residueRecycle)||0)),remove=Math.max(0,gross-recycle),gate=clmp(input.transferAvailability==null?1:input.transferAvailability,0,1),qh0=s.highP,ql0=s.lowP;
  var flowReferenceP=p.highReference+.62*(qi-p.inletReference);
- var desired=Math.max(0,qi*yieldFrac+p.highConductance*(s.highP-flowReferenceP)-p.lowConductance*(s.lowP-p.lowReference));
+ //12MY: downstream transport cannot teleport the entire new inlet increment.
+ // Lazy initialization preserves old snapshots and does not write a storage schema.
+ if(!Number.isFinite(s.transportDemand12MY))s.transportDemand12MY=Number.isFinite(s.netInlet)?s.netInlet:p.residueReference;
+ s.transportDemand12MY+=(qi*yieldFrac-s.transportDemand12MY)*(1-Math.exp(-dt/18));
+ var desired=Math.max(0,s.transportDemand12MY+p.highConductance*(s.highP-flowReferenceP)-p.lowConductance*(s.lowP-p.lowReference));
  var transfer=Math.min(260*yieldFrac,desired)*gate;
  // Do not withdraw non-existent inventory near the broad numerical floor.
  transfer=Math.min(transfer,qi*yieldFrac+p.highCapacitance*Math.max(0,s.highP-p.pressureNumericalMin)/dt);
@@ -13948,7 +14143,7 @@ function cfCompressionBalancePanel12MT(){
  else if(missingRes.length&&!missingIn.length)message='Residue unit unavailable: gas can accumulate upstream. Training response: reduce inlet loading and assess available load on the remaining residue units. Existing discharge recycle and high-pressure trips remain active.';
  else if(S&&S.imbalance< -3)message='Residue withdrawal exceeds fresh-gas supply after shrinkage: stored gas is falling. Watch PIT-4250A, residue suction, tower/cold-section temperatures and the existing low-pressure protection.';
  else if(S&&S.imbalance>3)message='Fresh-gas supply exceeds residue withdrawal: stored gas is rising. Watch inlet discharge, cryogenic/tower pressure, recycle response and the existing high-pressure protection.';
- return '<section class="cf-balance12mt" aria-label="Compression pressure and throughput"><div class="cf-balance-grid12mt">'+card('PIT-4250A',V.pit4250a==null?V.inlHdr:V.pit4250a,'psig','pit4250a','Inlet common discharge')+card('FIT-1045A',PLANT.in.flow,'MMSCFD','fit1045a','Fresh inlet gas')+card('PIT-8210A',V.pit8210a,'psig','pit8210a','Residue export pressure')+card('FIT-8210A',V.resRate,'MMSCFD','fit8210a','Net residue sales')+'</div><div class="cf-balance-guidance12mt">'+message+'</div><div class="cf-balance-brief12mt">Residue suction <b>'+val(V.residueSuctionPressure)+' psig</b> | Net balance <b>'+val(S&&S.imbalance)+' MMSCFD</b> | High-header slope <b>'+val(S&&S.highRate)+' psi/s</b> | Low-header slope <b>'+val(S&&S.lowRate)+' psi/s</b></div><details><summary>Watch the disturbance move through the plant</summary><p>Cold separator: <b>'+val(PLANT.L.PIC1421&&PLANT.L.PIC1421.pv)+' psig</b> | Tower controlled pressure: <b>'+val(PLANT.L.PIC1521&&PLANT.L.PIC1521.pv)+' psig</b><br>Chiller process outlet: <b>'+val(V.chill)+' F</b> | Demeth overhead: <b>'+val(V.demOvhd)+' F</b> | Expander outlet: <b>'+val(typeof EXP!=='undefined'&&EXP.expOutT)+' F</b></p><p>These are current simulator channels, not newly measured plant trends. Existing controller authority and thermal/transport lags determine direction and recovery. Read first-out alarms; warning and trip limits are not changed by this panel.</p></details><details><summary>Calibration, limits and what the reports do not establish</summary><p>Operator snapshot: inlet steps 5 / 4, residue 1 / 2 / 3; inlet 222.38 and residue 207.33 MMSCFD; PIT-4250A 949.40 and PIT-8210A 955.55 psig. It is a starting reference, not a pressure or flow clamp. Remote capacity is assumed 80%, not recorded with this snapshot.</p><p>Nine report workbooks contain 53 nonblank two-hour samples. Pressure-row aliases, 92/94-psig entries, the 1112-1117-psig export series, a positive 90 F cold-overhead entry, and date/shift conflicts remain qualified. No step-event timing or exact residue-suction measurement is supplied. Dynamic gains and 294-psig suction reference are simulator assumptions.</p><p>Compressor protection values are unchanged. No alarm is suppressed, no automatic load-step redistribution is introduced, and no shared-header transmitter is substituted for a cylinder pressure sensor. This is training, not an approved field operating procedure.</p></details></section>';
+ return '<section class="cf-balance12mt" aria-label="Compression pressure and throughput"><div class="cf-balance-grid12mt">'+card('PIT-4250A',V.pit4250a==null?V.inlHdr:V.pit4250a,'psig','pit4250a','Inlet common discharge')+card('FIT-1045A',PLANT.in.flow,'MMSCFD','fit1045a','Fresh inlet gas')+card('PIT-8210A',V.pit8210a,'psig','pit8210a','Residue export pressure')+card('FIT-8210A',V.resRate,'MMSCFD','fit8210a','Net residue sales')+'</div><div class="cf-balance-guidance12mt">'+message+'</div><div class="cf-balance-brief12mt">Residue suction <b>'+val(V.residueSuctionPressure)+' psig</b> | Net balance <b>'+val(S&&S.imbalance)+' MMSCFD</b> | High-header slope <b>'+val(S&&S.highRate)+' psi/s</b> | Low-header slope <b>'+val(S&&S.lowRate)+' psi/s</b></div><details><summary>Watch the disturbance move through the plant</summary><p>Cold separator: <b>'+val(PLANT.L.PIC1421&&PLANT.L.PIC1421.pv)+' psig</b> | Tower controlled pressure: <b>'+val(PLANT.L.PIC1521&&PLANT.L.PIC1521.pv)+' psig</b><br>Chiller process outlet: <b>'+val(V.chill)+' F</b> | Demeth overhead: <b>'+val(V.demOvhd)+' F</b> | Expander outlet: <b>'+val(typeof EXP!=='undefined'&&EXP.expOutT)+' F</b></p><p>These are current simulator channels, not newly measured plant trends. Existing controller authority and thermal/transport lags determine direction and recovery. Read first-out alarms; warning and trip limits are not changed by this panel.</p></details><details><summary>Calibration, limits and what the reports do not establish</summary><p>Operator snapshot: inlet steps 5 / 4, residue 1 / 2 / 3; inlet 222.38 and residue 207.33 MMSCFD; PIT-4250A 949.40 and PIT-8210A 955.55 psig. It is a starting reference, not a pressure or flow clamp. Remote capacity is assumed 80%, not recorded with this snapshot.</p><p>Nine report workbooks contain 53 nonblank two-hour samples. Pressure-row aliases, 92/94-psig entries, the 1112-1117-psig export series, a positive 90 F cold-overhead entry, and date/shift conflicts remain qualified. No step-event timing or exact residue-suction measurement is supplied. Dynamic gains and 294-psig suction reference are simulator assumptions.</p><p>Compressor protection values are unchanged. No alarm is suppressed, no automatic load-step redistribution is introduced, and no shared-header transmitter is substituted for a cylinder pressure sensor. This is training, not an approved field operating procedure.</p></details></section>'+cfLoadInteractionPanel12MY();
 }
 
 var CF_OPERATING_POINT_12FZ={revision:'12MT-OPERATOR-SNAPSHOT',inlet:222.38,residue:207.33,
@@ -14023,7 +14218,7 @@ function cfBuildCumulativeStepTable(base,adds){
  for(var i=1;i<=6;i++)out[i]=out[i-1]+(Number(adds[i])||0);
  return out;
 }
-var INLET_STEP_CAP80=cfBuildCumulativeStepTable(INLET_STEP_BASE80,INLET_STEP_ADD80); /* 64, 88, 94, 110, 116, 122, 128 */
+var INLET_STEP_CAP80=cfBuildCumulativeStepTable(INLET_STEP_BASE80,INLET_STEP_ADD80); /*12MY: cumulative current coefficients built from the exact retained increments above; older64/88/... annotation was stale.*/
 var RES_STEP_CAP80=cfBuildCumulativeStepTable(RES_STEP_BASE80,RES_STEP_ADD80);         /* 50.5, 63.5, 67.67, 77.5, 81.67, 85.83, 90 */
 function cfCapacityMultiplier(c){
  var sp=clmp(c&&c.remCapSP!=null?Number(c.remCapSP):80,50,100);
@@ -14246,7 +14441,7 @@ PLANT.tick=function(){
  var exprun=(EXP?EXP.run:true);
  var igv=(EXP&&EXP.run?EXP.igv:0);
  /* 12FX: independent LOCAL/REMOTE ownership and board MAN/AUTO; both use tower PV. */
- if(EXP&&PLANT.valves){expAdvanceControls();cfUpdateExpanderRouting12FY();}
+ if(EXP&&PLANT.valves){expAdvanceControls();cfExpanderAuxStep12NA();cfUpdateExpanderRouting12FY();}
  /* expModel()'s output (RPM, bearing temps, vibration, thrust, etc) was previously
     only refreshed by a SEPARATE independent timer that only starts once the ACMTC
     popup is opened -- meaning if IGV is adjusted from the control board screen
@@ -14316,14 +14511,14 @@ PLANT.tick=function(){
  var _exPressureSP=(L.PIC1521DEX?clmp(L.PIC1521DEX.sp,225,350):268);
  var _towerPressureBoost=exprun?Math.max(0,_exPressureSP-268)*0.22:0;
  var expContrib=(exprun?(igv-92)*0.5:-15)+_towerPressureBoost;
- /* FIT-1045A is rated for 225 MMSCFD in normal operation. Capacity above the usual
-    80% Remote Capacity point progressively opens a hard-push envelope up to 237 MMSCFD.
-    This is an operating envelope, not the transmitter span; FIT-1045A still displays 0-250. */
+ /*12MY: keep the retained225 normal-flow reference distinct from capacity and meter span.
+    A normal-reference value is not an automatic flow regulator. Existing237 model
+    guard, valve availability and pressure/recycle physics still bound fresh supply. */
  var _activeInletCapSum=0,_activeInletCapCount=0;
  [C.c41,C.c42].forEach(function(_c){if(_c&&_c.run){_activeInletCapSum+=clmp(Number(_c.remCapSP==null?80:_c.remCapSP),50,100);_activeInletCapCount++;}});
  var _activeInletCapAvg=_activeInletCapCount?_activeInletCapSum/_activeInletCapCount:50;
  var _hardPushFrac=clmp((_activeInletCapAvg-80)/20,0,1);
- var _plantInletFlowLimit=225+12*_hardPushFrac;
+ var _plantInletFlowLimit=237; /*12MY inherited broad numerical guard, not an installed safe-flow limit;225 is the normal reference, not a hidden80%-capacity throttle.*/
  var _flowBreathing=cfProcWave('inlet_rate_12fz',0.14,137)+cfProcWave('inlet_rate_long_12fz',0.04,331);
  var _inletDrawDemand=(nInl>0&&inletCap>0)?clmp(inletCap*(1+_flowBreathing/CF_OPERATING_POINT_12FZ.inlet),0,_plantInletFlowLimit):0;
  /* 12FY: flow acceptance follows available EX/JT capacity, not a fixed -15 MMSCFD expander-off penalty. */
@@ -14362,7 +14557,7 @@ PLANT.tick=function(){
  var _coldPotential=clmp((20-(chill||0))/45,0,1)*_refrigAvail*(0.55+0.45*_expAvail)*(1-0.35*_dehyPenalty);
  if(V.coldCondFrac==null)V.coldCondFrac=_coldPotential; else ez(V,'coldCondFrac',_coldPotential,0.04);
  V.hxRestriction=clmp(V.hxRestriction+(_dehyPenalty*0.0005)-(V.hxRestriction*0.00008),0,1);
- if(V.pdt1221!=null)ez(V,'pdt1221',clmp(0.8+(flow/210)*8+V.hxRestriction*8,0.2,20),0.04);
+ /*12MZ: PDT-1221 has one branch-flow owner in the gas/gas block.*/
  if(V.ft1421!=null){var _liqTarget=clmp(3+flow*0.035*V.coldCondFrac,0,20);ez(V,'ft1421',_liqTarget,0.04);}
  /* ── INLET GAS SYSTEM (V-1410 sep / F-1412 dehy filter) reactive model ── */
  /* Initialize each inlet-separation state independently. Older saved browser states may
@@ -14538,7 +14733,7 @@ PLANT.tick=function(){
  var _boostRpmFrac=clmp((EXP&&EXP.rpm?EXP.rpm:0)/24030,0,1.18);
  var _boostPowerFrac=clmp((EXP&&EXP.hp?EXP.hp:0)/2250,0,1.25);
  var _boostAvail=clmp(0.55*_boostRpmFrac+0.45*_boostPowerFrac,0,1.20);
- var _boostRecycle=clmp((L.PIC1121E&&isFinite(L.PIC1121E.out))?L.PIC1121E.out:0,0,100);
+ var _boostRecycle=cfExpanderRecycle12NA();
  var _boostForwardFrac=clmp(_boostAvail*(1-0.62*_boostRecycle/100),0,1.12);
  /* Primary plant fuel gas is physically taken from this methane-rich stream BEFORE
     the C-1121 booster. Use the previous-tick standard-flow equivalent so fuel demand
@@ -14559,7 +14754,7 @@ PLANT.tick=function(){
  var _boostRise=clmp(145*_boostAvail*(1-0.35*_boostRecycle/100),0,185);
  cfLag(V,'c1121BoostDischargeP',clmp(V.c1121BoostSuctionP+_boostRise,180,520),8,170,540);
  var _boostTin=clmp((V.demOvhd==null?-91:V.demOvhd)+175,45,155);
- var _boostTout=clmp(_boostTin+38+55*_boostPowerFrac+0.10*Math.max(0,V.c1121BoostDischargeP-V.c1121BoostSuctionP),70,255);
+ var _boostTout=clmp(_boostTin+((EXP&&EXP.run)?38*Math.min(1,_boostPowerFrac)+55*_boostPowerFrac+0.10*Math.max(0,V.c1121BoostDischargeP-V.c1121BoostSuctionP):0),45,255); /*12NA no fixed compression heating at zero work; existing empirical full-power gain retained.*/
  cfLag(V,'c1121BoostDischargeT',_boostTout,8,60,270);
  var _amb1321=(PLANT.weather&&isFinite(PLANT.weather.ambientTemp))?PLANT.weather.ambientTemp:75;
  var _a1321Approach=clmp(17+10*Math.pow(clmp((V.c1121ForwardFlow||0)/209,0,1.25),1.35),12,42);
@@ -15244,7 +15439,7 @@ PLANT.tick=function(){
   var _refAvail=(QHD&&QHD.systemRun)?clmp((QHD.actual||50)/Math.max(20,QHD.capSP||50),0.25,1.35):0.08;
   var _ambRef=(PLANT.weather&&isFinite(PLANT.weather.ambientTemp))?PLANT.weather.ambientTemp:75;
   var _te1241aTarget=20+(flowCryo-210)*0.025+(1-_refAvail)*8+(_ambRef-75)*0.035;
-  cfLag(V,'te1241a',clmp(_te1241aTarget,-10,70),22,-10,70);
+  /*12MZ: TE-1241A is advanced only from e1241FeedT in the mixed-feed block below.*/
   V.te1241c=L.TIC1241C.pv;
   cfLag(V,'te1241d',clmp(rsuct+8+(1-_refAvail)*2.5,-10,45),16,-10,45);
   cfLag(V,'pdt1441',clmp(5.8+Math.pow(Math.max(0.25,flowCryo/210),1.7)*0.35+_refAvail*0.4,1,18),10,1,18);
@@ -15572,14 +15767,17 @@ PLANT.tick=function(){
   cfLag(V,'e1241FeedT',_feedTarget,_refColdHealthy>0.18?42:75,-20,90);
 
   /* Common pressure into the chiller inherits the dehy outlet and branch pressure losses.
-     A weighted branch DP is used because the two streams are parallel before recombination. */
+     The larger measured core loss is a lower bound on shared branch endpoint loss; unresolved valve/line residuals are not a calibrated Cv solve. */
   var _pDry=clmp(V.dehyToCryoP==null?930:V.dehyToCryoP,500,1020);
-  var _dpGG=clmp(V.pdt1221==null?17.1:V.pdt1221,0,35);
-  var _dpRB=clmp(V.pdt1223a==null?4.7:V.pdt1223a,0,35);
-  var _branchDP=(_dpGG*_fgg+_dpRB*_frb)/_fmix;
-  var _commonDP=clmp(1.6+2.0*Math.pow(Math.max(0.08,flowCryo/223.37),1.78),0.4,7.5);
+  var _dpGG=clmp(V.pdt1221==null?17.1:V.pdt1221,0,100);
+  var _dpRB=clmp(V.pdt1223a==null?4.7:V.pdt1223a,0,100);
+  var _branchDP=Math.max(_fgg>0?_dpGG:0,_frb>0?_dpRB:0); /*12MZ parallel endpoint loss; unmeasured valve/line residual balances the lower core loss.*/
+  var _commonRatio=Math.max(0,flowCryo/223.37);
+  var _commonDP=clmp((1.6*_commonRatio+2*Math.pow(_commonRatio,1.78))*cfDensityRatio12MZ(_pDry,V.dehyToCryoT,930,84),0,100); /*12MZ zero-flow friction is zero.*/
   cfLag(V,'e1241FeedP',clmp(_pDry-_branchDP-_commonDP,450,1010),12,430,1020);
   if(V._e1241FeedPAnchor==null)V._e1241FeedPAnchor=V.e1241FeedP;
+  cfLag(V,'chillerGasDP12MZ',cfCorePressureDrop12MZ(flowCryo,223.37,8,V.e1241FeedP,V.e1241FeedT,910,4,1.85,1+(V.cryoMoistureRestriction||0)*.4),12,0,100);
+  if(V._chillerDpAnchor12MZ==null)V._chillerDpAnchor12MZ=V.chillerGasDP12MZ;
 
   /* 2026-08-20 simultaneous cold-section calibration: TE-1241C after the chiller is currently about -7.6 F.
      Preserve a slow process response around that observed point while still letting refrigeration
@@ -15642,7 +15840,7 @@ PLANT.tick=function(){
   var _upDelta=(V.e1241FeedP-(V._e1241FeedPAnchor||V.e1241FeedP));
   var _letCapPct=(V.coldVaporLetdownCapacityPct==null?100:V.coldVaporLetdownCapacityPct);
   var _letdownDeficit=Math.max(0,100-_letCapPct);
-  var _pUncontrolled=884.18+_upDelta*0.38+(flowCryo-223.37)*0.16+_letdownDeficit*0.72+(100-_igvNow)*0.10-_jtNow*0.025+(V.coldCondFrac-0.55)*3.5;
+  var _pUncontrolled=884.18+_upDelta*0.38-(V.chillerGasDP12MZ-V._chillerDpAnchor12MZ)+(flowCryo-223.37)*0.16+_letdownDeficit*0.72+(100-_igvNow)*0.10-_jtNow*0.025+(V.coldCondFrac-0.55)*3.5;
   var _pTarget=clmp(_pUncontrolled-_pctl*0.10,650,1030);
   if(L.PIC1421.man){cfLagLoop(L.PIC1421,clmp(_pUncontrolled-L.PIC1421.out*0.10,650,1030),8,600,1050);}
   else{
@@ -15764,9 +15962,9 @@ PLANT.tick=function(){
     means more compression heat for C-1121 and A-1321 to reject, so the cooler's outlet
     temp genuinely degrades (worse approach) at higher load instead of sitting fixed. */
  if(window.EXP||EXP){
-  V.te1321=clmp(114+(flow-210)*0.09+igvEff*0.16,90,170);
-  V.pt1321=clmp(297+(flow-210)*0.35+igvEff*0.45,200,380);
-  V.pt1121c=EXP.compDis; V.te1121c=EXP.compBrgT;
+  V.te1321=V.a1321OutletT; /*12NA shared cooler-outlet process state, not an independent flow-only display formula.*/
+  V.pt1321=V.residueSuctionPressure; /*12NA common residue-suction boundary; reduced-network limitations remain visible.*/
+  V.pt1121c=V.c1121BoostDischargeP;V.te1121c=V.c1121BoostDischargeT;EXP.compDis=V.pt1121c;EXP.compSuc=V.c1121BoostSuctionP; /*12NA process discharge T is not bearing T.*/
   var _expPathFlow=clmp(V.expanderCalcFlow||0,0,240);
   var _expFlowRatio=clmp(_expPathFlow/152,0,1.35);
   /* PDT-1121B is now the actual expander-path strainer loss. Flow-squared behavior makes
@@ -16424,8 +16622,8 @@ PLANT.tick=function(){
     component when a thermosiphon weakens, because liquid backup raises effective resistance.
     Do not invent a normal random walk; transmitter breathing is added by cfTxDisplay. */
  var _floodResistance=(V.sideRebStallRisk?2.2:0)+(V.bottomRebStallRisk?1.2:0);
- var _dpTarget=clmp(5.06*Math.pow(Math.max(_rebBranchRatio,0.03),1.78)+_floodResistance,0.15,30); /* live HMI PDT-1223A ~5.06 psid. */
- cfLag(V,'pdt1223a',_dpTarget,10,0.1,30);
+ var _dpTarget=cfCorePressureDrop12MZ(V.tcv1223Flow,222*.40,5.06,V.dehyToCryoP,_rebFeedT,930,84,1.78,1+(V.cryoMoistureRestriction||0)*.45); /*12MZ gas-pass flow loss, not liquid thermosiphon stall DP.*/
+ cfLag(V,'pdt1223a',_dpTarget,10,0,100);
  if(V.pdt1223a>=20&&!PLANT.esd){PLANT.esd=true;alarm('E-1223/1224 REBOILER DP HI-HI '+V.pdt1223a.toFixed(1)+' PSID — PDT-1223A HH trip 20 PSID');['c41','c42','c61','c62','c63'].forEach(function(k){if(PLANT.cmp[k])(PLANT.cmp[k].run=false,cfResetInletStopped12MF(PLANT.cmp[k]));});if(EXP)EXP.run=false;}
 
  /* Process-side temperatures move on slower liquid/metal time constants than the gas pass.
@@ -16461,7 +16659,7 @@ PLANT.tick=function(){
  /* Retain TE-1224B as its existing exchanger gas/process model state for the Gas/Gas
     page; do not overload it with the Demeth side-reboiler field transmitter. */
  var _towerPTempBias=clmp((_towerPressure-265)*0.055,-3,5);
- var _te1224bTarget=clmp(60.0+(L.TIC1225.pv-166.2)*0.10+(V.feedGasReboilDuty-1)*9.0-(flow-208)*0.010+_sideLocalHot-(_liftGas?2.0:0)+_towerPTempBias,35,112);
+ var _te1224bTarget=clmp(59+(_rebBranchRatio-1)*12+(_rebFeedT-84)*.15+(_towerPressure-268)*.03+(_circEffect-1.30)*.5,35,112); /*12MZ controlled exchanger-temperature proxy; gains are assumptions, no enthalpy/phase fit.*/
  var _te1223bTarget=clmp(105.2+(L.TIC1225.pv-166.2)*0.15+(V.feedGasReboilDuty-1)*5.0+_bottomLocalHot+_towerPTempBias,80,168);
  var _te1223cTarget=clmp(150.9+(L.TIC1225.pv-166.2)*0.30+(V.feedGasReboilDuty-1)*6.5+_bottomLocalHot*0.55+_towerPTempBias,100,205);
  cfLag(V,'te1224b',_te1224bTarget,48,30,120);
@@ -17105,16 +17303,7 @@ PLANT.tick=function(){
    /* TIC-1224B responds to the thermal result of the reboiler branch. More TCV-1223
       flow supplies more feed-gas heat to the bottom/side reboilers and raises this
       controlled temperature; low temperature therefore calls for more 1223 opening. */
-   if(Tic){
-    var _ticTarget=58.2+(flow-208.0)*0.020+(_rebDuty-1)*8.0; /* 2026-08-20 live HMI anchor: TIC-1224B PV 58.2 F at SP 59 F. */
-    ez(Tic,'pv',_ticTarget,0.055);
-    if(!Tic.man){
-     var eT=Tic.sp-Tic.pv;
-     Tic.out=clmp(Tic.out+eT*0.12,0,100);
-     var v3Target=clmp(12.03+Tic.out,0,100); /* 12.97% CV -> 25.00% valve at baseline */
-     v3+=(v3Target-v3)*0.035;
-    }
-   }
+   cfAdvanceSplitControl12MZ(Tic,PI,V,flow);v3=PI.tcv1223;
    /* TDIC-1224B is the gas/gas split controller. Closing TCV-1221 increases the
       exchanger temperature-difference error; the loop therefore opens 1221 toward
       100%. Baseline remains saturated at the operator-observed 100% position. */
@@ -17167,12 +17356,12 @@ PLANT.tick=function(){
       streams share one finite aluminum core. */
    var _coldAvail=clmp((-_coldAnchor-120)/30,0.35,1.25);
    var _eff=clmp(0.958-_moistPenalty-_switchPenalty-_fluxPenalty-_rsvUaPenalty+(_coldAvail-0.90)*0.012,0.70,0.968);
-   var _hotApproachFactor=clmp(0.382+(_ggBranchRatio-1)*0.018+(1-_coldAvail)*0.010,0.34,0.43);
+   var _hotApproachFactor=clmp(0.382-(_ggBranchRatio-1)*0.035+(1-_coldAvail)*0.010,0.34,0.43);
    var _hotOutTarget=clmp(_ggHotIn-_eff*(_ggHotIn-_coldAnchor)*_hotApproachFactor+Math.max(0,_rsvLoadRatio-1)*1.4,-25,82);
    cfLag(V,'te1221b',_hotOutTarget,48,-30,90);
    /* Cold residue/methane-rich pass warms toward the dry-gas inlet.  Higher cold-flow
       availability limits its outlet rise; higher hot-side duty warms it. */
-   var _coldOutGain=clmp(1.045-(_coldAvail-0.90)*0.035-(_ggBranchRatio-1)*0.018,0.96,1.08);
+   var _coldOutGain=clmp(1.045-(_coldAvail-0.90)*0.035+(_ggBranchRatio-1)*0.018,0.96,1.08); /*12MZ more hot-pass loading adds heat to cold return, not the reverse.*/
    var _coldOutTarget=clmp(_coldAnchor+_eff*(_ggHotIn-_coldAnchor)*_coldOutGain+(_rsvLoadRatio-1)*2.6,20,135);
    cfLag(V,'te1221f',_coldOutTarget,60,15,145);
    /* Dedicated RSV pass heat balance.  It enters near the cooled F-6800 residue-header
@@ -17184,7 +17373,7 @@ PLANT.tick=function(){
    var _rsvOutTarget=clmp(_rsvInT-_rsvPassEff*(_rsvInT-_coldAnchor)*0.97,-125,-35);
    cfLag(V,'rsvExchOutT',_rsvOutTarget,34,-135,-30);
    var _rsvPassRestrict=1+(V.cryoMoistureRestriction||0)*0.45;
-   cfLag(V,'rsvExchDp',clmp(2.20*Math.pow(_rsvRatio,1.82)*_rsvPassRestrict,0.05,18),11,0.03,20);
+   cfLag(V,'rsvExchDp',cfCorePressureDrop12MZ(V.rsvFlow,33,2.20,V.rsvExchInP,V.rsvExchInT,950,94,1.82,_rsvPassRestrict),11,0,100);
    V.rsvExchOutP=clmp((V.rsvExchInP==null?950:V.rsvExchInP)-V.rsvExchDp,0,1100);
    /* FCV-1438 pressure letdown provides additional JT cooling.  Use a bounded
       training-level phase proxy rather than pretending to be an EOS: colder return
@@ -17205,8 +17394,9 @@ PLANT.tick=function(){
    /* BAHX pressure drop follows branch mass flux approximately squared; incipient
       dehy moisture/solids restriction adds a slower penalty rather than appearing
       as random DP movement. */
-   var _ggRestrict=1+(V.cryoMoistureRestriction||0)*0.55;
-   cfLag(V,'pdt1221',clmp(17.11*Math.pow(_ggBranchRatio,1.72)*_ggRestrict,0.25,30),10,0.2,30);
+   var _ggRestrict=1+(V.cryoMoistureRestriction||0)*0.55+Math.max(0,V.hxRestriction||0)*.4; /* retained slow restriction contribution, now in the single DP owner */
+   cfLag(V,'pdt1221',cfCorePressureDrop12MZ(_ggBranchFlow,226.5*.60,20,V.dehyToCryoP,_ggHotIn,930,84,1.85,_ggRestrict),10,0,100);
+   cfGasGasAlarm12MZ();
    if(V.te1221d<=-15&&!PLANT.esd){PLANT.esd=true;alarm('TE-1221D LOW-LOW '+V.te1221d.toFixed(1)+'\u00b0F \u2014 gas/gas exchanger outlet temperature trip (-15\u00b0F)');['c41','c42','c61','c62','c63'].forEach(function(k){if(PLANT.cmp[k])(PLANT.cmp[k].run=false,cfResetInletStopped12MF(PLANT.cmp[k]));});if(EXP)EXP.run=false;}
    /* Split heat integration propagates downstream: weakening the reboiler branch
       reduces feed-gas precooling and reboil stripping, increasing chiller burden and
@@ -17600,7 +17790,8 @@ PLANT.tick=function(){
  ez(V,'tit9220disch',PLANT.in.air9220run?182:85,0.05);
  syncDehySequenceValves(); /* keep physical switch-valve colors/states tied to the automatic bed sequence */
  refrigUnitTick(); /* keeps all 3 refrig compressors' Popup_Refrig_Compr_Data-style readings live every tick, not just while the heavy Quantum HD popup is open */
- cfUpdateExpanderRouting12FY(); /* late trip/isolation must clear EX flow before trending or rendering */
+ if(!EXP.run){PLANT.valves.xv1121b=0;}cfUpdateExpanderRouting12FY(); /* late trip/isolation must clear EX flow before trending or rendering */
+ L.PIC1521DEX.pv=L.PIC1521DJT.pv=L.PIC1521.pv;EXP.expIn=V.pt1121b;V.expanderOutletFlowValid12NA=!!EXP.run&&(V.expanderCalcFlow||0)>.1;
  V.fit1045a=I.flow;V.fit8210a=V.resRate;V.pit4250a=V.inlHdr; /* one physical rate per meter across boards, Ryan and historian */
  recordAllTrends();
 };
@@ -17668,6 +17859,9 @@ function recordTrend(key, value){
 }
 function recordAllTrends(){
  var V=PLANT.v, L=PLANT.L;
+ ['pdt1221','pdt1223a','te1221b','te1224b','te1224c','te1241a','te1241c'].forEach(function(k){if(Number.isFinite(V[k]))recordTrend(k,V[k]);});
+ [['tcv1221flow',V.tcv1221Flow],['tcv1223flow',V.tcv1223Flow],['chillergasdp12mz',V.chillerGasDP12MZ],['tic1224bsp',L.TIC1224B.sp],['tcv1223travel',PLANT.in.tcv1223]].forEach(function(a){if(Number.isFinite(a[1]))recordTrend(a[0],a[1]);});
+ Object.keys(FILTER_RULES).forEach(function(k){recordTrend('filterdp_'+k,filterDP(k));});
  if(Number.isFinite(V.pit4250a))recordTrend('pit4250a',V.pit4250a);
  /* Every reciprocating compressor's suction/discharge/oil/gas-discharge temps --
     added this session alongside making mCompUnit()'s tags click-to-trend; without
@@ -17690,6 +17884,7 @@ function recordAllTrends(){
  recordTrend('te1121d',V.te1121d); recordTrend('te1121',V.te1121); recordTrend('pt1121a',V.pt1121a);
  recordTrend('pdt1121a',V.pdt1121a); recordTrend('pt1121b',V.pt1121b); recordTrend('pdt1121b',V.pdt1121b);
  recordTrend('te1121a',V.te1121a); recordTrend('te1321',V.te1321); recordTrend('pt1321',V.pt1321);
+ recordTrend('igv12na',EXP.igv);recordTrend('exflow12na',V.expanderCalcFlow);recordTrend('jtflow12na',V.jtCalcFlow);recordTrend('fcv1121a12na',V.fcv1221a);
  recordTrend('pt1121x',V.pt1121x); recordTrend('pic1121e_pv',L.PIC1121E.pv); recordTrend('pic1521djt_pv',L.PIC1521DJT.pv);
  recordTrend('pic1521dex_pv',L.PIC1521DEX.pv);
  if(EXP){recordTrend('exp_igv',EXP.igv);recordTrend('exp_local_demand',EXP.localDemand);recordTrend('exp_board_demand',L.PIC1521DEX.out);recordTrend('exp_remote',EXP.remote?1:0);recordTrend('exp_board_auto',L.PIC1521DEX.man?0:1);recordTrend('pic1521dex_sp',L.PIC1521DEX.sp);recordTrend('pic1521djt_sp',L.PIC1521DJT.sp); recordTrend('exp_rpm',EXP.rpm); recordTrend('exp_expoutt',EXP.expOutT);}
@@ -17745,7 +17940,7 @@ function EB(l,v,u){return '<div class="eb"><span>'+l+'</span><b>'+v+'</b> '+(u||
 function LP(k){var L=PLANT.L[k];return '<div class="lp"><div class="lpt">'+k+' <span class="'+(L.man?'mman':'maut')+'" data-act="mode" data-l="'+k+'">'+(L.man?'MAN':'AUTO')+'</span></div>'
  +'<div class="lpr"><span>SP</span><button data-act="sp" data-l="'+k+'" data-d="-1">&minus;</button><b>'+L.sp.toFixed(1)+'</b><button data-act="sp" data-l="'+k+'" data-d="1">+</button> '+L.u+'</div>'
  +'<div class="lpr"><span>PV</span><b class="pv">'+L.pv.toFixed(1)+'</b> '+L.u+'</div>'
- +'<div class="lpr"><span>CV</span>'+(L.man?'<button data-act="cv" data-l="'+k+'" data-d="-1">&minus;</button>':'')+'<b>'+L.out.toFixed(0)+'</b> % '+(L.man?'<button data-act="cv" data-l="'+k+'" data-d="1">+</button>':'')+' &nbsp;<i style="color:#6a7682;font-size:9px;">'+(L.man?'manual valve position':'auto output')+'</i></div></div>';}
+ +'<div class="lpr"><span>CV</span>'+(L.man?'<button data-act="cv" data-l="'+k+'" data-d="-1">&minus;</button>':'')+'<b>'+L.out.toFixed(0)+'</b> % '+(L.man?'<button data-act="cv" data-l="'+k+'" data-d="1">+</button>':'')+' &nbsp;<i style="color:#6a7682;font-size:9px;">'+(k==='TIC1224B'?'CV scale; see TCV travel':(L.man?'manual valve position':'auto output'))+'</i></div></div>';}
 function CP(k){var c=PLANT.cmp[k];var pct=c.run?cfLoadFraction(c)*100:0;var lm=cfCompressorLimits12MG(c,k)||{dis:{HH:'-'},suc:{LL:'-'},oilT:{HH:'-'}};var _seq=cfCompressorSequenceLabel(c);
  return '<div class="cp"><div class="cpt">'+c.name+' <span class="'+(c.run?'run':'stop')+'" data-act="crun" data-c="'+k+'">'+_seq+'</span></div>'
  +'<div class="cpr">Suction <b>'+c.suc.toFixed(0)+'</b> &nbsp; Disch <b>'+c.dis.toFixed(0)+'</b> PSIG</div>'
@@ -18166,7 +18361,7 @@ document.getElementById('eqtscr').addEventListener('click',function(e){var t=e.t
    if(L.TDIC1224B){L.TDIC1224B.man=true;}
    if(d>0&&v1>=100){
     v3=clmp(v3+1,0,100);
-    if(L.TIC1224B){L.TIC1224B.man=true;L.TIC1224B.out=clmp(v3-11.03,0,100);}
+    if(L.TIC1224B){L.TIC1224B.man=true;L.TIC1224B.out=clmp(v3-12.03,0,100);}
    }else{
     v1=clmp(v1+d,10,100);
     if(L.TDIC1224B)L.TDIC1224B.out=v1;
@@ -18174,7 +18369,7 @@ document.getElementById('eqtscr').addEventListener('click',function(e){var t=e.t
   }else if(k==='1223'){
    if(L.TIC1224B)L.TIC1224B.man=true;
    v3=clmp(v3+d,0,100);
-   if(L.TIC1224B)L.TIC1224B.out=clmp(v3-11.03,0,100);
+   if(L.TIC1224B)L.TIC1224B.out=clmp(v3-12.03,0,100);
   }
   if(v3>50){
    PI.tcvCrossLimitActive=true;
@@ -18187,6 +18382,7 @@ document.getElementById('eqtscr').addEventListener('click',function(e){var t=e.t
   }
   PI.tcv1221=clmp(Math.round(v1*100)/100,10,100);
   PI.tcv1223=clmp(Math.round(v3*100)/100,0,100);
+  if(L.TIC1224B&&L.TIC1224B._tracking12MZ){var tr=L.TIC1224B._tracking12MZ;tr.demand=PI.tcv1223;tr.lastOut=L.TIC1224B.out;tr.lastSP=L.TIC1224B.sp;tr.lastPV=L.TIC1224B.pv;tr.manual=true;}
   if(PI.tcv1223>50)alarm('TCV-1223 high-range split active — TCV-1221 cross-limited to '+PI.tcv1221.toFixed(1)+'% (10% minimum)');
   renderScreen();return;
  }
@@ -19447,17 +19643,17 @@ function expPopup(){var e=EXP||{run:true,igv:96,rpm:23800,pi101:346,expIn:612,ex
  s+=pr('IGV Position',(on?e.igv:0).toFixed(1),'%');
  s+=pr('Surge Relative Flow SP',e.surgeSP.toFixed(1),'% FLOW');
  s+=pr('Surge Relative Flow PV',(on?e.surgePV:0).toFixed(1),'% FLOW');
- s+=pr('Surge Valve Position',(L&&L.PIC1121E?L.PIC1121E.out:0).toFixed(1),'%');
+ s+=pr('FCV-1121A Surge Valve Position',cfExpanderRecycle12NA().toFixed(1),'%');
  s+=pr('Compr Inlet Volumetric Flow',(on?e.acfm:0).toFixed(0),'ACFM');
  s+='</div><div class="poc"><div class="pott">STATUS</div>';
  s+=pr('Cooler Fan Status',on?'RUNNING':'OFF');
  s+=pr('Expander Status',on?'RUNNING':'STOPPED');
- s+=pr('Pump #101 Status',(on&&e.pump101)?'RUNNING':'OFF');
- s+=pr('Pump #102 Status',(on&&e.pump102)?'RUNNING':'OFF');
+ s+=pr('Pump #101 Status',e.pump101?'RUNNING':'OFF');
+ s+=pr('Pump #102 Status',e.pump102?'RUNNING':'OFF');
  s+=pr('Compressor Inlet Valve',on?'OPEN':'CLOSED');
  s+=pr('Expander Inlet Trip Valve',on?'OPEN':'CLOSED');
  s+=pr('IGV Local/Remote Status',e.remote?(L.PIC1521DEX.man?'REMOTE / MANUAL':'REMOTE / AUTO'):'LOCAL / MANUAL');
- s+=pr('Surge Auto/Manual Status',(L&&L.PIC1121E&&L.PIC1121E.man)?'MANUAL':'AUTO');
+ s+=pr('Surge model status',(!e.run||e.startupPending)?'STOP / START PREPARATION - OPEN':'RETAINED RUN DEMAND (NO SURGE MAP)');
  s+=pr('Pump #101 Auto/Hand Status','HAND');
  s+=pr('Pump #102 Auto/Hand Status','AUTO');
  s+=pr('Expander Inlet Block Valve',on?'OPEN':'CLOSED');
@@ -19557,34 +19753,10 @@ function cfTxDisplay(tag,val,unit){
  if(tag==='PT-1441C')return Number(PLANT.L.PIC1441C.pv).toFixed(2);
  if(tag==='PT-1441')return Number(PLANT.L.PCV1441B.pv).toFixed(2);
  if(tag==='PDT-1438')return Number(filterDP('f1438')).toFixed(2);
- var raw=String(val==null?'':val), n=parseFloat(raw.replace(/,/g,''));
- if(!isFinite(n))return val;
- /* Only process transmitters/indicators. Do not animate controller CV/SP, switches or totalizers. */
- if(!/^(PT|PIT|PDT|PDIT|TE|TI|TIT|TDI|TDIT|FT|FIT|LT|LIT|ME|SE)[-_0-9A-Z]/.test(tag))return val;
- var u=String(unit||'').toUpperCase();
- var amp;
- if(/PSID|INH2O|H2O/.test(u)) amp=Math.max(0.015,Math.min(0.12,Math.abs(n)*0.0025));
- else if(/PSIG|PSI/.test(u)) amp=Math.max(0.06,Math.min(0.65,Math.abs(n)*0.0015));
- else if(/DEG|\u00b0F|TEMP/.test(u)) amp=Math.max(0.045,Math.min(0.30,Math.abs(n)*0.0012));
- else if(/MMSCFD/.test(u)) amp=Math.max(0.008,Math.min(0.09,Math.abs(n)*0.0013));
- else if(/GPM/.test(u)) amp=Math.max(0.03,Math.min(0.45,Math.abs(n)*0.0012));
- else if(/SCFH|ACFH|ACFM/.test(u)) amp=Math.max(0.8,Math.min(18,Math.abs(n)*0.0010));
- else if(/%/.test(u)) amp=0.035;
- else if(/RPM/.test(u)) amp=Math.max(1.0,Math.min(9,Math.abs(n)*0.00025));
- else amp=Math.max(0.01,Math.min(0.10,Math.abs(n)*0.001));
- var h=0;for(var i=0;i<tag.length;i++)h=(h*33+tag.charCodeAt(i))>>>0;
- var now=Date.now()/1000, ph=(h%6283)/1000;
- /* Two slow deterministic components: no random flicker, and the same tag agrees across screens. */
- var breathing=amp*(0.72*Math.sin(now/11.5+ph)+0.28*Math.sin(now/37.0+ph*0.61));
- var target=n+breathing;
- var st=CF_TX_DYN[tag];
- if(!st){st=CF_TX_DYN[tag]={v:target,t:now};}
- var dt=Math.max(0,Math.min(2,now-st.t||0)), tau=2.5+((h%50)/10); /* 2.5–7.4 s sensor lag */
- var a=1-Math.exp(-dt/tau); st.v+=(target-st.v)*a; st.t=now;
- var m=raw.match(/\.([0-9]+)/), dec=m?Math.min(3,m[1].length):0;
- /* Integer-only tags need enough motion to occasionally move one count, without noisy chatter. */
- if(dec===0 && Math.abs(st.v-n)<0.51) st.v=n+breathing*1.7;
- return st.v.toFixed(dec);
+ /*12NA: process signals already have their own transport/measurement dynamics.
+  Rendering is read-only: no per-visit filter, second clock, fake RPM at zero, or added display-only noise.
+  Existing plant waves, sensor faults, recorder samples and historical arrays are unchanged. */
+ return val;
 }
 function mTag(x,y,lab,val,unit){return '<g><rect x="'+x+'" y="'+y+'" width="96" height="32" rx="3" fill="#0b0f14" stroke="#2a333c"/><text x="'+(x+5)+'" y="'+(y+12)+'" fill="#8fa0b2" font-size="8">'+lab+'</text><text x="'+(x+5)+'" y="'+(y+26)+'" fill="#5cff8f" font-size="13" font-family="Consolas,monospace">'+val+'</text><text x="'+(x+91)+'" y="'+(y+26)+'" fill="#8fa0b2" font-size="8" text-anchor="end">'+(unit||'')+'</text></g>';}
 function mArr(x,y,lab,left){var p=left?('M'+(x+20)+' '+(y-7)+' L'+x+' '+y+' L'+(x+20)+' '+(y+7)+' Z'):('M'+x+' '+(y-7)+' L'+(x+20)+' '+y+' L'+x+' '+(y+7)+' Z');return '<path d="'+p+'" fill="#11161c" stroke="#5a6671"/><text x="'+(left?x+24:x-4)+'" y="'+(y+3)+'" fill="#8fa0b2" font-size="8.5" text-anchor="'+(left?'start':'end')+'">'+lab+'</text>';}
@@ -19638,7 +19810,7 @@ SCR.expander=function(){
  s+=pt(120,28,'PT-1121E',L.PIC1121E.pv.toFixed(2),'PSIG',['H'])+ctl(270,27,'PIC1121E',L.PIC1121E,'PIC-1121E')+mTCV(505,70,'PCV-1121E',L.PIC1121E.out)+mPipe('M515 70 H720 V96 H875')+mArr(875,96,'PRIMARY FUEL GAS',false);
  /* JT / EX alternative feed paths and separate reflux-service connection */
  s+=mArr(20,190,'',false)+mPipe('M40 190 H555');
- s+='<text x="45" y="180" fill="#283038" font-size="7" font-weight="700">FROM V-1421 COLD SEPARATOR — THREE PARALLEL PATHS</text>';
+ s+='<text x="45" y="180" fill="#283038" font-size="7" font-weight="700">FROM V-1421: EX / JT LETDOWN + SEPARATE REFLUX SERVICE</text>';
  s+=mPipe('M155 190 V325 H45')+mArr(45,325,'TO E-1222 REFLUX CONDENSER',true);
  /* JT branch */
  s+=mPipe('M300 190 V270 H380')+mTCV(390,270,'PCV-1121A',PLANT.valves.pcv1121a_bypass||0)+mPipe('M400 270 H760 V565');
@@ -22484,7 +22656,7 @@ SCR.gasgas=function(){
    '<rect x="'+x+'" y="'+(y+2)+'" width="88" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
    '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
    '<text x="'+(x+85)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text>';
-  if(alms){alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
+  if(alms){alms.forEach(function(a2,i2){var ac=(tag==='PDT-1221'&&a2==='H'&&V.gasGasHighDP12MZ)?'#d64323':a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});}
   return '<g data-act="trend" data-key="'+_k+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+s+'</g>';}
@@ -37672,9 +37844,12 @@ function createRyanIndexEngine12JT(dataset) {
     if(!definitions.some(function(d){return d.name==='CF_SOURCE_12MV';}))definitions.push({name:'CF_SOURCE_12MV',value:CF_SOURCE_12MV});
     if(!definitions.some(function(d){return d.name==='CF_SOURCE_12MW';}))definitions.push({name:'CF_SOURCE_12MW',value:CF_SOURCE_12MW});
     if(!definitions.some(function(d){return d.name==='CF_SOURCE_12MX';}))definitions.push({name:'CF_SOURCE_12MX',value:CF_SOURCE_12MX});
+    if(!definitions.some(function(d){return d.name==='CF_SOURCE_12MY';}))definitions.push({name:'CF_SOURCE_12MY',value:CF_SOURCE_12MY});
+    if(!definitions.some(function(d){return d.name==='CF_SOURCE_12MZ';}))definitions.push({name:'CF_SOURCE_12MZ',value:CF_SOURCE_12MZ});
+    if(!definitions.some(function(d){return d.name==='CF_SOURCE_12NA';}))definitions.push({name:'CF_SOURCE_12NA',value:CF_SOURCE_12NA});
     definitions=definitions.filter(function(d,i,all){return all.findIndex(function(x){return x.name===d.name;})===i;});
     return {
-      build:'12MX',sourceIndexBuild:'12MX',pumpStudy12MI:{build:'12MJ',intake:CF_PETRO_PUMP_STUDY_12MI.intake,sourceRef:CF_PETRO_PUMP_STUDY_12MI.sourceRef,newEngineeringFacts:0,newQuestions:20},sourceSHA256:CF_RYAN_INDEX_MANIFEST_12JT.sourceSHA256,
+      build:'12MZ',sourceIndexBuild:'12MZ',pumpStudy12MI:{build:'12MJ',intake:CF_PETRO_PUMP_STUDY_12MI.intake,sourceRef:CF_PETRO_PUMP_STUDY_12MI.sourceRef,newEngineeringFacts:0,newQuestions:20},sourceSHA256:CF_RYAN_INDEX_MANIFEST_12JT.sourceSHA256,
       summary:CF_RYAN_INDEX_MANIFEST_12JT.summary,components:Object.values(components),
       drawings:typeof cfSourceDrawings12HO==='function'?cfSourceDrawings12HO():[],
       sourceDefinitions:definitions,nameplates:typeof CF3D_DEVICE_PHOTOS!=='undefined'?CF3D_DEVICE_PHOTOS:[],
@@ -37697,12 +37872,12 @@ function createRyanIndexEngine12JT(dataset) {
   var previousFetch=ryanFetch;
   ryanFetch=function(body){
     body=Object.assign({},body||{});
-    body.clientReferenceBuild='12MX';body.referenceSnapshotDigest=CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest;
+    body.clientReferenceBuild='12MY';body.referenceSnapshotDigest=CF_RYAN_INDEX_MANIFEST_12JT.referenceDigest;
     var mode=String(body.mode||'qa').toLowerCase();
     var skip=['auth','health','reference_search','digest','digest_prepare','digest_pass','digest_batch_start','digest_batch_status','image_learn','learn','ingest','memory_extract','operating_memory_extract','shift_report_chunk'];
     if(skip.indexOf(mode)<0){
       try{body.indexReferenceContext=select(requestQuestion(body),{limit:22,maxChars:24000});}
-      catch(e){body.indexReferenceContext={build:'12MX',records:[],warnings:['Current index reference selection failed: '+String(e.message||e)+'. Server fallback remains available.']};console.error('12JT Ryan reference selection',e);}
+      catch(e){body.indexReferenceContext={build:'12MZ',records:[],warnings:['Current index reference selection failed: '+String(e.message||e)+'. Server fallback remains available.']};console.error('12JT Ryan reference selection',e);}
     }
     // Existing auth, history, live context, ingestion and transport remain intact.
     return previousFetch(body);
@@ -37758,7 +37933,7 @@ function cfFinalizeVisual12LJ(){
  step('valve positions',function(){if(!window.CFValvePositions12KI)cfInstallValveUpdate12KI();if(!window.CFValvePositions12KI)throw Error('Valve-position reader did not initialize.');window.CFValvePositions12KI.refresh();window.CFValvePositions12KI.setEnabled(true);window.CFValvePositions12KI.update(0);window.CFValvePositions12KJ=window.CFValvePositions12KI;});
  var features={equipmentTraining:!!window.CFEquipmentTrainer12MR,navigation:!!window.CFNavigation12MJ,dashboard:!!window.CFDashboard12KL,valvePositions:!!window.CFValvePositions12KI,referenceLibrary:typeof openLibrary==='function',componentFinder:!!window.CFComponentFinder12IK,componentTrace:!!window.CFComponentTrace12IZ,psvGapFinder:!!window.CFReference12KV,frickVendor:!!window.CFReference12KP,expanderVendor:!!window.CFReference12KQ,c5700Vendor:!!window.CFReference12KR,heaters:!!window.CFReference12KS,arielQuiz:!!window.CFReference12KT,frickParts:!!window.CFReference12KU,latestOilReview:!!window.CFReference12LI,esdBodyPlate:!!window.CFReference12LJ,quizBank:typeof QUIZ_BANK!=='undefined'?QUIZ_BANK.length:null};
  if(!features.dashboard||!features.valvePositions){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Feature restoration','Dashboard or valve-position subsystem requires review.');}
- window.CFAppReady12LJ={build:'12MX',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
+ window.CFAppReady12LJ={build:'12NA',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
  window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LJ=window.CFRyanIndexSync12JT;
  if(window.CFStartup12LJ)window.CFStartup12LJ.paint();
  return window.CFAppReady12LJ;
@@ -39507,7 +39682,7 @@ function cfInstallTrainerRefinement12MV(){if(window.CFTrainerRefinement12MV)retu
 }
 
 try{cfInstallTrainerRefinement12MV();}catch(e){console.error('12MV trainer refinement',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Trainer refinement',e);}
-try{cfInstallChillerReview12MX();}catch(e){console.error('12MX chiller review',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Chiller review',e);}try{cfInstallHeaterReview12MW();}catch(e){console.error('12MW heater and identity review',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Heater review',e);}
+try{cfInstallLoadInteraction12MY();}catch(e){console.error('12MY load interaction',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Load interaction',e);}try{cfInstallChillerReview12MX();}catch(e){console.error('12MX chiller review',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Chiller review',e);}try{cfInstallHeaterReview12MW();}catch(e){console.error('12MW heater and identity review',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Heater review',e);}
 try{cfInstallCompressorTrainingWorkspace12MO();}catch(e){console.error('12MO training workspace',e);if(window.CFStartup12LJ)window.CFStartup12LJ.note('Compressor Internals Studio',e);}
 
 
@@ -39540,10 +39715,22 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12MW',baseline:'12MV',sourceIn
 Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12MW',latestUpdate:'12MW',sourceDefinitions:142,sourceDefinitionBlocks:142,referenceNotes:3750});
 window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MW',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MW',sourceStorageMode:'learn-only',referenceDigest:'6e56b01a27c334b48b77ac2ffa093811a94d73fd16ebe748b5969d984c600e0f'});window.CF_CURRENT_RELEASE_12MW=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
 
-/* Current 12MX release authority; all earlier release blocks above are historical. */
-Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12MX',baseline:'12MW',sourceIndexBuild:'12MX',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,referenceDigest:'6e56b01a27c334b48b77ac2ffa093811a94d73fd16ebe748b5969d984c600e0f',sourceSHA256:'6e56b01a27c334b48b77ac2ffa093811a94d73fd16ebe748b5969d984c600e0f'});
-Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12MX',latestUpdate:'12MX',sourceDefinitions:143,sourceDefinitionBlocks:143,referenceNotes:3750});
-CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12MW',release:'12MX',deploymentStatus:'PREPARED_NOT_DEPLOYED',requestPosition:'NOT_INFERRED'};
-window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MX',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MX',sourceStorageMode:'learn-only',referenceDigest:'6e56b01a27c334b48b77ac2ffa093811a94d73fd16ebe748b5969d984c600e0f'});window.CF_CURRENT_RELEASE_12MX=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+/* Current 12MY release authority; all earlier release blocks above are historical. */
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12MY',baseline:'12MX',sourceIndexBuild:'12MY',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,referenceDigest:'9326e7625b0955f9513f72cc05d2151da1fb42d11da099eec5b86245f7838416',sourceSHA256:'9326e7625b0955f9513f72cc05d2151da1fb42d11da099eec5b86245f7838416'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12MY',latestUpdate:'12MY',sourceDefinitionCount:144,sourceDefinitions:144,sourceDefinitionBlocks:144,referenceNotes:3750});
+CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12MX',release:'12MY',deploymentStatus:'PREPARED_NOT_DEPLOYED',requestPosition:'NOT_INFERRED'};
+window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MY',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MY',sourceStorageMode:'learn-only',referenceDigest:'9326e7625b0955f9513f72cc05d2151da1fb42d11da099eec5b86245f7838416'});window.CF_CURRENT_RELEASE_12MX=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12MY=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+
+/* Current 12MZ release authority. Historical releases remain above. */
+try{cfInstallDpReview12MZ();cfInstallRundown12NA();}catch(e){console.error('12MZ DP review installation',e);}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{referenceDigest:'decd513fb35ef2e83ff4187275262c8aad7054d64a988c69ccab01bfbd30dea3',sourceSHA256:'decd513fb35ef2e83ff4187275262c8aad7054d64a988c69ccab01bfbd30dea3',build:'12MZ',baseline:'12MY',sourceIndexBuild:'12MZ',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12MZ',latestUpdate:'12MZ',sourceDefinitionCount:145,sourceDefinitions:145,sourceDefinitionBlocks:145,referenceNotes:3750});
+CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12MY',release:'12MZ',deploymentStatus:'PREPARED_NOT_DEPLOYED',requestPosition:'NOT_INFERRED'};
+window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12MZ',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12MZ',sourceStorageMode:'learn-only'});window.CF_CURRENT_RELEASE_12MZ=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12MY=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12MX=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12NA',baseline:'12MZ',sourceIndexBuild:'12NA',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE});Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12NA',latestUpdate:'12NA',sourceDefinitionCount:146,sourceDefinitions:146,sourceDefinitionBlocks:146});window.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12NA',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12NA',sourceStorageMode:'learn-only'});window.CF_CURRENT_RELEASE_12NA=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12MZ',release:'12NA',deploymentStatus:'PREPARED_NOT_DEPLOYED',requestPosition:'NOT_INFERRED'};
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{referenceDigest:'dd078e317fd9c9eaf0f5ef63b5bbb9d277005d11a1247bed0da7adaebae7a572',sourceSHA256:'dd078e317fd9c9eaf0f5ef63b5bbb9d277005d11a1247bed0da7adaebae7a572',sourceHashBasis:'SHA256 of canonical 12NA review plus baseline main-file digest; not a whole-application hash'});
 })(); // 12JJ close the shared application scope AFTER both visual mounts
+
 
