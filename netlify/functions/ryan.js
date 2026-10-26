@@ -727,13 +727,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-10-26-12NJ';
+const RYAN_BUILD_ID='RYAN-2026-10-26-12NK';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-STARTUP-EVIDENCE-12NJ-20261026';
+const RYAN_CODE_SIGNATURE='CF-RYAN-READOUT-BRANDING-12NK-20261026';
 
 
 
@@ -44612,3 +44612,11 @@ module.exports.REFERENCE_STATE_12NJ=RYAN_INDEX_REFERENCE_12JT;
 module.exports.RYAN_INDEX_MANIFEST_12NJ=RYAN_INDEX_MANIFEST_12JT;
 module.exports.equipmentTrainingData12NJ=module.exports.equipmentTrainingData12NI;
 module.exports.STARTUP_EVIDENCE_REPAIR_12NJ={scope:'Frontend source loading and exact-owner card repair; no new plant facts or process controls.',plateOwnership:'Retained exact equipment owners; no individual serial or National Board transfers.',knownLimitations:['Live deployment/GPU not verified by source checks','Existing JT-only hydraulic qualification and unmodeled residue suction channels remain']};
+
+/*12NK matching presentation release; engineering and archive data unchanged.*/
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12NK',baseline:'12NJ',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});
+RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12NJ',release:'12NK',deploymentStatus:'PREPARED_NOT_DEPLOYED'};
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12NK',baseline:'12NJ',backendBuild:RYAN_BUILD_ID});
+module.exports.REFERENCE_STATE_12NK=RYAN_INDEX_REFERENCE_12JT;
+module.exports.RYAN_INDEX_MANIFEST_12NK=RYAN_INDEX_MANIFEST_12JT;
+module.exports.DISPLAY_REPAIR_12NK={scope:'Bounded readout precision and fitted SVG value/unit columns; server EQT gate included explicitly.',sourceFactsAdded:0,processChanges:false};
