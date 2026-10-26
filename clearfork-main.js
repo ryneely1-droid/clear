@@ -1,5 +1,44 @@
 
 (function(){
+/*12NK display-only number formatting. Raw PLANT/controller values, trend samples,
+  alarm comparisons and saved history are deliberately never rounded here. */
+function cfFormatReadout12NK(value,unit){
+ if(value===null||value===undefined)return '--';
+ if(typeof value!=='number'&&typeof value!=='string')return String(value);
+ var text=String(value).trim();
+ if(!text)return '--';
+ if(/^[+-]?(?:NaN|Infinity)$/i.test(text))return 'N/A';
+ var numeric=/^[+-]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text);
+ if(!numeric)return text;
+ var n=Number(text.replace(/,/g,''));if(!Number.isFinite(n))return 'N/A';
+ var u=String(unit||'').trim().toUpperCase(),small=/^(?:MIL|MILS|IPS|IN\/S|IN\/SEC|MM\/S|G'S|G RMS)$/.test(u);
+ var places=/^(?:RPM|HOURS|HRS|COUNT)$/.test(u)?0:(small?3:2);
+ /* Preserve intentional short, preformatted values, including 3-place vibration
+    readings. Long numeric strings from JS floats are not a precision request. */
+ if(typeof value==='string'&&!/[eE]/.test(text)){
+  var fraction=(text.split('.')[1]||'').length;
+  if(fraction<=3&&Math.abs(n)<1e9){return n===0?text.replace(/^-/,''):text;}
+ }
+ if(n===0)n=0;
+ if(Math.abs(n)>=1e9||(n!==0&&Math.abs(n)<Math.pow(10,-places)/2))return n.toExponential(2).replace('e+','e');
+ var out=n.toFixed(places);return /^-0(?:\.0+)?$/.test(out)?out.slice(1):out;
+}
+function cfReadoutEscape12NK(value){return String(value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function cfReadoutSvg12NK(x,y,width,value,unit,fontSize,unitSize,fill,unitFill,weight){
+ /* Both columns are fitted inside the ORIGINAL box: no clipped sign, lost unit,
+    process clamp, fake zero, or geometry/layout expansion. Title retains raw value. */
+ var label=cfFormatReadout12NK(value,unit),u=String(unit||''),gap=u?5:0;
+ var uf=unitSize||7,fs=fontSize||11,unitWidth=u?u.length*uf*.68:0;
+ unitWidth=Math.min(Math.max(0,width-22),unitWidth);
+ var available=Math.max(12,width-unitWidth-gap),natural=label.length*fs*.66;
+ var actual=Math.max(7,Math.min(fs,available/Math.max(1,label.length*.66)));
+ var fit=label.length*actual*.66>available?' textLength="'+available.toFixed(2)+'" lengthAdjust="spacingAndGlyphs"':'';
+ var full=(value===null||value===undefined?'No reading':String(value))+(u?' '+u:'');
+ return '<g data-cf-readout-row="12NK" data-cf-left="'+x+'" data-cf-width="'+width+'"><title>'+cfReadoutEscape12NK(full)+'</title>'+
+  '<text data-cf-readout="12NK" data-cf-available="'+available.toFixed(2)+'" x="'+x+'" y="'+y+'" fill="'+fill+'" font-size="'+actual.toFixed(2)+'" font-family="Consolas,monospace" style="font-family:Consolas,monospace;font-variant-numeric:tabular-nums"'+(weight?' font-weight="'+weight+'"':'')+fit+'>'+cfReadoutEscape12NK(label)+'</text>'+
+  (u?'<text data-cf-unit="12NK" x="'+(x+width-1)+'" y="'+y+'" fill="'+unitFill+'" font-size="'+uf+'" font-family="Consolas,monospace" style="font-family:Consolas,monospace" text-anchor="end"'+(u.length*uf*.68>unitWidth?' textLength="'+unitWidth.toFixed(2)+'" lengthAdjust="spacingAndGlyphs"':'')+'>'+cfReadoutEscape12NK(u)+'</text>':'')+'</g>';
+}
+
 /*12NJ: clear only generated previous-selection presentation, never source/storage data.
   Keep the original title/list nodes because older display functions retain references.*/
 function cfResetInspectionHost12NJ(){
@@ -569,7 +608,7 @@ function cfInstallEquipmentTraining12MQ(){
  return window.CFEquipmentTrainingReference12MQ={build:'12MQ',report:report,source:CF_SOURCE_12MQ};
 }
 
-window.CFMainScript12LJ={build:"12NJ",phase:"starting"};
+window.CFMainScript12LJ={build:"12NK",phase:"starting"};
 var CF_SOURCE_12MP={"build":"12MP","baseline":"12MO","date":"2026-10-23","id":"equipment_internal_detail_12mp","title":"Equipment Internal Training","notebookKey":"compressor_internals_training_12mo","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["c4100","c6100","c5700"],"equipmentIds":["C-4100","C-6100","C-5700"],"sourceClass":"OPERATOR_REQUEST_WITH_OEM_FAMILY_RESEARCH_AND_EXISTING_PLANT_SOURCE","existingSourceRefs":["CF_SOURCE_12MO","CF_SOURCE_12KR (history only where superseded)","CF_SOURCE_12LI (current C-5700 oil topology)","CF_SOURCE_12KT (KBZ manual)","CF_SOURCE_12KX (JGQ manual)","CF_PWH_SOURCE_12MH (future NGL only)"],"research":[{"id":"ariel-frame-oil","title":"Ariel / frame-driven oil pumps","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/frame_driven_lube_oil_pumps.html","scope":"OEM family mechanism. Auxiliary-end chain drive and distinct KBZ regulation, not installed piping or a new pressure setting.","reviewed":"2026-10-23"},{"id":"ariel-divider","title":"Ariel / common-supply cylinder lubrication diagram","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","scope":"Generic vendor explanatory diagram. Metered quantities depend on the selected blocks; exact installed injection points are not established.","reviewed":"2026-10-23"},{"id":"ariel-filter","title":"Ariel / frame oil filters","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/lube_oil_filter.html","scope":"Family filter construction and differential-pressure indication. No installed element or trip change.","reviewed":"2026-10-23"},{"id":"ariel-crosshead","title":"Ariel / crossheads","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/crossheads.html","scope":"Generic pin/bushing and top/bottom lubrication; no serial balance weights or rod-load certification.","reviewed":"2026-10-23"},{"id":"ariel-rod","title":"Ariel / connecting rods","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/connecting_rods.html","scope":"Forged-rod family reference, not a serial parts drawing.","reviewed":"2026-10-23"},{"id":"ariel-jgq-detail","title":"Ariel / JGN-JGQ frame standard features","url":"https://www.arielcorp.com/support/application-manual/frame-class-equipment/jgn_jgq_frames.html","scope":"JGQ family exterior, short integral guide, filter/gauges and tubing. Actual installed source records remain controlling.","reviewed":"2026-10-23"}],"newEntries":[{"id":"equipment_training_name","title":"Equipment Internal Training / future pump category","tags":["C-4100","C-6100","C-5700"],"text":"The existing trainer is renamed Equipment Internal Training. Inlet, residue and overhead are active; expander, refrigeration, regeneration and NGL pumps are future categories. Existing training IDs, unit source ownership and future part fields are preserved.","authority":"OPERATOR_REQUEST"},{"id":"detailed_lube_reference","title":"Separate lubrication duties and source boundary","tags":["C-4100","C-6100","C-5700"],"text":"Training adds distinct circulating frame-oil, cylinder/packing force-feed, and unassigned packing vent/drain views. Tubing bends, unions, point counts, marker timing, chain ratio and microgeometry remain schematic. No feed rates, material ratings, pressures or installed parts are inferred.","authority":"OEM_GUIDED_TRAINING_GEOMETRY"},{"id":"frame_oil_detail","title":"Frame oil and auxiliary-end mechanism","tags":["C-4100","C-6100","C-5700"],"text":"Source-linked oil teaching objects include sump, suction strainer, auxiliary-end pump/chain drive, cooler/bypass, full-flow filter and two pressure indications, gallery/bearing feeds, pre-lube, frame-side wiper return, breather and oil level. KBZ downstream-filter external regulation is distinguished from small-frame pump-head regulation.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"forcefeed_detail","title":"Application-selected metering and individual tube identification","tags":["C-4100","C-6100","C-5700"],"text":"Ariel common-supply diagram supplies the explanatory metering path: checked supply, force-feed pump, overpressure device alternative, pressure indication, progressive divider, cycle/no-flow monitor and checked injection points. Divider proportions are application-selected, not automatically equal. Drive-box oil remains separate from the injection supply. This is not a confirmed installed BOM or real shutdown channel.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"c5700_preserve_correction","title":"C-5700 oil topology remains owner-specific","tags":["C-5700","PSV-1005","PSV-1042"],"text":"Retain 12LI: 1024 is circulation/heater assembly (1017/1019/1021, TC1025, FSLL1023), not a cylinder lubricator. PSV1005 branches from pump1003 before check1004 and returns before strainer1001. PSV1042 protects the separate circulation/heater loop; both settings remain unestablished. Generic force-feed detail does not restore retired false plant feeds.","authority":"RETAINED_SOURCE_CROSSLINK_12LI"},{"id":"jgq_exterior_detail","title":"C-5700 current model exterior refined","tags":["C-5700"],"text":"Refined the active 12KR JGQ/2 exterior: ribbed crankcase, silver removable top and side covers, short guide housing, cylinder casting ribs, head flange/studs and valve access caps. Existing two cylinder identities, motor/shaft, nozzles, boundaries and later corrected oil connections remain. Blue/silver finish and fine dimensions are visual references, not a paint survey or installed parts catalog.","authority":"OEM_APPEARANCE_WITH_RETAINED_PLANT_TOPOLOGY"},{"id":"mechanism_detail","title":"Selectable small moving components","tags":["C-4100","C-6100","C-5700"],"text":"Added crosshead-pin bushing, rod-attachment and connecting-rod cap-fastener groups, enlarged guide oil-film overlays, and schematic moving chain/gear/metering elements. Existing slider-crank and ideal gas-cycle equations are retained; this is not a rod-load, lubrication-rate or valve-impact calculation.","authority":"TRAINING_ONLY"}],"policy":["No claim of all installed internal parts: serial-specific assembly drawings, tube schedules, injection sheets, approved BOM and field configuration are not complete.","All existing part IDs and owner links retained. Added training subparts do not create physical plant equipment. Manufacturer part numbers and installed ratings remain blank until source evidence is supplied.","Frame returns, process gas, packing leakage and force-feed oil are separate. Unestablished vent/drain receiving destinations are not connected to a convenient header.","Shared source references do not copy serial/National Board identifiers. No alarms, operating equations, settings, gate files or browser-storage schema are changed.","Generic lube diagram is filed once in Clearfork P&IDs as an OEM explanatory reference, not an issued plant drawing.","NGL pump category is a future placeholder only. PWH and NGL evidence already retained is not duplicated or converted to a new model."],"pending":["Exact serial-specific lubrication tube schedule, fitted injection count, divider configuration, metering quantities, oil source variants and installed part/rating selection.","Full native GPU and integrated plant rendering validation, final site collisions and real equipment field verification are separate tasks."],"drawings":[{"number":"ARIEL-APP-COMMON-OIL-FIGURE","revision":"Web page updated 09/07/2001","title":"Ariel force-feed lubrication / common oil supply - generic explanatory figure","pages":[1],"sourceFile":"Ariel application manual - Cylinder Lube Oil Distribution Block System","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","referenceKey":"ariel_common_lube_diagram_12mp","sourceClass":"GENERIC_VENDOR_EXPLANATORY_DIAGRAM_NOT_PLANT_PID","scope":"Catalog locator only, not an Ariel issued drawing number. Generic common-supply example; exact installed variants and injection-point count not established.","sourceStorageMode":"learn-only","sourceRetained":false,"sha256":null}]};
 function cfApplyEquipmentDetail12MP(H,S){
  'use strict';var I=H.info||{},sets=[H.records,H.deviceData,H.trace],ids=S.newEntries.map(function(f){return f.id;}),key=S.notebookKey;
@@ -10682,10 +10721,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-10-26-12NJ';
+var RYAN_BUILD_ID='RYAN-2026-10-26-12NK';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-STARTUP-EVIDENCE-12NJ-20261026';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-READOUT-BRANDING-12NK-20261026';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -18391,7 +18430,7 @@ function recordAllTrends(){
  });
 }
 /* ---------- render helpers ---------- */
-function EB(l,v,u){return '<div class="eb"><span>'+l+'</span><b>'+v+'</b> '+(u||'')+'</div>';}
+function EB(l,v,u){return '<div class="eb"><span>'+l+'</span><b>'+cfFormatReadout12NK(v,u)+'</b> '+(u||'')+'</div>';}
 function LP(k){var L=PLANT.L[k];return '<div class="lp"><div class="lpt">'+k+' <span class="'+(L.man?'mman':'maut')+'" data-act="mode" data-l="'+k+'">'+(L.man?'MAN':'AUTO')+'</span></div>'
  +'<div class="lpr"><span>SP</span><button data-act="sp" data-l="'+k+'" data-d="-1">&minus;</button><b>'+L.sp.toFixed(1)+'</b><button data-act="sp" data-l="'+k+'" data-d="1">+</button> '+L.u+'</div>'
  +'<div class="lpr"><span>PV</span><b class="pv">'+L.pv.toFixed(1)+'</b> '+L.u+'</div>'
@@ -18421,8 +18460,7 @@ SCR.pmps=function(){
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="'+w+'" height="17" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+15)+'" fill="#1cd840" font-size="10" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+w-3)+'" y="'+(y+15)+'" fill="#4a6888" font-size="6.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+3,y+15,(w-3)-(3),val,unit,10,6.5,'#1cd840','#4a6888',700)+'</g>';
   if(alms){var by=y+20;alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':(a2==='H'?'#4a3800':'#141c24'));
    s+='<rect x="'+(x+i2*18)+'" y="'+by+'" width="16" height="9" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*18+8)+'" y="'+(by+7)+'" fill="#8090a8" font-size="6" text-anchor="middle">'+a2+'</text>';});}
@@ -18583,7 +18621,7 @@ SCR.refcomp=function(){var u=(QHD?QHD.units:{c1140:0,c1141:0,c1142:1});
   return '<g data-act="trend" data-key="'+key+'" data-label="'+lab+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7.5">'+lab+'</text>'+
    '<rect x="'+(x+118)+'" y="'+(y-9)+'" width="60" height="14" fill="#050a0e" stroke="#20303c" rx="1"/>'+
-   '<text x="'+(x+174)+'" y="'+(y+2)+'" fill="#22e34a" font-size="9.5" font-family="Consolas,monospace" font-weight="700" text-anchor="end">'+val+'</text>'+
+   ''+cfReadoutSvg12NK(x+122,y+2,52,val,'',9.5,6.5,'#22e34a','#4a7088',700)+''+
    '<text x="'+(x+182)+'" y="'+(y+2)+'" fill="#4a7088" font-size="6.5">'+(unit||'')+'</text></g>';
  }
  var dataRows=[['sucP','sucp','Suction Pressure','PSIG',1],['discP','discp','Discharge Pressure','PSIG',0],['oilP','oilp','Oil Pressure','PSIG',1],['oilFiltP','oilfiltp','Oil Filter Pressure','PSIG',1],
@@ -19244,7 +19282,7 @@ PLANT.cmp.c41.rpm=895;PLANT.cmp.c42.rpm=895;PLANT.cmp.c61.rpm=895;PLANT.cmp.c62.
 ['c41','c42','c61','c62','c63','c57'].forEach(function(k){var op={c41:58,c42:59,c61:56,c62:65,c63:61,c57:60};PLANT.cmp[k].oilP=op[k];});
 var ROD={residue:[['Throw 1',47997,42537],['Throw 2',55210,45480],['Throw 3',47997,42537],['Throw 4',55210,45480],['Throw 5',29379,23919],['Throw 6',55210,45480]]};
 var HMISP={inlet:[475,1000,102],residue:[265,1080,80],oh:[230,230,80]};
-function pr(l,v,u,cls){return '<div class="por'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+v+'</b> '+(u||'')+'</div>';}
+function pr(l,v,u,cls){return '<div class="por'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+cfFormatReadout12NK(v,u)+'</b> '+(u||'')+'</div>';}
 function sH(v,hi,hh){return (hh!=null&&v>hh)?'al':((hi!=null&&v>hi)?'wn':'');}
 function sL(v,ll,lo){return (ll!=null&&v<ll)?'al':((lo!=null&&v<lo)?'wn':'');}
 function truckCallPopup(kind){
@@ -20043,7 +20081,7 @@ function expPopup(){var e=EXP||{run:true,igv:96,rpm:23800,pi101:346,expIn:612,ex
 }
 function heaterPopup(k){
  var V=PLANT.v;
- function tr2(l,v,u,cls){return '<div class="por'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+v+'</b> '+(u||'')+'</div>';}
+ function tr2(l,v,u,cls){return '<div class="por'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+cfFormatReadout12NK(v,u)+'</b> '+(u||'')+'</div>';}
  var running=(V.h_firing>0.5);
  var s='<div class="pop"><div class="poph">H-1711 REGEN GAS HEATER \u2014 Tulsa Heaters Midstream Local Panel &mdash; '+(running?'RUN':'STANDBY')+'<button data-act="popclose">Exit</button></div><div class="popb">';
  s+='<div class="poc"><div class="pott">COIL TEMPERATURES</div>';
@@ -20109,7 +20147,7 @@ function cfTxDisplay(tag,val,unit){
   Existing plant waves, sensor faults, recorder samples and historical arrays are unchanged. */
  return val;
 }
-function mTag(x,y,lab,val,unit){return '<g><rect x="'+x+'" y="'+y+'" width="96" height="32" rx="3" fill="#0b0f14" stroke="#2a333c"/><text x="'+(x+5)+'" y="'+(y+12)+'" fill="#8fa0b2" font-size="8">'+lab+'</text><text x="'+(x+5)+'" y="'+(y+26)+'" fill="#5cff8f" font-size="13" font-family="Consolas,monospace">'+val+'</text><text x="'+(x+91)+'" y="'+(y+26)+'" fill="#8fa0b2" font-size="8" text-anchor="end">'+(unit||'')+'</text></g>';}
+function mTag(x,y,lab,val,unit){return '<g><rect x="'+x+'" y="'+y+'" width="96" height="32" rx="3" fill="#0b0f14" stroke="#2a333c"/><text x="'+(x+5)+'" y="'+(y+12)+'" fill="#8fa0b2" font-size="8">'+lab+'</text>'+cfReadoutSvg12NK(x+5,y+26,86,val,unit,13,8,'#5cff8f','#8fa0b2',0)+'</g>';}
 function mArr(x,y,lab,left){var p=left?('M'+(x+20)+' '+(y-7)+' L'+x+' '+y+' L'+(x+20)+' '+(y+7)+' Z'):('M'+x+' '+(y-7)+' L'+(x+20)+' '+y+' L'+x+' '+(y+7)+' Z');return '<path d="'+p+'" fill="#11161c" stroke="#5a6671"/><text x="'+(left?x+24:x-4)+'" y="'+(y+3)+'" fill="#8fa0b2" font-size="8.5" text-anchor="'+(left?'start':'end')+'">'+lab+'</text>';}
 function mTitle(t){return '<text x="520" y="22" fill="#bcd6ee" font-size="15" font-weight="700" text-anchor="middle" letter-spacing="1">'+t+'</text>';}
 
@@ -20152,7 +20190,7 @@ SCR.coldsep=function(){var L=PLANT.L,V=PLANT.v;var s=mTitle('COLD SEPARATOR (V-1
   +'<div class="sect">Controls</div><div class="erow">'+LP('PIC1421')+LP('LIC1421')+'</div>';};
 SCR.expander=function(){
  var e=(EXP?EXP:{igv:100,igvSP:100,auto:false,rpm:24300,run:true}),L=PLANT.L,V=PLANT.v;
- function pt(x,y,tag,val,unit,alms){val=cfTxDisplay(tag,val,unit);var trendKey=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase();var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text><g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer"><rect x="'+x+'" y="'+(y+2)+'" width="86" height="19" fill="#060a0f" stroke="#28333f" rx="1"/><text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text><text x="'+(x+83)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text></g>';if(alms)alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/><text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});return s;}
+ function pt(x,y,tag,val,unit,alms){val=cfTxDisplay(tag,val,unit);var trendKey=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase();var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text><g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer"><rect x="'+x+'" y="'+(y+2)+'" width="86" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+cfReadoutSvg12NK(x+3,y+16,80,val,unit,11,7.5,'#1cd840','#4a6888',700)+'</g>';if(alms)alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/><text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});return s;}
  function ctl(x,y,key,o,tag){var mc=o.man?'#9a4200':'#156a2e',s='<rect x="'+x+'" y="'+y+'" width="104" height="72" fill="#060a0f" stroke="#28333f" rx="2"/><rect x="'+x+'" y="'+y+'" width="104" height="14" fill="#0f1a24" rx="2"/><text x="'+(x+3)+'" y="'+(y+10)+'" fill="#90a8c0" font-size="8" font-weight="700">'+tag+'</text><g data-act="mode" data-l="'+key+'"><rect x="'+(x+85)+'" y="'+(y+2)+'" width="16" height="10" fill="'+mc+'"/><text x="'+(x+93)+'" y="'+(y+10)+'" fill="#fff" font-size="8" text-anchor="middle">'+(o.man?'M':'A')+'</text></g>';[['SP',o.sp,26],['PV',o.pv,40],['CV',o.out,56]].forEach(function(r){s+='<text x="'+(x+3)+'" y="'+(y+r[2])+'" fill="#6888a8" font-size="7">'+r[0]+'</text><text x="'+(x+18)+'" y="'+(y+r[2])+'" fill="#1cd840" font-size="12" font-family="Consolas">'+Number(r[1]).toFixed(2)+'</text><text x="'+(x+101)+'" y="'+(y+r[2])+'" fill="#4a6888" font-size="7" text-anchor="end">'+(r[0]==='CV'?'%':'PSIG')+'</text>';});s+='<g data-act="sp" data-d="-1" data-l="'+key+'"><rect x="'+(x+79)+'" y="'+(y+16)+'" width="10" height="9" fill="#182028"/><text x="'+(x+84)+'" y="'+(y+24)+'" fill="#70b0e8" font-size="11" text-anchor="middle">−</text></g><g data-act="sp" data-d="1" data-l="'+key+'"><rect x="'+(x+91)+'" y="'+(y+16)+'" width="10" height="9" fill="#182028"/><text x="'+(x+96)+'" y="'+(y+24)+'" fill="#70b0e8" font-size="11" text-anchor="middle">+</text></g>';return s;}
  if(PLANT.redtag.ex1121==null)PLANT.redtag.ex1121=false;
  var s='<rect x="0" y="0" width="1120" height="620" fill="#c6ccd2"/><text x="560" y="18" fill="#080e18" font-size="14" font-weight="700" text-decoration="underline" text-anchor="middle">EXPANDER / COMPRESSOR</text>';
@@ -20203,8 +20241,7 @@ SCR.reb=function(){
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="86" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+83)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+3,y+16,80,val,unit,11,7.5,'#1cd840','#4a6888',700)+'</g>';
   var by=y+24;
   if(alms){alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+by+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
@@ -20435,8 +20472,7 @@ SCR.inlsys=function(){
   var s='<g data-act="trend" data-key="'+_k+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">';
   s+='<text x="'+x+'" y="'+y+'" fill="#101820" font-size="7">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="86" height="18" fill="#050a0e" stroke="#22323e" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+15)+'" fill="#22e34a" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+83)+'" y="'+(y+15)+'" fill="#4a7088" font-size="7" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+3,y+15,80,val,unit,11,7,'#22e34a','#4a7088',700)+'';
   if(alms){alms.forEach(function(a,i){var ac=a==='HH'?'#602800':(a==='LL'?'#500000':(a==='H'||a==='L'?'#3a3000':'#141c24'));
    s+='<rect x="'+(x+i*20)+'" y="'+(y+21)+'" width="18" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i*20+9)+'" y="'+(y+29)+'" fill="#c0b070" font-size="6.5" text-anchor="middle">'+a+'</text>';});}
@@ -20598,7 +20634,7 @@ SCR.dehy=function(){
  var j=function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);}; /* 12DE: process engine owns movement; transmitter display adds shared lag/breathing */
  function pt(x,y,tag,val,unit,alms){val=cfTxDisplay(tag,val,unit);
   var trendKey=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase();
-  var q='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text><g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer"><rect x="'+x+'" y="'+(y+2)+'" width="92" height="20" fill="#060a0f" stroke="#28333f" rx="2"/><text x="'+(x+4)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text><text x="'+(x+88)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7" text-anchor="end">'+(unit||'')+'</text></g>';
+  var q='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text><g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer"><rect x="'+x+'" y="'+(y+2)+'" width="92" height="20" fill="#060a0f" stroke="#28333f" rx="2"/>'+cfReadoutSvg12NK(x+4,y+16,84,val,unit,11,7,'#1cd840','#4a6888',700)+'</g>';
   if(alms)alms.forEach(function(a2,i){q+='<rect x="'+(x+i*22)+'" y="'+(y+24)+'" width="20" height="10" fill="#141c24" stroke="#303c48" rx="1"/><text x="'+(x+i*22+10)+'" y="'+(y+32)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});
   return q;
  }
@@ -20659,8 +20695,7 @@ SCR.stabinlet=function(){
   var _k=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase();recordTrend(_k,parseFloat(val));
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="6.5">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="88" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+85)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+3,y+16,82,val,unit,11,7.5,'#1cd840','#4a6888',700)+'';
   if(alms){alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});}
@@ -20872,8 +20907,7 @@ SCR.stab=function(){
   var _k=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase(); recordTrend(_k,parseFloat(val)); /* trend wiring added this session */
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="6.5">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="88" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+85)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+3,y+16,82,val,unit,11,7.5,'#1cd840','#4a6888',700)+'';
   if(alms){alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});}
@@ -22354,7 +22388,7 @@ function mExch(x,y,w,hh,lab){var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" heig
 function mComp(x,y,lab){return '<circle cx="'+x+'" cy="'+y+'" r="21" fill="#fbfbfc" stroke="#1b1f24" stroke-width="2"/><path d="M'+(x-11)+' '+(y-10)+' L'+(x+13)+' '+y+' L'+(x-11)+' '+(y+10)+' Z" fill="#c2c8cc" stroke="#1b1f24"/><text x="'+x+'" y="'+(y+36)+'" fill="#10151b" font-size="10.5" text-anchor="middle">'+lab+'</text>';}
 function mFan(x,y,lab){return '<rect x="'+(x-26)+'" y="'+(y-9)+'" width="52" height="18" rx="3" fill="#fbfbfc" stroke="#1b1f24" stroke-width="1.5"/><line x1="'+(x-18)+'" y1="'+y+'" x2="'+(x+18)+'" y2="'+y+'" stroke="#5a6671" stroke-width="2"/><text x="'+x+'" y="'+(y+22)+'" fill="#10151b" font-size="9.5" text-anchor="middle">'+lab+'</text>';}
 function mValve(x,y,vk){var op=PLANT.valves[vk];var col=op?'#1ea84a':'#c0392b';return '<g data-act="valve" data-v="'+vk+'" style="cursor:pointer"><path d="M'+(x-10)+' '+(y-9)+' L'+x+' '+y+' L'+(x-10)+' '+(y+9)+' Z" fill="'+col+'" stroke="#1b1f24"/><path d="M'+(x+10)+' '+(y-9)+' L'+x+' '+y+' L'+(x+10)+' '+(y+9)+' Z" fill="'+col+'" stroke="#1b1f24"/><text x="'+x+'" y="'+(y-13)+'" fill="#10151b" font-size="8.5" text-anchor="middle">'+vk.toUpperCase()+'</text></g>';}
-function mTag(x,y,lab,val,unit){var raw='<g><text x="'+(x+2)+'" y="'+(y+8)+'" fill="#26303a" font-size="8.5">'+lab+'</text><rect x="'+x+'" y="'+(y+11)+'" width="96" height="21" rx="2" fill="#0a0d10" stroke="#3a4148"/><text x="'+(x+5)+'" y="'+(y+26)+'" fill="#22e34a" font-size="13" font-family="Consolas,monospace">'+val+'</text><text x="'+(x+91)+'" y="'+(y+26)+'" fill="#7fb0c0" font-size="8" text-anchor="end">'+(unit||'')+'</text></g>';var n=parseFloat(String(val).replace(/,/g,''));if(isFinite(n)&&unit){var k=lab.replace(/[^A-Za-z0-9]/g,'').toLowerCase();recordTrend(k,n);return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+raw+'</g>';}return raw;}
+function mTag(x,y,lab,val,unit){var raw='<g><text x="'+(x+2)+'" y="'+(y+8)+'" fill="#26303a" font-size="8.5">'+lab+'</text><rect x="'+x+'" y="'+(y+11)+'" width="96" height="21" rx="2" fill="#0a0d10" stroke="#3a4148"/>'+cfReadoutSvg12NK(x+5,y+26,86,val,unit,13,8,'#22e34a','#7fb0c0',0)+'</g>';var n=parseFloat(String(val).replace(/,/g,''));if(isFinite(n)&&unit){var k=lab.replace(/[^A-Za-z0-9]/g,'').toLowerCase();recordTrend(k,n);return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+raw+'</g>';}return raw;}
 function mArr(x,y,lab,left){var p=left?('M'+(x+20)+' '+(y-7)+' L'+x+' '+y+' L'+(x+20)+' '+(y+7)+' Z'):('M'+x+' '+(y-7)+' L'+(x+20)+' '+y+' L'+x+' '+(y+7)+' Z');return '<path d="'+p+'" fill="#1b1f24"/><text x="'+(left?x+24:x-4)+'" y="'+(y+3)+'" fill="#26303a" font-size="8.5" text-anchor="'+(left?'start':'end')+'">'+lab+'</text>';}
 /* ===== Interlock engine (new) =====
    Real, live-evaluated permissive lists for ESD-1000D, XV-1410, and XV-1040A, built
@@ -22880,8 +22914,7 @@ SCR.demeth=function(){
   var _k=lab.replace(/[^A-Za-z0-9]/g,'').toLowerCase(); recordTrend(_k,parseFloat(val)); /* trend wiring added this session */
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7.5">'+lab+'</text>'+
    '<rect x="'+x+'" y="'+(y+3)+'" width="96" height="22" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+4)+'" y="'+(y+19)+'" fill="#1cd840" font-size="13" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+92)+'" y="'+(y+19)+'" fill="#4a6888" font-size="8" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+4,y+19,88,val,unit,13,8,'#1cd840','#4a6888',700)+'';
   if(alms){alms.forEach(function(a,i){
    var ac=a==='HH'||a==='LSHH'?'#602800':(a==='LL'||a==='LSLL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i*20)+'" y="'+(y+27)+'" width="18" height="11" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
@@ -23005,8 +23038,7 @@ SCR.gasgas=function(){
   var _k=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase(); recordTrend(_k,parseFloat(val)); /* trend wiring added this session */
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="6.5">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="88" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+85)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+3,y+16,82,val,unit,11,7.5,'#1cd840','#4a6888',700)+'';
   if(alms){alms.forEach(function(a2,i2){var ac=(tag==='PDT-1221'&&a2==='H'&&V.gasGasHighDP12MZ)?'#d64323':a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});}
@@ -23239,8 +23271,7 @@ SCR.hotoil=function(){
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="'+w+'" height="17" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+15)+'" fill="#1cd840" font-size="10" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+w-3)+'" y="'+(y+15)+'" fill="#4a6888" font-size="6.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+3,y+15,(w-3)-(3),val,unit,10,6.5,'#1cd840','#4a6888',700)+'</g>';
   if(alms){var by=y+20;alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':(a2==='H'?'#4a3800':'#141c24'));
    s+='<rect x="'+(x+i2*18)+'" y="'+by+'" width="16" height="9" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*18+8)+'" y="'+(by+7)+'" fill="#8090a8" font-size="6" text-anchor="middle">'+a2+'</text>';});}
@@ -23367,8 +23398,7 @@ SCR.util=function(){
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="88" height="19" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+16)+'" fill="#1cd840" font-size="11" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+85)+'" y="'+(y+16)+'" fill="#4a6888" font-size="7.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+3,y+16,82,val,unit,11,7.5,'#1cd840','#4a6888',700)+'</g>';
   if(alms){alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i2*22)+'" y="'+(y+22)+'" width="20" height="10" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*22+10)+'" y="'+(y+30)+'" fill="#8090a8" font-size="6.5" text-anchor="middle">'+a2+'</text>';});}
@@ -23518,8 +23548,7 @@ SCR.plinlet=function(){
   var _k=tag.replace(/[^A-Za-z0-9]/g,'').toLowerCase(); recordTrend(_k,parseFloat(val)); /* trend wiring added this session */
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+3)+'" width="90" height="20" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+4)+'" y="'+(y+18)+'" fill="#1cd840" font-size="12" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+87)+'" y="'+(y+18)+'" fill="#4a6888" font-size="8" text-anchor="end">'+(unit||'')+'</text>';
+   ''+cfReadoutSvg12NK(x+4,y+18,83,val,unit,12,8,'#1cd840','#4a6888',700)+'';
   if(alms){alms.forEach(function(a,i){
    var ac=a==='HH'?'#602800':(a==='LL'?'#500000':'#141c24');
    s+='<rect x="'+(x+i*22)+'" y="'+(y+25)+'" width="20" height="11" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
@@ -23835,8 +23864,7 @@ SCR.rescomp=function(){var C=PLANT.cmp,V=PLANT.v,L=PLANT.L;
   return '<g data-act="trend" data-key="'+_k+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<text x="'+x+'" y="'+y+'" fill="#101820" font-size="8">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+3)+'" width="80" height="19" fill="#050a0e" stroke="#20303c" rx="1"/>'+
-   '<text x="'+(x+4)+'" y="'+(y+17)+'" fill="#22e34a" font-size="12" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+77)+'" y="'+(y+17)+'" fill="#4a7088" font-size="7.5" text-anchor="end">'+(unit||'')+'</text>'+
+   ''+cfReadoutSvg12NK(x+4,y+17,73,val,unit,12,7.5,'#22e34a','#4a7088',700)+''+
    '</g>';
  }
  function ctl(x,y,key,Lobj,tag,units){
@@ -23995,8 +24023,7 @@ SCR.inlcomp=function(){
   return '<g data-act="trend" data-key="'+_k+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<text x="'+x+'" y="'+y+'" fill="#101820" font-size="8">'+tag+'</text>'+
    '<rect x="'+x+'" y="'+(y+3)+'" width="80" height="19" fill="#050a0e" stroke="#20303c" rx="1"/>'+
-   '<text x="'+(x+4)+'" y="'+(y+17)+'" fill="#22e34a" font-size="12" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+77)+'" y="'+(y+17)+'" fill="#4a7088" font-size="7.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+4,y+17,73,val,unit,12,7.5,'#22e34a','#4a7088',700)+'</g>';
  }
  function ctl(x,y,key,Lobj,tag,units){
   if(!Lobj)return '';
@@ -24161,8 +24188,7 @@ SCR.refsys=function(){
   var s='<text x="'+x+'" y="'+y+'" fill="#283038" font-size="7">'+tag+'</text>'+
    '<g data-act="trend" data-key="'+trendKey+'" data-label="'+tag+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+
    '<rect x="'+x+'" y="'+(y+2)+'" width="'+w+'" height="17" fill="#060a0f" stroke="#28333f" rx="1"/>'+
-   '<text x="'+(x+3)+'" y="'+(y+15)+'" fill="#1cd840" font-size="10" font-family="Consolas,monospace" font-weight="700">'+val+'</text>'+
-   '<text x="'+(x+w-3)+'" y="'+(y+15)+'" fill="#4a6888" font-size="6.5" text-anchor="end">'+(unit||'')+'</text></g>';
+   ''+cfReadoutSvg12NK(x+3,y+15,(w-3)-(3),val,unit,10,6.5,'#1cd840','#4a6888',700)+'</g>';
   if(alms){var by=y+20;alms.forEach(function(a2,i2){var ac=a2==='HH'?'#602800':(a2==='LL'?'#500000':(a2==='H'?'#4a3800':'#141c24'));
    s+='<rect x="'+(x+i2*18)+'" y="'+by+'" width="16" height="9" fill="'+ac+'" stroke="#303c48" rx="1"/>'+
       '<text x="'+(x+i2*18+8)+'" y="'+(by+7)+'" fill="#8090a8" font-size="6" text-anchor="middle">'+a2+'</text>';});}
@@ -38139,7 +38165,7 @@ function cfFinalizeVisual12LJ(){
  step('valve positions',function(){if(!window.CFValvePositions12KI)cfInstallValveUpdate12KI();if(!window.CFValvePositions12KI)throw Error('Valve-position reader did not initialize.');window.CFValvePositions12KI.refresh();window.CFValvePositions12KI.setEnabled(true);window.CFValvePositions12KI.update(0);window.CFValvePositions12KJ=window.CFValvePositions12KI;});
  var features={equipmentTraining:!!window.CFEquipmentTrainer12MR,navigation:!!window.CFNavigation12MJ,dashboard:!!window.CFDashboard12KL,valvePositions:!!window.CFValvePositions12KI,referenceLibrary:typeof openLibrary==='function',componentFinder:!!window.CFComponentFinder12IK,componentTrace:!!window.CFComponentTrace12IZ,psvGapFinder:!!window.CFReference12KV,frickVendor:!!window.CFReference12KP,expanderVendor:!!window.CFReference12KQ,c5700Vendor:!!window.CFReference12KR,heaters:!!window.CFReference12KS,arielQuiz:!!window.CFReference12KT,frickParts:!!window.CFReference12KU,latestOilReview:!!window.CFReference12LI,esdBodyPlate:!!window.CFReference12LJ,quizBank:typeof QUIZ_BANK!=='undefined'?QUIZ_BANK.length:null};
  if(!features.dashboard||!features.valvePositions){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Feature restoration','Dashboard or valve-position subsystem requires review.');}
- window.CFAppReady12LJ={build:'12NJ',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
+ window.CFAppReady12LJ={build:'12NK',features:features,failures:failures,scope:'Initialization presence check, not 3D collision or field verification'};window.CFMainScript12LJ.phase=failures.length?'completed with feature errors':'complete';
  window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;window.CFRyanIndexSync12LJ=window.CFRyanIndexSync12JT;
  if(window.CFStartup12LJ)window.CFStartup12LJ.paint();
  return window.CFAppReady12LJ;
@@ -40325,6 +40351,12 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{sourceIndexBuild:'12NI',referenceDige
 Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12NJ',baseline:'12NI',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE});
 CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12NI',release:'12NJ',deploymentStatus:'PREPARED_NOT_DEPLOYED'};
 window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:'12NJ',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE}));window.CF_CURRENT_RELEASE_12NJ=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+/*12NK terminal readout/presentation repair only; source digest and trainer stay12NI.*/
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12NK',baseline:'12NJ',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE});
+CF_RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12NJ',release:'12NK',deploymentStatus:'PREPARED_NOT_DEPLOYED'};
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:'12NK',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE}));
+window.CF_CURRENT_RELEASE_12NK=window.CF_CURRENT_RELEASE_12JT;window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+window.CFReadout12NK={build:'12NK',format:cfFormatReadout12NK,scope:'Display only; raw simulation and recorder values retained.'};
 cfBindRetainedAudit12NJ();
 CF_INSPECTION_STATE_12MC.sources=null;CF_EQUIPMENT_INFORMATION_12MD.index=null;if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();
 cfFinalizeVisual12LJ();CF_SPEED_12ML.readyMs=performance.now()-CF_SPEED_12ML.started;
