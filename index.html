@@ -3,6 +3,8 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!--12NM: T-1521 internal training with source-qualified model snapshots; straight inline EQT gate separately supplied.--> 
+<!--12NL: remove duplicate heater future cards; keep all ten active lessons, source catalog, 12NI internals and 12NK readouts/access diagnostics.-->
 <!--12NK: display precision/fitting only. Explicit server access gate replacement required for logo.--> 
 <!--12NJ: repair full startup order and exact-owner equipment information; retain source12NI and trainer12NI.-->
 <!--12NI: authoritative guide-nozzle geometry, runtime revision and cumulative request checks; branded access gate12NH retained.-->
@@ -30,7 +32,7 @@
 <!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
 <!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12NK-ROOT">
+<meta name="cf-deployment-package" content="12NM-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -78,13 +80,13 @@
 <link rel="preload" as="script" href="./data-13-cf_plate_audit_12kb.js">
 <link rel="preload" as="script" href="./data-14-cf_source_12ko.js">
 <link rel="preload" as="script" href="./data-15-cf_source_12kp.js">
-<link rel="preload" as="script" href="./clearfork-main.js?v=12NK">
+<link rel="preload" as="script" href="./clearfork-main.js?v=12NM">
 <!-- 12IA: expander visual enhancement; M2145 and targeted M2140 source review; XV-6060 and PV-6050A photos. Paired backend RYAN-2026-10-06-12II. -->
 <!-- 12HW: FCV-1422 actuator-only source; M2120 Rev 8 heater refinement. Matched with RYAN-2026-10-06-12II. No process/storage change. -->
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12NK | Clear Fork - Readout formatting and EQT access screen</title>
+<title>12NM | Clear Fork - Demethanizer internal training</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -1146,7 +1148,7 @@
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12NK',problems=[],loaded=false;
+ 'use strict';var expected='12NM',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
  var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,compressorTraining:(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR)?(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR).status():null,kbzModel:window.CFKbzVisual12MN?window.CFKbzVisual12MN.audit():null,regenModel:window.CFRegenVisual12MM?window.CFRegenVisual12MM.audit():null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MC?window.CFInspection12MC.audit():null,navigation:window.CFNavigation12MJ?window.CFNavigation12MJ.status():null,workspace:window.CFWorkspace12MK?window.CFWorkspace12MK.status():null,performance:window.CFPerformance12ML?window.CFPerformance12ML.status():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
@@ -1275,7 +1277,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
 <script src="./data-13-cf_plate_audit_12kb.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script src="./data-14-cf_source_12ko.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script src="./data-15-cf_source_12kp.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12NK" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script src="./clearfork-main.js?v=12NM" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
@@ -1791,8 +1793,8 @@ window.CF_DYNAMIC_AUDIT_12EQ=window.CF_DYNAMIC_AUDIT_12ER;window.CF_DYNAMIC_AUDI
    last={checkedAt:new Date().toISOString(),authenticated:d.authenticated===true,accessScreenBuild:d.accessScreenBuild||null,accessScreenVersion:d.accessScreenVersion||null,branding:d.branding||null};
    if(res.status===401){say('Sign in on the published HTTPS site first. No local history was changed.');return;}
    if(!res.ok)throw Error('Access status returned HTTP '+res.status);
-   var current=d.accessScreenBuild==='12NK'&&d.branding==='EQT-inline-mark';
-   var msg=current?'EQT logo screen 12NK / v1.4 is installed.':'The published gate is older or unidentified. Replace netlify/edge-functions/clearfork-access.js with the 12NK file; updating index.html alone does not change the entrance.';
+   var current=d.accessScreenBuild==='12NM'&&d.branding==='EQT-inline-mark';
+   var msg=current?'EQT logo screen 12NM / v1.5 is installed.':'The published gate is older or unidentified. Replace netlify/edge-functions/clearfork-access.js with the 12NM file; updating index.html alone does not change the entrance.';
    if(window.CF_CURRENT_RELEASE_12JT)msg+=' Application '+window.CF_CURRENT_RELEASE_12JT.frontend+'.';
    say(msg+' Shared-history storage must separately report connected in Questions Asked. This check does not save, publish or delete questions.');
   }catch(e){last={checkedAt:new Date().toISOString(),error:'Access status unavailable'};say('Could not verify the published gate. Open the hosted HTTPS site and check the deployment. Local files cannot run the server password gate. No browser data was changed.');}
