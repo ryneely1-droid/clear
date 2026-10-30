@@ -727,13 +727,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-10-30-12NZ';
+const RYAN_BUILD_ID='RYAN-2026-10-30-12OA';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-VERIFIED-FILING-12NZ-20261030';
+const RYAN_CODE_SIGNATURE='CF-RYAN-TRAINER-LAUNCH-12OA-20261030';
 
 
 
@@ -46054,3 +46054,13 @@ globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze({frontend:'12NZ',backend:RYAN_B
 const selectBefore12NZ=selectKnowledge;selectKnowledge=function(message,context,mode){var out=selectBefore12NZ.apply(this,arguments);if(/filing|unfiled|need.*file|folder|127 items/i.test(String(message||'')+' '+String(context||'')))out.currentLibraryFiling12NZ=CF_SOURCE_12NZ;return out;};
 if(module.exports._test)module.exports._test.selectKnowledge=selectKnowledge;
 module.exports.REFERENCE_STATE_12NZ=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12NZ=RYAN_INDEX_MANIFEST_12JT;module.exports.VERIFIED_FILING_12NZ=CF_SOURCE_12NZ;
+
+/*12OA: application release identity only. Retain exact12NZ knowledge/filing and12NY training content. */
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OA',baseline:'12NZ',sourceIndexBuild:'12NZ',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});
+RYAN_INDEX_MANIFEST_12JT.batch={baseline:'12NZ',release:'12OA',deploymentStatus:'PREPARED_NOT_DEPLOYED'};
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OA',baseline:'12NZ',sourceIndexBuild:'12NZ',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});
+globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OA',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12NY',sourceIndexBuild:'12NZ'}));
+module.exports.REFERENCE_STATE_12OA=RYAN_INDEX_REFERENCE_12JT;
+module.exports.RYAN_INDEX_MANIFEST_12OA=RYAN_INDEX_MANIFEST_12JT;
+module.exports.equipmentTrainingData12OA=module.exports.equipmentTrainingData12NY;
+module.exports.TRAINER_LAUNCH_REPAIR_12OA={applicationBuild:'12OA',baseline:'12NZ',trainerRuntime:'12NY',sourceIndexBuild:'12NZ',scope:'Separate application-file matching from trainer runtime/catalog matching; retained content unchanged.',deployed:false};
