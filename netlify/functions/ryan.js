@@ -727,13 +727,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-10-31-12OF';
+const RYAN_BUILD_ID='RYAN-2026-10-31-12OG';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-P1619-SEALPOT-12OF-20261031';
+const RYAN_CODE_SIGNATURE='CF-RYAN-TRAINER-LABELS-12OG-20261031';
 
 
 
@@ -46320,3 +46320,11 @@ Object.assign(RYAN_INDEX_REFERENCE_12JT,{referenceDigest:'1345ae39cfedf11c685e0d
 globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{referenceDigest:'1345ae39cfedf11c685e0d5b05ebf5fc4b8f150c2e20b7186b903596d506f87d',frontend:'12OF',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,sourceIndexBuild:'12OF',trainerRuntime:'12OC'}));
 const selectBefore12OF=selectKnowledge;selectKnowledge=function(message,context,mode){var result=selectBefore12OF.apply(this,arguments),q=String(message||'')+' '+String(context||'');if(/(?:P\s*-?\s*1619|13148|Momentum|MP5200|seal.?pot|seal.?support)/i.test(q))result.currentP1619SealPot12OF=CF_SOURCE_12OF;return result;};if(module.exports._test)module.exports._test.selectKnowledge=selectKnowledge;
 module.exports.REFERENCE_STATE_12OF=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OF=RYAN_INDEX_MANIFEST_12JT;module.exports.SOURCE_12OF=CF_SOURCE_12OF;module.exports.APPLIED_12OF=CF_APPLIED_12OF;module.exports.equipmentTrainingData12OF=module.exports.equipmentTrainingData12OE;module.exports.applySealPotEvidence12OF=cfApplySealPotEvidence12OF;module.exports.augmentSealPotInspection12OF=cfAugmentSealPotInspection12OF;module.exports.sealPotRows12OF=cfSealPotRows12OF;
+
+//12OG: label-control interface revision; retained source content is unchanged.
+const CF_TRAINING_CATALOG_BEFORE_12OG=module.exports.equipmentTrainingData12OF;
+function cfTrainingLabelCatalog12OG(data){data.build='12OG';data.runtimeRevision='12OG';data.labelControlRevision='12OG';return data;}
+module.exports.equipmentTrainingData12OG=function(){return cfTrainingLabelCatalog12OG(CF_TRAINING_CATALOG_BEFORE_12OG());};
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OG',baseline:'12OF',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OG'});
+module.exports.REFERENCE_STATE_12OG=RYAN_INDEX_REFERENCE_12JT;
+module.exports.RYAN_INDEX_MANIFEST_12OG=RYAN_INDEX_MANIFEST_12JT;
