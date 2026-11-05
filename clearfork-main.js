@@ -1,5 +1,37 @@
 
 (function(){
+/*12OH: inlet receiver closure plate only; previous source and trainer behavior retained.*/
+var CF_SOURCE_12OH={"build":"12OH","baseline":"12OG","date":"2026-11-01","id":"v1000_tdw_closure_plate_12oh","title":"V-1000 inlet pig receiver / individual D2000 closure plate","sourceClass":"USER_PHOTOGRAPHS_WITH_OPERATOR_RECEIVER_ASSOCIATION","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["oh_v1000_closure"],"parentOwnerKeys":["v1000"],"existingSourceRefs":["CF3D_PID_M2000_12HI"],"plate":{"ownerKey":"oh_v1000_closure","parentOwnerKey":"v1000","referenceKey":"oh_v1000_closure","role":"Quick-actuating closure; NOT the complete receiver pressure vessel","certifiedBy":"T.D. Williamson","model":"D2000","descriptionLiteral":"D2000 QUICK-ACTUATING CLOSURE","sizeLiteral":"30\" (750 MM)","partNumber":"12342150","serial":"30UJD085","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121],"designCodesLiteral":["ASME B31.4/B31.8","CSA Z662 CAT 11"],"designFactorRows":[{"printedFactor":"0.60","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]},{"printedFactor":"0.50","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]}],"printedPlantTag":null,"yearBuilt":null,"unreadableUpperRightField":null,"association":"Operator identifies the photographed closure as belonging to the inlet pig receiver. Existing M2000 record identifies that receiver as V-1000 and separately records a 30-inch quick-opening closure.","photos":[{"name":"IMG_0784.jpeg","sha256":"9837e35298edc92bd17f6fb4c31d71ef8b2c18cddab567f52ea2442bdd65880b","byteLength":453904,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false},{"name":"IMG_0785.jpeg","sha256":"de23f6e41068513241bdae9b201fb9d449f98aee2be38299efeaf40645d5acaf","byteLength":457772,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false}],"qualifications":["Two photographs show one plate and one individual closure. No second closure or receiver is created.","Individual closure serial, part number, maker and ratings belong only to oh_v1000_closure. They are not the receiver shell identity, a valve identity or a sister launcher identity.","The plate prints 1480 PSI / 102 BAR. Preserve the PSI label literally rather than silently changing its pressure basis to PSIG.","The separate M2000 receiver drawing reference of 1440 PSIG at 130 F and the existing PSV-1000 record remain unchanged. Closure MAWP is not a receiver rerating, operating target, trip, isolation authorization or relief setting.","Both printed design-factor rows (0.60 and 0.50) are retained; no active installed design-factor case is selected or inferred. CSA CAT 11 is a literal transcription, not a standards interpretation.","30-inch (750 MM) is retained exactly as printed, not replaced with a recalculated unit conversion.","The upper-right field cannot be confidently read. No fabrication year, material, hydrotest, barrel serial or National Board number is inferred.","Only the closed closure face and readable plaque are represented. The existing end-cap silhouette is retained; end assignment, dimensions and mounting are schematic. No inferred hinge/locking mechanism or opening sequence is implemented."]},"pending":["V-1000 receiver-shell identity/rating plate, serial/NB/MDMT where applicable; this closure plate does not replace it.","Applicable D2000 serial-specific vendor assembly/GA, measured door/end correspondence, hinge/locking details, seals/materials and installed closure accessories.","Unreadable upper-right plate marking and applicable design-factor case; not resolved by matching a generic catalog."],"policy":["One canonical closure source and one photo-ledger group with two corroborating views. Existing receiver and launcher records remain separate.","Index the existing receiver closure as a child of v1000 for independent picking and reference; no second receiver, closure body or process route.","No process, protection, pressure setting, opening control, training runtime, quiz, saved-data or authentication changes."],"newEntries":[{"id":"oh.closure","title":"Individual inlet pig receiver closure identity","ownerKeys":["oh_v1000_closure"],"tags":["V-1000 closure"],"text":"IMG_0784 and IMG_0785 corroborate one T.D. Williamson D2000 quick-actuating closure, part 12342150, serial 30UJD085, 30-inch (750 MM), with the two printed rating/design-factor cases retained under plate. Operator associates it with inlet pig receiver V-1000; receiver vessel identity and ratings remain separate.","authority":"USER_PHOTOS / OPERATOR_PARENT_ASSOCIATION","referenceKey":"oh_v1000_closure"}]};
+function cfClosureRows12OH(){var p=CF_SOURCE_12OH.plate;return [
+ ['Component','V-1000 / inlet pig receiver quick-actuating closure'],['Certified by (plate)',p.certifiedBy],['Model',p.descriptionLiteral],['Size as printed',p.sizeLiteral],['Part number',p.partNumber],['Individual CLOSURE serial',p.serial],['Closure MAWP as printed',p.mawpPsi+' PSI / '+p.mawpBar+' BAR'],['Temperature range as printed','-50 to 250 F / -46 to 121 C'],['Design codes as printed',p.designCodesLiteral.join('; ')],['Two printed design-factor rows','0.60 and 0.50; each lists 1480 PSI / 102 BAR and the same temperature range'],['Parent association',p.association],['Plate fields not established','Upper-right marking unreadable; plant tag and year not established by this plate'],['Evidence','IMG_0784.jpeg + IMG_0785.jpeg; two views of one plate'],['Scope','Closure only. Receiver vessel ratings and PSV-1000 are separate and unchanged']];}
+function cfApplyClosureEvidence12OH(H){
+ var S=CF_SOURCE_12OH,p=S.plate,info=H.info||H.referenceNotes||{},set=H.records||H.components||{},rows=Array.isArray(set)?set:Object.values(set),report={build:S.build,matched:false,existingReceiver:p.parentOwnerKey,closure:p.ownerKey,newRegistryEntries:0,newPhysicalEquipment:0,serialTransfers:0,missing:[]};
+ var exact=function(k){return rows.filter(function(r){return r&&(r.assetId||r.key)===k;});},parents=exact(p.parentOwnerKey),child=exact(p.ownerKey);
+ if(parents.length!==1||!info[p.parentOwnerKey]||!/(?:Inlet Gas Pig Receiver|Inlet.*Pig Receiver)/i.test(info[p.parentOwnerKey].t||'')){report.missing.push('Exact existing V-1000 inlet pig receiver is unavailable; no guessed association.');return report;}
+ if(child.length>1||(child.length===1&&(child[0].parentAssetId!==p.parentOwnerKey||!child[0].closureNameplate12OH))){report.missing.push('Closure identity collision; record left unchanged.');return report;}
+ var r=child[0];if(!r){r={assetId:p.ownerKey,key:p.ownerKey,tag:'V-1000 closure',tagConfirmed:false,kind:'closure',equipment:'V-1000',parentAssetId:p.parentOwnerKey,modelKey:p.ownerKey,service:'Inlet pig receiver quick-actuating end closure; closed read-only presentation',manufacturer:p.certifiedBy,model:p.model,serial:p.serial,partNumber:p.partNumber,nominalInches:30,source:'IMG_0784.jpeg / IMG_0785.jpeg; same individual closure plate, operator-associated inlet pig receiver',drawings:['020185-AE-DW-M2000'],revision:'2 (parent routing reference; not a plate revision)',placement:'Existing receiver end-cap representation; schematic side/end assignment and mounting, not surveyed vendor geometry',status:'INDIVIDUAL_CLOSURE_PLATE / OPERATOR_RECEIVER_ASSOCIATION / SCHEMATIC_MODEL',referenceRecordOnly:false,fieldDevice:false,photoIds:p.photos.map(function(x){return x.name;}),aliases:['V-1000 D2000 closure','inlet pig receiver closure','30UJD085','12342150'],sourceStorageMode:'learn-only',sourceMediaRetained:false,ports:[],closureNameplate12OH:{definition:'CF_SOURCE_12OH',path:'plate',owner:p.ownerKey,referenceKey:p.referenceKey},sourceReview12OH:{definition:'CF_SOURCE_12OH',owner:p.ownerKey,factIds:['oh.closure']}};
+  if(Array.isArray(set))set.push(r);else set[p.ownerKey]=r;report.newRegistryEntries=1;
+ }
+ r.nameplateAudit12KB={tag:r.tag,status:'INDIVIDUAL_CLOSURE_PLATE_RETAINED',category:'Vessel / equipment',retained:['D2000 closure part '+p.partNumber+'; individual closure serial '+p.serial+'; 30-inch (750 MM).','Closure rating 1480 PSI / 102 BAR, -50 to 250 F / -46 to 121 C; separate 0.60 and 0.50 design-factor rows.'],missing:S.pending.slice(1),conflicts:[],photoIds:r.photoIds.slice(),referenceOnly:false,build:'12KB',latestReviewBuild:'12OH'};
+ if(!info[p.ownerKey])info[p.ownerKey]={t:'V-1000 closure / T.D. Williamson D2000 / individual plate',d:cfClosureRows12OH().map(function(x){return x.join(': ');}).concat(p.qualifications),sourceReview12OH:r.sourceReview12OH,sourceStorageMode:'learn-only',sourceMediaRetained:false};
+ var link={owner:p.ownerKey,referenceKey:p.referenceKey,definition:'CF_SOURCE_12OH',scope:'Closure only; parent vessel identity and ratings are not inherited'};parents[0].closureReference12OH=link;info[p.parentOwnerKey].closureReference12OH=link;
+ function parentAudit(a){if(!a)return;a.status='CLOSURE_PLATE_RETAINED / RECEIVER_SHELL_PLATE_PENDING';var n='Separate D2000 closure plate retained on '+p.ownerKey+'; receiver vessel identity/rating plate is still separate.';if(!(a.retained||[]).includes(n))(a.retained||(a.retained=[])).push(n);a.latestReviewBuild='12OH';}
+ parentAudit(parents[0].nameplateAudit12KB);
+ Array.from(new Set([H.audit,H.fieldCollectionAudit12KP].filter(Boolean))).forEach(function(a){var hit=(a.rows||[]).filter(function(x){return [x.key,x.assetId,x.modelKey].concat(x.assetIds||[]).filter(Boolean).includes(p.ownerKey);});if(!hit.length){(a.rows||(a.rows=[])).push(Object.assign({id:'plate_'+p.ownerKey,assetIds:[p.ownerKey],parent:['V-1000'],priority:3,tagConfirmed:false,area:'Inlet separation/compression',service:r.service,drawings:r.drawings.slice(),source:r.photoIds.slice(),sourceRecords:1,evidence:[{definition:'CF_SOURCE_12OH',owner:p.ownerKey,path:'plate',source:r.photoIds.join(' / ')}],basis:'One individual closure plate with two views. Receiver shell not rerated.',collectionPhase:'current'},r.nameplateAudit12KB));}
+ (a.rows||[]).filter(function(x){var ks=[x.key,x.assetId,x.modelKey].concat(x.assetIds||[]).filter(Boolean);return ks.includes(p.parentOwnerKey)&&ks.every(function(k){return k===p.parentOwnerKey;});}).forEach(parentAudit);
+ var categories={},statuses={};a.rows.forEach(function(x){categories[x.category]=(categories[x.category]||0)+1;statuses[x.status]=(statuses[x.status]||0)+1;});a.summary=Object.assign({},a.summary,{auditRows:a.rows.length,categories:categories,statuses:statuses,referenceOnlyRows:a.rows.filter(function(x){return x.referenceOnly;}).length});a.latestReferenceUpdateBuild='12OH';});
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(x){return x.name==='CF_SOURCE_12OH';}))H.sourceDefinitions.push({name:'CF_SOURCE_12OH',value:S});
+ if(H.nameplates&&!H.nameplates.some(function(x){return (x.data||x).sourceDefinition==='CF_SOURCE_12OH';}))H.nameplates.push({indexMainLine:null,data:{name:p.photos[0].name,sha256:p.photos[0].sha256,byteLength:p.photos[0].byteLength,assetIds:[p.ownerKey],ownerKey:p.ownerKey,parentOwnerKey:p.parentOwnerKey,equipment:r.tag,sourceDefinition:'CF_SOURCE_12OH',corroboratingPhotos:p.photos.slice(1),sourceStorageMode:'learn-only',sourceMediaRetained:false,base64:''}});
+ if(H.categories){var name='Field nameplates / Inlet pig receiver',c=H.categories.find(function(c){return c[0]===name;});if(!c){c=[name,[]];H.categories.push(c);}if(!c[1].includes(p.ownerKey))c[1].push(p.ownerKey);}
+ report.matched=true;return report;
+}
+function cfAugmentClosureInspection12OH(r,raw){
+ if(!r)return r;var p=CF_SOURCE_12OH.plate,key=r.assetId||r.key;
+ if(key===p.ownerKey&&raw&&raw.closureNameplate12OH){r.manufacturer=p.certifiedBy;r.model=p.model;r.serial=p.serial;r.nameplateAudit12KB=raw.nameplateAudit12KB;r.remainingEvidence12MC=CF_SOURCE_12OH.pending.slice(1);r.plateSections12MC=(r.plateSections12MC||[]).filter(function(x){return x.definition!=='CF_SOURCE_12OH';});r.plateSections12MC.push({id:'v1000-closure-12oh',title:'Individual CLOSURE plate / not the receiver vessel',fields:cfClosureRows12OH(),definition:'CF_SOURCE_12OH',referenceKey:p.referenceKey,evidence:'USER_PHOTOS / OPERATOR_PARENT_ASSOCIATION',source:p.photos.map(function(x){return x.name;}).join(' / '),shared:false,limits:p.qualifications.slice()});}
+ if(key===p.parentOwnerKey&&raw&&raw.closureReference12OH){r.closureReference12OH=raw.closureReference12OH;r.nameplateAudit12KB=raw.nameplateAudit12KB;}
+ return r;
+}
+
 /*12OF: one existing P-1619 seal pot; source-owned plate, selection and appearance only.*/
 var CF_SOURCE_12OF={"build":"12OF","baseline":"12OE","date":"2026-10-31","id":"p1619_individual_sealpot_plate_12of","title":"P-1619 seal-pot individual nameplate / exact-owner display and model","sourceClass":"USER_PHOTOGRAPH_WITH_OPERATOR_EQUIPMENT_ASSOCIATION","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["lo_support_p1619"],"parentOwnerKeys":["p1619"],"existingSourceRefs":["CF_SOURCE_12LO","CF_SOURCE_12OE"],"plate":{"ownerKey":"lo_support_p1619","parentOwnerKey":"p1619","referenceKey":"p1619_sealpot_plate_12of","manufacturer":"Momentum Engineered Systems, Inc.","model":"MP5200-0740-4L-05-0045","serial":"13148","yearBuilt":2018,"mawpPsig":740,"mawpTemperatureF":100,"hydrotestPsig":1100,"printedTag":null,"association":"Operator explicitly identifies IMG_0779.jpeg as the P-1619 seal pot. The photographed TAG # field is blank.","photo":{"name":"IMG_0779.jpeg","sha256":"dfe1dc9418753abff54ad6511d52fe325d7e429f12a62a1d388af67b4b882e32","byteLength":552057,"sourceClass":"USER_SUPPLIED_FIELD_PHOTOGRAPH","containsOriginalMedia":false},"qualifications":["This individual seal-pot identity belongs only to lo_support_p1619. P-1620 seal-pot serial 13139, pump serials and motor serials remain separate.","740 PSIG at 100 F is the photographed pressure-body MAWP, not a normal operating pressure, charge pressure, alarm, trip or relief setting.","1100 PSIG is the separate hydrotest pressure; it is not an operating rating.","The model string is retained literally; capacity, materials, seal fluid, seal plan and dimensions are not decoded from it. The existing Plan 52 association is separately retained from M2160 / CF_SOURCE_12LO.","The blank TAG # field is not a newly assigned plant tag. P-1619 ownership is the explicit operator association.","Appearance is photograph-informed. Exact dimensions, nozzle locations, internals and the complete instrument arrangement remain unverified; existing connections are retained."]},"pending":["P-1619 seal-pot surveyed dimensions, capacity, wetted materials, internal construction and verified installed seal/support configuration; not established by this plate."],"resolvedEvidence":["Individual P-1619 seal-support reservoir plate is now supplied as IMG_0779.jpeg. The plate portion of CF_SOURCE_12OE.pending[1] is resolved; installed configuration remains qualified."],"policy":["Reuse the existing lo_support_p1619 assembly and P-1619 association; add no equipment and copy no sister-unit serials.","Store one canonical plate record and one photo-evidence role; derived cards and Library links share that record.","Preserve existing P-1619 pump/motor evidence, P-1620 and every other source. No process/control/storage/authentication changes.","Main-model plaque and finish update only; body dimensions, anchors, support piping and all trainers remain unchanged."],"newEntries":[{"id":"of.sealpot","title":"P-1619 seal-pot plate / individual serial 13148","ownerKeys":["lo_support_p1619"],"tags":["P-1619 seal pot"],"text":"The IMG_0779.jpeg plate identifies Momentum Engineered Systems, Inc., model MP5200-0740-4L-05-0045, serial 13148, built 2018, MAWP 740 PSIG at 100 F and hydrotest 1100 PSIG. TAG # is blank; the user associates this individual reservoir with P-1619. Keep the pump, driver and P-1620 reservoir identities separate.","authority":"USER_PHOTOGRAPH / OPERATOR_PARENT_ASSOCIATION","referenceKey":"p1619_sealpot_plate_12of"}]};
 
@@ -1796,7 +1828,7 @@ function cfEnsureDrawingMetadata12NJ(number){
   uninitialized until their existing source statement executes; never read their
   child fields during earlier installers. No new engineering records are made.*/
 function cfSourceDefinitions12HO(){
-    var definitions=[{name:'CF_SOURCE_12OE',value:CF_SOURCE_12OE},{name:'CF_SOURCE_12NW',value:CF_SOURCE_12NW},{name:'CF_SOURCE_12NV',value:CF_SOURCE_12NV},{name:"CF_SOURCE_12NU",value:CF_SOURCE_12NU},{name:"CF_SOURCE_12NT",value:CF_SOURCE_12NT},{name:'CF_SOURCE_12NN',value:CF_SOURCE_12NN},{name:'CF_SOURCE_12NM',value:CF_SOURCE_12NM}];
+    var definitions=[{name:'CF_SOURCE_12OH',value:CF_SOURCE_12OH},{name:'CF_SOURCE_12OE',value:CF_SOURCE_12OE},{name:'CF_SOURCE_12NW',value:CF_SOURCE_12NW},{name:'CF_SOURCE_12NV',value:CF_SOURCE_12NV},{name:"CF_SOURCE_12NU",value:CF_SOURCE_12NU},{name:"CF_SOURCE_12NT",value:CF_SOURCE_12NT},{name:'CF_SOURCE_12NN',value:CF_SOURCE_12NN},{name:'CF_SOURCE_12NM',value:CF_SOURCE_12NM}];
     if(typeof CF_SOURCE_12LR!=='undefined')definitions.push({name:'CF_SOURCE_12LR',value:CF_SOURCE_12LR});
     definitions.push({name:"CF_SOURCE_12KQ",value:CF_SOURCE_12KQ});
     definitions.push({name:"CF_SOURCE_12KP",value:CF_SOURCE_12KP});
@@ -2290,7 +2322,7 @@ function cfInstallEquipmentTraining12MQ(){
 /*12OA: one application identity for the loaded main and its embedded launcher.
  * Trainer catalog/runtime revisions are independent and remain validated separately.
  * Future application releases change this one declaration, not the trainer content. */
-const CF_APPLICATION_BUILD_12OA='12OG';
+const CF_APPLICATION_BUILD_12OA='12OK';
 window.CFMainScript12LJ={build:CF_APPLICATION_BUILD_12OA,phase:"starting"};
 var CF_SOURCE_12MP={"build":"12MP","baseline":"12MO","date":"2026-10-23","id":"equipment_internal_detail_12mp","title":"Equipment Internal Training","notebookKey":"compressor_internals_training_12mo","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["c4100","c6100","c5700"],"equipmentIds":["C-4100","C-6100","C-5700"],"sourceClass":"OPERATOR_REQUEST_WITH_OEM_FAMILY_RESEARCH_AND_EXISTING_PLANT_SOURCE","existingSourceRefs":["CF_SOURCE_12MO","CF_SOURCE_12KR (history only where superseded)","CF_SOURCE_12LI (current C-5700 oil topology)","CF_SOURCE_12KT (KBZ manual)","CF_SOURCE_12KX (JGQ manual)","CF_PWH_SOURCE_12MH (future NGL only)"],"research":[{"id":"ariel-frame-oil","title":"Ariel / frame-driven oil pumps","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/frame_driven_lube_oil_pumps.html","scope":"OEM family mechanism. Auxiliary-end chain drive and distinct KBZ regulation, not installed piping or a new pressure setting.","reviewed":"2026-10-23"},{"id":"ariel-divider","title":"Ariel / common-supply cylinder lubrication diagram","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","scope":"Generic vendor explanatory diagram. Metered quantities depend on the selected blocks; exact installed injection points are not established.","reviewed":"2026-10-23"},{"id":"ariel-filter","title":"Ariel / frame oil filters","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/lube_oil_filter.html","scope":"Family filter construction and differential-pressure indication. No installed element or trip change.","reviewed":"2026-10-23"},{"id":"ariel-crosshead","title":"Ariel / crossheads","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/crossheads.html","scope":"Generic pin/bushing and top/bottom lubrication; no serial balance weights or rod-load certification.","reviewed":"2026-10-23"},{"id":"ariel-rod","title":"Ariel / connecting rods","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/connecting_rods.html","scope":"Forged-rod family reference, not a serial parts drawing.","reviewed":"2026-10-23"},{"id":"ariel-jgq-detail","title":"Ariel / JGN-JGQ frame standard features","url":"https://www.arielcorp.com/support/application-manual/frame-class-equipment/jgn_jgq_frames.html","scope":"JGQ family exterior, short integral guide, filter/gauges and tubing. Actual installed source records remain controlling.","reviewed":"2026-10-23"}],"newEntries":[{"id":"equipment_training_name","title":"Equipment Internal Training / future pump category","tags":["C-4100","C-6100","C-5700"],"text":"The existing trainer is renamed Equipment Internal Training. Inlet, residue and overhead are active; expander, refrigeration, regeneration and NGL pumps are future categories. Existing training IDs, unit source ownership and future part fields are preserved.","authority":"OPERATOR_REQUEST"},{"id":"detailed_lube_reference","title":"Separate lubrication duties and source boundary","tags":["C-4100","C-6100","C-5700"],"text":"Training adds distinct circulating frame-oil, cylinder/packing force-feed, and unassigned packing vent/drain views. Tubing bends, unions, point counts, marker timing, chain ratio and microgeometry remain schematic. No feed rates, material ratings, pressures or installed parts are inferred.","authority":"OEM_GUIDED_TRAINING_GEOMETRY"},{"id":"frame_oil_detail","title":"Frame oil and auxiliary-end mechanism","tags":["C-4100","C-6100","C-5700"],"text":"Source-linked oil teaching objects include sump, suction strainer, auxiliary-end pump/chain drive, cooler/bypass, full-flow filter and two pressure indications, gallery/bearing feeds, pre-lube, frame-side wiper return, breather and oil level. KBZ downstream-filter external regulation is distinguished from small-frame pump-head regulation.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"forcefeed_detail","title":"Application-selected metering and individual tube identification","tags":["C-4100","C-6100","C-5700"],"text":"Ariel common-supply diagram supplies the explanatory metering path: checked supply, force-feed pump, overpressure device alternative, pressure indication, progressive divider, cycle/no-flow monitor and checked injection points. Divider proportions are application-selected, not automatically equal. Drive-box oil remains separate from the injection supply. This is not a confirmed installed BOM or real shutdown channel.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"c5700_preserve_correction","title":"C-5700 oil topology remains owner-specific","tags":["C-5700","PSV-1005","PSV-1042"],"text":"Retain 12LI: 1024 is circulation/heater assembly (1017/1019/1021, TC1025, FSLL1023), not a cylinder lubricator. PSV1005 branches from pump1003 before check1004 and returns before strainer1001. PSV1042 protects the separate circulation/heater loop; both settings remain unestablished. Generic force-feed detail does not restore retired false plant feeds.","authority":"RETAINED_SOURCE_CROSSLINK_12LI"},{"id":"jgq_exterior_detail","title":"C-5700 current model exterior refined","tags":["C-5700"],"text":"Refined the active 12KR JGQ/2 exterior: ribbed crankcase, silver removable top and side covers, short guide housing, cylinder casting ribs, head flange/studs and valve access caps. Existing two cylinder identities, motor/shaft, nozzles, boundaries and later corrected oil connections remain. Blue/silver finish and fine dimensions are visual references, not a paint survey or installed parts catalog.","authority":"OEM_APPEARANCE_WITH_RETAINED_PLANT_TOPOLOGY"},{"id":"mechanism_detail","title":"Selectable small moving components","tags":["C-4100","C-6100","C-5700"],"text":"Added crosshead-pin bushing, rod-attachment and connecting-rod cap-fastener groups, enlarged guide oil-film overlays, and schematic moving chain/gear/metering elements. Existing slider-crank and ideal gas-cycle equations are retained; this is not a rod-load, lubrication-rate or valve-impact calculation.","authority":"TRAINING_ONLY"}],"policy":["No claim of all installed internal parts: serial-specific assembly drawings, tube schedules, injection sheets, approved BOM and field configuration are not complete.","All existing part IDs and owner links retained. Added training subparts do not create physical plant equipment. Manufacturer part numbers and installed ratings remain blank until source evidence is supplied.","Frame returns, process gas, packing leakage and force-feed oil are separate. Unestablished vent/drain receiving destinations are not connected to a convenient header.","Shared source references do not copy serial/National Board identifiers. No alarms, operating equations, settings, gate files or browser-storage schema are changed.","Generic lube diagram is filed once in Clearfork P&IDs as an OEM explanatory reference, not an issued plant drawing.","NGL pump category is a future placeholder only. PWH and NGL evidence already retained is not duplicated or converted to a new model."],"pending":["Exact serial-specific lubrication tube schedule, fitted injection count, divider configuration, metering quantities, oil source variants and installed part/rating selection.","Full native GPU and integrated plant rendering validation, final site collisions and real equipment field verification are separate tasks."],"drawings":[{"number":"ARIEL-APP-COMMON-OIL-FIGURE","revision":"Web page updated 09/07/2001","title":"Ariel force-feed lubrication / common oil supply - generic explanatory figure","pages":[1],"sourceFile":"Ariel application manual - Cylinder Lube Oil Distribution Block System","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","referenceKey":"ariel_common_lube_diagram_12mp","sourceClass":"GENERIC_VENDOR_EXPLANATORY_DIAGRAM_NOT_PLANT_PID","scope":"Catalog locator only, not an Ariel issued drawing number. Generic common-supply example; exact installed variants and injection-point count not established.","sourceStorageMode":"learn-only","sourceRetained":false,"sha256":null}]};
 function cfApplyEquipmentDetail12MP(H,S){
@@ -14406,10 +14438,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-10-31-12OG';
+var RYAN_BUILD_ID='RYAN-2026-11-04-12OK';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-TRAINER-LABELS-12OG-20261031';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-CONNECTION-DETAIL-PHASE3-12OK-20261104';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -44463,6 +44495,461 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,basel
 window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,trainerRuntime:'12OG'}));
 if(cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
 document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Internal trainer label toggle';
+
+function cfClosureAppearance12OH(){
+ if(window.CFClosureAppearance12OH)return window.CFClosureAppearance12OH;
+ var p=CF_SOURCE_12OH.plate,k=p.ownerKey,parent=p.parentOwnerKey,a=ANCH[parent],root=(byKey[parent]||[]).find(function(m){return m.isGroup&&m.children&&m.children.some(function(n){return n.geometry&&/Cylinder/.test(n.geometry.type||'');});});
+ if(!root||!a)return {build:'12OH',changed:false,reason:'Original receiver group/anchor unavailable; no replacement vessel generated.'};
+ var cap=root.children.find(function(m){return m.isMesh&&m.geometry&&/Sphere/.test(m.geometry.type||'')&&Math.abs(m.position.x-a.len/2)<1e-5;});
+ if(!cap)return {build:'12OH',changed:false,reason:'Original positive-end cap unavailable; no guessed substitute.'};
+ // Retain the existing closed cap geometry, transforms and receiver dimensions.
+ cap.userData=Object.assign({},cap.userData,{key:k,part12OH:'existing-closed-end-cap',sourceDefinition:'CF_SOURCE_12OH',schematicNotSurveyed:true});
+ byKey[k]=byKey[k]||[];if(!byKey[k].includes(cap))byKey[k].push(cap);if(!picks.includes(cap))picks.push(cap);
+ var silver=new THREE.MeshStandardMaterial({color:0xc4cbd0,metalness:.7,roughness:.38});
+ var cv=document.createElement('canvas');cv.width=1024;cv.height=720;var c=cv.getContext('2d');c.fillStyle='#b7bfc3';c.fillRect(0,0,1024,720);c.fillStyle='#111922';c.fillRect(20,20,984,680);c.fillStyle='#edf2f3';c.textAlign='center';
+ [['T.D. WILLIAMSON',60],['D2000 QUICK-ACTUATING CLOSURE',36],['30-inch (750 MM)',40],['PART 12342150',38],['CLOSURE SERIAL 30UJD085',38],['MAWP 1480 PSI / 102 BAR',38],['-50 to 250 F / -46 to 121 C',32],['Plate reference - receiver rating separate',27]].forEach(function(t,i){c.font=t[1]+'px Arial';c.fillText(t[0],512,92+i*77);});
+ var radius=a.r,x=a.len/2+.55*radius+.018,width=radius*.91,height=radius*.64;
+ var plate=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),side:THREE.DoubleSide}));plate.position.set(x,0,0);plate.rotation.y=Math.PI/2;
+ function register(mesh,part){mesh.userData={key:k,part12OH:part,sourceDefinition:'CF_SOURCE_12OH',schematicNotSurveyed:true};root.add(mesh);byKey[k].push(mesh);picks.push(mesh);return mesh;}
+ register(plate,'individual-closure-plate');
+ [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(function(s,i){var bolt=new THREE.Mesh(cfSphereGeometry12JG(radius*.015,10,8),silver);bolt.position.set(x+.006,s[0]*height*.44,s[1]*width*.46);bolt.scale.x=.4;register(bolt,'plate-fastener-'+i);});
+ root.updateMatrixWorld(true);var center=root.localToWorld(V(x,0,0));ANCH[k]={mid:center.clone(),top:center.clone(),parent:parent,closureDisplayOnly:true};
+ if(typeof cfRefreshPickCache12JG==='function')cfRefreshPickCache12JG();
+ return window.CFClosureAppearance12OH={build:'12OH',changed:true,owner:k,parent:parent,newMeshes:5,existingCapReused:true,capGeometryChanged:false,receiverAnchorsChanged:false,routesChanged:false,closedReadOnly:true,positionQualification:'Existing positive-end cap used schematically; exact installed end/azimuth and mounting require GA or wider tagged view.'};
+}
+function cfRenderClosureLink12OH(r,host){
+ var p=CF_SOURCE_12OH.plate;if(!r||!host||(r.assetId||r.key)!==p.parentOwnerKey||host.querySelector('[data-closure-link12oh]'))return;
+ var doc=host.ownerDocument,d=doc.createElement('details');d.className='cf-disclosure12mk';d.dataset.closureLink12oh=p.ownerKey;
+ var sm=doc.createElement('summary');sm.textContent='Associated D2000 closure / separate individual plate';d.appendChild(sm);
+ var note=doc.createElement('p');note.textContent='This plate belongs to the quick-actuating closure, not the complete V-1000 vessel. Receiver drawing ratings and PSV-1000 remain unchanged.';d.appendChild(note);
+ var b=doc.createElement('button');b.type='button';b.textContent='Open V-1000 closure record';b.onclick=function(){show(p.ownerKey);};d.appendChild(b);
+ var loaded=false;d.addEventListener('toggle',function(){if(!d.open||loaded)return;loaded=true;cfInspectionGrid12MC(d,cfClosureRows12OH());});host.appendChild(d);
+}
+function cfInstallClosureEvidence12OH(){
+ if(window.CFClosureEvidence12OH)return window.CFClosureEvidence12OH;
+ var S=CF_SOURCE_12OH,p=S.plate,report=cfApplyClosureEvidence12OH({info:INFO,records:CF3D_DEVICE_RECORDS,categories:LIB_CATS,audit:CF_PLATE_AUDIT_12KB});
+ if(!report.matched)throw Error(report.missing.join('; '));
+ var raw=CF3D_DEVICE_RECORDS[p.ownerKey];CF3D_DEVICE_DATA[p.ownerKey]=raw;CF_TRACE_DATA_12IZ.components[p.ownerKey]=raw;
+ [CF3D_DEVICE_DATA,CF_TRACE_DATA_12IZ.components].forEach(function(s){if(s[p.parentOwnerKey]){s[p.parentOwnerKey].closureReference12OH=CF3D_DEVICE_RECORDS[p.parentOwnerKey].closureReference12OH;s[p.parentOwnerKey].nameplateAudit12KB=CF3D_DEVICE_RECORDS[p.parentOwnerKey].nameplateAudit12KB;}});
+ raw.aliases.forEach(function(s){if(!CF3D_DEVICE_RECORDS[s]&&!CF3D_DEVICE_ALIASES[s])CF3D_DEVICE_ALIASES[s]=p.ownerKey;});
+ if(!CF3D_DEVICE_PHOTOS.some(function(x){return x.sourceDefinition==='CF_SOURCE_12OH';}))CF3D_DEVICE_PHOTOS.push({name:p.photos[0].name,sha256:p.photos[0].sha256,byteLength:p.photos[0].byteLength,assetIds:[p.ownerKey],ownerKey:p.ownerKey,parentOwnerKey:p.parentOwnerKey,equipment:raw.tag,sourceDefinition:'CF_SOURCE_12OH',corroboratingPhotos:p.photos.slice(1),sourceStorageMode:'learn-only',sourceMediaRetained:false,base64:''});
+ var enrich=cfEnrichEquipmentRecord12MD;cfEnrichEquipmentRecord12MD=function(r,raw,index){return cfAugmentClosureInspection12OH(enrich.apply(this,arguments),raw);};
+ var render=cfRenderEquipmentDossier12MD;cfRenderEquipmentDossier12MD=function(r,host){var result=render.apply(this,arguments);cfRenderClosureLink12OH(r,host);return result;};
+ CF_INSPECTION_STATE_12MC.sources=null;CF_EQUIPMENT_INFORMATION_12MD.index=null;CF_EQUIPMENT_INFORMATION_12MD.lastAudit=null;CF_SELECTION_STATE_12OE.index=null;LIB_STATIC_SEARCH_CACHE=null;LIB_STATIC_TAG_CACHE=null;CF3D_ASSOC.dirty=true;
+ report.appearance=cfClosureAppearance12OH();cfRefBuildComponents();if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();if(window.CFLibraryFiling12LQ)window.CFLibraryFiling12LQ.refresh(true);
+ window.CFClosureEvidence12OH={build:S.build,source:S,report:report,inspect:function(){return cf3dInspectDevice(p.ownerKey);}};return window.CFClosureEvidence12OH;
+}
+cfInstallClosureEvidence12OH();
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{referenceDigest:"3d6a584a8631bd1491671d8cbc7a02e7ba1c31e7136c14a9612c3f5d383444a4",build:CF_APPLICATION_BUILD_12OA,baseline:'12OG',sourceIndexBuild:'12OH',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,trainerRuntime:'12OG'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceIndexBuild:'12OH',latestUpdate:'12OH',sourceDefinitionCount:cfSourceDefinitions12HO().length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionBlocks:cfSourceDefinitions12HO().length,nameplateSourceRecords:CF3D_DEVICE_PHOTOS.length,nameplates:CF3D_DEVICE_PHOTOS.length,referenceNotes:Object.keys(INFO).length,componentRecords:Object.keys(CF3D_DEVICE_RECORDS).length,quizQuestions:QUIZ_BANK.length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{referenceDigest:"3d6a584a8631bd1491671d8cbc7a02e7ba1c31e7136c14a9612c3f5d383444a4",frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,sourceIndexBuild:'12OH',trainerRuntime:'12OG'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;document.title='12OH | Clear Fork - Inlet pig receiver closure evidence';if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+/* 12OI PHASE 1 - equipment-only presentation. No process or reference facts changed.
+   Mesh objects, owners, transforms, anchors, connections and original resources survive.
+   Unknown, transparent, animated-indication and pipe/device geometry is left alone. */
+var CF_EQUIPMENT_FINISH_PLAN_12OI={build:'12OI',baseline:'12OH',phase:1,title:'Equipment surface and silhouette enhancement',sourceClass:'SOFTWARE_VISUAL_PRESENTATION_ONLY',scope:'Existing main-plant equipment. Piping and connections are reserved for phases 2 and 3. Internal lessons and source facts are unchanged.',features:['Smoother existing curved shells and heads','Subtle rounded edges on existing solid equipment casings','Separate paint, metallic trim and structural-support finish','Equipment-local procedural reflection and fine surface texture','Enhanced / Original comparison without saved-data changes'],limits:['No new installed hardware or mechanical dimensions are asserted.','No piping, nozzles, valve positions, readings, interlocks or component identities are changed.','Surface texture, bevel radius and sampling resolution are presentation choices, not inspected field construction.']};
+function cfCreateEquipmentFinish12OI(C){
+ 'use strict';
+ var T=C.THREE,root=C.plant,records=C.records||{},eqp=C.eqp||{},excluded=C.excluded||new Set(),doc=C.document;
+ var rows=[],materials=new Map(),geometries=new Map(),canonical=new Map(),textures={},owners={},skips={},errors=[],enabled=true,quality='balanced';
+ var counts={scanned:0,eligible:0,materialChanges:0,curved:0,beveled:0,unmodifiedGeometry:0};
+ var allowedType=/^(?:demeth|tower|vert|horiz|filter|filterh|inletcomp|rescomp|ohcomp|regencomp|refcomp|expander|cooler|aircooler|exch|kettle|vrectexch|tank|heater|pump|flare)$/;
+ var allowedKind=/^(?:equipment|pump|compressor|motor|driver|vessel|tank|filter|exchanger|heater|blower|cooler|closure|dryer|separator|fan)$/i;
+ var forbiddenRole=/(?:pipe|piping|tubing|tube-|tube\b|nozzle|port\b|port-|route|tee\b|elbow|bend|reducer|adaptor|adapter|tap\b|valve|psv|transmitter|gauge|indicator|sensor|thermowell|flow.?arrow|flow.?marker|frost|flame|liquid|level|particle|droplet|label|plaque|nameplate|tag.?plate|window|sight.?glass|screen|guard.?mesh|wire.?mesh)/i;
+ function skip(why){skips[why]=(skips[why]||0)+1;return null;}
+ function data(m){var u=m.userData||{},out=[];Object.keys(u).forEach(function(k){if(/(?:part|role|visual|piece|detail|name|kind)/i.test(k)&&typeof u[k]==='string')out.push(u[k]);});return out.join(' ');}
+ function key(m){for(var p=m;p&&p!==root;p=p.parent){if(p.userData&&p.userData.key)return String(p.userData.key);}return null;}
+ function blocked(m){for(var p=m;p&&p!==root;p=p.parent){if(excluded.has(p))return true;var u=p.userData||{};if(Object.keys(u).some(function(k){return /(?:pipeRun|pipeRoute|pipeSegment|controlValve|fieldDevice|psvId|psvKey|valvePosition|frostOverlay|flamePart)/i.test(k)&&u[k]!=null&&u[k]!==false;}))return true;}return false;}
+ function equipment(k){
+  if(!k||/^(?:pipe|psv|cf3d_cv|cf3d_field|route|flow|label)/i.test(k))return false;
+  var e=eqp[k],r=records[k];
+  if(e&&allowedType.test(e.t||'')&&Number.isFinite(e.x)&&Number.isFinite(e.z))return true;
+  if(r&&allowedKind.test(r.kind||'')&&!r.referenceOnly&&!r.referenceRecordOnly)return true;
+  return false;
+ }
+ function role(m,txt){
+  var mat=m.material,c=mat.color||{r:.5,g:.5,b:.5},lum=(c.r+c.g+c.b)/3;
+  if(/(?:bolt|fastener|nut\b|washer|stud\b|machined|polish|metal.?trim|closure.?rim|seam|flange|retaining.?ring)/i.test(txt))return 'metal';
+  if(/(?:skirt|saddle|support|skid|sole|base|foot|mount|frame.?rail|structure|ladder|platform|handrail)/i.test(txt)||lum<.16)return 'support';
+  if(/(?:jacket|insulat|cladding)/i.test(txt))return 'jacket';
+  if(/(?:rotor|blade|shaft|coupling)/i.test(txt))return 'mechanism';
+  return 'paint';
+ }
+ function finiteGeometry(g){var a=g.getAttribute?g.getAttribute('position'):g.attributes&&g.attributes.position;if(!a||!a.array||a.count<3)return false;for(var i=0;i<a.array.length;i++)if(!Number.isFinite(a.array[i]))return false;return true;}
+ function originalArgs(g){var p=g.parameters||{},type=g.type||'';
+  if(type==='CylinderGeometry'||type==='CylinderBufferGeometry')return {type:'CylinderGeometry',a:[p.radiusTop,p.radiusBottom,p.height,p.radialSegments,p.heightSegments,p.openEnded,p.thetaStart,p.thetaLength]};
+  if(type==='SphereGeometry'||type==='SphereBufferGeometry')return {type:'SphereGeometry',a:[p.radius,p.widthSegments,p.heightSegments,p.phiStart,p.phiLength,p.thetaStart,p.thetaLength]};
+  if(type==='TorusGeometry'||type==='TorusBufferGeometry')return {type:'TorusGeometry',a:[p.radius,p.tube,p.radialSegments,p.tubularSegments,p.arc]};
+  if(type==='BoxGeometry'||type==='BoxBufferGeometry')return {type:'BoxGeometry',a:[p.width,p.height,p.depth,p.widthSegments,p.heightSegments,p.depthSegments]};
+  return null;
+ }
+ function construct(a){return new(Function.prototype.bind.apply(T[a.type],[null].concat(a.a)))();}
+ function safePrimitive(g,a){
+  if(canonical.has(g))return canonical.get(g);
+  var b=null,ok=false;
+  try{b=construct(a);var p=g.attributes.position,q=b.attributes.position;ok=p&&q&&p.array.length===q.array.length;
+   if(ok)for(var i=0;i<p.array.length;i++){if(Math.abs(p.array[i]-q.array[i])>1e-6){ok=false;break;}}
+  }catch(e){ok=false;}finally{if(b&&b.dispose)b.dispose();}
+  canonical.set(g,!!ok);return !!ok;
+ }
+ function roundedBox(w,h,d,b,segments){
+  var g=new T.BoxGeometry(w,h,d,segments,segments,segments),p=g.attributes.position,n=g.attributes.normal,half=[w/2,h/2,d/2];
+  for(var i=0;i<p.count;i++){
+   var v=[p.getX(i),p.getY(i),p.getZ(i)],c=v.map(function(x,j){return Math.max(-half[j]+b,Math.min(half[j]-b,x));});
+   var q=v.map(function(x,j){return x-c[j];}),len=Math.hypot(q[0],q[1],q[2])||1;
+   p.setXYZ(i,c[0]+b*q[0]/len,c[1]+b*q[1]/len,c[2]+b*q[2]/len);
+   if(n)n.setXYZ(i,q[0]/len,q[1]/len,q[2]/len);
+  }
+  p.needsUpdate=true;if(n)n.needsUpdate=true;g.computeBoundingBox();g.computeBoundingSphere();return g;
+ }
+ function refine(row,q){
+  var g=row.originalGeometry,a=originalArgs(g);if(!a||!safePrimitive(g,a))return g;
+  var p=g.parameters||{},rmax=Math.max(Number(p.radiusTop)||0,Number(p.radiusBottom)||0,Number(p.radius)||0),n=q==='fine'?64:40,aa={type:a.type,a:a.a.slice()},kind=null;
+  if(a.type==='CylinderGeometry'&&rmax>=.28&&(p.radialSegments||8)>=12&&(p.radialSegments||8)<n){aa.a[3]=n;kind='curved';}
+  else if(a.type==='SphereGeometry'&&rmax>=.28&&(p.widthSegments||8)>=12&&(p.widthSegments||8)<n){aa.a[1]=n;aa.a[2]=q==='fine'?32:24;kind='curved';}
+  else if(a.type==='TorusGeometry'&&rmax>=.50&&(p.tubularSegments||8)>=16&&(p.tubularSegments||8)<n){aa.a[2]=Math.max(p.radialSegments||8,8);aa.a[3]=n;kind='curved';}
+  else if(a.type==='BoxGeometry'&&row.role==='paint'&&Math.min(p.width,p.height,p.depth)>=.4&&Math.max(p.width,p.height,p.depth)/Math.min(p.width,p.height,p.depth)<18&&!/(?:rib|fin|core|bundle|baffle|plate|channel|tray|deck|pad|wall)/i.test(row.description)){kind='beveled';}
+  if(!kind)return g;
+  var cacheKey=(g.uuid||g.id)+'|'+kind+'|'+q;if(geometries.has(cacheKey))return geometries.get(cacheKey);
+  var out=kind==='beveled'?roundedBox(p.width,p.height,p.depth,Math.min(.14,Math.min(p.width,p.height,p.depth)*.045),q==='fine'?6:4):construct(aa);
+  if(!finiteGeometry(out)){if(out.dispose)out.dispose();return g;}
+  out.userData=Object.assign({},g.userData||{},{equipmentPresentation12OI:true,kind:kind,sourcePrimitive:g.uuid||g.id});
+  // Bounds cannot grow beyond the original ANALYTIC primitive envelope. Transforms stay unchanged.
+  if(out.computeBoundingBox)out.computeBoundingBox();if(out.computeBoundingSphere)out.computeBoundingSphere();
+  row.geometryKind=kind;geometries.set(cacheKey,out);return out;
+ }
+ function surfaceTexture(kind){
+  if(textures[kind])return textures[kind];if(!doc||!T.CanvasTexture)return null;
+  var canvas=doc.createElement('canvas');canvas.width=128;canvas.height=128;var ctx=canvas.getContext('2d');if(!ctx)return null;
+  var im=ctx.createImageData(128,128),seed=76193;
+  for(var y=0;y<128;y++)for(var x=0;x<128;x++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;var fine=(seed>>>24)/255-.5;var v=kind==='brushed'?128+Math.sin(y*Math.PI/4)*9+fine*7:128+fine*16;var i=(y*128+x)*4;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
+  ctx.putImageData(im,0,0);var tex=new T.CanvasTexture(canvas);tex.wrapS=tex.wrapT=T.RepeatWrapping;if(tex.repeat)tex.repeat.set(kind==='brushed'?2:6,kind==='brushed'?4:6);tex.needsUpdate=true;textures[kind]=tex;return tex;
+ }
+ function reflection(){
+  if(textures.reflection)return textures.reflection;if(!doc||!T.CubeTexture)return null;
+  var faces=[];for(var i=0;i<6;i++){var cv=doc.createElement('canvas');cv.width=cv.height=128;var ctx=cv.getContext('2d');if(!ctx)return null;
+   var gr=ctx.createLinearGradient(0,0,0,128);gr.addColorStop(0,i===3?'#303d42':'#e9f0f4');gr.addColorStop(.48,'#9daab3');gr.addColorStop(.53,'#66727b');gr.addColorStop(1,'#39464a');ctx.fillStyle=gr;ctx.fillRect(0,0,128,128);
+   if(i!==3){var glow=ctx.createLinearGradient(0,0,128,0);glow.addColorStop(0,'rgba(255,255,255,0)');glow.addColorStop(.26,'rgba(255,255,255,.38)');glow.addColorStop(.39,'rgba(255,255,255,0)');glow.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,128,128);}faces.push(cv);
+  }
+  var cube=new T.CubeTexture(faces);if(T.sRGBEncoding)cube.encoding=T.sRGBEncoding;cube.needsUpdate=true;textures.reflection=cube;return cube;
+ }
+ function finish(mat,kind){
+  var id=(mat.uuid||mat.id)+'|'+kind;if(materials.has(id))return materials.get(id);
+  var out=mat.clone();out.name=(mat.name||'Equipment')+' / phase 1 '+kind;
+  var tune={paint:[.49,.13,.36],support:[.62,.28,.33],metal:[.30,.78,.70],jacket:[.42,.56,.52],mechanism:[.40,.58,.50]}[kind];
+  // Preserve exact color and all indicator/opacity properties. Only opaque static equipment finishes qualify.
+  out.roughness=tune[0];out.metalness=tune[1];out.envMapIntensity=tune[2];
+  if(!out.envMap)out.envMap=reflection();
+  if(!out.bumpMap&&!out.normalMap&&kind!=='mechanism'){out.bumpMap=surfaceTexture(kind==='metal'||kind==='jacket'?'brushed':'paint');out.bumpScale=(kind==='metal'||kind==='jacket')?.0015:.004;}
+  out.userData=Object.assign({},mat.userData||{},{equipmentFinish12OI:true,originalMaterial:mat.uuid||mat.id,presentationRole:kind});out.needsUpdate=true;materials.set(id,out);return out;
+ }
+ function inspectMesh(m){
+  if(!m.isMesh||!m.geometry||!m.material)return;counts.scanned++;
+  var k=key(m),txt=data(m),mat=m.material;
+  if(!equipment(k))return skip('not-equipment');
+  if(blocked(m))return skip('pipe-device-or-protected');
+  if(forbiddenRole.test(txt))return skip('connection-indication-or-identification');
+  if(Array.isArray(mat)||!mat.isMeshStandardMaterial||mat.transparent||mat.opacity<1||mat.wireframe||mat.map||mat.alphaMap||mat.vertexColors)return skip('text-transparent-or-special-material');
+  if(mat.emissive&&Math.max(mat.emissive.r||0,mat.emissive.g||0,mat.emissive.b||0)>.001)return skip('emissive-status');
+  var p=m.geometry.parameters||{};
+  if(/Cylinder/.test(m.geometry.type||'')&&(Math.max(p.radiusTop||0,p.radiusBottom||0)<.22||(p.openEnded&&Math.max(p.radiusTop||0,p.radiusBottom||0)<.85)))return skip('small-bore-or-fine-structure');
+  if(!finiteGeometry(m.geometry))return skip('non-finite-or-empty');
+  var ro=role(m,txt),row={mesh:m,key:k,role:ro,description:txt,originalGeometry:m.geometry,originalMaterial:mat,enhancedMaterial:finish(mat,ro),geometryKind:null};
+  row.enhancedGeometry=refine(row,quality);rows.push(row);counts.eligible++;counts.materialChanges++;if(row.geometryKind)counts[row.geometryKind]++;else counts.unmodifiedGeometry++;
+  owners[k]=owners[k]||{key:k,tag:(records[k]&&records[k].tag)||(eqp[k]&&eqp[k].tag)||k,meshes:0,curved:0,beveled:0};owners[k].meshes++;if(row.geometryKind)owners[k][row.geometryKind]++;
+ }
+ root.traverse(function(m){try{inspectMesh(m);}catch(e){errors.push({key:key(m),message:String(e.message||e)});}});
+ function apply(on,q){
+  enabled=!!on;quality=q==='fine'?'fine':'balanced';
+  if(C.beforeChange)C.beforeChange();
+  rows.forEach(function(r){try{r.mesh.geometry=enabled?refine(r,quality):r.originalGeometry;r.mesh.material=enabled?r.enhancedMaterial:r.originalMaterial;}catch(e){r.mesh.geometry=r.originalGeometry;r.mesh.material=r.originalMaterial;errors.push({key:r.key,message:String(e.message||e)});}});
+  if(C.afterChange)C.afterChange();return summary();
+ }
+ function summary(){return {build:'12OI',phase:1,enabled:enabled,quality:quality,scope:CF_EQUIPMENT_FINISH_PLAN_12OI.scope,counts:Object.assign({},counts),equipmentOwners:Object.keys(owners).length,skipped:Object.assign({},skips),cachedMaterials:materials.size,cachedGeometries:geometries.size,errors:errors.slice(),sourceFactsAdded:0,newPhysicalEquipment:0,pipeRoutesChanged:0};}
+ function audit(){return Object.assign(summary(),{owners:Object.values(owners),untouchedPrimaryEquipment:Object.keys(eqp).filter(function(k){var e=eqp[k];return e&&allowedType.test(e.t||'')&&Number.isFinite(e.x)&&!owners[k];}).map(function(k){return {key:k,tag:eqp[k].tag,reason:'No eligible opaque equipment surface found; left unchanged rather than guessing.'};}),policy:CF_EQUIPMENT_FINISH_PLAN_12OI.limits.slice()});}
+ apply(true,'balanced');return {summary:summary,audit:audit,setEnabled:function(on){return apply(on,quality);},setQuality:function(q){return apply(enabled,q);},rows:rows};
+}
+function cfInstallEquipmentFinish12OI(){
+ if(window.CFEquipmentFinish12OI)return window.CFEquipmentFinish12OI;
+ var excluded=new Set();
+ function exclude(o){if(!o)return;if(o.isObject3D){excluded.add(o);return;}if(o.mesh&&o.mesh.isObject3D)excluded.add(o.mesh);if(o.object&&o.object.isObject3D)excluded.add(o.object);if(o.meshes) o.meshes.forEach(exclude);if(o.parts) o.parts.forEach(exclude);if(o.segments) o.segments.forEach(exclude);if(o.elbows) o.elbows.forEach(exclude);}
+ [typeof CF3D_ALL_SEGMENTS==='undefined'?[]:CF3D_ALL_SEGMENTS,typeof CF3D_PIPE_RUNS==='undefined'?[]:CF3D_PIPE_RUNS,typeof CF3D_PSV_MESHES==='undefined'?[]:CF3D_PSV_MESHES,typeof CF3D_FIELD_MESHES==='undefined'?[]:CF3D_FIELD_MESHES,typeof CF3D_CONTROL_MESHES==='undefined'?[]:CF3D_CONTROL_MESHES,typeof mvalGroup==='undefined'?[]:mvalGroup,typeof instGroup==='undefined'?[]:instGroup].forEach(function(a){if(Array.isArray(a))a.forEach(exclude);});
+ // Preserve existing selection, including its exact owner. Restore the material state
+ // before switching finishes so highlight cleanup cannot later restore a stale finish.
+ var selection=null,initialSelection=typeof selKey==='undefined'?null:selKey;
+ // Snapshot unhighlighted resources even if a restored session already has a selection.
+ if(initialSelection&&typeof highlight==='function')highlight(null);
+ var api=cfCreateEquipmentFinish12OI({THREE:THREE,plant:plant,records:CF3D_DEVICE_RECORDS,eqp:EQP,excluded:excluded,document:document,
+  beforeChange:function(){selection=typeof selKey==='undefined'?null:selKey;if(selection&&typeof highlight==='function')highlight(null);},
+  afterChange:function(){if(selection&&typeof highlight==='function')highlight(selection);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Equipment appearance redraw',e);}}}
+ });
+ if(initialSelection&&typeof highlight==='function')highlight(initialSelection);
+ window.CFEquipmentFinish12OI=api;
+ var host=document.createElement('section');host.id='cfEquipmentFinish12OI';host.setAttribute('aria-label','Equipment visual enhancement');host.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0;padding:10px 13px;border:1px solid #426075;border-radius:9px;background:#12232e;color:#d6e8f1;font:12px/1.4 Segoe UI,Arial,sans-serif';
+ var title=document.createElement('strong');title.textContent='PHASE 1 / EQUIPMENT';title.style.cssText='font-size:11px;letter-spacing:.08em;color:#a9d6e9';host.appendChild(title);
+ var lab=document.createElement('label');lab.style.cssText='display:flex;align-items:center;gap:7px;color:#e5eff5;font-size:12px;cursor:pointer';var check=document.createElement('input');check.type='checkbox';check.id='cfEquipmentEnhanced12OI';check.checked=true;lab.appendChild(check);lab.appendChild(document.createTextNode('Enhanced equipment'));host.appendChild(lab);
+ var res=document.createElement('select');res.id='cfEquipmentQuality12OI';res.setAttribute('aria-label','Equipment surface detail');res.style.cssText='flex:0 1 165px;min-width:140px;min-height:34px;font-size:12px;padding:6px;background:#172f3f;color:#e7f1f6;border:1px solid #4a687c';[['balanced','Balanced detail'],['fine','Fine close-up detail']].forEach(function(a){var o=document.createElement('option');o.value=a[0];o.textContent=a[1];res.appendChild(o);});host.appendChild(res);
+ var status=document.createElement('span');status.setAttribute('role','status');status.style.cssText='font-size:11px;color:#b3cbd8';host.appendChild(status);
+ var details=document.createElement('details');details.style.cssText='width:100%;font-size:11px';var sum=document.createElement('summary');sum.textContent='Scope and equipment coverage';sum.style.cursor='pointer';details.appendChild(sum);var info=document.createElement('div');info.style.cssText='max-height:230px;overflow:auto;padding:7px 0';details.appendChild(info);host.appendChild(details);
+ function paint(){var s=api.summary();check.checked=s.enabled;res.value=s.quality;status.textContent=(s.enabled?'Enhanced':'Original')+' / '+s.equipmentOwners+' equipment owners / piping unchanged';if(details.open){info.textContent='';var p=document.createElement('p');p.textContent=CF_EQUIPMENT_FINISH_PLAN_12OI.scope+' Appearance only; not vendor CAD or proof of installed materials. Uncheck to compare the original appearance. No saved data is changed.';info.appendChild(p);api.audit().owners.forEach(function(r){var q=document.createElement('div');q.textContent=r.tag+': '+r.meshes+' existing surfaces; '+r.curved+' curved / '+r.beveled+' softened casings';info.appendChild(q);});}}
+ check.onchange=function(){api.setEnabled(check.checked);paint();};res.onchange=function(){api.setQuality(res.value);paint();};details.ontoggle=paint;
+ var view=document.getElementById('v3d');if(view&&view.parentNode)view.parentNode.insertBefore(host,view);paint();api.panel=host;return api;
+}
+try{cfInstallEquipmentFinish12OI();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Equipment visual phase 1',e);console.error('12OI equipment enhancement',e);}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OH',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase1:CF_EQUIPMENT_FINISH_PLAN_12OI});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase1:CF_EQUIPMENT_FINISH_PLAN_12OI}));
+if(typeof cfHeading12NM!=='undefined'&&cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+document.title='12OI | Clear Fork - Equipment visual enhancement / Phase 1';
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+/* 12OJ PHASE 2 - registered piping presentation only.
+   Never rebuild a run, close a valve gap, change a size, infer a connection, or
+   mutate a reference record. Phase 1 equipment and phase/selection overlays remain separate. */
+var CF_PIPE_FINISH_PLAN_12OJ={build:'12OJ',baseline:'12OI',phase:2,title:'Piping surface and roundness enhancement',sourceClass:'SOFTWARE_VISUAL_PRESENTATION_ONLY',scope:'Existing registered main-plant pipe walls, bends, reducers and layer infills. Phase 1 equipment remains; connection, hardware and remaining-detail review is reserved for Phase 3.',features:['Smoother existing straight-pipe, bend and reducer surfaces','Color-preserving satin pipe finish and restrained local reflections','Exact existing route, radius, cut-spool and owner preservation','Independent Enhanced piping and Balanced / Fine comparison','Read-only coverage and exclusions from the running scene'],limits:['No new piping, fabricated joints, supports, insulation or connection is inferred.','Source line sizes and current schematic radii remain separate; neither is changed.','A better finish is not a completed connection audit, field survey or hydraulic validation.','Existing phase-flow transparency, frost, arrows, instruments, valve positions and labels remain controlled by their original features.']};
+function cfPipeCandidates12OJ(C){
+ var root=C.plant,rows=new Map(),runs=C.runs||[],segments=C.segments||[],registry=C.routeRegistry||{},defs=C.devices||[],infill=new Set(),runSet=new Set(runs),knownKeys=new Set(),ids=new Set(),skip={},reasons=[];
+ function attached(m){for(var p=m;p;p=p.parent)if(p===root)return true;return false;}
+ function note(reason,m){skip[reason]=(skip[reason]||0)+1;if(reasons.length<200)reasons.push({key:m&&m.userData&&m.userData.key||null,reason:reason});}
+ function description(m){var u=m.userData||{};return Object.keys(u).filter(function(k){return /part|role|detail|kind|name|visual/i.test(k)&&typeof u[k]==='string';}).map(function(k){return u[k];}).join(' ');}
+ function add(m,owner,id,kind){
+  if(!m||!m.isMesh||!m.geometry||!attached(m)){if(m)note('detached-or-not-a-mesh',m);return;}
+  var u=m.userData||{},txt=description(m);
+  if(!infill.has(m)&&(u.fieldDevice||u.valvePart||u.psvPart||u.controlValveTag||u.positionPart12KI||u.phaseFlowOverlay12JH||u.visualOnly12JI||u.coldZone12JI||/(?:valve|actuator|handwheel|bonnet|stem|flange|bolt|fastener|gauge|indicator|sensor|thermowell|nozzle|port\b|plate|label|support|skid|brace|shaft|vane|blade)/i.test(txt))){note('hardware-port-or-overlay',m);return;}
+  // Some equipment and device helpers call seg(). Membership in the active pipe
+  // run/route inventory, not the primitive type or an equipment tag, is required.
+  if(!owner&&!id){note('unresolved-route-owner',m);return;}
+  var r=rows.get(m);if(!r){r={mesh:m,keys:[],routeIds:[],kind:kind,description:txt};rows.set(m,r);}
+  if(owner&&r.keys.indexOf(owner)<0)r.keys.push(owner);if(id&&r.routeIds.indexOf(id)<0)r.routeIds.push(id);
+ }
+ runs.forEach(function(r){if(r.key)knownKeys.add(r.key);if(r.routeId12HN)ids.add(r.routeId12HN);});
+ (registry.records||[]).forEach(function(r){if(r.id)ids.add(r.id);if(r.key)knownKeys.add(r.key);});
+ runs.forEach(function(r){(r.segments||[]).forEach(function(m){add(m,r.key,r.routeId12HN,'straight / reducer');});(r.elbows||[]).forEach(function(m){add(m,r.key,r.routeId12HN,'bend');});});
+ function pointOn(p,a,b){if(!p||!a||!b)return false;var d=b.clone().sub(a),l=d.lengthSq();if(l<1e-12)return false;var t=p.clone().sub(a).dot(d)/l;return t>=-1e-7&&t<=1.0000001&&p.distanceToSquared(a.clone().addScaledVector(d,Math.max(0,Math.min(1,t))))<1e-10;}
+ var byKeyRuns={};runs.forEach(function(r){(byKeyRuns[r.key]||(byKeyRuns[r.key]=[])).push(r);});
+ segments.forEach(function(s){var m=s.mesh;if(!m)return;var u=m.userData||{},owned=(u.pipeRouteIds12HN||[]).filter(function(id){return ids.has(id);}),ownerKeys=(u.sharedPipeKeys||[]).concat(s.key||[]);
+  if(s.path&&runSet.has(s.path)){add(m,s.path.key,s.path.routeId12HN,'straight / reducer');return;}
+  if(owned.length){owned.forEach(function(id){add(m,s.key||u.key,id,'registered segment');});return;}
+  ownerKeys.forEach(function(k){(byKeyRuns[k]||[]).forEach(function(r){for(var i=1;i<(r.points||[]).length;i++)if(pointOn(s.a,r.points[i-1],r.points[i])&&pointOn(s.b,r.points[i-1],r.points[i])){add(m,k,r.routeId12HN,'cut / shared spool');break;}});});
+ });
+ (C.infills||[]).forEach(function(f){var d=defs.find(function(x){return x.key===f.key;}),k=d&&d.pipeKey;if(!k||!knownKeys.has(k)){note('infill-without-exact-host',f.mesh);return;}infill.add(f.mesh);add(f.mesh,k,null,'layer infill');});
+ root.traverse(function(m){if(!m.isMesh)return;var u=m.userData||{};(u.pipeRouteIds12HN||[]).filter(function(id){return ids.has(id);}).forEach(function(id){add(m,u.key,id,'registered route surface');});});
+ return {rows:Array.from(rows.values()),skipped:skip,excludedExamples:reasons,activeRunCount:runs.length,registryRouteCount:(registry.records||[]).length};
+}
+function cfCreatePipeFinish12OJ(C){
+ 'use strict';
+ var T=C.THREE,doc=C.document,inventory=cfPipeCandidates12OJ(C),rows=[],materials=new Map(),geometryCache=new Map(),canonical=new Map(),textures={},enabled=true,quality='balanced',errors=[],skips=Object.assign({},inventory.skipped),scanned=inventory.rows.length,protectedGeometry=C.protectedGeometryKeys||new Set();
+ var checkedVertices=0;
+ function skip(k){skips[k]=(skips[k]||0)+1;}
+ function args(g){var p=g.parameters||{},t=(g.type||'').replace('BufferGeometry','Geometry');
+  if(t==='CylinderGeometry')return {type:t,a:[p.radiusTop,p.radiusBottom,p.height,p.radialSegments,p.heightSegments,p.openEnded,p.thetaStart,p.thetaLength]};
+  if(t==='SphereGeometry')return {type:t,a:[p.radius,p.widthSegments,p.heightSegments,p.phiStart,p.phiLength,p.thetaStart,p.thetaLength]};
+  if(t==='TorusGeometry')return {type:t,a:[p.radius,p.tube,p.radialSegments,p.tubularSegments,p.arc]};return null;
+ }
+ function make(a){return new(Function.prototype.bind.apply(T[a.type],[null].concat(a.a)))();}
+ function sameArray(a,b){if(!a||!b||a.length!==b.length)return false;for(var i=0;i<a.length;i++)if(!Number.isFinite(a[i])||Math.abs(a[i]-b[i])>1e-6)return false;return true;}
+ function pristine(g,a){if(canonical.has(g))return canonical.get(g);var test=null,ok=false;
+  try{test=make(a);ok=sameArray(g.attributes.position.array,test.attributes.position.array)&&sameArray(g.attributes.normal.array,test.attributes.normal.array);if(ok&&!!g.index!==!!test.index)ok=false;if(ok&&g.index)ok=sameArray(g.index.array,test.index.array);}catch(e){ok=false;}finally{if(test&&test.dispose)test.dispose();}canonical.set(g,ok);return ok;
+ }
+ function valid(g){var p=g.attributes&&g.attributes.position;if(!p||!p.count)return false;for(var i=0;i<p.array.length;i++)if(!Number.isFinite(p.array[i]))return false;return true;}
+ function refine(row,q){var g=row.originalGeometry,a=args(g);if(!a||!pristine(g,a)||row.preserveGeometry)return g;
+  var p=g.parameters||{},n=q==='fine'?48:32,small=Math.max(p.radius||0,p.radiusTop||0,p.radiusBottom||0)<.09;if(small)n=q==='fine'?32:20;var aa={type:a.type,a:a.a.slice()},changed=false;
+  if(a.type==='CylinderGeometry'&&(p.radialSegments||8)>=8&&(p.radialSegments||8)<n){aa.a[3]=n;changed=true;}
+  if(a.type==='SphereGeometry'){var w=q==='fine'?40:24,h=q==='fine'?24:16;if(small){w=q==='fine'?24:16;h=q==='fine'?16:12;}if((p.widthSegments||8)>=8&&((p.widthSegments||8)<w||(p.heightSegments||6)<h)){aa.a[1]=Math.max(w,p.widthSegments||8);aa.a[2]=Math.max(h,p.heightSegments||6);changed=true;}}
+  if(a.type==='TorusGeometry'&&((p.radialSegments||8)<(q==='fine'?16:12)||(p.tubularSegments||8)<(q==='fine'?72:48))){aa.a[2]=Math.max(p.radialSegments||8,q==='fine'?16:12);aa.a[3]=Math.max(p.tubularSegments||8,q==='fine'?72:48);changed=true;}
+  if(!changed)return g;var key=(g.uuid||g.id)+'|'+q;if(geometryCache.has(key))return geometryCache.get(key);
+  var out=make(aa);if(!valid(out)){if(out.dispose)out.dispose();errors.push({owner:row.keys.join(', '),reason:'Non-finite refinement rejected'});return g;}
+  // Sampling changes only. Keep exact parametric radius, end planes, sweep and caps.
+  out.userData=Object.assign({},g.userData||{},{pipePresentation12OJ:true,sourceGeometry:g.uuid||g.id});if(out.computeBoundingBox)out.computeBoundingBox();if(out.computeBoundingSphere)out.computeBoundingSphere();checkedVertices+=out.attributes.position.count;geometryCache.set(key,out);return out;
+ }
+ function bump(){if(textures.bump)return textures.bump;if(!doc||!T.CanvasTexture)return null;var cv=doc.createElement('canvas');cv.width=cv.height=64;var x=cv.getContext('2d');if(!x)return null;var im=x.createImageData(64,64),seed=32177;for(var i=0;i<64*64;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;var v=126+(seed>>>27);im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=255;}x.putImageData(im,0,0);var t=new T.CanvasTexture(cv);t.wrapS=t.wrapT=T.RepeatWrapping;if(t.repeat)t.repeat.set(3,4);t.needsUpdate=true;textures.bump=t;return t;}
+ function reflection(){if(C.reflection)return C.reflection;if(textures.reflection)return textures.reflection;if(!doc||!T.CubeTexture)return null;var faces=[];for(var i=0;i<6;i++){var cv=doc.createElement('canvas');cv.width=cv.height=32;var c=cv.getContext('2d');if(!c)return null;var gr=c.createLinearGradient(0,0,0,32);gr.addColorStop(0,'#d8e4ec');gr.addColorStop(.46,'#9cadb9');gr.addColorStop(.55,'#6c7a83');gr.addColorStop(1,'#45535a');c.fillStyle=gr;c.fillRect(0,0,32,32);faces.push(cv);}var t=new T.CubeTexture(faces);if(T.sRGBEncoding)t.encoding=T.sRGBEncoding;t.needsUpdate=true;textures.reflection=t;return t;}
+ function finish(base){var k=base.uuid||base.id;if(materials.has(k))return materials.get(k);var m=base.clone(),metal=Number(base.metalness)>=.65;
+  m.name=(base.name||'Pipe wall')+' / Phase 2';m.roughness=metal?.37:.46;m.metalness=metal?.66:.18;m.envMapIntensity=metal?.42:.28;if(!m.envMap)m.envMap=reflection();
+  if(!m.bumpMap&&!m.normalMap){m.bumpMap=bump();m.bumpScale=.0013;}
+  // Share only live color channels; cloning for selection still produces independent colors.
+  // Do not freeze a service-color update in a detached copy, or recolor a sister service.
+  m.color=base.color;if(base.emissive)m.emissive=base.emissive;
+  m.userData=Object.assign({},base.userData||{},{pipeFinish12OJ:true,sourceMaterial:k});m.needsUpdate=true;materials.set(k,m);return m;
+ }
+ inventory.rows.forEach(function(t){var m=t.mesh,mat=m.material,g=m.geometry;
+  if(Array.isArray(mat)||!mat||!mat.isMeshStandardMaterial||mat.transparent||mat.opacity<1||mat.map||mat.alphaMap||mat.vertexColors||mat.wireframe){skip('special-transparent-or-mapped-surface');return;}
+  if(mat.emissive&&Math.max(mat.emissive.r,mat.emissive.g,mat.emissive.b)>.001){skip('emissive-or-selected-surface');return;}
+  if(mat.userData&&mat.userData.equipmentFinish12OI){skip('phase-1-equipment-protected');return;}
+  if(!valid(g)){skip('invalid-geometry');return;}
+  var r=Object.assign(t,{originalGeometry:g,originalMaterial:mat,enhancedMaterial:finish(mat),preserveGeometry:t.keys.some(function(k){return protectedGeometry.has(k);}),lastGeometry:g,pendingMaterial:false,hook:null});rows.push(r);
+ });
+ function managed(row,mat){return mat===row.originalMaterial||mat===row.enhancedMaterial;}
+ function applyMaterial(row){var desired=enabled?row.enhancedMaterial:row.originalMaterial;if(managed(row,row.mesh.material)){row.mesh.material=desired;row.pendingMaterial=false;return true;}row.pendingMaterial=true;return false;}
+ function defer(row){if(row.hook)return;var prior=row.mesh.onBeforeRender;row.hook=function(){if(prior)prior.apply(this,arguments);if(row.pendingMaterial&&managed(row,row.mesh.material)){applyMaterial(row);if(row.mesh.onBeforeRender===row.hook)row.mesh.onBeforeRender=prior;row.hook=null;}};row.mesh.onBeforeRender=row.hook;}
+ function apply(on,q){enabled=!!on;quality=q==='fine'?'fine':'balanced';if(C.beforeChange)C.beforeChange();try{rows.forEach(function(r){try{
+   var target=enabled?refine(r,quality):r.originalGeometry;if(r.mesh.geometry===r.originalGeometry||r.mesh.geometry===r.lastGeometry){r.mesh.geometry=target;r.lastGeometry=target;}else skip('externally-replaced-geometry-left-alone');
+   if(!applyMaterial(r))defer(r);
+  }catch(e){errors.push({owner:r.keys.join(', '),reason:String(e.message||e)});}});}finally{if(C.afterChange)C.afterChange();}return summary();}
+ function summary(){var owners=new Set(),routeIds=new Set(),refined=0,pending=0,hidden=0;rows.forEach(function(r){r.keys.forEach(function(k){owners.add(k);});r.routeIds.forEach(function(k){routeIds.add(k);});if(r.mesh.geometry!==r.originalGeometry)refined++;if(r.pendingMaterial)pending++;if(r.mesh.visible===false)hidden++;});return {build:'12OJ',phase:2,enabled:enabled,quality:quality,activeRunCount:inventory.activeRunCount,registeredRouteCount:inventory.registryRouteCount,candidateMeshes:scanned,eligibleMeshes:rows.length,pipeOwnerKeys:owners.size,representedRouteIds:routeIds.size,refinedMeshes:refined,hiddenMeshesPreserved:hidden,overlayDeferredMeshes:pending,cachedMaterials:materials.size,cachedGeometries:geometryCache.size,cachedVertices:checkedVertices,skipped:Object.assign({},skips),errors:errors.slice(),routeCoordinatesChanged:0,pipeSizesChanged:0,newPipes:0,sourceFactsAdded:0};}
+ function audit(){var owners={};rows.forEach(function(r){r.keys.forEach(function(k){var a=owners[k]||(owners[k]={key:k,meshes:0,routeIds:[],geometryPreservedForColdOverlay:0});a.meshes++;r.routeIds.forEach(function(id){if(a.routeIds.indexOf(id)<0)a.routeIds.push(id);});if(r.preserveGeometry)a.geometryPreservedForColdOverlay++;});});return Object.assign(summary(),{scope:CF_PIPE_FINISH_PLAN_12OJ.scope,policy:CF_PIPE_FINISH_PLAN_12OJ.limits.slice(),owners:Object.values(owners),excludedExamples:inventory.excludedExamples});}
+ apply(true,'balanced');return {summary:summary,audit:audit,setEnabled:function(on){return apply(on,quality);},setQuality:function(q){return apply(enabled,q);},rows:rows};
+}
+function cfInstallPipeFinish12OJ(){
+ if(window.CFPipeFinish12OJ)return window.CFPipeFinish12OJ;
+ var selected=null,initial=typeof selKey==='undefined'?null:selKey;
+ if(initial&&typeof highlight==='function')highlight(null);
+ var coldKeys=new Set();plant.traverse(function(m){var u=m.userData||{};if(u.coldZone12JI&&u.hostKey)coldKeys.add(u.hostKey);});
+ // Explicit retained exposed-cold route keys: preserve their tessellation to avoid
+ // changing contact with independently sampled frost overlays built lazily later.
+ ['pipeTo_c1140suc','pipeTo_c1141suc','pipeTo_c1142suc','gn_expander_outlet','gn_jt_bypass','pipeTo_t1521rsv'].forEach(function(k){coldKeys.add(k);});
+ var reflections=window.CFEquipmentFinish12OI&&window.CFEquipmentFinish12OI.rows||[],env=reflections.find(function(r){return r.enhancedMaterial&&r.enhancedMaterial.envMap;});
+ var api;
+ try{api=cfCreatePipeFinish12OJ({THREE:THREE,plant:plant,runs:CF3D_PIPE_RUNS,segments:CF3D_ALL_SEGMENTS,infills:CF3D_FIELD_INFILL,routeRegistry:CF3D_PIPE_ROUTES_12HN,devices:CF3D_FIELD_DEVICES.concat(CF3D_CONTROL_VALVES),document:document,reflection:env&&env.enhancedMaterial.envMap,protectedGeometryKeys:coldKeys,
+  beforeChange:function(){selected=typeof selKey==='undefined'?null:selKey;if(selected&&typeof highlight==='function')highlight(null);},
+  afterChange:function(){if(selected&&typeof highlight==='function')highlight(selected);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Piping appearance redraw',e);}}}
+ });}finally{if(initial&&typeof highlight==='function')highlight(initial);}
+ window.CFPipeFinish12OJ=api;
+ var doc=document,host=doc.createElement('section');host.id='cfPipeFinish12OJ';host.setAttribute('aria-label','Piping visual enhancement');host.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0;padding:10px 13px;border:1px solid #436b72;border-radius:9px;background:#10272c;color:#e1eff2;font:12px/1.45 Segoe UI,Arial,sans-serif';
+ var title=doc.createElement('strong');title.textContent='PHASE 2 / PIPING';title.style.cssText='font-size:11px;letter-spacing:.08em;color:#a4dcd8';host.appendChild(title);
+ var label=doc.createElement('label');label.style.cssText='display:flex;align-items:center;gap:7px;color:#e6f3f2;font-size:12px;cursor:pointer;min-height:36px';var check=doc.createElement('input');check.type='checkbox';check.id='cfPipingEnhanced12OJ';check.checked=true;label.appendChild(check);label.appendChild(doc.createTextNode('Enhanced piping'));host.appendChild(label);
+ var select=doc.createElement('select');select.id='cfPipingQuality12OJ';select.setAttribute('aria-label','Piping surface detail');select.style.cssText='flex:0 1 165px;min-width:140px;min-height:36px;font-size:12px;padding:6px;background:#16353a;color:#e4f4f2;border:1px solid #4a777d';[['balanced','Balanced detail'],['fine','Fine close-up detail']].forEach(function(a){var o=doc.createElement('option');o.value=a[0];o.textContent=a[1];select.appendChild(o);});host.appendChild(select);
+ var status=doc.createElement('span');status.setAttribute('role','status');status.style.cssText='font-size:11px;color:#b3d4d7;overflow-wrap:anywhere';host.appendChild(status);
+ var detail=doc.createElement('details');detail.style.cssText='width:100%;min-width:0;font-size:11px';var summary=doc.createElement('summary');summary.textContent='Scope, piping coverage and exclusions';summary.style.cssText='cursor:pointer;min-height:30px';detail.appendChild(summary);var content=doc.createElement('div');content.style.cssText='max-height:260px;overflow:auto;padding:5px 0;overflow-wrap:anywhere';detail.appendChild(content);host.appendChild(detail);
+ function paint(){var s=api.summary();check.checked=s.enabled;select.value=s.quality;status.textContent=(s.enabled?'Enhanced':'Original')+' / '+s.eligibleMeshes+' pipe surfaces / routes and sizes unchanged';if(!detail.open)return;content.textContent='';var p=doc.createElement('p');p.textContent=CF_PIPE_FINISH_PLAN_12OJ.scope+' Service colors, line identities and source-sized reductions are retained. This is not a connection or clash-certification pass. Comparison changes only this page session.';content.appendChild(p);
+  var c=doc.createElement('p');c.textContent='In-scene pipe owners: '+s.pipeOwnerKeys+'. Refined surfaces: '+s.refinedMeshes+'. Temporary flow/selection overlays waiting to return: '+s.overlayDeferredMeshes+'. Phase 1 controls remain independent.';content.appendChild(c);
+  var exclusions=doc.createElement('p');exclusions.textContent='Excluded: valve/instrument/nozzle hardware, labels, arrows, frost/phase effects, special materials and detached historical meshes. Unknown or edited geometry is not reconstructed.';content.appendChild(exclusions);
+  var download=doc.createElement('button');download.type='button';download.textContent='Export piping visual audit';download.style.cssText='font-size:12px;min-height:34px;padding:5px 10px';download.onclick=function(){var blob=new Blob([JSON.stringify(api.audit(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='ClearFork_12OJ_Piping_Visual_Runtime_Audit.json';doc.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);};content.appendChild(download);
+  api.audit().owners.forEach(function(r){var item=doc.createElement('div');item.textContent=r.key+': '+r.meshes+' existing pipe surfaces'+(r.routeIds.length?' | '+r.routeIds.join(', '):'');content.appendChild(item);});}
+ check.onchange=function(){api.setEnabled(check.checked);paint();};select.onchange=function(){api.setQuality(select.value);paint();};detail.ontoggle=paint;var view=doc.getElementById('v3d');if(view&&view.parentNode)view.parentNode.insertBefore(host,view);paint();api.panel=host;return api;
+}
+try{cfInstallPipeFinish12OJ();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Piping visual phase 2',e);console.error('12OJ piping enhancement',e);}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OI',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase2:CF_PIPE_FINISH_PLAN_12OJ});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase2:CF_PIPE_FINISH_PLAN_12OJ}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof cfHeading12NM!=='undefined'&&cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+document.title='12OJ | Clear Fork - Piping visual enhancement / Phase 2';
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+/* 12OK: phase 3 finishes existing connection hardware and secondary structures.
+ * The connection inspector reads exact retained anchors. It never auto-connects
+ * nearby geometry, revises source topology, or changes plant/persistent state. */
+var CF_DETAIL_FINISH_PLAN_12OK={build:'12OK',baseline:'12OJ',phase:3,title:'Connections, hardware and remaining model detail',sourceClass:'SOFTWARE_VISUAL_PRESENTATION_ONLY',scope:'Existing main-model connection hardware, valves, instrument housings, supports and secondary site surfaces not handled by phases 1 and 2. Read-only exact-anchor connection review.',features:['Smoother existing flanges, unions, nozzles, valve and instrument housings','Distinct restrained trim, painted-hardware and structural finishes','Existing racks, bases and grade surface detail without new objects','Independent Enhanced details and Balanced / Fine controls','Searchable connection endpoints, local focus and original record access','Read-only endpoint-coordinate audit with unresolved references preserved'],limits:['Appearance changes do not establish installed dimensions, materials, bolt counts or vendor construction.','Connection review compares retained route coordinates with explicitly named anchors; it is not a hydraulic, clash, open-end or field verification.','Unknown endpoints are not joined to nearby equipment. No drain, relief, vent or process destination is inferred.','Live valve indications, mapped dials, labels, plates, transparent effects, animations and phase-flow displays retain their original owners and controls.']};
+function cfDetailCandidates12OK(C){
+ var root=C.plant,excluded=C.excluded||new Set(),explicit=new Map(),rows=[],skips={},seen=new Set();
+ function put(list,role){(list||[]).forEach(function(o){if(!o)return;var m=o.mesh||o;if(m&&m.isObject3D)explicit.set(m,role);});}
+ put(C.fieldMeshes,'device');put(C.controlMeshes,'device');put(C.psvMeshes,'device');put(C.manualMeshes,'device');put(C.instrumentMeshes,'device');put(C.rackMeshes,'structure');put(C.siteMeshes,'ground');
+ function skip(s){skips[s]=(skips[s]||0)+1;}
+ function describe(o){var u=o.userData||{};return Object.keys(u).filter(function(k){return /part|role|detail|name|kind|visual/i.test(k)&&typeof u[k]==='string';}).map(function(k){return u[k];}).join(' ');}
+ function classify(m){var u=m.userData||{},key=null,tagged=null,txt=describe(m),protectedNode=false;
+  for(var p=m;p&&p!==root;p=p.parent){var d=p.userData||{};if(excluded.has(p))return {skip:'handled-by-phase-1-or-2'};if(!key&&d.key)key=String(d.key);if(!tagged&&explicit.has(p))tagged=explicit.get(p);
+   if(d.phaseFlowOverlay12JH||d.visualOnly12JI||d.coldZone12JI||d.label12ml||d.positionPart12KI||d.flamePart||d.frostOverlay)protectedNode=true;
+  }
+  if(protectedNode||/(?:label|plaque|nameplate|tag[-_ ]?plate|display|dial[-_ ]?face|lens|glass|pointer|needle|indicator|position[-_ ]?band|status|flow[-_ ]?(?:arrow|marker|direction)|particle|droplet|liquid|flame|frost|water[-_ ]?surface|quality[-_ ]?probe)/i.test(txt))return {skip:'identification-status-or-process-graphic'};
+  if(m.isInstancedMesh||m.isSkinnedMesh)return {skip:'instanced-or-deformed-surface'};
+  var rec=(C.records||{})[key]||{},kind=String(rec.kind||'');
+  if(u.nozzleKey||/(?:nozzle|port[-_ ]?neck|flange|union|adapter|adaptor|ferrule|fitting|coupler|connector|bolt|fastener|washer|nut\b|stud\b)/i.test(txt))return {key:key||u.nozzleKey||'connection',role:'connection',description:txt};
+  if(tagged==='device'||u.fieldDevice||u.controlValveTag||u.valvePart||u.psvPart||u.psvKey||/^(?:manual|check|strainer|restriction|regulator|instrument|control|modulating|shutdown|psv|valve|transmitter|gauge)$/.test(kind))return {key:key||u.fieldDevice||'device',role:/(?:stem|spindle|shaft|yoke|bonnet[-_ ]?joint|cover[-_ ]?rim|impulse|thermowell|gland|manifold)/i.test(txt)?'trim':'device',description:txt};
+  if(tagged==='ground')return {key:key||'site-grade',role:'ground',description:txt};
+  if(tagged==='structure'||/(?:skid|saddle|skirt|support|base[-_ ]?(?:frame|plate|pad)|concrete|pedestal|platform|ladder|handrail|fence|rack[-_ ]?(?:beam|post|frame)|structural|bracket)/i.test(txt))return {key:key||'site-structure',role:/concrete|pad|pedestal/i.test(txt)?'base':'structure',description:txt};
+  if(u.pipeRouteIds12HN||u.sharedPipeKeys||u.fieldInfill)return {skip:'registered-pipe-owned-by-phase-2'};
+  return {skip:'unclassified-left-unchanged'};
+ }
+ root.traverse(function(m){if(!m.isMesh||!m.geometry||!m.material||seen.has(m))return;seen.add(m);var x=classify(m);if(x.skip){skip(x.skip);return;}var mat=m.material;
+  if(Array.isArray(mat)||!mat.isMeshStandardMaterial||mat.transparent||mat.opacity<1||mat.map||mat.alphaMap||mat.wireframe||mat.vertexColors||mat.displacementMap){skip('mapped-transparent-or-special-material');return;}
+  if(mat.emissive&&Math.max(mat.emissive.r||0,mat.emissive.g||0,mat.emissive.b||0)>.001){skip('emissive-indication');return;}
+  rows.push(Object.assign({mesh:m},x));
+ });return {rows:rows,scanned:seen.size,skipped:skips};
+}
+function cfCreateDetailFinish12OK(C){
+ 'use strict';var T=C.THREE,inventory=cfDetailCandidates12OK(C),rows=[],materials=new Map(),geometries=new Map(),pristineCache=new Map(),textures={},errors=[],enabled=true,quality='balanced';
+ function valid(g){var p=g&&g.attributes&&g.attributes.position;if(!p||!p.count)return false;for(var i=0;i<p.array.length;i++)if(!Number.isFinite(p.array[i]))return false;return true;}
+ function args(g){var p=g.parameters||{},t=(g.type||'').replace('BufferGeometry','Geometry');
+  if(t==='CylinderGeometry')return {type:t,a:[p.radiusTop,p.radiusBottom,p.height,p.radialSegments,p.heightSegments,p.openEnded,p.thetaStart,p.thetaLength]};
+  if(t==='SphereGeometry')return {type:t,a:[p.radius,p.widthSegments,p.heightSegments,p.phiStart,p.phiLength,p.thetaStart,p.thetaLength]};
+  if(t==='TorusGeometry')return {type:t,a:[p.radius,p.tube,p.radialSegments,p.tubularSegments,p.arc]};return null;}
+ function make(a){return new(Function.prototype.bind.apply(T[a.type],[null].concat(a.a)))();}
+ function equal(a,b){if(!a||!b||a.length!==b.length)return false;for(var i=0;i<a.length;i++)if(!Number.isFinite(a[i])||Math.abs(a[i]-b[i])>1e-6)return false;return true;}
+ function pristine(g,a){if(pristineCache.has(g))return pristineCache.get(g);var t=null,ok=false;try{t=make(a);ok=equal(g.attributes.position.array,t.attributes.position.array)&&equal(g.attributes.normal.array,t.attributes.normal.array)&&!!g.index===!!t.index&&(!g.index||equal(g.index.array,t.index.array));}catch(e){ok=false;}finally{if(t&&t.dispose)t.dispose();}pristineCache.set(g,ok);return ok;}
+ function refine(row,q){var g=row.originalGeometry;if(row.role==='ground'||row.role==='base')return g;var a=args(g);if(!a||!pristine(g,a))return g;var p=g.parameters||{},n=q==='fine'?48:32,aa={type:a.type,a:a.a.slice()},changed=false;
+  // Hexagonal fasteners and deliberately low-sided solids must stay polygonal.
+  if(a.type==='CylinderGeometry'&&(p.radialSegments||8)>=12&&(p.radialSegments||8)<n){aa.a[3]=n;changed=true;}
+  if(a.type==='SphereGeometry'&&(p.widthSegments||8)>=12){var w=q==='fine'?40:28,h=q==='fine'?24:18;if((p.widthSegments||8)<w||(p.heightSegments||8)<h){aa.a[1]=Math.max(p.widthSegments||8,w);aa.a[2]=Math.max(p.heightSegments||8,h);changed=true;}}
+  if(a.type==='TorusGeometry'&&(p.tubularSegments||8)>=16){var r=q==='fine'?14:10,t=q==='fine'?64:48;if((p.radialSegments||8)<r||(p.tubularSegments||8)<t){aa.a[2]=Math.max(p.radialSegments||8,r);aa.a[3]=Math.max(p.tubularSegments||8,t);changed=true;}}
+  if(!changed)return g;var key=(g.uuid||g.id)+'|'+q;if(geometries.has(key))return geometries.get(key);var out=make(aa);if(!valid(out)){if(out.dispose)out.dispose();errors.push({owner:row.key,message:'Invalid refined surface rejected'});return g;}
+  out.userData=Object.assign({},g.userData||{},{detailPresentation12OK:true,sourceGeometry:g.uuid||g.id});if(out.computeBoundingBox)out.computeBoundingBox();if(out.computeBoundingSphere)out.computeBoundingSphere();geometries.set(key,out);return out;
+ }
+ function texture(kind){if(textures[kind])return textures[kind];var doc=C.document;if(!doc||!T.CanvasTexture)return null;var cv=doc.createElement('canvas');cv.width=cv.height=64;var ctx=cv.getContext('2d');if(!ctx)return null;var im=ctx.createImageData(64,64),seed=27183;
+  for(var y=0;y<64;y++)for(var x=0;x<64;x++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;var v=128+((seed>>>24)-128)*(kind==='mineral'?.36:.075)+(kind==='trim'?Math.sin(y*1.8)*5:0),i=(y*64+x)*4;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}ctx.putImageData(im,0,0);var t=new T.CanvasTexture(cv);t.wrapS=t.wrapT=T.RepeatWrapping;if(t.repeat)t.repeat.set(kind==='mineral'?80:3,kind==='mineral'?80:4);t.needsUpdate=true;textures[kind]=t;return t;
+ }
+ function finish(base,role){var id=(base.uuid||base.id)+'|'+role;if(materials.has(id))return materials.get(id);var out=base.clone(),tune={connection:[.34,.65,.48],trim:[.30,.72,.50],device:[.47,.22,.34],structure:[.62,.30,.25],base:[.91,.025,0],ground:[.98,0,0]}[role];
+  out.name=(base.name||'Existing hardware')+' / phase 3 '+role;out.color=base.color;if(base.emissive)out.emissive=base.emissive;out.roughness=tune[0];out.metalness=tune[1];out.envMapIntensity=tune[2];
+  if(!out.envMap&&role!=='ground'&&role!=='base'&&C.reflection)out.envMap=C.reflection;
+  if(!out.bumpMap&&!out.normalMap){out.bumpMap=texture(role==='ground'||role==='base'?'mineral':role==='connection'||role==='trim'?'trim':'paint');out.bumpScale=role==='ground'?.018:role==='base'?.006:.0015;}
+  out.userData=Object.assign({},base.userData||{},{detailFinish12OK:true,originalMaterial:base.uuid||base.id,presentationRole:role});out.needsUpdate=true;materials.set(id,out);return out;
+ }
+ inventory.rows.forEach(function(x){if(!valid(x.mesh.geometry)){errors.push({owner:x.key,message:'Invalid original geometry left alone'});return;}rows.push(Object.assign(x,{originalGeometry:x.mesh.geometry,originalMaterial:x.mesh.material,enhancedMaterial:finish(x.mesh.material,x.role),lastGeometry:x.mesh.geometry,pending:false,hook:null}));});
+ function managed(r){return r.mesh.material===r.originalMaterial||r.mesh.material===r.enhancedMaterial;}
+ function applyMaterial(r){if(managed(r)){r.mesh.material=enabled?r.enhancedMaterial:r.originalMaterial;r.pending=false;return true;}r.pending=true;return false;}
+ function defer(r){if(r.hook)return;var previous=r.mesh.onBeforeRender;r.hook=function(){if(previous)previous.apply(this,arguments);if(r.pending&&managed(r)){applyMaterial(r);if(r.mesh.onBeforeRender===r.hook)r.mesh.onBeforeRender=previous;r.hook=null;}};r.mesh.onBeforeRender=r.hook;}
+ function apply(on,q){enabled=!!on;quality=q==='fine'?'fine':'balanced';if(C.beforeChange)C.beforeChange();try{rows.forEach(function(r){try{if(r.mesh.geometry===r.lastGeometry||r.mesh.geometry===r.originalGeometry){var next=enabled?refine(r,quality):r.originalGeometry;r.mesh.geometry=next;r.lastGeometry=next;}if(!applyMaterial(r))defer(r);}catch(e){errors.push({owner:r.key,message:String(e.message||e)});}});}finally{if(C.afterChange)C.afterChange();}return summary();}
+ function summary(){var categories={},owners=new Set(),curved=0,pending=0;rows.forEach(function(r){categories[r.role]=(categories[r.role]||0)+1;owners.add(r.key);if(r.mesh.geometry!==r.originalGeometry)curved++;if(r.pending)pending++;});return {build:'12OK',phase:3,enabled:enabled,quality:quality,scannedMeshes:inventory.scanned,eligibleMeshes:rows.length,ownerCount:owners.size,categories:categories,refinedMeshes:curved,overlayDeferredMeshes:pending,skipped:inventory.skipped,cachedMaterials:materials.size,cachedGeometries:geometries.size,errors:errors.slice(),newHardware:0,routeCoordinatesChanged:0,componentIdentitiesChanged:0};}
+ function audit(){var owners={};rows.forEach(function(r){var a=owners[r.key]||(owners[r.key]={key:r.key,surfaces:0,roles:[]});a.surfaces++;if(a.roles.indexOf(r.role)<0)a.roles.push(r.role);});return Object.assign(summary(),{scope:CF_DETAIL_FINISH_PLAN_12OK.scope,limits:CF_DETAIL_FINISH_PLAN_12OK.limits.slice(),owners:Object.values(owners)});}
+ apply(true,'balanced');return {summary:summary,audit:audit,setEnabled:function(on){return apply(on,quality);},setQuality:function(q){return apply(enabled,q);},rows:rows};
+}
+function cfAuditConnections12OK(C){
+ // A coordinate contract is deliberately narrower than actual physical connectivity.
+ var records=C.records||[],ports=C.ports||{},anchors=C.anchors||{},tolerance=1e-5,rows=[],counts={routes:0,invalidRoutes:0,coordinateMatches:0,coordinateDifferences:0,unresolvedEndpoints:0,zeroLengthLegs:0};
+ function xyz(p){if(Array.isArray(p)&&p.length>=3&&p.slice(0,3).every(function(v){return typeof v==='number'&&Number.isFinite(v);}))return p.slice(0,3);if(p&&['x','y','z'].every(function(k){return typeof p[k]==='number'&&Number.isFinite(p[k]);}))return [p.x,p.y,p.z];return null;}
+ function side(ref,point){ref=ref||{};var name=typeof ref.anchor==='string'?ref.anchor:null,target=null,basis='No explicit coordinate anchor in this retained endpoint';
+  if(name&&ports[name]){target=xyz(ports[name].mouth);basis='Exact named port mouth: '+name;}
+  else if(name&&anchors[name]){var a=anchors[name];target=xyz(a.top||a.mid||a);basis='Exact named model anchor: '+name;}
+  else if(name)basis='Named anchor '+name+' is not available; no substitute chosen';
+  var delta=target&&point?Math.hypot(point[0]-target[0],point[1]-target[1],point[2]-target[2]):null;
+  var state=delta===null?'unresolved':delta<=tolerance?'coordinate-match':'coordinate-difference';if(state==='unresolved')counts.unresolvedEndpoints++;else if(state==='coordinate-match')counts.coordinateMatches++;else counts.coordinateDifferences++;
+  return {label:ref.label||ref.key||name||'Unassigned endpoint',owner:ref.key||null,anchor:name,point:point,target:target,deltaModelUnits:delta,state:state,basis:basis,sourceQualification:ref.basis||null};
+ }
+ records.forEach(function(r,index){if(!r)return;counts.routes++;var pts=(r.points||[]).map(xyz),valid=pts.length>=2&&pts.every(Boolean),zeros=0;if(!valid)counts.invalidRoutes++;if(valid)for(var i=1;i<pts.length;i++)if(Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2])<=tolerance)zeros++;
+  counts.zeroLengthLegs+=zeros;rows.push({id:r.id||('unidentified-route-'+index),key:r.key||null,title:r.title||r.service||r.key||'Unidentified route',nominal:r.nominal||null,source:r.source||null,drawings:(r.drawings||[]).slice(),status:r.status||null,sourceReviewRequired:!!r.review,validPoints:valid,zeroLengthLegs:zeros,bidirectional:!!r.bidirectional,upstream:side(r.up||r.upstream,valid?pts[0]:null),downstream:side(r.down||r.downstream,valid?pts[pts.length-1]:null)});
+ });return {build:'12OK',basis:'READ_ONLY_RETAINED_ROUTE_AND_EXPLICIT_ANCHOR_COORDINATES',counts:counts,toleranceModelUnits:tolerance,rows:rows,limits:['Coordinate matches do not establish field, rendered-mesh or hydraulic continuity.','A difference can reflect stale route metadata or a deliberate interface; review it before changing a route.','No closest-equipment matching, endpoint movement, pipe creation, automatic connection or source rewrite is performed.']};
+}
+function cfMountDetailTools12OK(C){
+ var doc=C.document,api=C.api,host=doc.createElement('section');host.id='cfDetailFinish12OK';host.className='cf-detail12ok';host.setAttribute('aria-label','Phase 3 connections and details');
+ var style=doc.createElement('style');style.textContent='.cf-detail12ok{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0;padding:10px 13px;border:1px solid #655b80;border-radius:9px;background:#211e32;color:#e4e9f3;font:12px/1.5 Segoe UI,Arial,sans-serif}.cf-detail12ok *{box-sizing:border-box}.cf-detail12ok strong{font-size:11px;letter-spacing:.08em;color:#d0c2ef}.cf-detail12ok label{display:flex;gap:7px;align-items:center;color:#e4e9f3;min-height:36px}.cf-detail12ok select,.cf-detail12ok input[type=search]{min-width:0;max-width:100%;min-height:36px;padding:7px 9px;background:#171528;color:#f0eaff;border:1px solid #726389;border-radius:6px;font:12px Segoe UI,Arial}.cf-detail12ok select{flex:0 1 180px}.cf-detail12ok details{width:100%;min-width:0}.cf-detail12ok summary{cursor:pointer;padding:6px 0}.cf-detail12ok button{font-size:12px;min-height:36px;padding:6px 11px;white-space:normal}.cf-detail12ok .cf-detail-tools{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}.cf-detail12ok .cf-detail-tools>*{max-width:100%}.cf-detail12ok .cf-route-search{flex:1 1 230px}.cf-detail12ok .cf-route-select{flex:1 1 400px}.cf-detail12ok .cf-route-result{max-height:340px;overflow:auto;overflow-wrap:anywhere;padding:12px;border:1px solid #524964;background:#141422;border-radius:8px}.cf-detail12ok .cf-endpoints{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cf-detail12ok .cf-endpoints>div{padding:10px;background:#242036;border-radius:6px;min-width:0}.cf-detail12ok .cf-coordinate-warning{color:#f4d6a5}.cf-detail12ok small{display:block;color:#c2bdd1;line-height:1.5}.cf-detail12ok :focus-visible{outline:2px solid #dfc0ff;outline-offset:2px}@media(max-width:600px){.cf-detail12ok .cf-endpoints{grid-template-columns:1fr}.cf-detail12ok .cf-route-select{width:100%;flex-basis:100%}.cf-detail12ok .cf-route-result{max-height:440px}}';doc.head.appendChild(style);
+ function el(tag,text,parent){var e=doc.createElement(tag);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+ el('strong','PHASE 3 / CONNECTIONS & DETAILS',host);var lab=el('label',null,host),check=el('input',null,lab);check.type='checkbox';check.id='cfDetailsEnhanced12OK';check.checked=true;lab.appendChild(doc.createTextNode('Enhanced details'));
+ var quality=el('select',null,host);quality.id='cfDetailQuality12OK';quality.setAttribute('aria-label','Connection and hardware detail');[['balanced','Balanced detail'],['fine','Fine close-up detail']].forEach(function(a){var o=el('option',a[1],quality);o.value=a[0];});var status=el('span','',host);status.setAttribute('role','status');
+ var det=el('details',null,host);det.id='cfConnectionReview12OK';el('summary','Inspect connections and remaining model coverage',det);var lead=el('small','Exact retained endpoints only. Model-coordinate agreement is not a field connection or clash certification. Nothing is automatically joined or moved.',det);
+ var toolbar=el('div',null,det);toolbar.className='cf-detail-tools';var search=el('input',null,toolbar);search.type='search';search.placeholder='Search equipment, line or route';search.className='cf-route-search';search.id='cfConnectionSearch12OK';search.setAttribute('aria-label','Search connection records');
+ var select=el('select',null,toolbar);select.className='cf-route-select';select.id='cfConnectionSelect12OK';select.setAttribute('aria-label','Select an exact connection record');var result=el('div',null,det);result.className='cf-route-result';result.id='cfConnectionResult12OK';
+ var actions=el('div',null,det);actions.className='cf-detail-tools';var refresh=el('button','Refresh connection review',actions);refresh.type='button';var download=el('button','Export phase 3 visual / connection audit',actions);download.type='button';var coverage=el('small','',det),report=null;
+ function paint(){var s=api.summary();check.checked=s.enabled;quality.value=s.quality;status.textContent=(s.enabled?'Enhanced':'Original')+' / '+s.eligibleMeshes+' existing detail surfaces';coverage.textContent=Object.keys(s.categories).map(function(k){return k+': '+s.categories[k];}).join(' | ')+'. No new hardware or route edits. Excluded: labels, plate text, status indications, special materials and unclassified surfaces.';}
+ function draw(){result.textContent='';if(!report)return;var r=report.rows.find(function(x){return x.id===select.value;});if(!r){el('p','No matching connection record. No endpoint inferred.',result);return;}el('b',r.title,result);el('small','Record '+r.id+' | '+(r.nominal||'Nominal size not assigned')+' | '+(r.drawings.join(', ')||'Drawing link not assigned'),result);el('small','Source: '+(r.source||'Not assigned')+' | '+(r.status||'Status not assigned'),result);
+  if(!r.validPoints||r.zeroLengthLegs)el('p','Route-coordinate review required: '+(!r.validPoints?'missing / invalid coordinates':r.zeroLengthLegs+' zero-length leg(s)'),result).className='cf-coordinate-warning';
+  var grid=el('div',null,result);grid.className='cf-endpoints';[['Upstream / retained reference direction',r.upstream],['Downstream / retained reference direction',r.downstream]].forEach(function(a,i){var b=el('div',null,grid);el('b',a[0],b);el('p',a[1].label,b);var p=el('small',a[1].state==='coordinate-match'?'Coordinate match to named anchor (model only)':a[1].state==='coordinate-difference'?'REVIEW: endpoint differs from named anchor by '+a[1].deltaModelUnits.toFixed(5)+' model units':'Endpoint coordinate association unresolved',b);if(a[1].state!=='coordinate-match')p.className='cf-coordinate-warning';el('small',a[1].basis,b);if(a[1].sourceQualification)el('small',a[1].sourceQualification,b);var focus=el('button',i?'Focus downstream end':'Focus upstream end',b);focus.type='button';focus.disabled=!a[1].point;focus.onclick=function(){if(C.focus)C.focus(a[1].point,r);};});
+  if(r.bidirectional)el('small','Bidirectional/equalizing service: upstream/downstream labels are reference endpoints, not a one-way flow assertion.',result);if(r.sourceReviewRequired)el('small','The existing source record requires review; this visual pass does not clear that status.',result);
+  var open=el('button','Open original pipe information',result);open.type='button';open.onclick=function(){if(C.openRoute)C.openRoute(r.id);};
+ }
+ function options(){var old=select.value,q=search.value.toLowerCase().trim(),all=report?report.rows:[],rows=all.filter(function(r){return !q||[r.id,r.key,r.title,r.upstream.label,r.downstream.label,r.drawings.join(' ')].join(' ').toLowerCase().indexOf(q)>=0;});select.textContent='';rows.forEach(function(r){var o=el('option',r.id+' | '+r.title,select);o.value=r.id;});if(rows.some(function(r){return r.id===old;}))select.value=old;draw();lead.textContent=rows.length+' of '+all.length+' retained routes. Exact anchor comparison only; no nearest-equipment matching, automatic connections or field/clash certification.';}
+ function load(){report=C.connectionAudit();options();paint();}
+ check.onchange=function(){api.setEnabled(check.checked);paint();};quality.onchange=function(){api.setQuality(quality.value);paint();};det.ontoggle=function(){if(det.open&&!report)load();};search.oninput=options;select.onchange=draw;refresh.onclick=load;
+ download.onclick=function(){if(!report)load();var payload={appearance:api.audit(),connections:report},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=el('a',null,doc.body);a.href=url;a.download='ClearFork_12OK_Phase3_Runtime_Audit.json';a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);};
+ var view=doc.getElementById('v3d');if(view&&view.parentNode)view.parentNode.insertBefore(host,view);paint();api.panel=host;api.refreshConnectionReview=load;return host;
+}
+function cfInstallDetailFinish12OK(){
+ if(window.CFDetailFinish12OK)return window.CFDetailFinish12OK;
+ var excluded=new Set(),first=window.CFEquipmentFinish12OI,second=window.CFPipeFinish12OJ;[first,second].forEach(function(a){if(a&&a.rows)a.rows.forEach(function(r){excluded.add(r.mesh);});});
+ var selection=null,initial=typeof selKey==='undefined'?null:selKey,api;if(initial&&typeof highlight==='function')highlight(null);
+ function before(){selection=typeof selKey==='undefined'?null:selKey;if(selection&&typeof highlight==='function')highlight(null);}
+ function after(){if(selection&&typeof highlight==='function')highlight(selection);try{if(ren&&scene&&cam)ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Phase 3 redraw',e);}}
+ var envRow=first&&first.rows&&first.rows.find(function(r){return r.enhancedMaterial&&r.enhancedMaterial.envMap;});
+ try{api=cfCreateDetailFinish12OK({THREE:THREE,plant:plant,document:document,records:CF3D_DEVICE_RECORDS,excluded:excluded,fieldMeshes:CF3D_FIELD_MESHES,controlMeshes:CF3D_CONTROL_MESHES,psvMeshes:CF3D_PSV_MESHES,manualMeshes:mvalGroup,instrumentMeshes:instGroup,rackMeshes:typeof rackGroup==='undefined'?[]:rackGroup,siteMeshes:typeof groundBig==='undefined'?[]:[groundBig],reflection:envRow&&envRow.enhancedMaterial.envMap,beforeChange:before,afterChange:after});}finally{if(initial&&typeof highlight==='function')highlight(initial);}
+ window.CFDetailFinish12OK=api;
+ api.connectionAudit=function(){return cfAuditConnections12OK({records:CF3D_PIPE_ROUTES_12HN.records,ports:CF3D_PORTS,anchors:ANCH});};
+ cfMountDetailTools12OK({document:document,api:api,connectionAudit:api.connectionAudit,openRoute:function(id){var r=CF3D_PIPE_ROUTES_12HN.byId[id];if(!r)return;if(typeof cfResetInspectionHost12NJ==='function')cfResetInspectionHost12NJ();cf3dRenderPipeRoutes12HN([r],null);if(r.key&&typeof highlight==='function')highlight(r.key);},focus:function(point){var p=V.apply(null,point);if(plant.localToWorld)p=plant.localToWorld(p);var dir=cam.position.clone().sub(ctl.target);if(dir.length()<.01)dir.set(1,.5,1);dir.normalize();if(dir.y<.2)dir.y=.2;dir.normalize();flyVec(p.clone().addScaledVector(dir,14),p);}});
+ return api;
+}
+try{cfInstallDetailFinish12OK();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Connections and details phase 3',e);console.error('12OK details enhancement',e);}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OJ',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase3:CF_DETAIL_FINISH_PLAN_12OK});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,visualPhase3:CF_DETAIL_FINISH_PLAN_12OK}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof cfHeading12NM!=='undefined'&&cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+document.title='12OK | Clear Fork - Connections and model detail / Phase 3';
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
 })(); // 12JJ close the shared application scope AFTER both visual mounts
 
 
