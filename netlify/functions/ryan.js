@@ -727,13 +727,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-11-04-12OK';
+const RYAN_BUILD_ID='RYAN-2026-11-05-12OM';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-CONNECTION-DETAIL-PHASE3-12OK-20261104';
+const RYAN_CODE_SIGNATURE='CF-RYAN-VESSEL-OCCLUSION-12OM-20261105';
 
 
 
@@ -46387,3 +46387,26 @@ Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OK',baseline:'12OJ',backendBuil
 Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OK',baseline:'12OJ',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,visualPhase3:CF_DETAIL_FINISH_PLAN_12OK});
 globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OK',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,visualPhase3:CF_DETAIL_FINISH_PLAN_12OK}));
 module.exports.REFERENCE_STATE_12OK=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OK=RYAN_INDEX_MANIFEST_12JT;module.exports.DETAIL_FINISH_PLAN_12OK=CF_DETAIL_FINISH_PLAN_12OK;module.exports.equipmentTrainingData12OK=module.exports.equipmentTrainingData12OJ;
+
+/*12OL: presentation-only catalog normalization. Original engineering content stays owned
+ * by its retained source. Only complete existing lessons are selectable in the workspace.*/
+function cfTrainingStudyCatalog12OL(data){
+ data.build='12OL';data.runtimeRevision='12OL';
+ data.studyInterface12OL={revision:'12OL',menu:'Working lessons only; unbuilt cards are not launch targets',sections:['Start here','Parts','Flow','T / P / state','Definitions','Guided steps','Sources'],sourcePolicy:'Reuse the retained lesson, exact-owner dossier and qualified readings. No new engineering facts or plant commands.'};
+ return data;
+}
+
+//12OL catalog/interface only: no new reference-source or component facts.
+const CF_TRAINER_STUDY_12OL={build:'12OL',baseline:'12OK',scope:'Sixteen existing lessons; working-only menu and consistent source-owned study interface',sourceFactsAdded:0};
+module.exports.equipmentTrainingData12OL=function(){return cfTrainingStudyCatalog12OL(module.exports.equipmentTrainingData12OK());};
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OL',baseline:'12OK',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OL',trainerStudy:CF_TRAINER_STUDY_12OL});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OL',baseline:'12OK',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerStudy:CF_TRAINER_STUDY_12OL});
+globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OL',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OL'}));
+module.exports.REFERENCE_STATE_12OL=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OL=RYAN_INDEX_MANIFEST_12JT;
+
+/*12OM presentation repair metadata only; engineering records unchanged.*/
+const CF_VESSEL_REPAIR_12OM={build:'12OM',baseline:'12OL',scope:'Main-plant vessel teaching overlays use exact-owner final shell coordinates and normal depth occlusion',sourceFactsAdded:0,plantControlsChanged:false};
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OM',baseline:'12OL',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OL',vesselRepair:CF_VESSEL_REPAIR_12OM});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OM',baseline:'12OL',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,vesselRepair:CF_VESSEL_REPAIR_12OM});
+globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OM',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OL',vesselRepair:CF_VESSEL_REPAIR_12OM}));
+module.exports.REFERENCE_STATE_12OM=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OM=RYAN_INDEX_MANIFEST_12JT;module.exports.equipmentTrainingData12OM=module.exports.equipmentTrainingData12OL;
