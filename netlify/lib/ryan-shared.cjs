@@ -1,6 +1,10 @@
 'use strict';
-// Clear Fork 12NG. Server-only shared Q&A. Never store credentials, attachments or full browser context.
-// Install @netlify/blobs 10.7.11. Site-scoped records survive deployments. No read/modify/write shared arrays.
+// Clear Fork shared-history interface 12NG; compatible 12OQ storage repair 1, 2026-11-06.
+// Server-only shared Q&A. Never log credentials, URLs, question text or raw SDK errors.
+// No new namespace, schema, authentication setting, history deletion or provider bypass.
+// Retains the installed @netlify/blobs dependency. Site-scoped records survive deployments.
+// JSON conditional writes use Store.set, avoiding the setJSON condition-header defect in 10.7.11.
+// The transport rejects non-success HTTP responses before an older SDK can misreport a write.
 const crypto = require('node:crypto');
 const VERSION = 'clearfork-access-v1.1';
 const COOKIE = '__Host-clearfork_access';
@@ -43,16 +47,82 @@ function receipt(auth,id,answer){const s=Buffer.from(JSON.stringify({v:1,id,dige
 function checkReceipt(auth,token,id,answer){try{const [s,h]=String(token).split('.');if(!eq(Buffer.from(h,'base64url'),hmac(auth.key,'ryan-history-completion\0'+s)))return false;const p=JSON.parse(Buffer.from(s,'base64url'));return p.v===1&&p.id===id&&p.exp>Math.floor(Date.now()/1000)&&p.digest===hash(JSON.stringify(answer));}catch{return false;}}
 function createService(options={}){
  const env=options.env||process.env;
- function store(event){if(options.store)return options.store;let sdk;try{sdk=require('@netlify/blobs');}catch{fail(503,'SHARED_SDK','Shared history needs the @netlify/blobs dependency. Install the supplied dependency setup and redeploy.');}
-  try{sdk.connectLambda(event);const context=String(env.CLEARFORK_HISTORY_NAMESPACE||env.CONTEXT||'production'),name=context==='production'?'clearfork-ryan-questions-v1':'clearfork-ryan-questions-v1-'+context.replace(/[^a-z0-9-]/gi,'-');return sdk.getStore({name,consistency:'strong',fetch:async(url,init={})=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);try{return await fetch(url,{...init,signal:controller.signal});}finally{clearTimeout(timer);}}});}catch{fail(503,'SHARED_STORE','Shared history could not connect to Netlify Blobs. Check the function deployment and Blobs support.');}
+ const diagnosticRevision = '12OQ-storage-1';
+ // This function deliberately never returns/logs an arbitrary upstream message, request,
+ // URL, exception stack, body, cookie, environment value or SDK credential.
+ function storageError(error, operation) {
+  if(error && error.sharedStorageDiagnostic12OQ)return error;
+  const statusCandidates=[error&&error.storageHttpStatus,error&&error.status,error&&error.statusCode,error&&error.response&&error.response.status];
+  const httpStatus=statusCandidates.find(n=>Number.isInteger(n)&&n>=400&&n<=599)||null;
+  const name=String(error&&error.name||'');
+  const rawCode=String(error&&error.code||error&&error.cause&&error.cause.code||'');
+  const timeout=error&&error.storageTimeout12OQ || name==='AbortError'||name==='TimeoutError'||['ETIMEDOUT','UND_ERR_CONNECT_TIMEOUT','UND_ERR_HEADERS_TIMEOUT','UND_ERR_BODY_TIMEOUT'].includes(rawCode);
+  const networkCodes=['ENOTFOUND','EAI_AGAIN','ECONNREFUSED','ECONNRESET','ENETUNREACH','EHOSTUNREACH','CERT_HAS_EXPIRED','UNABLE_TO_VERIFY_LEAF_SIGNATURE','DEPTH_ZERO_SELF_SIGNED_CERT','ERR_TLS_CERT_ALTNAME_INVALID'];
+  const network=networkCodes.includes(rawCode);
+  let code='SHARED_STORAGE_ERROR',reason='The shared-history storage operation failed. Its underlying provider cause is not yet identified.';
+  if(timeout){code='SHARED_STORAGE_TIMEOUT';reason='The Netlify storage request timed out.';}
+  else if(httpStatus===401||httpStatus===403){code='SHARED_STORAGE_ACCESS';reason='Netlify storage rejected the function request (HTTP '+httpStatus+'). This is not the Ryan unlock password.';}
+  else if(httpStatus===429){code='SHARED_STORAGE_RATE_LIMIT';reason='Netlify storage rate-limited the request (HTTP 429).';}
+  else if(httpStatus&&httpStatus>=500){code='SHARED_STORAGE_UPSTREAM';reason='Netlify storage returned HTTP '+httpStatus+'.';}
+  else if(httpStatus){code='SHARED_STORAGE_HTTP';reason='Netlify storage returned HTTP '+httpStatus+'.';}
+  else if(network){code='SHARED_STORAGE_NETWORK';reason='The function could not complete its storage connection ('+rawCode+').';}
+  else if(operation==='connect'){code='SHARED_STORAGE_CONTEXT';reason='The function could not initialize its Netlify Blobs runtime connection.';}
+  else if(operation==='write-acknowledgment'){code='SHARED_STORAGE_ACK';reason='Storage did not return a valid conditional-write acknowledgment. A saved question is not confirmed.';}
+  const ref=crypto.randomBytes(6).toString('hex');
+  const info={revision:diagnosticRevision,code,operation,upstreamStatus:httpStatus,reference:ref};
+  // Log safe categorical information only. Network codes are from the allowlist above.
+  if(network)info.networkCode=rawCode;
+  console.error('[Ryan shared storage] '+JSON.stringify(info));
+  const out=new Error('Shared-history storage needs attention ['+code+']. '+reason+' Stage: '+operation+'. Support reference: '+ref+'. Keep the existing passwords, secrets and history.');
+  out.statusCode=502;out.code=code;out.sharedStorageDiagnostic12OQ=true;
+  return out;
+ }
+ function store(event){
+  if(options.store)return options.store;
+  let sdk;
+  try{sdk=require('@netlify/blobs');}
+  catch{fail(502,'SHARED_SDK','Shared-history storage needs attention [SHARED_SDK]. The @netlify/blobs dependency could not load. Check the existing package.json and function build. Do not change the Ryan password.');}
+  try{
+   sdk.connectLambda(event);
+   const context=String(env.CLEARFORK_HISTORY_NAMESPACE||env.CONTEXT||'production');
+   const name=context==='production'?'clearfork-ryan-questions-v1':'clearfork-ryan-questions-v1-'+context.replace(/[^a-z0-9-]/gi,'-');
+   return sdk.getStore({name,consistency:'strong',fetch:async(url,init={})=>{
+    const controller=new AbortController();let timedOut=false;
+    const timer=setTimeout(()=>{timedOut=true;controller.abort();},8000);
+    try{
+     const res=await fetch(url,{...init,signal:controller.signal});
+     const method=String(init.method||(url&&url.method)||'GET').toUpperCase();
+     // Missing reads and failed atomic preconditions belong to the SDK's normal protocol.
+     const expectedMissing=(method==='GET'||method==='HEAD')&&res.status===404;
+     const expectedCondition=method==='PUT'&&res.status===412;
+     if(!res.ok&&!expectedMissing&&!expectedCondition){
+      try{if(res.body&&res.body.cancel)await res.body.cancel();}catch{}
+      const err=new Error('Netlify storage HTTP failure');err.storageHttpStatus=res.status;throw err;
+     }
+     return res;
+    }catch(e){
+     if(timedOut){const err=new Error('Netlify storage deadline');err.storageTimeout12OQ=true;throw storageError(err,'transport');}
+     throw storageError(e,'transport');
+    }finally{clearTimeout(timer);}
+   }});
+  }catch(e){throw storageError(e,'connect');}
+ }
+ async function writeNewJSON(s,key,value){
+  let result;
+  try{
+   // Store.set passes conditional-write options correctly in the retained 10.7.11 SDK.
+   result=await s.set(key,JSON.stringify(value),{onlyIfNew:true});
+  }catch(e){throw storageError(e,'write');}
+  if(!result||typeof result.modified!=='boolean')throw storageError(null,'write-acknowledgment');
+  return result;
  }
  async function get(s,id){const p=prefix(id),req=await s.get(p+'.request',{type:'json'});if(!req)return null;const answer=await s.get(p+'.answer',{type:'json'});if(answer)return {id,status:'complete',request:req,record:completedRecord(req,answer)};const error=await s.get(p+'.failure',{type:'json'});return {id,status:error?'failed':'pending',request:req,error:error?error.message:null};}
- async function putAnswer(s,id,answer){const key=prefix(id)+'.answer';for(let n=0;n<3;n++){try{const r=await s.setJSON(key,answer,{onlyIfNew:true});if(r.modified)return true;const old=await s.get(key,{type:'json'});if(old&&hash(JSON.stringify(old))===hash(JSON.stringify(answer)))return true;fail(409,'IMMUTABLE','An answer already exists; it was not overwritten.');}catch(e){if(e.statusCode===409||n===2)throw e;await new Promise(r=>setTimeout(r,80*(n+1)));}}}
+ async function putAnswer(s,id,answer){const key=prefix(id)+'.answer';for(let n=0;n<3;n++){try{const r=await writeNewJSON(s,key,answer);if(r.modified)return true;const old=await s.get(key,{type:'json'});if(old&&hash(JSON.stringify(old))===hash(JSON.stringify(answer)))return true;fail(409,'IMMUTABLE','An answer already exists; it was not overwritten.');}catch(e){if(e.statusCode===409||n===2)throw e;await new Promise(r=>setTimeout(r,80*(n+1)));}}}
  async function begin(event,body){const auth=authorize(event,env),s=store(event),id=body.sharedQuestionId;
   if(!validId(id)||Math.abs(Date.now()-Number(id.slice(0,13)))>86400000)fail(400,'ID','Refresh the question request and try again.');
   const req={schemaVersion:1,id,question:text(body.message,LIMITS.question,'Question'),mode:String(body.mode||'qa').slice(0,64),askedAt:Date.now(),sourceBuild:String(body.clientBuild||'').slice(0,100),origin:'SERVER_REQUEST',status:'submitted'};
-  const p=prefix(id),r=await s.setJSON(p+'.request',req,{onlyIfNew:true});
-  if(!r.modified){const old=await get(s,id);if(!old||old.request.question!==req.question||old.request.mode!==req.mode)fail(409,'ID_CONFLICT','Question identifier is already in use.');return {auth,s,id,duplicate:old};}
+  const p=prefix(id),r=await writeNewJSON(s,p+'.request',req);
+  if(!r.modified){const old=await get(s,id).catch(e=>{throw storageError(e,'read-existing-question');});if(!old||old.request.question!==req.question||old.request.mode!==req.mode)fail(409,'ID_CONFLICT','Question identifier is already in use.');return {auth,s,id,duplicate:old};}
   return {auth,s,id,req};
  }
  async function finish(job,body,result){let data;try{data=JSON.parse(result.body||'{}');}catch{data={};}
@@ -60,7 +130,7 @@ function createService(options={}){
   if(good){let ans;try{ans=completion(data,body);}catch(e){data.sharedHistory={id:job.id,saved:false,status:'answer-too-large',error:e.message};return {...result,body:JSON.stringify(data)};}
    if(ans){try{await putAnswer(job.s,job.id,ans);data.sharedHistory={id:job.id,saved:true,status:'complete'};}catch{data.sharedHistory={id:job.id,saved:false,status:'pending-answer-save',error:'Answer is visible locally but not confirmed shared. Retry its pending save.',retry:{sharedHistoryAction:'complete',id:job.id,answer:ans,receipt:receipt(job.auth,job.id,ans)}};}}
    else data.sharedHistory={id:job.id,saved:true,status:'pending',error:'Question saved; no final textual answer was returned.'};
-  }else{const failure={at:Date.now(),message:'Ryan request did not return a completed answer. HTTP '+Number(result.statusCode||500)+'. No response text is promoted to verified information.'};try{await job.s.setJSON(prefix(job.id)+'.failure',failure,{onlyIfNew:true});}catch{}data.sharedHistory={id:job.id,saved:true,status:'failed'};}
+  }else{const failure={at:Date.now(),message:'Ryan request did not return a completed answer. HTTP '+Number(result.statusCode||500)+'. No response text is promoted to verified information.'};try{await writeNewJSON(job.s,prefix(job.id)+'.failure',failure);}catch{}data.sharedHistory={id:job.id,saved:true,status:'failed'};}
   return {...result,headers:{...result.headers,...headers},body:JSON.stringify(data)};
  }
  async function action(event,body){const auth=authorize(event,env),s=store(event),a=body.sharedHistoryAction;
@@ -81,7 +151,7 @@ function createService(options={}){
    const ans={reply:r.answer,workplan:safeJSON(r.workplan),cost:r.costUsd==null?null:{usd:Number(r.costUsd)},answeredAt:Number(r.answeredAt)||Date.now(),importedAt:Date.now(),source:'Browser-published historical answer - unverified, not server-generated in this request',partial:!!r.partial,reusable:false,liveDependent:true,containsLiveSnapshot:!!r.containsLiveSnapshot,contextKey:''};
    if(Buffer.byteLength(JSON.stringify(ans))>LIMITS.recordBytes)fail(413,'SIZE','Published answer too large.');
    if(previous){const old=await s.get(p+'.answer',{type:'json'});if(old){if(old.reply!==ans.reply)fail(409,'IMMUTABLE','An existing shared answer was not overwritten.');return response(200,{ok:true,id,saved:true,duplicate:true});}}
-   else {const created=await s.setJSON(p+'.request',req,{onlyIfNew:true});if(!created.modified){const owner=await s.get(p+'.request',{type:'json'});if(!owner||owner.question!==req.question||owner.origin!=='CLIENT_PUBLISHED')fail(409,'ID_CONFLICT','A different request owns this identifier.');const old=await s.get(p+'.answer',{type:'json'});if(old){if(old.reply!==ans.reply)fail(409,'IMMUTABLE','An existing shared answer was not overwritten.');return response(200,{ok:true,id,saved:true,duplicate:true});}}}
+   else {const created=await writeNewJSON(s,p+'.request',req);if(!created.modified){const owner=await s.get(p+'.request',{type:'json'});if(!owner||owner.question!==req.question||owner.origin!=='CLIENT_PUBLISHED')fail(409,'ID_CONFLICT','A different request owns this identifier.');const old=await s.get(p+'.answer',{type:'json'});if(old){if(old.reply!==ans.reply)fail(409,'IMMUTABLE','An existing shared answer was not overwritten.');return response(200,{ok:true,id,saved:true,duplicate:true});}}}
    await putAnswer(s,id,ans);return response(200,{ok:true,id,saved:true});
   }
   fail(400,'ACTION','Unknown shared-history action.');
