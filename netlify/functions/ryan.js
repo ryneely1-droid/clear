@@ -727,13 +727,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-11-05-12OM';
+const RYAN_BUILD_ID='RYAN-2026-11-05-12OQ';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-VESSEL-OCCLUSION-12OM-20261105';
+const RYAN_CODE_SIGNATURE='CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105';
 
 
 
@@ -40563,7 +40563,7 @@ Never promote a lower-trust fact to VERIFIED without source evidence.
 
 Never invent a tag, valve lineup, alarm limit, PSV set pressure, procedure step, or nameplate value.
 
-For current compressor lineup, throughput and tower pressure, OPERATOR_RUNNING_POINT_20261002 is the latest requested SIMULATOR SCENARIO: 205.37 inlet / 196.01 residue MMSCFD with main inlet/residue compressors and EX running. LATEST 12GA overrides the auxiliary lineup: C-1140 only; C-1141/C-1142, C-5700 and V-9220 STOPPED. REFRIGERATION_SUCTION_12GA governs suction-pressure cause/effect and F-1438 maintenance; empirical gains are not verified field tuning. Current LIVE context always overrides the starting values. Never call modeled 78.005% inlet capacity or three-Frick simulation allowance an approved real-plant setting. Do not turn an EX/JT SP into a hard physical pressure ceiling or confuse PT-1521A lower-section pressure with the controlled PV.
+For current lineup, throughput and pressure, use the supplied current simulator snapshot. Dated operator scenarios and examples are historical, not immutable settings. Use the selected current exact-owner references for static facts and preserve explicit limitations.
 
 For Clear Fork JT/EX gas routing and C3 recovery, OPERATOR_JT_C3_20261002 is the latest operator correction: only JT and EX are alternative feed paths; no EX flow when stopped, continued gas uses JT. Usual C3 recovery is 77-85% JT-only and 95-98% with EX operating normally. Cite these as operator observations, not residue composition, design guarantees or trips. Newer ranges supersede older generic high-recovery assumptions. Existing reflux circuits are not a third substitute for JT or EX.
 
@@ -40578,18 +40578,18 @@ For safety-critical work, distinguish drafting/analysis from authorization and r
  
 
 RETAINED SOURCE / IDENTITY RULES (historical entries yield to newer source evidence):
-${CURRENT_REFERENCE_RULES_12HN.filter(r => !r.startsWith('The current client build') && !r.startsWith('The new M2045 PSV')).join("\n")}
+${CF_EVIDENCE_ROUTER_12OQ.rules.join("\n")}
 
 CURRENT INDEX SOURCE / IDENTITY PRECEDENCE (12JU, continuing12JT):
-${CURRENT_REFERENCE_RULES_12JT.join("\n")}
+Current final exact-owner registry, current source qualifiers and explicit revisions take precedence over stale historical seed constants.
 
 CURRENT BACKEND REVISION:
 - Build: ${RYAN_BUILD_ID}
 - Diagnostic revision: ${RYAN_DIAGNOSTIC_REVISION}
 - Code signature: ${RYAN_CODE_SIGNATURE}
-- Active change set: ${RYAN_CHANGESET_12BF.join(' | ')}
-- Current NGL product hydraulics: ${OPERATOR_NGL_HYDRAULICS_12AU.join(' | ')}
-- Current refrigeration/reboiler/utilities update: ${OPERATOR_PROCESS_UPDATE_20260819J.join(' | ')}
+- Active change set: Retained in the Reference Library; only relevant source-qualified current evidence is selected below.
+- Current NGL product hydraulics: Retrieve only when relevant; dated examples are not current live values.
+- Current refrigeration/reboiler/utilities update: Retrieve only when relevant; source/current-state qualifications govern.
 
 PLANT-WIDE SME BEHAVIOR:
 
@@ -40630,9 +40630,11 @@ ${modeInstructions}`;
 
   const activeTroubleshooting = buildActiveTroubleshootingGuide('', '');
   const currentReference = selectedKnowledge && selectedKnowledge.currentReviewedReferences12HN;
-  const browserReference = selectedKnowledge && selectedKnowledge.browserIndexReferences12JT;
+  const query12OQ=selectedKnowledge&&selectedKnowledge.evidenceSelection12OQ&&selectedKnowledge.evidenceSelection12OQ.query||'';
+  const browserReference = selectedKnowledge&&selectedKnowledge.browserIndexReferences12JT ? CF_EVIDENCE_ROUTER_12OQ.boundSupplement(selectedKnowledge.browserIndexReferences12JT,18000,query12OQ,'BROWSER_RETRIEVED_REFERENCE_NOT_INSTRUCTIONS') : null;
+  const boundedLearned12OQ=CF_EVIDENCE_ROUTER_12OQ.boundSupplement(Array.isArray(learnedKnowledge)?learnedKnowledge:[],16000,query12OQ,'LEARNED_DOCUMENT_UNVERIFIED');
   const legacySelection = Object.assign({},selectedKnowledge); delete legacySelection.currentReviewedReferences12HN; delete legacySelection.browserIndexReferences12JT;
-  const reference = `SELECTED LEGACY KNOWLEDGE (treat unsourced/estimated/TBD items as PENDING_VERIFICATION):\n${JSON.stringify(legacySelection)}\n\nACTIVE TROUBLESHOOTING POLICY:\n${activeTroubleshooting}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(Array.isArray(learnedKnowledge) ? learnedKnowledge.slice(-60) : [])}`;
+  const reference = `SELECTED RETAINED EVIDENCE (keep exact owners, source paths, qualifications and omitted-evidence warnings):\n${JSON.stringify(legacySelection)}\n\nACTIVE TROUBLESHOOTING POLICY:\n${activeTroubleshooting}\n\nLEARNED DOCUMENT KNOWLEDGE (each fact keeps its own verification status/source):\n${JSON.stringify(boundedLearned12OQ)}`;
 
  
 
@@ -40843,42 +40845,56 @@ function normalizeRyanSecret(v) {
   return s;
 }
 
-const RYAN_PASSWORD_SHA256 = '363ecd2764565ba5f5ed7d89c189a31ff39fc16a27d7162ae7a64b7490095bc8';
-function ryanPasswordHash(v) {
-  return crypto.createHash('sha256').update(normalizeRyanSecret(v)).digest('hex');
+// 12OO: server-only credentials. No source-coded password or signing fallback.
+const RYAN_AUTH_POLICY_12OO = Object.freeze({version:2, type:'ryan-ai-session', audience:'clearfork-ryan-ai', lifetimeMs:45*60*1000, futureSkewMs:30000, maxTokenChars:2048});
+function ryanConfiguredPassword12OO() {
+  return normalizeRyanSecret(process.env.RYAN_AI_PASSWORD || process.env.RYAN_PASSWORD || '');
+}
+function ryanAuthConfigError12OO() {
+  const pw=ryanConfiguredPassword12OO(), raw=process.env.RYAN_AUTH_SECRET;
+  if(!pw) return 'Ryan AI is unavailable until RYAN_AI_PASSWORD (or RYAN_PASSWORD) is configured in the server Functions environment.';
+  if(typeof raw!=='string'||Buffer.byteLength(raw,'utf8')<32||Buffer.byteLength(raw,'utf8')>4096||raw.trim()!==raw)
+    return 'Ryan AI is unavailable until RYAN_AUTH_SECRET is configured as an independent server-only random secret (at least 32 bytes). Generate 32 random bytes as 64 hex characters, set Functions scope, and redeploy. Do not put the secret in application files.';
+  if(secureEqual(raw,pw)||(process.env.CLEARFORK_SESSION_SECRET&&secureEqual(raw,process.env.CLEARFORK_SESSION_SECRET)))
+    return 'RYAN_AUTH_SECRET must be independent of the Ryan password and the site-session secret.';
+  return '';
 }
 function ryanPasswordAccepted(candidate, configuredSecret) {
-  const c = normalizeRyanSecret(candidate);
-  const e = normalizeRyanSecret(configuredSecret);
-  if (!c) return false;
-  if (e && secureEqual(c, e)) return true;
-  return secureEqual(ryanPasswordHash(c), RYAN_PASSWORD_SHA256);
+  if(typeof candidate!=='string'||Buffer.byteLength(candidate,'utf8')>4096)return false;
+  const c=normalizeRyanSecret(candidate),e=normalizeRyanSecret(configuredSecret);
+  if(!c||!e)return false;
+  // Compare fixed-length digests, not a public embedded password hash.
+  return crypto.timingSafeEqual(crypto.createHash('sha256').update(c).digest(),crypto.createHash('sha256').update(e).digest());
 }
 function ryanAuthSigningSecret() {
-  return RYAN_PASSWORD_SHA256;
+  if(ryanAuthConfigError12OO())return null;
+  // Domain separation and credential/epoch binding revoke outstanding tokens on rotation.
+  const binding=JSON.stringify([RYAN_AUTH_POLICY_12OO.audience,ryanConfiguredPassword12OO(),String(process.env.RYAN_AUTH_EPOCH||'1'),String(process.env.SITE_ID||process.env.URL||''),String(process.env.CONTEXT||'production')]);
+  return crypto.createHmac('sha256',process.env.RYAN_AUTH_SECRET).update('clearfork-ryan-auth-v2\0').update(binding).digest();
 }
-
 function makeRyanAuthToken(secret) {
-  if (!secret) return '';
-  const exp = Date.now() + 45 * 60 * 1000;
-  const payload = Buffer.from(JSON.stringify({ exp, build: RYAN_BUILD_ID })).toString('base64url');
-  const sig = crypto.createHmac('sha256', String(secret)).update(payload).digest('base64url');
-  return payload + '.' + sig;
+  if(!secret)return '';
+  const p=RYAN_AUTH_POLICY_12OO,iat=Date.now();
+  const payload=Buffer.from(JSON.stringify({v:p.version,type:p.type,aud:p.audience,build:RYAN_BUILD_ID,iat,exp:iat+p.lifetimeMs,jti:crypto.randomBytes(18).toString('base64url')})).toString('base64url');
+  return payload+'.'+crypto.createHmac('sha256',secret).update('clearfork-ryan-token-v2\0'+payload).digest('base64url');
 }
-
 function verifyRyanAuthToken(token, secret) {
   try {
-    if (!token || !secret) return false;
-    const parts = String(token).split('.');
-    if (parts.length !== 2) return false;
-    const expected = crypto.createHmac('sha256', String(secret)).update(parts[0]).digest('base64url');
-    if (!secureEqual(parts[1], expected)) return false;
-    const data = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
-    return data && data.build === RYAN_BUILD_ID && Number(data.exp) > Date.now();
-  } catch { return false; }
+    const p=RYAN_AUTH_POLICY_12OO;
+    if(!secret||typeof token!=='string'||token.length>p.maxTokenChars)return false;
+    const bits=token.split('.');
+    if(bits.length!==2||!bits.every(x=>/^[A-Za-z0-9_-]+$/.test(x))||bits[1].length!==43)return false;
+    const expected=crypto.createHmac('sha256',secret).update('clearfork-ryan-token-v2\0'+bits[0]).digest();
+    const signature=Buffer.from(bits[1],'base64url');
+    if(signature.length!==expected.length||signature.toString('base64url')!==bits[1]||!crypto.timingSafeEqual(signature,expected))return false;
+    const encoded=Buffer.from(bits[0],'base64url');if(encoded.toString('base64url')!==bits[0])return false;
+    const d=JSON.parse(encoded.toString('utf8')),now=Date.now();
+    return !!d&&d.v===p.version&&d.type===p.type&&d.aud===p.audience&&d.build===RYAN_BUILD_ID&&
+      Number.isSafeInteger(d.iat)&&Number.isSafeInteger(d.exp)&&d.iat>=0&&d.iat<=now+p.futureSkewMs&&
+      d.exp>now&&d.exp>d.iat&&d.exp-d.iat<=p.lifetimeMs&&now-d.iat<p.lifetimeMs&&
+      typeof d.jti==='string'&&/^[A-Za-z0-9_-]{24}$/.test(d.jti);
+  } catch {return false;}
 }
-
- 
 
 function postJson(url, headers, payloadObj, timeoutMs = REQUEST_TIMEOUT_MS) {
 
@@ -41726,14 +41742,17 @@ exports.handler = async function(event) {
 
     const { message, context, mode, scanLabel, history, password, authToken, attachment, learnedKnowledge, documentType, clientBuild } = body || {};
 
-    const expectedPw = normalizeRyanSecret(process.env.RYAN_AI_PASSWORD || process.env.RYAN_PASSWORD || '');
+    const expectedPw = ryanConfiguredPassword12OO();
+    const authConfigError=ryanAuthConfigError12OO();
+    if(authConfigError)return {statusCode:503,headers:{'content-type':'application/json','cache-control':'no-store','x-ryan-build':RYAN_BUILD_ID},body:JSON.stringify({error:authConfigError,code:'RYAN_AUTH_CONFIG',authRequired:true,buildId:RYAN_BUILD_ID})};
     const effectiveMode = String(mode || 'qa').toLowerCase();
     const signingSecret = ryanAuthSigningSecret();
     const tokenOk = verifyRyanAuthToken(authToken, signingSecret);
     const passwordOk = ryanPasswordAccepted(password, expectedPw);
     if (!tokenOk && !passwordOk) return { statusCode: 403, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: 'Incorrect password.', authRequired: true, buildId: RYAN_BUILD_ID, authConfigDetected: !!expectedPw }) };
     if (effectiveMode === 'auth') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, codeSignature: RYAN_CODE_SIGNATURE, authToken: makeRyanAuthToken(signingSecret), authExpiresMinutes: 45, authConfigDetected: !!expectedPw }) };
+      if(!passwordOk)return {statusCode:403,headers:{'content-type':'application/json','cache-control':'no-store','x-ryan-build':RYAN_BUILD_ID},body:JSON.stringify({error:'Enter the configured Ryan password to start a new session.',authRequired:true,buildId:RYAN_BUILD_ID})};
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, codeSignature: RYAN_CODE_SIGNATURE, authToken: makeRyanAuthToken(signingSecret), authExpiresMinutes: 45, authExpiresAt: Date.now()+RYAN_AUTH_POLICY_12OO.lifetimeMs, authVersion:2, authConfigDetected: !!expectedPw }) };
     }
 
 
@@ -44575,7 +44594,7 @@ exports.handler=async function(event){
  const mode=String(body&&body.mode||'qa').toLowerCase(),eligible=body&&typeof body.message==='string'&&body.message.trim()&&!/^(auth|health|reference_search|digest(?:_|$)|image_learn|operating_memory_extract|shift_report_chunk)/.test(mode);
  if(!eligible)return RYAN_HANDLER_BEFORE_12NG(event);
  const expected=normalizeRyanSecret(process.env.RYAN_AI_PASSWORD||process.env.RYAN_PASSWORD||'');
- if(!verifyRyanAuthToken(body.authToken,ryanAuthSigningSecret())&&!ryanPasswordAccepted(body.password,expected))return RYAN_HANDLER_BEFORE_12NG(event);
+ if(ryanAuthConfigError12OO()||(!verifyRyanAuthToken(body.authToken,ryanAuthSigningSecret())&&!ryanPasswordAccepted(body.password,expected)))return RYAN_HANDLER_BEFORE_12NG(event);
  if(body.clientBuild&&body.clientBuild!==RYAN_BUILD_ID)return RYAN_HANDLER_BEFORE_12NG(event);
  if(!body.sharedQuestionId)body.sharedQuestionId=Date.now()+'-'+require('node:crypto').randomUUID();
  let job;try{job=await RYAN_SHARED_12NG.begin(event,body);}catch(e){return RYAN_SHARED_SERVICE_12NG.response(e.statusCode||503,{error:e.statusCode?e.message:'Shared question storage is unavailable. No new AI request was sent; retry when storage is restored.',code:e.code||'SHARED_UNAVAILABLE',buildId:RYAN_BUILD_ID});}
@@ -46410,3 +46429,70 @@ Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OM',baseline:'12OL',backendBuil
 Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OM',baseline:'12OL',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,vesselRepair:CF_VESSEL_REPAIR_12OM});
 globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OM',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,trainerRuntime:'12OL',vesselRepair:CF_VESSEL_REPAIR_12OM}));
 module.exports.REFERENCE_STATE_12OM=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OM=RYAN_INDEX_MANIFEST_12JT;module.exports.equipmentTrainingData12OM=module.exports.equipmentTrainingData12OL;
+
+/* 12ON: one retained strainer on its exact, already rerouted M2680/M2045 service.
+ * Coordinates are schematic model coordinates, not surveyed field dimensions.
+ * No pipe topology, operating state, manufacturer identity or source fact changes. */
+var CF_SP2045B_PLAN_12ON={build:'12ON',baseline:'12OM',owner:'cf3d_hn_sp2045b',tag:'SP-2045B',kind:'strainer',routeKey:'pipeTo_inlsuchdr_6810',routeId:'pipe12hn_71',upstreamKey:'cf3d_hn_mv204501',upstreamTag:'204501',before:[41.825,2.64,-120.9],upstreamCenter:[60,1.8,-121.8],center:[60,1.8,-119.3],direction:[0,0,1],leadStart:[60,1.8,-125.2],leadEnd:[60,1.8,-117.2],nominalInches:10,sourceDrawing:'020185-AE-DW-M2045',sourceFact:'residue_return',sourceDefinition:'CF3D_PID_SOURCE_12HN',placementBasis:'Existing 1017 return lead from the M2680 model reconciliation; retain the prior 2.5-model-unit separation downstream of block 204501. Exact installed chainage and strainer construction remain unverified.',sourceFactsAdded:0,pipeRoutesChanged:0};
+function cfSp2045BPlan12ON(route,upstream,record){
+ var P=CF_SP2045B_PLAN_12ON,errors=[],toArray=function(p){return Array.isArray(p)?p.slice():p&&typeof p.toArray==='function'?p.toArray():null;},same=function(a,b){return a&&b&&a.length===3&&a.every(function(n,i){return Number.isFinite(n)&&Math.abs(n-b[i])<1e-6;});};
+ if(!record||(record.assetId||record.key)!==P.owner||record.tag!==P.tag||record.kind!=='strainer'||!(record.drawings||[]).includes(P.sourceDrawing))errors.push('Exact retained SP-2045B strainer/source identity is unavailable.');
+ if(!route||route.key!==P.routeKey||((route.id||route.routeId12HN)&&(route.id||route.routeId12HN)!==P.routeId))errors.push('Exact retained 1017 return route is unavailable.');
+ var points=(route&&route.points||[]).map(toArray),segments=[];
+ for(var i=1;i<points.length;i++)if(same(points[i-1],P.leadStart)&&same(points[i],P.leadEnd))segments.push(i-1);
+ if(segments.length!==1)errors.push('The documented M2680 lead is missing or ambiguous; no nearest-pipe attachment is allowed.');
+ if(!upstream||upstream.key!==P.upstreamKey||upstream.tag!==P.upstreamTag||upstream.pipeKey!==P.routeKey||!same(toArray(upstream.center),P.upstreamCenter))errors.push('Upstream block 204501 is not at the retained rerouted location.');
+ // The host is still the ten-inch lead; the 6/10/14-inch control station stays downstream.
+ if(route&&Array.isArray(route.diameterSections12HN)){
+  var sections=route.diameterSections12HN.filter(function(s){return same(toArray(s.a),P.leadStart)&&same(toArray(s.b),P.leadEnd);});
+  if(sections.length!==1||sections[0].nps!==P.nominalInches)errors.push('The named lead no longer has the retained ten-inch size.');
+ }else if(route&&Number.isFinite(route.radius)&&Math.abs(route.radius-P.nominalInches/24)>1e-6)errors.push('The reference route radius disagrees with the ten-inch lead.');
+ return {ok:errors.length===0,errors:errors,owner:P.owner,route:P.routeKey,routeId:P.routeId,segmentIndex:segments[0],center:P.center.slice(),direction:P.direction.slice(),start:points[0]||null,end:points[points.length-1]||null};
+}
+function cfApplySp2045BReference12ON(H,plan){
+ var P=CF_SP2045B_PLAN_12ON,records=H.records||H.components||{},rows=Array.isArray(records)?records:Object.values(records),hits=rows.filter(function(r){return r&&(r.assetId||r.key)===P.owner;}),info=H.info||H.referenceNotes||{};
+ if(!plan||!plan.ok||hits.length!==1||hits[0].tag!==P.tag)return {applied:false,reason:'Exact verified model placement and owner required.'};
+ var r=hits[0],location='On the 10-inch 1017 return from F-6800, after 204501 and before PV-6810A. Schematic model center [60, 1.8, -119.3]; not a surveyed field position.',binding={build:P.build,routeKey:P.routeKey,routeId:P.routeId,segmentIndex:plan.segmentIndex,center:plan.center.slice(),direction:plan.direction.slice(),basis:P.placementBasis,sourceDefinition:P.sourceDefinition,sourceFact:P.sourceFact};
+ r.location=location;r.pipeKey=P.routeKey;r.modelPlacement12ON=binding;
+ if(r.sourceRecord){r.sourceRecord.center=plan.center.slice();r.sourceRecord.direction=plan.direction.slice();r.sourceRecord.pipeKey=P.routeKey;r.sourceRecord.routeStart=plan.start.slice();r.sourceRecord.routeEnd=plan.end.slice();}
+ if(H.deviceData&&H.deviceData[P.owner])Object.assign(H.deviceData[P.owner],{location:location,modelPlacement12ON:binding});
+ if(H.trace&&H.trace.components&&H.trace.components[P.owner])Object.assign(H.trace.components[P.owner],{location:location,modelPlacement12ON:binding});
+ var n=info[P.owner];if(n){n.modelPlacement12ON=binding;var prefix='MODEL PLACEMENT 12ON: ';var text=prefix+location;if(!Array.isArray(n.d))n.d=[];n.d=n.d.filter(function(t){return String(t).indexOf(prefix)!==0;});n.d.push(text);}
+ return {applied:true,owner:P.owner,route:P.routeKey,center:plan.center.slice(),newPhysicalEquipment:0,sourceFactsAdded:0};
+}
+
+/*12ON: exact model placement metadata, not new engineering-source evidence.*/
+const CF_SP2045B_ROUTE_12ON=RYAN_INDEX_REFERENCE_12JT.pipes.find(function(p){return p.key===CF_SP2045B_PLAN_12ON.routeKey;});
+const CF_SP2045B_OWNER_12ON=RYAN_INDEX_REFERENCE_12JT.components.find(function(r){return r.assetId===CF_SP2045B_PLAN_12ON.owner;});
+const CF_SP2045B_RESOLVED_12ON=cfSp2045BPlan12ON(CF_SP2045B_ROUTE_12ON,{key:'cf3d_hn_mv204501',tag:'204501',pipeKey:'pipeTo_inlsuchdr_6810',center:CF_SP2045B_PLAN_12ON.upstreamCenter},CF_SP2045B_OWNER_12ON);
+const CF_SP2045B_APPLIED_12ON=cfApplySp2045BReference12ON(RYAN_INDEX_REFERENCE_12JT,CF_SP2045B_RESOLVED_12ON);
+if(!CF_SP2045B_APPLIED_12ON.applied)throw Error('12ON exact SP-2045B reference placement failed');
+EQUIPMENT_INFORMATION_ENGINE_12MD=null;
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12ON',baseline:'12OM',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,strainerPlacementRepair:CF_SP2045B_PLAN_12ON});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12ON',baseline:'12OM',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,strainerPlacementRepair:CF_SP2045B_PLAN_12ON});
+globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12ON',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,strainerPlacementRepair:CF_SP2045B_PLAN_12ON}));
+module.exports.REFERENCE_STATE_12ON=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12ON=RYAN_INDEX_MANIFEST_12JT;module.exports.equipmentTrainingData12ON=module.exports.equipmentTrainingData12OM;module.exports.SP2045B_PLAN_12ON=CF_SP2045B_PLAN_12ON;module.exports.SP2045B_APPLIED_12ON=CF_SP2045B_APPLIED_12ON;
+
+// 12OO software-only identity: engineering references and training catalog unchanged.
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OO',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE}));
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OO',baseline:'12ON',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,priority1Repair:{authenticationVersion:2,clockStepSeconds:1,engineeringFactsChanged:false}});
+
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OO',baseline:'12ON',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});
+module.exports.REFERENCE_STATE_12OO=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12OO=RYAN_INDEX_MANIFEST_12JT;module.exports.equipmentTrainingData12OO=module.exports.equipmentTrainingData12ON;
+
+// 12OP software acceptance identity only. No reference/authentication change.
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OP',baseline:'12OO'});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OP',baseline:'12OO'});
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OP'}));
+module.exports.REFERENCE_STATE_12OP=RYAN_INDEX_REFERENCE_12JT;module.exports.equipmentTrainingData12OP=module.exports.equipmentTrainingData12OO;
+
+/*12OQ one active retrieval entry point replaces the accumulated selection-wrapper chain.
+ * Historical selectors/data remain for provenance; ordinary requests do not execute them. */
+const CF_EVIDENCE_ROUTER_12OQ=require('../lib/ryan-evidence.cjs').createEvidenceRouter(RYAN_INDEX_REFERENCE_12JT,genericProcessKnowledge);
+selectKnowledge=CF_EVIDENCE_ROUTER_12OQ.select;
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OQ',baseline:'12OP',retrieval:'bounded-current-evidence-12OQ'});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OQ',baseline:'12OP'});
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OQ'}));
+module.exports.REFERENCE_STATE_12OQ=RYAN_INDEX_REFERENCE_12JT;module.exports.equipmentTrainingData12OQ=module.exports.equipmentTrainingData12OP;
+module.exports.evidenceRouter12OQ=CF_EVIDENCE_ROUTER_12OQ;
+if(module.exports._test){module.exports._test.selectKnowledge=selectKnowledge;module.exports._test.buildSystemPrompt=buildSystemPrompt;}
