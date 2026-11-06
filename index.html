@@ -3,6 +3,8 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!--12OO: Priority 1. Dedicated server signing secret required; fixed-step process clock. Preserve saved data.--> 
+<!--12ON: relocate the existing SP-2045B onto its exact 1017 return lead; all 12OM vessel fixes retained.--> 
 <!--12OM: main-plant vessel overlays aligned to actual shells; depth-correct scoped cutaways. Trainer12OL preserved.-->
 <!--12OM: working-only trainer menu, shared study navigation and source-backed detail; all three visual phases preserved.--> 
 <!--12OM: cumulative equipment + piping + connection/hardware presentation; exact-anchor review is read-only.-->
@@ -53,7 +55,7 @@
 <!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
 <!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12OM-ROOT">
+<meta name="cf-deployment-package" content="12OQ-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -101,13 +103,13 @@
 <link rel="preload" as="script" href="./data-13-cf_plate_audit_12kb.js">
 <link rel="preload" as="script" href="./data-14-cf_source_12ko.js">
 <link rel="preload" as="script" href="./data-15-cf_source_12kp.js">
-<link rel="preload" as="script" href="./clearfork-main.js?v=12OM">
+<link rel="preload" as="script" href="./clearfork-main.js?v=12OQ">
 <!-- 12IA: expander visual enhancement; M2145 and targeted M2140 source review; XV-6060 and PV-6050A photos. Paired backend RYAN-2026-10-06-12II. -->
 <!-- 12HW: FCV-1422 actuator-only source; M2120 Rev 8 heater refinement. Matched with RYAN-2026-10-06-12II. No process/storage change. -->
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12OM | Clear Fork - Vessel position and transparency repair</title>
+<title>12OQ | Clear Fork - Focused Ryan and live control trends</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -405,7 +407,110 @@
 #startupguide .exkeys button{flex:0 0 auto;}
 @media(max-width:1000px){#startupguide .extrainworkspace{grid-template-columns:1fr;}#startupguide .extraincontrols{position:relative;max-height:none;}#startupguide .sgbody{grid-template-columns:150px 1fr;}#startupguide .sgsection.exsequence ol{columns:1;}}
 </style>
-<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script id="cfAcceptanceBootstrap12OP">
+/* 12OP: read-only startup observation. Never executes plant commands or reads saved records. */
+function CFCreateAcceptance12OP(W,D){
+ 'use strict';
+ var meta=D.querySelector('meta[name="cf-deployment-package"]'),BUILD=meta?String(meta.content||'').replace(/-ROOT$/,''):'',start=now(),entered=false,ended=false,domReady=false,mainBuild=null,probe=null,frames=0,firstFrame=null,lastFrame=null,samples=[],issues=[],assets={},lastGraphics=null,dialog=null,rendererRef=null,lastGraphicsPoll=-Infinity;
+ var definitions=[['three-core','Three.js r128','graphics'],['orbit-controls','OrbitControls r128','graphics'],['spreadsheet-reader','Spreadsheet reader','optional'],['main','clearfork-main.js','main']];
+ var dataNames=['data-01-cf_text_pool_12kg.js','data-02-cf_color_plan_12jf.js','data-03-cf_drain_audit_12jl.js','data-04-cf_drain_audit_12jn.js','data-05-cf_drain_audit_12jr.js','data-06-cf_source_12jv.js','data-07-cf_source_12jw.js','data-08-cf_source_12jx.js','data-09-cf_model_12jy.js','data-10-cf_model_12jz.js','data-11-cf_trace_data_12iz.js','data-12-cf_phase_plan_12jh.js','data-13-cf_plate_audit_12kb.js','data-14-cf_source_12ko.js','data-15-cf_source_12kp.js'];
+ dataNames.forEach(function(n){definitions.push([n,n,'data']);});
+ definitions.forEach(function(a){assets[a[0]]={id:a[0],name:a[1],kind:a[2],state:'waiting'};});
+ function now(){return W.performance&&typeof W.performance.now==='function'?W.performance.now():Date.now();}
+ function finite(v){return typeof v==='number'&&Number.isFinite(v)?v:null;}
+ function pathname(value){try{return new URL(String(value),W.location&&W.location.href||'https://invalid.example/').pathname.split('/').pop().slice(0,100);}catch(e){return 'unavailable';}}
+ function issue(code,kind,file,line){
+  var r={code:String(code).slice(0,90),severity:kind==='optional'?'warning':'error',file:file?pathname(file):null,line:finite(line)};
+  if(!issues.some(function(x){return x.code===r.code&&x.file===r.file&&x.line===r.line;}))issues.push(r);
+  if(issues.length>80)issues.shift();paint();
+ }
+ function asset(id,ok){if(!assets[id])return false;assets[id].state=ok?'loaded':'failed';if(!ok)issue('ASSET_NOT_LOADED',assets[id].kind,assets[id].name,null);paint();return ok;}
+ function basic(){
+  var prior=W.CFStartup12LJ,feature=W.CFAppReady12LJ,visual=W.CFVisualIntegrity12LK,clock=W.CFSimulationClock12OO,s=null;
+  try{s=clock&&clock.status();}catch(e){s={fault:'Clock status unavailable'};}
+  var legacyErrors=prior&&Array.isArray(prior.errors)?prior.errors.length:0;
+  var featureFailures=feature&&Array.isArray(feature.failures)?feature.failures.length:0;
+  var visualErrors=visual&&Array.isArray(visual.runtimeErrors)?visual.runtimeErrors.length:0;
+  var versions=!!mainBuild&&mainBuild===BUILD&&(!prior||prior.expected===BUILD);
+  var dataLoaded=dataNames.filter(function(n){return assets[n].state==='loaded';}).length;
+  var requiredErrors=issues.filter(function(x){return x.severity==='error';}).length;
+  var lost=true;try{lost=!rendererRef||rendererRef.getContext().isContextLost();}catch(e){}
+  if(lastGraphics)lastGraphics.contextLost=lost;
+  var native=!!lastGraphics&&lastGraphics.nativeWebGL===true&&!lost&&lastGraphics.width>0&&lastGraphics.height>0;
+  var complete=ended&&domReady&&versions&&dataLoaded===15&&assets.main.state==='loaded';
+  var okay=complete&&native&&frames>0&&!requiredErrors&&!legacyErrors&&!featureFailures&&!visualErrors&&!(s&&s.fault);
+  return {phase:requiredErrors?'blocked-or-error':!entered?'waiting-for-main':!ended?'initializing':!domReady?'waiting-for-document':!native||!frames?'waiting-for-native-frame':okay?'startup-observed':'review-required',startupObserved:okay,terminalReached:ended,documentReady:domReady,versionPairMatches:versions,dataLoaded:dataLoaded,legacyErrors:legacyErrors,featureFailures:featureFailures,visualErrors:visualErrors,clockFault:!!(s&&s.fault)};
+ }
+ function paint(){
+  if(!D.body)return;
+  var s=basic(),e=D.getElementById('cfLoadStatus12ML');
+  if(!e)return;
+  if(s.phase==='blocked-or-error'){
+   e.hidden=false;e.setAttribute('role','alert');e.textContent='Clear Fork '+BUILD+': startup needs attention. Open Startup check / Acceptance report. No saved data was cleared.';
+  }else if(s.terminalReached&&!s.startupObserved){
+   e.hidden=false;e.textContent='Main script reached its final installer. Native drawing and startup checks are '+(frames?'under review.':'still pending.');
+  }
+ }
+ function enterMain(build){
+  entered=true;mainBuild=String(build);var ok=true;
+  if(mainBuild!==BUILD){issue('INDEX_MAIN_REVISION_MISMATCH','main','clearfork-main.js');ok=false;}
+  if(!W.THREE||String(W.THREE.REVISION)!=='128'||typeof W.THREE.WebGLRenderer!=='function'){
+   issue('REQUIRED_THREE_R128_UNAVAILABLE','graphics','three.min.js');ok=false;
+  }
+  if(!W.THREE||typeof W.THREE.OrbitControls!=='function'){issue('REQUIRED_ORBIT_CONTROLS_UNAVAILABLE','graphics','OrbitControls.js');ok=false;}
+  if(dataNames.some(function(n){return assets[n].state!=='loaded';})){issue('REQUIRED_DATA_FILES_INCOMPLETE','data');ok=false;}
+  if(!ok){W.CFMainScript12LJ={build:mainBuild,phase:'blocked before initialization',endReached12OP:false};paint();}
+  return ok;
+ }
+ function finishMain(readOnlyProbe){ended=true;probe=typeof readOnlyProbe==='function'?readOnlyProbe:null;if(W.CFMainScript12LJ)W.CFMainScript12LJ.endReached12OP=true;paint();}
+ function observeFrame(renderer,cpuMs){
+  try{
+   var t=now(),poll=!lastGraphics||rendererRef!==renderer||t-lastGraphicsPoll>=1000;
+   rendererRef=renderer;
+   if(poll){
+    lastGraphicsPoll=t;var gl=renderer&&renderer.getContext&&renderer.getContext(),nativeContext=!!gl&&((typeof W.WebGLRenderingContext==='function'&&gl instanceof W.WebGLRenderingContext)||(typeof W.WebGL2RenderingContext==='function'&&gl instanceof W.WebGL2RenderingContext));
+    var nativeRenderer=!!W.THREE&&typeof W.THREE.WebGLRenderer==='function'&&renderer instanceof W.THREE.WebGLRenderer;
+    var canvas=renderer&&renderer.domElement,rect=canvas&&canvas.getBoundingClientRect();
+    lastGraphics={nativeWebGL:nativeContext&&nativeRenderer&&String(W.THREE.REVISION)==='128',threeRevision:W.THREE&&String(W.THREE.REVISION)||null,contextLost:!gl||!!gl.isContextLost(),width:rect?rect.width:0,height:rect?rect.height:0,rendererClass:nativeRenderer?'THREE.WebGLRenderer':'not-verified',contextType:nativeContext?Object.prototype.toString.call(gl):'not-native'};
+   }
+   if(!lastGraphics.nativeWebGL||lastGraphics.contextLost||lastGraphics.width<=0||lastGraphics.height<=0)return;
+   frames++;if(firstFrame===null){firstFrame=t-start;paint();}lastFrame=t;
+   if(Number.isFinite(cpuMs)&&cpuMs>=0){samples.push(cpuMs);if(samples.length>120)samples.shift();}
+   if(frames===2)paint();
+  }catch(e){issue('RENDER_OBSERVATION_FAILED','graphics');}
+ }
+ function snapshot(){
+  var r=null;try{r=probe?probe():null;}catch(e){issue('RUNTIME_READ_ONLY_PROBE_FAILED','main');}
+  var ordered=samples.slice().sort(function(a,b){return a-b;}),pct=function(p){return ordered.length?ordered[Math.min(ordered.length-1,Math.floor((ordered.length-1)*p))]:null;};
+  return {schema:1,build:BUILD,basis:'Observation of this actual page; not a field, deployment or all-workflow certification.',startup:basic(),main:{entered:entered,build:mainBuild,terminalReached:ended},assets:definitions.map(function(a){return Object.assign({},assets[a[0]]);}),graphics:lastGraphics?Object.assign({},lastGraphics):null,performance:{elapsedMs:now()-start,firstNativeFrameMs:firstFrame,nativeFrames:frames,lastFrameAgeMs:lastFrame===null?null:now()-lastFrame,frameCpuSubmissionMs:{samples:ordered.length,p50:pct(.5),p95:pct(.95),maximum:ordered.length?ordered[ordered.length-1]:null},scope:'Bounded frame submission sample, not measured GPU execution or guaranteed device FPS.'},events:issues.slice(),runtime:r,workflows:{sceneRaycast:'not asserted by startup',finderLibrary:'requires journey test',allTrainers:'requires journey test',savedDataRetention:'requires isolated-profile reload test',liveNetlifyAndCloud:'not tested by this report'},privacy:'No saved-data values, credentials, chat text or request bodies are collected.'};
+ }
+ function button(parent,label,fn){var n=D.createElement('button');n.type='button';n.style.cssText='min-height:40px;padding:8px 12px;border:1px solid #688ba0;border-radius:7px;background:#1c4056;color:#eef8fd;font:600 12px/1.4 system-ui;cursor:pointer';n.textContent=label;n.onclick=fn;parent.appendChild(n);return n;}
+ function exportReport(){var text=JSON.stringify(snapshot(),null,2),url=W.URL.createObjectURL(new W.Blob([text],{type:'application/json'})),a=D.createElement('a');a.href=url;a.download='ClearFork_'+BUILD+'_Runtime_Acceptance.json';D.body.appendChild(a);a.click();a.remove();W.setTimeout(function(){W.URL.revokeObjectURL(url);},1000);}
+ function open(){
+  if(dialog)dialog.remove();dialog=D.createElement('section');dialog.id='cfAcceptanceDialog12OP';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Runtime acceptance report');
+  dialog.style.cssText='position:fixed;inset:4vh 3vw;z-index:1000000;overflow:auto;background:#102432;color:#e4f0f6;border:1px solid #7199ae;border-radius:12px;padding:18px;font:14px/1.5 system-ui;box-sizing:border-box;overscroll-behavior:contain';
+  var h=D.createElement('h2');h.textContent='Runtime acceptance / '+BUILD;dialog.appendChild(h);
+  var p=D.createElement('p');p.textContent='Read-only observation. Successful startup is not proof that every workflow passed. Existing source and initialization warnings remain visible. No saved data is cleared.';dialog.appendChild(p);
+  var bar=D.createElement('div');bar.style.cssText='display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:0;background:#102432;padding:8px 0';dialog.appendChild(bar);
+  var pre=D.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 monospace';
+  var refresh=function(){pre.textContent=JSON.stringify(snapshot(),null,2);};
+  button(bar,'Refresh report',refresh);button(bar,'Export read-only JSON',exportReport);var close=button(bar,'Close',function(){dialog.remove();dialog=null;});dialog.appendChild(pre);D.body.appendChild(dialog);refresh();close.focus();
+  dialog.addEventListener('keydown',function(e){if(e.key==='Escape'){close.click();}if(e.key==='Tab'){var b=Array.from(dialog.querySelectorAll('button'));if(e.shiftKey&&D.activeElement===b[0]){e.preventDefault();b[b.length-1].focus();}else if(!e.shiftKey&&D.activeElement===b[b.length-1]){e.preventDefault();b[0].focus();}}});
+ }
+ function addReportButton(host){if(!host||host.querySelector('[data-acceptance12op]'))return;var b=button(host,'Open acceptance report',open);b.setAttribute('data-acceptance12op','');}
+ W.addEventListener('error',function(e){
+  if(e.target&&e.target.tagName==='SCRIPT'){var id=e.target.getAttribute('data-cf-asset12op');if(id)asset(id,false);}
+  else if(e.message)issue('UNCAUGHT_JAVASCRIPT_ERROR','main',e.filename,e.lineno);
+ },true);
+ W.addEventListener('unhandledrejection',function(){issue('UNHANDLED_PROMISE_REJECTION','main');});
+ D.addEventListener('DOMContentLoaded',function(){domReady=true;paint();});
+ W.addEventListener('load',function(){domReady=true;paint();});
+ return {build:BUILD,asset:asset,enterMain:enterMain,finishMain:finishMain,observeFrame:observeFrame,status:snapshot,summary:basic,canDismissProgress:function(){return basic().startupObserved;},paint:paint,open:open,exportReport:exportReport,addReportButton:addReportButton};
+}
+window.CFAcceptance12OP=CFCreateAcceptance12OP(window,document);
+
+</script>
+<script defer data-cf-asset12op="spreadsheet-reader" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" onload="window.CFAcceptance12OP.asset('spreadsheet-reader',true)" onerror="window.CFAcceptance12OP.asset('spreadsheet-reader',false)"></script>
 <style id="questionsAsked12FV">
 .qa-panel{font:13px/1.55 "Segoe UI",Arial,sans-serif;color:#dce6ee;min-width:0;}
 .qa-panel h2{margin:0 0 5px;font-size:23px;color:#e9f5ff;}
@@ -651,7 +756,7 @@
 <div id="weatherPanel" style="position:fixed;top:8px;right:10px;z-index:55;background:#0d1116;border:1px solid #2a3542;border-radius:8px;padding:8px 12px;font-family:Consolas,monospace;font-size:11px;color:#cfe6ff;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,0.4);">Loading weather...</div></header>
 <div id="cfLoadStatus12ML" role="status" aria-live="polite">Loading the existing plant model and reference data...</div>
 <script id="cfLoadProgress12ML">
-(function(){var started=performance.now(),loaded=0;window.CFLoadProgress12ML={asset:function(){loaded++;var e=document.getElementById('cfLoadStatus12ML');if(e)e.textContent='Reference files loaded: '+loaded+' / 15. Preparing the existing plant model...';},ready:function(stats){var e=document.getElementById('cfLoadStatus12ML');if(e){e.textContent='First model frame rendered. Startup check reports any initialization errors.';setTimeout(function(){e.hidden=true;},2400);}},status:function(){return {dataFilesLoaded:loaded,elapsedMs:performance.now()-started};}};})();
+(function(){var started=performance.now(),loaded=0;window.CFLoadProgress12ML={asset:function(){loaded++;var e=document.getElementById('cfLoadStatus12ML');if(e)e.textContent='Reference files loaded: '+loaded+' / 15. Preparing the existing plant model...';},ready:function(stats){var e=document.getElementById('cfLoadStatus12ML');if(e){e.textContent='First model frame rendered. Startup check reports any initialization errors.';setTimeout(function(){if(window.CFAcceptance12OP&&window.CFAcceptance12OP.canDismissProgress())e.hidden=true;else if(window.CFAcceptance12OP)window.CFAcceptance12OP.paint();},2400);}},status:function(){return {dataFilesLoaded:loaded,elapsedMs:performance.now()-started};}};})();
 </script>
 <div class="bar">
   <button id="walkbtn">&#9658; Walk mode</button>
@@ -1178,14 +1283,14 @@
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12OM',problems=[],loaded=false;
+ 'use strict';var expected='12OQ',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
- var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,compressorTraining:(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR)?(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR).status():null,kbzModel:window.CFKbzVisual12MN?window.CFKbzVisual12MN.audit():null,regenModel:window.CFRegenVisual12MM?window.CFRegenVisual12MM.audit():null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MC?window.CFInspection12MC.audit():null,navigation:window.CFNavigation12MJ?window.CFNavigation12MJ.status():null,workspace:window.CFWorkspace12MK?window.CFWorkspace12MK.status():null,performance:window.CFPerformance12ML?window.CFPerformance12ML.status():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!window.CFAppReady12LJ,features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
+ var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,compressorTraining:(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR)?(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR).status():null,kbzModel:window.CFKbzVisual12MN?window.CFKbzVisual12MN.audit():null,regenModel:window.CFRegenVisual12MM?window.CFRegenVisual12MM.audit():null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MC?window.CFInspection12MC.audit():null,navigation:window.CFNavigation12MJ?window.CFNavigation12MJ.status():null,workspace:window.CFWorkspace12MK?window.CFWorkspace12MK.status():null,performance:window.CFPerformance12ML?window.CFPerformance12ML.status():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!(window.CFMainScript12LJ&&window.CFMainScript12LJ.endReached12OP),features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
   document.title=expected+' | Clear Fork - Responsive workspace';
   var s=api.snapshot(),b=document.getElementById('startupState12LJ');if(!b){b=document.createElement('div');b.id='startupState12LJ';b.style.cssText='margin:5px 22px;color:#adc9d8;font:12px Segoe UI,Arial,sans-serif';var hdr=document.querySelector('header');if(hdr)hdr.appendChild(b);}
   if(b){b.textContent='Index '+expected+' | Main '+(s.main||'waiting')+' | '+(s.mainFinished?(problems.length?'Initialization completed - review Startup check':'Initialization completed'):loaded?'Initialization incomplete - open Startup check':'Loading');b.style.color=s.mainFinished&&!problems.length?'#a3d7bd':loaded?'#ffcf78':'#adc9d8';}
- },open:function(){var old=document.getElementById('startupCheck12LJ');if(old)old.remove();var box=document.createElement('section');box.id='startupCheck12LJ';box.setAttribute('role','dialog');box.setAttribute('aria-label','Simulator startup check');box.style.cssText='position:fixed;inset:8vh 4vw auto;max-height:82vh;overflow:auto;z-index:999990;background:#122531;border:1px solid #66879b;border-radius:10px;padding:20px;color:#e8f3fa';var close=document.createElement('button');close.textContent='Close';close.style.float='right';close.onclick=function(){box.remove();};box.appendChild(close);var h=document.createElement('h2');h.textContent='Startup / feature check';box.appendChild(h);var p=document.createElement('p');p.textContent='A version label alone is not proof that all modules initialized. This read-only report never clears your saved data.';box.appendChild(p);var pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';pre.textContent=JSON.stringify(api.snapshot(),null,2);box.appendChild(pre);document.body.appendChild(box);}};
+ },open:function(){var old=document.getElementById('startupCheck12LJ');if(old)old.remove();var box=document.createElement('section');box.id='startupCheck12LJ';box.setAttribute('role','dialog');box.setAttribute('aria-label','Simulator startup check');box.style.cssText='position:fixed;inset:8vh 4vw auto;max-height:82vh;overflow:auto;z-index:999990;background:#122531;border:1px solid #66879b;border-radius:10px;padding:20px;color:#e8f3fa';var close=document.createElement('button');close.textContent='Close';close.style.float='right';close.onclick=function(){box.remove();};box.appendChild(close);var h=document.createElement('h2');h.textContent='Startup / feature check';box.appendChild(h);var p=document.createElement('p');p.textContent='A version label alone is not proof that all modules initialized. This read-only report never clears your saved data.';box.appendChild(p);var pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';pre.textContent=JSON.stringify(api.snapshot(),null,2);box.appendChild(pre);if(window.CFAcceptance12OP)window.CFAcceptance12OP.addReportButton(box);document.body.appendChild(box);}};
  window.CFStartup12LJ=api;
  window.addEventListener('error',function(e){if(e.message)api.note('JavaScript',e.message+' '+(e.filename||'')+':'+(e.lineno||''));});
  window.addEventListener('unhandledrejection',function(e){api.note('Unhandled promise',e.reason);});
@@ -1245,8 +1350,8 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
 };
 try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){window.CFStartup12LJ.note("Early dashboard",e);}
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script data-cf-asset12op="three-core" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="window.CFAcceptance12OP.asset('three-core',true)" onerror="window.CFAcceptance12OP.asset('three-core',false)"></script>
+<script data-cf-asset12op="orbit-controls" src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" onload="window.CFAcceptance12OP.asset('orbit-controls',true)" onerror="window.CFAcceptance12OP.asset('orbit-controls',false)"></script>
 <!-- 12LJ-ROOT: cumulative 12KT plus Frick parts-reference update. Current batch request 1 of 3; root scripts required. -->
 <script id="cf12kqDeploymentBootstrap">
 (function () {
@@ -1256,8 +1361,8 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
   var failure = null;
   var expected = ["CF_TEXT_POOL_12KG","CF_COLOR_PLAN_12JF","CF_DRAIN_AUDIT_12JL","CF_DRAIN_AUDIT_12JN","CF_DRAIN_AUDIT_12JR","CF_SOURCE_12JV","CF_SOURCE_12JW","CF_SOURCE_12JX","CF_MODEL_12JY","CF_MODEL_12JZ","CF_TRACE_DATA_12IZ","CF_PHASE_PLAN_12JH","CF_PLATE_AUDIT_12KB","CF_SOURCE_12KO","CF_SOURCE_12KP"];
   window.CF12KQDeploymentD1 = {
-    package: '12LJ-ROOT',
-    applicationRelease: '12LJ',
+    package: '12OQ-ROOT',
+    applicationRelease: '12OQ',
     pending: pending,
     fail: function (name) {
       failure = String(name);
@@ -1269,14 +1374,14 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
         box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:999999;padding:16px;border:2px solid #b64030;background:#fff2e8;color:#38150c;font:16px/1.5 Arial,sans-serif;white-space:pre-wrap';
         (document.body || document.documentElement).appendChild(box);
       }
-      box.textContent = 'Clear Fork 12LJ-ROOT: a required local file did not load: ' + failure +
+      box.textContent = 'Clear Fork 12OQ-ROOT: a required local file did not load: ' + failure +
         '\nKeep clearfork-main.js and all 15 data-*.js files in the SAME folder as index.html, using their original filenames. Do not upload the index alone.' +
         '\nThis message does not clear or change saved browser data.';
     },
     take: function (name) {
       if (!Object.prototype.hasOwnProperty.call(pending, name)) {
         this.fail(name);
-        throw new Error('12LJ-ROOT required static data not loaded: ' + name);
+        throw new Error('12OQ-ROOT required static data not loaded: ' + name);
       }
       var value = pending[name];
       delete pending[name];
@@ -1284,7 +1389,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
       return value;
     },
     status: function () {
-      return { package: '12LJ-ROOT', applicationRelease: '12LJ', expectedDataAssets: expected.length,
+      return { package: '12OQ-ROOT', applicationRelease: '12OQ', expectedDataAssets: expected.length,
         availableDataAssets: Object.keys(pending).length, consumedDataAssets: consumed.length,
         failedAsset: failure,
         note: 'Packaging diagnostic only. Loaded files do not establish correct process behavior or field authorization.' };
@@ -1292,22 +1397,22 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
   };
 })();
 </script>
-<script src="./data-01-cf_text_pool_12kg.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-01-cf_text_pool_12kg.js')"></script>
-<script src="./data-02-cf_color_plan_12jf.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-02-cf_color_plan_12jf.js')"></script>
-<script src="./data-03-cf_drain_audit_12jl.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-03-cf_drain_audit_12jl.js')"></script>
-<script src="./data-04-cf_drain_audit_12jn.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-04-cf_drain_audit_12jn.js')"></script>
-<script src="./data-05-cf_drain_audit_12jr.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-05-cf_drain_audit_12jr.js')"></script>
-<script src="./data-06-cf_source_12jv.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-06-cf_source_12jv.js')"></script>
-<script src="./data-07-cf_source_12jw.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-07-cf_source_12jw.js')"></script>
-<script src="./data-08-cf_source_12jx.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-08-cf_source_12jx.js')"></script>
-<script src="./data-09-cf_model_12jy.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-09-cf_model_12jy.js')"></script>
-<script src="./data-10-cf_model_12jz.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-10-cf_model_12jz.js')"></script>
-<script src="./data-11-cf_trace_data_12iz.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-11-cf_trace_data_12iz.js')"></script>
-<script src="./data-12-cf_phase_plan_12jh.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-12-cf_phase_plan_12jh.js')"></script>
-<script src="./data-13-cf_plate_audit_12kb.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
-<script src="./data-14-cf_source_12ko.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
-<script src="./data-15-cf_source_12kp.js" onload="window.CFLoadProgress12ML.asset()" onerror="window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script src="./clearfork-main.js?v=12OM" onerror="window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script data-cf-asset12op="data-01-cf_text_pool_12kg.js" src="./data-01-cf_text_pool_12kg.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-01-cf_text_pool_12kg.js',true)" onerror="window.CFAcceptance12OP.asset('data-01-cf_text_pool_12kg.js',false);window.CF12KQDeploymentD1.fail('data-01-cf_text_pool_12kg.js')"></script>
+<script data-cf-asset12op="data-02-cf_color_plan_12jf.js" src="./data-02-cf_color_plan_12jf.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-02-cf_color_plan_12jf.js',true)" onerror="window.CFAcceptance12OP.asset('data-02-cf_color_plan_12jf.js',false);window.CF12KQDeploymentD1.fail('data-02-cf_color_plan_12jf.js')"></script>
+<script data-cf-asset12op="data-03-cf_drain_audit_12jl.js" src="./data-03-cf_drain_audit_12jl.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-03-cf_drain_audit_12jl.js',true)" onerror="window.CFAcceptance12OP.asset('data-03-cf_drain_audit_12jl.js',false);window.CF12KQDeploymentD1.fail('data-03-cf_drain_audit_12jl.js')"></script>
+<script data-cf-asset12op="data-04-cf_drain_audit_12jn.js" src="./data-04-cf_drain_audit_12jn.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-04-cf_drain_audit_12jn.js',true)" onerror="window.CFAcceptance12OP.asset('data-04-cf_drain_audit_12jn.js',false);window.CF12KQDeploymentD1.fail('data-04-cf_drain_audit_12jn.js')"></script>
+<script data-cf-asset12op="data-05-cf_drain_audit_12jr.js" src="./data-05-cf_drain_audit_12jr.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-05-cf_drain_audit_12jr.js',true)" onerror="window.CFAcceptance12OP.asset('data-05-cf_drain_audit_12jr.js',false);window.CF12KQDeploymentD1.fail('data-05-cf_drain_audit_12jr.js')"></script>
+<script data-cf-asset12op="data-06-cf_source_12jv.js" src="./data-06-cf_source_12jv.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-06-cf_source_12jv.js',true)" onerror="window.CFAcceptance12OP.asset('data-06-cf_source_12jv.js',false);window.CF12KQDeploymentD1.fail('data-06-cf_source_12jv.js')"></script>
+<script data-cf-asset12op="data-07-cf_source_12jw.js" src="./data-07-cf_source_12jw.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-07-cf_source_12jw.js',true)" onerror="window.CFAcceptance12OP.asset('data-07-cf_source_12jw.js',false);window.CF12KQDeploymentD1.fail('data-07-cf_source_12jw.js')"></script>
+<script data-cf-asset12op="data-08-cf_source_12jx.js" src="./data-08-cf_source_12jx.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-08-cf_source_12jx.js',true)" onerror="window.CFAcceptance12OP.asset('data-08-cf_source_12jx.js',false);window.CF12KQDeploymentD1.fail('data-08-cf_source_12jx.js')"></script>
+<script data-cf-asset12op="data-09-cf_model_12jy.js" src="./data-09-cf_model_12jy.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-09-cf_model_12jy.js',true)" onerror="window.CFAcceptance12OP.asset('data-09-cf_model_12jy.js',false);window.CF12KQDeploymentD1.fail('data-09-cf_model_12jy.js')"></script>
+<script data-cf-asset12op="data-10-cf_model_12jz.js" src="./data-10-cf_model_12jz.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-10-cf_model_12jz.js',true)" onerror="window.CFAcceptance12OP.asset('data-10-cf_model_12jz.js',false);window.CF12KQDeploymentD1.fail('data-10-cf_model_12jz.js')"></script>
+<script data-cf-asset12op="data-11-cf_trace_data_12iz.js" src="./data-11-cf_trace_data_12iz.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-11-cf_trace_data_12iz.js',true)" onerror="window.CFAcceptance12OP.asset('data-11-cf_trace_data_12iz.js',false);window.CF12KQDeploymentD1.fail('data-11-cf_trace_data_12iz.js')"></script>
+<script data-cf-asset12op="data-12-cf_phase_plan_12jh.js" src="./data-12-cf_phase_plan_12jh.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-12-cf_phase_plan_12jh.js',true)" onerror="window.CFAcceptance12OP.asset('data-12-cf_phase_plan_12jh.js',false);window.CF12KQDeploymentD1.fail('data-12-cf_phase_plan_12jh.js')"></script>
+<script data-cf-asset12op="data-13-cf_plate_audit_12kb.js" src="./data-13-cf_plate_audit_12kb.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-13-cf_plate_audit_12kb.js',true)" onerror="window.CFAcceptance12OP.asset('data-13-cf_plate_audit_12kb.js',false);window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
+<script data-cf-asset12op="data-14-cf_source_12ko.js" src="./data-14-cf_source_12ko.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-14-cf_source_12ko.js',true)" onerror="window.CFAcceptance12OP.asset('data-14-cf_source_12ko.js',false);window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
+<script data-cf-asset12op="data-15-cf_source_12kp.js" src="./data-15-cf_source_12kp.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-15-cf_source_12kp.js',true)" onerror="window.CFAcceptance12OP.asset('data-15-cf_source_12kp.js',false);window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
+<script data-cf-asset12op="main" src="./clearfork-main.js?v=12OQ" onload="window.CFAcceptance12OP.asset('main',true)" onerror="window.CFAcceptance12OP.asset('main',false);window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
