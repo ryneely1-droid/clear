@@ -1,5 +1,7 @@
 
 (function(){
+const CF_APPLICATION_BUILD_12OA='12OQ';
+if(window.CFAcceptance12OP&&!window.CFAcceptance12OP.enterMain(CF_APPLICATION_BUILD_12OA))return;
 /*12OH: inlet receiver closure plate only; previous source and trainer behavior retained.*/
 var CF_SOURCE_12OH={"build":"12OH","baseline":"12OG","date":"2026-11-01","id":"v1000_tdw_closure_plate_12oh","title":"V-1000 inlet pig receiver / individual D2000 closure plate","sourceClass":"USER_PHOTOGRAPHS_WITH_OPERATOR_RECEIVER_ASSOCIATION","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["oh_v1000_closure"],"parentOwnerKeys":["v1000"],"existingSourceRefs":["CF3D_PID_M2000_12HI"],"plate":{"ownerKey":"oh_v1000_closure","parentOwnerKey":"v1000","referenceKey":"oh_v1000_closure","role":"Quick-actuating closure; NOT the complete receiver pressure vessel","certifiedBy":"T.D. Williamson","model":"D2000","descriptionLiteral":"D2000 QUICK-ACTUATING CLOSURE","sizeLiteral":"30\" (750 MM)","partNumber":"12342150","serial":"30UJD085","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121],"designCodesLiteral":["ASME B31.4/B31.8","CSA Z662 CAT 11"],"designFactorRows":[{"printedFactor":"0.60","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]},{"printedFactor":"0.50","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]}],"printedPlantTag":null,"yearBuilt":null,"unreadableUpperRightField":null,"association":"Operator identifies the photographed closure as belonging to the inlet pig receiver. Existing M2000 record identifies that receiver as V-1000 and separately records a 30-inch quick-opening closure.","photos":[{"name":"IMG_0784.jpeg","sha256":"9837e35298edc92bd17f6fb4c31d71ef8b2c18cddab567f52ea2442bdd65880b","byteLength":453904,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false},{"name":"IMG_0785.jpeg","sha256":"de23f6e41068513241bdae9b201fb9d449f98aee2be38299efeaf40645d5acaf","byteLength":457772,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false}],"qualifications":["Two photographs show one plate and one individual closure. No second closure or receiver is created.","Individual closure serial, part number, maker and ratings belong only to oh_v1000_closure. They are not the receiver shell identity, a valve identity or a sister launcher identity.","The plate prints 1480 PSI / 102 BAR. Preserve the PSI label literally rather than silently changing its pressure basis to PSIG.","The separate M2000 receiver drawing reference of 1440 PSIG at 130 F and the existing PSV-1000 record remain unchanged. Closure MAWP is not a receiver rerating, operating target, trip, isolation authorization or relief setting.","Both printed design-factor rows (0.60 and 0.50) are retained; no active installed design-factor case is selected or inferred. CSA CAT 11 is a literal transcription, not a standards interpretation.","30-inch (750 MM) is retained exactly as printed, not replaced with a recalculated unit conversion.","The upper-right field cannot be confidently read. No fabrication year, material, hydrotest, barrel serial or National Board number is inferred.","Only the closed closure face and readable plaque are represented. The existing end-cap silhouette is retained; end assignment, dimensions and mounting are schematic. No inferred hinge/locking mechanism or opening sequence is implemented."]},"pending":["V-1000 receiver-shell identity/rating plate, serial/NB/MDMT where applicable; this closure plate does not replace it.","Applicable D2000 serial-specific vendor assembly/GA, measured door/end correspondence, hinge/locking details, seals/materials and installed closure accessories.","Unreadable upper-right plate marking and applicable design-factor case; not resolved by matching a generic catalog."],"policy":["One canonical closure source and one photo-ledger group with two corroborating views. Existing receiver and launcher records remain separate.","Index the existing receiver closure as a child of v1000 for independent picking and reference; no second receiver, closure body or process route.","No process, protection, pressure setting, opening control, training runtime, quiz, saved-data or authentication changes."],"newEntries":[{"id":"oh.closure","title":"Individual inlet pig receiver closure identity","ownerKeys":["oh_v1000_closure"],"tags":["V-1000 closure"],"text":"IMG_0784 and IMG_0785 corroborate one T.D. Williamson D2000 quick-actuating closure, part 12342150, serial 30UJD085, 30-inch (750 MM), with the two printed rating/design-factor cases retained under plate. Operator associates it with inlet pig receiver V-1000; receiver vessel identity and ratings remain separate.","authority":"USER_PHOTOS / OPERATOR_PARENT_ASSOCIATION","referenceKey":"oh_v1000_closure"}]};
 function cfClosureRows12OH(){var p=CF_SOURCE_12OH.plate;return [
@@ -2322,7 +2324,7 @@ function cfInstallEquipmentTraining12MQ(){
 /*12OA: one application identity for the loaded main and its embedded launcher.
  * Trainer catalog/runtime revisions are independent and remain validated separately.
  * Future application releases change this one declaration, not the trainer content. */
-const CF_APPLICATION_BUILD_12OA='12OM';
+/* Active application build is declared at scope entry for startup preflight. */
 window.CFMainScript12LJ={build:CF_APPLICATION_BUILD_12OA,phase:"starting"};
 var CF_SOURCE_12MP={"build":"12MP","baseline":"12MO","date":"2026-10-23","id":"equipment_internal_detail_12mp","title":"Equipment Internal Training","notebookKey":"compressor_internals_training_12mo","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["c4100","c6100","c5700"],"equipmentIds":["C-4100","C-6100","C-5700"],"sourceClass":"OPERATOR_REQUEST_WITH_OEM_FAMILY_RESEARCH_AND_EXISTING_PLANT_SOURCE","existingSourceRefs":["CF_SOURCE_12MO","CF_SOURCE_12KR (history only where superseded)","CF_SOURCE_12LI (current C-5700 oil topology)","CF_SOURCE_12KT (KBZ manual)","CF_SOURCE_12KX (JGQ manual)","CF_PWH_SOURCE_12MH (future NGL only)"],"research":[{"id":"ariel-frame-oil","title":"Ariel / frame-driven oil pumps","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/frame_driven_lube_oil_pumps.html","scope":"OEM family mechanism. Auxiliary-end chain drive and distinct KBZ regulation, not installed piping or a new pressure setting.","reviewed":"2026-10-23"},{"id":"ariel-divider","title":"Ariel / common-supply cylinder lubrication diagram","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","scope":"Generic vendor explanatory diagram. Metered quantities depend on the selected blocks; exact installed injection points are not established.","reviewed":"2026-10-23"},{"id":"ariel-filter","title":"Ariel / frame oil filters","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/lube_oil_filter.html","scope":"Family filter construction and differential-pressure indication. No installed element or trip change.","reviewed":"2026-10-23"},{"id":"ariel-crosshead","title":"Ariel / crossheads","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/crossheads.html","scope":"Generic pin/bushing and top/bottom lubrication; no serial balance weights or rod-load certification.","reviewed":"2026-10-23"},{"id":"ariel-rod","title":"Ariel / connecting rods","url":"https://www.arielcorp.com/support/application-manual/compressor/frame/connecting_rods.html","scope":"Forged-rod family reference, not a serial parts drawing.","reviewed":"2026-10-23"},{"id":"ariel-jgq-detail","title":"Ariel / JGN-JGQ frame standard features","url":"https://www.arielcorp.com/support/application-manual/frame-class-equipment/jgn_jgq_frames.html","scope":"JGQ family exterior, short integral guide, filter/gauges and tubing. Actual installed source records remain controlling.","reviewed":"2026-10-23"}],"newEntries":[{"id":"equipment_training_name","title":"Equipment Internal Training / future pump category","tags":["C-4100","C-6100","C-5700"],"text":"The existing trainer is renamed Equipment Internal Training. Inlet, residue and overhead are active; expander, refrigeration, regeneration and NGL pumps are future categories. Existing training IDs, unit source ownership and future part fields are preserved.","authority":"OPERATOR_REQUEST"},{"id":"detailed_lube_reference","title":"Separate lubrication duties and source boundary","tags":["C-4100","C-6100","C-5700"],"text":"Training adds distinct circulating frame-oil, cylinder/packing force-feed, and unassigned packing vent/drain views. Tubing bends, unions, point counts, marker timing, chain ratio and microgeometry remain schematic. No feed rates, material ratings, pressures or installed parts are inferred.","authority":"OEM_GUIDED_TRAINING_GEOMETRY"},{"id":"frame_oil_detail","title":"Frame oil and auxiliary-end mechanism","tags":["C-4100","C-6100","C-5700"],"text":"Source-linked oil teaching objects include sump, suction strainer, auxiliary-end pump/chain drive, cooler/bypass, full-flow filter and two pressure indications, gallery/bearing feeds, pre-lube, frame-side wiper return, breather and oil level. KBZ downstream-filter external regulation is distinguished from small-frame pump-head regulation.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"forcefeed_detail","title":"Application-selected metering and individual tube identification","tags":["C-4100","C-6100","C-5700"],"text":"Ariel common-supply diagram supplies the explanatory metering path: checked supply, force-feed pump, overpressure device alternative, pressure indication, progressive divider, cycle/no-flow monitor and checked injection points. Divider proportions are application-selected, not automatically equal. Drive-box oil remains separate from the injection supply. This is not a confirmed installed BOM or real shutdown channel.","authority":"OEM_FAMILY_REFERENCE_NOT_AS_BUILT"},{"id":"c5700_preserve_correction","title":"C-5700 oil topology remains owner-specific","tags":["C-5700","PSV-1005","PSV-1042"],"text":"Retain 12LI: 1024 is circulation/heater assembly (1017/1019/1021, TC1025, FSLL1023), not a cylinder lubricator. PSV1005 branches from pump1003 before check1004 and returns before strainer1001. PSV1042 protects the separate circulation/heater loop; both settings remain unestablished. Generic force-feed detail does not restore retired false plant feeds.","authority":"RETAINED_SOURCE_CROSSLINK_12LI"},{"id":"jgq_exterior_detail","title":"C-5700 current model exterior refined","tags":["C-5700"],"text":"Refined the active 12KR JGQ/2 exterior: ribbed crankcase, silver removable top and side covers, short guide housing, cylinder casting ribs, head flange/studs and valve access caps. Existing two cylinder identities, motor/shaft, nozzles, boundaries and later corrected oil connections remain. Blue/silver finish and fine dimensions are visual references, not a paint survey or installed parts catalog.","authority":"OEM_APPEARANCE_WITH_RETAINED_PLANT_TOPOLOGY"},{"id":"mechanism_detail","title":"Selectable small moving components","tags":["C-4100","C-6100","C-5700"],"text":"Added crosshead-pin bushing, rod-attachment and connecting-rod cap-fastener groups, enlarged guide oil-film overlays, and schematic moving chain/gear/metering elements. Existing slider-crank and ideal gas-cycle equations are retained; this is not a rod-load, lubrication-rate or valve-impact calculation.","authority":"TRAINING_ONLY"}],"policy":["No claim of all installed internal parts: serial-specific assembly drawings, tube schedules, injection sheets, approved BOM and field configuration are not complete.","All existing part IDs and owner links retained. Added training subparts do not create physical plant equipment. Manufacturer part numbers and installed ratings remain blank until source evidence is supplied.","Frame returns, process gas, packing leakage and force-feed oil are separate. Unestablished vent/drain receiving destinations are not connected to a convenient header.","Shared source references do not copy serial/National Board identifiers. No alarms, operating equations, settings, gate files or browser-storage schema are changed.","Generic lube diagram is filed once in Clearfork P&IDs as an OEM explanatory reference, not an issued plant drawing.","NGL pump category is a future placeholder only. PWH and NGL evidence already retained is not duplicated or converted to a new model."],"pending":["Exact serial-specific lubrication tube schedule, fitted injection count, divider configuration, metering quantities, oil source variants and installed part/rating selection.","Full native GPU and integrated plant rendering validation, final site collisions and real equipment field verification are separate tasks."],"drawings":[{"number":"ARIEL-APP-COMMON-OIL-FIGURE","revision":"Web page updated 09/07/2001","title":"Ariel force-feed lubrication / common oil supply - generic explanatory figure","pages":[1],"sourceFile":"Ariel application manual - Cylinder Lube Oil Distribution Block System","url":"https://www.arielcorp.com/support/application-manual/compressor/cylinder/cylinder_lube_oil_distribution_b.html","referenceKey":"ariel_common_lube_diagram_12mp","sourceClass":"GENERIC_VENDOR_EXPLANATORY_DIAGRAM_NOT_PLANT_PID","scope":"Catalog locator only, not an Ariel issued drawing number. Generic common-supply example; exact installed variants and injection-point count not established.","sourceStorageMode":"learn-only","sourceRetained":false,"sha256":null}]};
 function cfApplyEquipmentDetail12MP(H,S){
@@ -6085,6 +6087,7 @@ function cfVisualPreferences12ML(load){
  return CF_VISUAL_PREF_12ML;
 }
 function cfFrameTiming12ML(start){
+ if(window.CFAcceptance12OP)window.CFAcceptance12OP.observeFrame(ren,performance.now()-start);
  var elapsed=performance.now()-start,m=CF_SPEED_12ML;m.frames++;m.frameCpuMs=elapsed;m.frameCpuAverageMs=m.frames===1?elapsed:m.frameCpuAverageMs*.9+elapsed*.1;
  if(m.firstFrameMs===null){m.firstFrameMs=performance.now()-m.started;if(window.CFLoadProgress12ML)window.CFLoadProgress12ML.ready(m);}
  var n=CF_ADAPTIVE_12ML;if(!CF_VISUAL_PREF_12ML.adaptive||!CF_NAV_12LL||CF_NAV_12LL.moving||CF_NAV_12LL.dragging){n.slow=0;n.fast=0;return;}
@@ -14578,10 +14581,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-05-12OM';
+var RYAN_BUILD_ID='RYAN-2026-11-05-12OQ';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-VESSEL-OCCLUSION-12OM-20261105';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -14941,21 +14944,21 @@ function cfClearRetiredSurgeDrill12GI(){
  }
 }
 function leadScenarioById(id){return CMD_LEAD_SCENARIOS.find(function(s){return s.id===id;});}
-function startLeadScenario(id){var st=window.CMD_LEAD_STATE,sc=leadScenarioById(id);if(!sc)return;if(st.active){var prev=leadScenarioById(st.active);if(prev&&prev.teardown)prev.teardown();}st.active=id;st.startedAt=Date.now();st.startFlow=(PLANT.in&&PLANT.in.flow)||0;st.startC2=(PLANT.v&&PLANT.v.c2ngl)||0;if(sc.setup)sc.setup();}
+function startLeadScenario(id){var st=window.CMD_LEAD_STATE,sc=leadScenarioById(id);if(!sc)return;if(st.active){var prev=leadScenarioById(st.active);if(prev&&prev.teardown)prev.teardown();}st.active=id;st.startedAt=Date.now();st.startedActiveSeconds12OO=cfSimulationClockStatus12OO().activeWallSeconds;st.startFlow=(PLANT.in&&PLANT.in.flow)||0;st.startC2=(PLANT.v&&PLANT.v.c2ngl)||0;if(sc.setup)sc.setup();}
 function endLeadScenario(){var st=window.CMD_LEAD_STATE,sc=leadScenarioById(st.active);if(sc&&sc.teardown)sc.teardown();st.active=null;}
 function cmdLeadTab(){
  cfClearRetiredSurgeDrill12GI();
  var st=window.CMD_LEAD_STATE;
  if(!st.active){
   return '<div style="font-weight:700;color:#dce6ee;margin-bottom:6px;">System Lead Training Call</div>'+
-   '<div style="color:#8a97a4;font-size:12px;margin-bottom:12px;">Pick a real scenario below. It grades against this simulator\u2019s own live plant variables (real flow, real C2-in-NGL, real compressor run state) over real wall-clock time \u2014 nothing here is scripted playback.</div>'+
+   '<div style="color:#8a97a4;font-size:12px;margin-bottom:12px;">Pick a real scenario below. It grades against this simulator\u2019s own live plant variables (real flow, real C2-in-NGL, real compressor run state) over active real-time equivalent (paused time excluded) \u2014 nothing here is scripted playback.</div>'+
    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
    CMD_LEAD_SCENARIOS.map(function(s){return '<div style="background:#141a22;border:1px solid #2a3542;border-radius:6px;padding:10px 12px;cursor:pointer;" data-leadstart="'+s.id+'"><div style="font-weight:700;color:#dce6ee;">'+s.title+'</div><div style="font-size:11px;color:#8a97a4;margin-top:4px;">'+s.desc+'</div></div>';}).join('')+
    '</div>';
  }
  var sc=CMD_LEAD_SCENARIOS.find(function(s){return s.id===st.active;});
  if(!sc){st.active=null;return cmdLeadTab();}
- var elapsedSec=(Date.now()-st.startedAt)/1000;
+ var elapsedSec=st.startedActiveSeconds12OO==null?0:Math.max(0,cfSimulationClockStatus12OO().activeWallSeconds-st.startedActiveSeconds12OO);
  var res=sc.check(PLANT.v);
  var withinTol=Math.abs(res.value-res.target)<=res.tolerance;
  var pctTime=Math.min(100,elapsedSec/600*100); /* 10 real minutes, matches the original scenario framing */
@@ -14963,7 +14966,7 @@ function cmdLeadTab(){
   '<div style="color:#8a97a4;font-size:12px;margin-bottom:10px;">'+sc.desc+'</div>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">'+
    cmdCard('Current '+res.metric,res.value.toFixed(2)+' '+res.unit,'target '+res.target+' \u00b1'+res.tolerance)+
-   cmdCard('Elapsed',Math.floor(elapsedSec)+'s','of 600s (10 real minutes)')+
+   cmdCard('Elapsed',Math.floor(elapsedSec)+'s','of 600s (10 active minutes)')+
    cmdCard('Status',withinTol?'IN TOLERANCE':'OUT OF TOLERANCE',withinTol?'holding within band':'adjust toward target')+
   '</div>'+
   '<div style="background:#0a0e13;border-radius:4px;height:8px;overflow:hidden;margin-bottom:10px;"><div style="background:'+(withinTol?'#1f7a3a':'#7a3a1f')+';height:100%;width:'+pctTime.toFixed(0)+'%;"></div></div>'+
@@ -15084,12 +15087,13 @@ function cmdRenderTab(){
       leaks, anyone who has it can run up the API bill until it's changed.
       Right tool for "keep casual/accidental use out of a small crew's
       training tool," not for a public-facing product. */
-var RYAN_AI_PW=null; /* kept in memory only, never in IndexedDB/localStorage; resets on reload */
+var RYAN_AI_PW=null; /* 12OO boolean compatibility flag only; the entered password is never retained after sign-in. */
+var RYAN_AI_EXPIRES_AT12OO=0;
 var RYAN_AI_AUTH_TOKEN=null; /* server-signed 45-minute session token; prevents background report review from reusing/stumbling over raw-password state */
 var RYAN_AI_UNLOCKED_AT=null; /* timestamp of unlock -- session auto-expires after RYAN_AI_SESSION_MS */
 var RYAN_AI_SESSION_MS=45*60*1000; /* 45 minutes, per Ryan's request -- re-locks automatically, not just on reload */
-function ryanAiSessionExpired(){return !RYAN_AI_UNLOCKED_AT||(Date.now()-RYAN_AI_UNLOCKED_AT)>RYAN_AI_SESSION_MS;}
-function ryanAiLock(){RYAN_AI_PW=null;RYAN_AI_AUTH_TOKEN=null;RYAN_AI_UNLOCKED_AT=null;}
+function ryanAiSessionExpired(){return !RYAN_AI_AUTH_TOKEN||!RYAN_AI_UNLOCKED_AT||Date.now()>=RYAN_AI_EXPIRES_AT12OO||(Date.now()-RYAN_AI_UNLOCKED_AT)>=RYAN_AI_SESSION_MS;}
+function ryanAiLock(){RYAN_AI_PW=null;RYAN_AI_AUTH_TOKEN=null;RYAN_AI_UNLOCKED_AT=null;RYAN_AI_EXPIRES_AT12OO=0;}
 var RYAN_ATTACH_ID=null; /* currently selected P&ID/document from the local library, or null */
 var RYAN_LARGE_SOURCE_URL='';try{RYAN_LARGE_SOURCE_URL=localStorage.getItem('ryanLargeSourceUrl')||'';}catch(_e){}
 var RYAN_ATTACH_DESCRIPTIONS={};
@@ -15198,9 +15202,9 @@ function askRyanRender(){
   var candidate=pwInp.value;if(err)err.textContent='Checking password…';unlockBtn.disabled=true;
   ryanFetch({mode:'auth',message:'',context:'',history:[],password:candidate}).then(function(res){
     unlockBtn.disabled=false;
-    if(res.status===403||!res.ok||!res.d||!res.d.authToken){RYAN_AI_PW=null;RYAN_AI_AUTH_TOKEN=null;RYAN_AI_UNLOCKED_AT=null;if(err)err.textContent='Incorrect password.';return;}
-    RYAN_AI_PW=candidate;RYAN_AI_AUTH_TOKEN=res.d.authToken;RYAN_AI_UNLOCKED_AT=Date.now();askRyanRender();
-  }).catch(function(e){unlockBtn.disabled=false;if(err)err.textContent='Could not verify Ryan password: '+String(e&&e.message||e);});
+    if(res.status===403||!res.ok||!res.d||!res.d.authToken){ryanAiLock();candidate=null;pwInp.value='';if(err)err.textContent=res.d&&res.d.error||'Ryan sign-in failed.';return;}
+    RYAN_AI_PW=true;RYAN_AI_AUTH_TOKEN=res.d.authToken;RYAN_AI_UNLOCKED_AT=Date.now();RYAN_AI_EXPIRES_AT12OO=Math.min(RYAN_AI_UNLOCKED_AT+RYAN_AI_SESSION_MS,Number(res.d.authExpiresAt)||RYAN_AI_UNLOCKED_AT+RYAN_AI_SESSION_MS);candidate=null;pwInp.value='';askRyanRender();
+  }).catch(function(e){candidate=null;pwInp.value='';unlockBtn.disabled=false;if(err)err.textContent='Could not verify Ryan password: '+String(e&&e.message||e);});
  });
  var attachSel=document.getElementById('askRyanAttach');
  if(attachSel){
@@ -15638,7 +15642,7 @@ function ryanCompactGenericContext(){
 function ryanTrendIntelligenceText(query){
  try{
   if(typeof TREND_LOG==='undefined'||typeof TREND_TIME==='undefined')return '(historian unavailable)';
-  var now=Date.now(), q=String(query||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  var now=cfSimulationTimestamp12OO(), q=String(query||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   var aliases=[];
   if(/refrig|1140|1141|1142|1441|1241/.test(String(query||'').toLowerCase()))aliases=['1441','1241','1140','1141','1142','refrig'];
   else if(/residue|6100|6200|6300|6050|6800/.test(String(query||'').toLowerCase()))aliases=['6100','6200','6300','6050','6800'];
@@ -15651,7 +15655,7 @@ function ryanTrendIntelligenceText(query){
   if(!keys.length)keys=Object.keys(TREND_LOG).filter(function(k){return /flow|resrate|c2ngl|pic1521|tic1225/.test(k);});
   keys=keys.slice(0,24);
   function stat(k,windowMs){var a=TREND_LOG[k]||[],t=TREND_TIME[k]||[];if(!a.length)return null;var cutoff=now-windowMs, vals=[];for(var i=0;i<a.length;i++){var ti=t[i]||now;if(ti>=cutoff)vals.push(a[i]);}if(!vals.length)return null;var first=vals[0],last=vals[vals.length-1],sum=0,lo=Infinity,hi=-Infinity;vals.forEach(function(v){sum+=v;if(v<lo)lo=v;if(v>hi)hi=v;});return {n:vals.length,first:first,last:last,delta:last-first,avg:sum/vals.length,lo:lo,hi:hi};}
-  var lines=['TREND INTELLIGENCE (72-hour historian; one-minute samples when available):'];
+  var lines=['SIMULATOR TREND INTELLIGENCE (72 simulated hours; one simulated-minute samples when available). Timestamps follow the executed simulation timeline anchored to this page session, not elapsed wall time or field telemetry. Existing imported/historical records keep their original provenance.'];
   keys.forEach(function(k){var s10=stat(k,10*60000),s3=stat(k,3*3600000),s24=stat(k,24*3600000),s72=stat(k,72*3600000);if(!s10&&!s3&&!s24&&!s72)return;function f(s){return s?('now '+fmtRyanNum(s.last)+', Δ '+fmtRyanNum(s.delta)+', range '+fmtRyanNum(s.lo)+'..'+fmtRyanNum(s.hi)+', n='+s.n):'n/a';}lines.push(k+': 10m ['+f(s10)+'] | 3h ['+f(s3)+'] | 24h ['+f(s24)+'] | 72h ['+f(s72)+']');});
   return lines.length>1?lines.join('\n'):'(no matching trend history yet)';
  }catch(e){return '(trend summary unavailable: '+String(e&&e.message||e)+')';}
@@ -15744,12 +15748,14 @@ function ryanPidReferenceContext(query){
  }catch(err){return '(P&ID Reference Library index unavailable: '+String(err&&err.message||err)+')';}
 }
 function ryanFetch(body){
- body=body||{};
+ body=Object.assign({},body||{});
+ var authMode=String(body.mode||'qa').toLowerCase()==='auth';
+ if(!authMode){delete body.password;if(ryanAiSessionExpired()){ryanAiLock();return Promise.resolve({ok:false,status:403,d:{error:'Ryan session expired. Sign in again; your saved data is unchanged.',authRequired:true}});}}
  var _deviceFacts;try{_deviceFacts=cf3dDeviceKnowledge12GI(body.message||body.question||'');}catch(e){e.ryanPhase='context';return Promise.reject(e);}
  if(_deviceFacts)body.context=_deviceFacts+'\n\n'+String(body.context||'');
  body.clientBuild=RYAN_BUILD_ID;
  if(cfRyanSharedEligible12NG(body)){body.sharedQuestionId=body.sharedQuestionId||cfRyanNewId12NG();body.sharedLive=ryanQaIsLiveQuestion(body.message,body.mode);body.sharedFollowup=ryanQaIsFollowup(body.message);}
- if(RYAN_AI_AUTH_TOKEN&&!body.authToken)body.authToken=RYAN_AI_AUTH_TOKEN;
+ if(!authMode&&RYAN_AI_AUTH_TOKEN&&!body.authToken)body.authToken=RYAN_AI_AUTH_TOKEN;
  var timeoutMs=(body&&['shift_report','shift_report_chunk','shift_report_synthesis','operating_memory_extract'].indexOf(body.mode)>=0)?24000:((body&&(body.mode==='digest_prepare'||body.mode==='digest_pass'||body.mode==='image_learn'))?30000:((body&&(body.mode==='digest'||body.mode==='scan'||body.mode==='loto_workplan'))?30000:26000));
  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
  var timer=ctrl?setTimeout(function(){ctrl.abort();},timeoutMs):null;
@@ -15759,6 +15765,7 @@ function ryanFetch(body){
     if(serverBuild&&serverBuild!==RYAN_BUILD_ID){res.ok=false;res.status=409;res.d={error:'Ryan version mismatch: browser is '+RYAN_BUILD_ID+' but backend is '+serverBuild+'. Deploy matching index.html, clearfork-main.js and netlify/functions/ryan.js files, redeploy, then hard-refresh.'};}
     if(res.ok&&res.d&&res.d.codeSignature&&res.d.codeSignature!==RYAN_EXPECTED_SIGNATURE){res.ok=false;res.status=409;res.d={error:'Ryan backend signature mismatch: browser expects '+RYAN_EXPECTED_SIGNATURE+' but backend returned '+res.d.codeSignature+'. Netlify is serving a different backend file.',buildId:serverBuild||''};}
     if(res.d&&res.d.sharedHistory){var sh=res.d.sharedHistory;if(sh.retry)cfRyanQueue12NG(sh.retry);CF_RYAN_SHARED12NG.status=sh.saved?(sh.status==='complete'?'Question and answer saved in shared history.':'Question saved in shared history; answer status: '+sh.status):'Shared answer save NOT confirmed. Open Questions Asked to retry.';CF_RYAN_SHARED12NG.error='';cfRyanSharedStatus12NG();}
+    if(res.status===403&&res.d&&res.d.authRequired)ryanAiLock();
     return res;
   });},function(e){
    if(timer)clearTimeout(timer);
@@ -16622,54 +16629,12 @@ function ryanInstallLatestPlantwideTrendWindow(hours,cb){hours=Math.max(1,Number
 /* ═══════ TREND CHART renderer: draws a real SVG line chart from TREND_LOG history
    for any instrument tag, with min/max/current readout and a light grid. ═══════ */
 function openTrendChart(key,label,unit,keepView){
- document.getElementById('trendTitle').textContent = '📈 Trend — ' + label;
- var body=document.getElementById('trendBody');
- var allData=(TREND_LOG[key]||[]).slice(), allTimes=(TREND_TIME[key]||[]).slice();
- if(allData.length<2){ body.innerHTML='<div style="color:#8fa0b0;text-align:center;padding:30px;">Not enough history yet — keep the sim running a bit, then check back.</div>'; document.getElementById('trendpanel').style.display='block'; return; }
- if(allTimes.length!==allData.length){var now0=Date.now();allTimes=allData.map(function(v,i){return now0-(allData.length-1-i)*TREND_MIN_SAMPLE_MS;});}
- if(!keepView||TREND_VIEW.key!==key){TREND_VIEW.key=key;TREND_VIEW.endMs=allTimes[allTimes.length-1];TREND_VIEW.spanMs=10*60*1000;}
- var latest=allTimes[allTimes.length-1], earliest=Math.max(allTimes[0],latest-TREND_RETENTION_MS);
- if(TREND_VIEW.endMs==null)TREND_VIEW.endMs=latest;
- TREND_VIEW.endMs=Math.max(earliest+TREND_VIEW.spanMs,Math.min(latest,TREND_VIEW.endMs));
- var startMs=TREND_VIEW.endMs-TREND_VIEW.spanMs;
- var data=[],times=[]; for(var ii=0;ii<allData.length;ii++){if(allTimes[ii]>=startMs&&allTimes[ii]<=TREND_VIEW.endMs){data.push(allData[ii]);times.push(allTimes[ii]);}}
- if(data.length<2){data=allData.slice(-Math.min(12,allData.length));times=allTimes.slice(-data.length);}
- var w=700,h=250,padL=48,padR=18,padT=24,padB=42;
- var rawMn=Math.min.apply(null,data), rawMx=Math.max.apply(null,data), cur=data[data.length-1];
- var _fixedInstrumentRange=(key==='fit1045a')?[0,250]:null;
- var span=rawMx-rawMn, floorSpan=trendEngineeringFloor(unit,cur);
- var mid=(rawMx+rawMn)/2;if(!isFinite(mid))mid=cur;
- if(_fixedInstrumentRange){rawMn=_fixedInstrumentRange[0];rawMx=_fixedInstrumentRange[1];}
- else if(!isFinite(span)||span<floorSpan){rawMn=mid-floorSpan/2;rawMx=mid+floorSpan/2;}else{var margin=Math.max(span*0.12,floorSpan*0.05);rawMn-=margin;rawMx+=margin;}
- var mn=rawMn,mx=rawMx;
- function pxTime(t){return padL+((t-startMs)/(TREND_VIEW.spanMs||1))*(w-padL-padR);}
- function py(v){return padT+(1-((v-mn)/(mx-mn)))*(h-padT-padB);}
- var pts=data.map(function(v,i){return pxTime(times[i]).toFixed(1)+','+py(v).toFixed(1);}).join(' ');
- var s2='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;align-items:center;">'+
-  '<button data-trendnav="back" style="padding:4px 9px;min-height:28px;">◀ 3h</button><button data-trendnav="now" style="padding:4px 9px;min-height:28px;">NOW</button>'+
-  [10/60,0.5,1,3,12,24,72].map(function(hr){var ms=hr*3600000,lab=hr<1?'10m':(hr<2?(hr*60)+'m':hr+'h');return '<button data-trendspan="'+ms+'" style="padding:4px 9px;min-height:28px;'+(Math.abs(TREND_VIEW.spanMs-ms)<1?'border-color:#3fd0ff;color:#bfefff;':'')+'">'+lab+'</button>';}).join('')+
-  '<button data-trendnav="fwd" style="padding:4px 9px;min-height:28px;">3h ▶</button></div>';
- s2+='<svg id="trendSvg" data-key="'+key+'" viewBox="0 0 '+w+' '+h+'" style="width:100%;background:#060a0f;border:1px solid #28333f;border-radius:6px;cursor:crosshair;touch-action:none;">';
- for(var g=0;g<=4;g++){var gy=padT+g*(h-padT-padB)/4;s2+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(w-padR)+'" y2="'+gy.toFixed(1)+'" stroke="#1c2733" stroke-width="1"/>';}
- /* 3-hour vertical guide lines when the selected window is long enough. */
- if(TREND_VIEW.spanMs>=3*3600000){var firstGuide=Math.ceil(startMs/(3*3600000))*(3*3600000);for(var gt=firstGuide;gt<TREND_VIEW.endMs;gt+=3*3600000){var gx=pxTime(gt);s2+='<line x1="'+gx.toFixed(1)+'" y1="'+padT+'" x2="'+gx.toFixed(1)+'" y2="'+(h-padB)+'" stroke="#26384a" stroke-width="1" stroke-dasharray="3 4"/>';}}
- s2+='<text x="6" y="'+(padT+4)+'" fill="#5a7088" font-size="9">'+mx.toFixed(2)+'</text><text x="6" y="'+(h-padB+4)+'" fill="#5a7088" font-size="9">'+mn.toFixed(2)+'</text>';
- s2+='<polyline points="'+pts+'" fill="none" stroke="#3fd0ff" stroke-width="1.6"/>';
- var lastX=pxTime(times[times.length-1]),lastY=py(cur);s2+='<line id="trendCursorLine" x1="'+lastX.toFixed(1)+'" x2="'+lastX.toFixed(1)+'" y1="'+padT+'" y2="'+(h-padB)+'" stroke="#ffd36a" stroke-width="1" stroke-dasharray="4 3"/><circle id="trendCursorDot" cx="'+lastX.toFixed(1)+'" cy="'+lastY.toFixed(1)+'" r="5" fill="#ffd36a" stroke="#101820" stroke-width="1.5"/></svg>';
- var rawMin=Math.min.apply(null,data),rawMax=Math.max.apply(null,data);
- body.innerHTML=s2+'<div id="trendPointReadout" style="margin-top:9px;padding:9px 12px;border:1px solid #354454;border-radius:5px;background:#0b1118;display:flex;justify-content:space-between;gap:12px;align-items:center;font:12px Consolas,monospace;"><span style="color:#9fb0c0;">SELECTED: <b id="trendPointTime" style="color:#ffd36a;">'+new Date(times[times.length-1]).toLocaleString()+'</b></span><span><b id="trendPointValue" style="color:#5cff8f;font-size:15px;">'+cur.toFixed(3)+'</b> <span style="color:#8fa0b2;">'+unit+'</span></span></div>'+
- '<div style="display:flex;justify-content:space-between;margin-top:10px;color:#9fb0c0;font-size:12px;"><span>ACTUAL MIN: '+rawMin.toFixed(2)+' '+unit+'</span><span style="color:#3fd0ff;font-weight:700;">CURRENT: '+cur.toFixed(2)+' '+unit+'</span><span>ACTUAL MAX: '+rawMax.toFixed(2)+' '+unit+'</span></div>'+
- '<div style="text-align:center;color:#71849a;font-size:10.5px;margin-top:8px;">Default view is 10 minutes with engineering-scale minimum span so ~1 psi / 1°F / 1 GPM does not look like a major upset. Use ◀/▶ to move through history in 3-hour steps. Historian retains 72 hours at 1-minute resolution.</div>'+
- '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px;padding:8px 10px;background:#0d1820;border:1px solid #294657;border-radius:5px;"><button id="trendBrainInstall" style="padding:5px 10px;min-height:30px;background:#173a40;border-color:#3f7f89;color:#c9f7ff;">🧠 Install this window in Ryan\'s brain</button><span id="trendBrainStatus" style="font-size:10.5px;color:#7f9aa8;">12h, 24h and 72h views auto-install/update a source-labelled simulator trend episode.</span></div>';
- var svg=document.getElementById('trendSvg');
- function inspect(ev){var r=svg.getBoundingClientRect(),cx=(ev.touches&&ev.touches[0]?ev.touches[0].clientX:ev.clientX)-r.left,localX=(cx/r.width)*w,targetT=startMs+Math.max(0,Math.min(1,(localX-padL)/(w-padL-padR)))*TREND_VIEW.spanMs,idx=0,best=Infinity;for(var i=0;i<times.length;i++){var d=Math.abs(times[i]-targetT);if(d<best){best=d;idx=i;}}var x=pxTime(times[idx]),y=py(data[idx]),ln=document.getElementById('trendCursorLine'),dot=document.getElementById('trendCursorDot');if(ln){ln.setAttribute('x1',x.toFixed(1));ln.setAttribute('x2',x.toFixed(1));}if(dot){dot.setAttribute('cx',x.toFixed(1));dot.setAttribute('cy',y.toFixed(1));}var tv=document.getElementById('trendPointValue'),tt=document.getElementById('trendPointTime');if(tv)tv.textContent=Number(data[idx]).toFixed(3);if(tt)tt.textContent=new Date(times[idx]).toLocaleString();}
- svg.addEventListener('click',inspect);svg.addEventListener('pointermove',function(ev){if(ev.buttons)inspect(ev);});
- body.querySelectorAll('[data-trendspan]').forEach(function(b){b.addEventListener('click',function(){TREND_VIEW.spanMs=Math.min(TREND_RETENTION_MS,parseFloat(b.getAttribute('data-trendspan'))||600000);TREND_VIEW.endMs=latest;openTrendChart(key,label,unit,true);});});
- body.querySelectorAll('[data-trendnav]').forEach(function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-trendnav');if(a==='now')TREND_VIEW.endMs=latest;else TREND_VIEW.endMs+=(a==='back'?-1:1)*3*3600000;TREND_VIEW.endMs=Math.max(earliest+TREND_VIEW.spanMs,Math.min(latest,TREND_VIEW.endMs));openTrendChart(key,label,unit,true);});});
- var brainBtn=document.getElementById('trendBrainInstall'),brainStatus=document.getElementById('trendBrainStatus');function installTrend(auto){if(brainBtn)brainBtn.disabled=true;if(brainStatus)brainStatus.textContent=auto?'Auto-installing this '+(TREND_VIEW.spanMs/3600000).toFixed(0)+'h window…':'Installing selected window…';ryanInstallTrendWindow(key,label,unit,startMs,TREND_VIEW.endMs,{autoInstalled:!!auto},function(items,err){if(brainBtn)brainBtn.disabled=false;if(brainStatus)brainStatus.textContent=err?err:('Installed/updated '+((items&&items.length)||0)+' source-labelled trend record in Ryan\'s brain.');});}if(brainBtn)brainBtn.addEventListener('click',function(){installTrend(false);});if(TREND_VIEW.spanMs>=12*3600000)setTimeout(function(){installTrend(true);},0);
- document.getElementById('trendpanel').style.display='block';
+ key=cfTrendResolve12OQ(key,typeof eqtCur==='string'?eqtCur:'');
+ if(!keepView||CF_TREND_UI_12OQ.key!==key){TREND_VIEW.key=key;TREND_VIEW.endMs=null;TREND_VIEW.spanMs=600000;CF_TREND_UI_12OQ.live=true;}
+ CF_TREND_UI_12OQ.key=key;CF_TREND_UI_12OQ.label=label||key;CF_TREND_UI_12OQ.unit=unit||'';
+ document.getElementById('trendTitle').textContent='Trend - '+(label||key);document.getElementById('trendpanel').style.display='block';cfRenderTrend12OQ();cfTrendStartTimer12OQ();
 }
-function closeTrendChart(){ document.getElementById('trendpanel').style.display='none'; }
+function closeTrendChart(){document.getElementById('trendpanel').style.display='none';cfTrendStopTimer12OQ();}
 document.getElementById('trendClose').addEventListener('click',closeTrendChart);
 document.getElementById('trendpanel').addEventListener('click',function(e){if(e.target===this)closeTrendChart();});
 
@@ -18716,17 +18681,16 @@ function recipDynamicState(c,key,sucP,disP,flowCap,maxStep){
    a historical-climate simulation, not a live forecast, and is documented as such
    in the panel itself. Humidity/wind/condition are simplified, cosmetic-but-real
    (not literally hardcoded/random-only) rather than a full meteorological model.
-   Deliberately a standalone function, NOT buried inside PLANT.tick() -- the full
-   physics engine only runs once the EQT board has been opened at least once, but
-   weather is supposed to be visible on every dashboard immediately, so this needs
-   its own independent real-time base and its own background interval (set up below,
-   right after this function) rather than waiting on that. */
-PLANT.tickWeather=function(){
- var _nowMs=Date.now();
- if(PLANT._weatherLastMs==null){PLANT._weatherLastMs=_nowMs;PLANT._weatherSec=0;}
- if(PLANT.simLive===false){PLANT._weatherLastMs=_nowMs;return;} /* PAUSED: freeze weather time/state too. This has its own standalone setInterval below (independent of PLANT.tick()), so the Pause check added to PLANT.tick() earlier never reached it -- the weather popup's clock kept advancing every second regardless of Pause. Guarding it here, inside tickWeather() itself, covers it no matter which caller invokes it (PLANT.tick() also calls this internally). */
- PLANT._weatherSec+=Math.max(0,Math.min(5,(_nowMs-PLANT._weatherLastMs)/1000))*(PLANT.simSpeed||1); /* 12CH: weather now advances on the same simulation-speed clock as process physics. Because tickWeather uses real elapsed time, only the first catch-up tick contributes elapsed time, so this does not double-count the runtime's multi-step loop. */
- PLANT._weatherLastMs=_nowMs;
+   12OO: weather is initialized once for the dashboard, then advances only through
+   the same one-second process step as the plant. Its display refresh does not
+   integrate weather. The real calendar season remains an explicitly separate
+   presentation reference; the compressed diurnal cycle uses simulation seconds. */
+PLANT.tickWeather=function(stepSeconds){
+ if(PLANT.simLive===false)return;
+ var dt=stepSeconds==null?0:Number(stepSeconds);
+ if(!Number.isFinite(dt)||dt<0||dt>1)throw Error('Weather requires the process timestep.');
+ if(!Number.isFinite(PLANT._weatherSec))PLANT._weatherSec=0;
+ PLANT._weatherSec+=dt;
  var simDay=PLANT._weatherSec/600;
  /* Seasonal component now anchored to the REAL calendar date (the same real
     device clock the Schedule popup uses for "today"), not the old compressed
@@ -18765,30 +18729,26 @@ function renderWeatherPanel(){
  p.innerHTML='<div style="font-weight:700;color:#8fd0ff;margin-bottom:3px;">\u2601\ufe0f SITE WEATHER (sim)</div>'+
   '<div>'+months[mIdx]+' '+dom+', '+pad(hh)+':'+pad(mm)+' \u2014 '+W.condition+'</div>'+
   '<div>Temp: <b style="color:#1cd840;">'+W.ambientTemp.toFixed(1)+'\u00b0F</b> \u00b7 RH: '+W.humidity.toFixed(0)+'% \u00b7 Wind: '+W.windMph.toFixed(0)+' mph</div>'+
-  '<div style="color:#5a6b7c;font-size:9.5px;margin-top:2px;">Historical climate simulation (Morgantown WV normals), not a live forecast. 1 sim-day \u2248 10 real minutes.</div>';
+  '<div style="color:#5a6b7c;font-size:9.5px;margin-top:2px;">Historical climate simulation (Morgantown WV normals), not a live forecast. 1 weather day = 600 simulation seconds; calendar season uses the device date.</div>';
 }
 setInterval(renderWeatherPanel,2000);
 renderWeatherPanel();
-PLANT.tick=function(){
+PLANT.tick=function(stepSeconds){
+ if(PLANT.simLive===false)return false;
+ var _stepSeconds=stepSeconds==null?1:Number(stepSeconds);
+ if(_stepSeconds!==1)throw Error('PLANT.tick requires one fixed simulation second.');
  var I=this.in,L=this.L,C=this.cmp,V=this.v;
  cfClearRetiredSurgeDrill12GI();
- /* Real elapsed-time counter, not just a tick-call counter -- foundation for the GC
-    sample-and-hold below, and for real background-tab-resilient timing. The master runtime below repays elapsed-time debt in
-    bounded one-second physics steps, so process rates stay tied to simulated time rather
-    than popup/render frequency. */
- var _nowMs=Date.now();
- if(PLANT.simSeconds==null){PLANT.simSeconds=0;PLANT._lastRealMs=_nowMs;}
- if(PLANT.simLive===false){PLANT._lastRealMs=_nowMs;return;} /* PAUSED (Live/Pause popup): freeze simulated time AND all physics -- update _lastRealMs so resuming doesn't inject a fake time-jump, but skip the simSeconds increment and everything below it entirely. Previously only outage aging and System Lead calls respected this flag; the master clock and process physics kept advancing even while "paused", which didn't match what Pause is supposed to mean. */
- if(PLANT.simSpeed==null)PLANT.simSpeed=1; /* Simulation Speed popup (beside Live) -- 1/2/5/10x, cycled by cfSpeedBtn. Scales the master real-elapsed clock below, so anything timed off simSeconds (weather sample/hold, ESD trip elapsed display) runs faster in step with it. */
- PLANT.simSeconds+=Math.max(0,Math.min(5,(_nowMs-PLANT._lastRealMs)/1000))*PLANT.simSpeed; /* clamp so a long real gap (e.g. a backgrounded tab finally resuming) can't inject a huge one-shot jump until real catch-up stepping exists */
- PLANT._lastRealMs=_nowMs;
+ if(!Number.isFinite(PLANT.simSeconds))PLANT.simSeconds=0;
+ PLANT.simSeconds+=_stepSeconds;
+ /* 12OO speed is applied once by the scheduler, never again inside a process tick. */
  /* Shift Dashboard "time since last trip" -- tracks the real esd false->true edge
     against the same simSeconds clock already used elsewhere, rather than adding a
     second parallel timing system. */
  if(PLANT.esd && !PLANT._wasEsd){PLANT.lastTripSimSeconds=PLANT.simSeconds;}
  PLANT._wasEsd=!!PLANT.esd;
- PLANT.tickWeather();
- tickFilterHealth(Math.max(0,Math.min(5,(_nowMs-(PLANT._filterLastMs||_nowMs))/1000))*PLANT.simSpeed);PLANT._filterLastMs=_nowMs;
+ PLANT.tickWeather(_stepSeconds);
+ tickFilterHealth(_stepSeconds);
  var exprun=(EXP?EXP.run:true);
  var igv=(EXP&&EXP.run?EXP.igv:0);
  /* 12FX: independent LOCAL/REMOTE ownership and board MAN/AUTO; both use tower PV. */
@@ -22155,6 +22115,338 @@ var TREND_TIME = {}; /* parallel timestamp array; keeps TREND_LOG numeric for al
 var TREND_RETENTION_MS = 72*60*60*1000; /* operator request: retain up to 72 hours */
 var TREND_MIN_SAMPLE_MS = 60000; /* 1-minute historian samples; 72 h = 4320 points/tag */
 var TREND_MAX = Math.ceil(TREND_RETENTION_MS/TREND_MIN_SAMPLE_MS)+16;
+var CF_TREND_RECORDING_12OQ=false;
+/*12OQ one read-only control-screen channel registry; sampling never invokes a screen renderer.*/
+var CF_TREND_CHANNELS_12OQ=Object.create(null),CF_TREND_SCREEN_KEYS_12OQ=Object.create(null),CF_TREND_SAMPLING_12OQ=false;
+var CF_TREND_STATUS_12OQ={samples:0,lastSample:null,unavailable:[],conflicts:[],schema:'existing numeric history + existing parallel timestamps'};
+function cfTrendDependencies12OQ(paths){var roots={PLANT:PLANT,EXP:typeof EXP==='undefined'?null:EXP,QHD:typeof QHD==='undefined'?null:QHD,REFRIG_UNIT_DATA:typeof REFRIG_UNIT_DATA==='undefined'?null:REFRIG_UNIT_DATA};return paths.every(function(p){var v=roots[p[0]];for(var i=1;i<p.length;i++){if(v==null)return false;v=v[p[i]];}return v!=null&&(typeof v!=='number'||Number.isFinite(v));});}
+function cfTrendFinite12OQ(v){return typeof v==='number'&&Number.isFinite(v)?v:null;}
+function cfTrendKey12OQ(label){return String(label||'').replace(/[^A-Za-z0-9]/g,'').toLowerCase();}
+function cfTrendRegister12OQ(key,label,unit,get,basis,screen){
+ if(!key||typeof get!=='function')return;
+ CF_TREND_CHANNELS_12OQ[key]={key:key,label:label,unit:unit,get:get,basis:basis||'Existing simulator signal; not field telemetry.',screen:screen||null};
+}
+function cfTrendResolve12OQ(key,screen){var map=CF_TREND_SCREEN_KEYS_12OQ[screen||''];return map&&map[key]||key;}
+function cfRecordControlTrends12OQ(){
+ var V=PLANT.v||{},L=PLANT.L||{};
+ // Register only known screen/control bindings, not every internal model coefficient.
+ Object.keys(L).forEach(function(k){['pv','sp','out'].forEach(function(f){var key=cfTrendKey12OQ(k)+'_'+f;if(!CF_TREND_CHANNELS_12OQ[key])cfTrendRegister12OQ(key,k+' '+f.toUpperCase(),f==='out'?'%':L[k].u||'',function(){return PLANT.L[k]&&PLANT.L[k][f];},'Existing controller '+f+'; command/output is not a separate field sensor.');});var key=cfTrendKey12OQ(k);if(!CF_TREND_CHANNELS_12OQ[key])cfTrendRegister12OQ(key,k,L[k].u||'',function(){return PLANT.L[k]&&PLANT.L[k].pv;});});
+ Object.keys(PLANT.cmp||{}).forEach(function(k){var c=PLANT.cmp[k];Object.entries({suction:'suc',discharge:'dis',oiltemp:'oilT',gasdischt:'discT'}).forEach(function(pair){var key=cfTrendKey12OQ(pair[0]+c.name);if(!CF_TREND_CHANNELS_12OQ[key])cfTrendRegister12OQ(key,pair[0]+' '+c.name,/temp|discht/.test(pair[0])?'DEGF':'PSIG',function(){return PLANT.cmp[k][pair[1]];},'Existing exact compressor owner/name, same as its control-screen click target.');});});
+ var missing=[];CF_TREND_SAMPLING_12OQ=true;
+ try{Object.keys(CF_TREND_CHANNELS_12OQ).forEach(function(k){var d=CF_TREND_CHANNELS_12OQ[k],v=null;try{v=cfTrendFinite12OQ(d.get());}catch(e){}if(v===null){missing.push(k);return;}recordTrend(k,v);});}finally{CF_TREND_SAMPLING_12OQ=false;}
+ CF_TREND_STATUS_12OQ.samples++;CF_TREND_STATUS_12OQ.lastSample=cfSimulationTimestamp12OO();CF_TREND_STATUS_12OQ.unavailable=missing;
+}
+function cfTrendSnapshot12OQ(key){
+ var a=TREND_LOG[key]||[],t=TREND_TIME[key]||[],v=[],ts=[],mismatch=a.length!==t.length;
+ // Never create invented dates for previously untimestamped history.
+ if(!mismatch)for(var i=0;i<a.length;i++)if(cfTrendFinite12OQ(a[i])!==null&&cfTrendFinite12OQ(t[i])!==null){v.push(a[i]);ts.push(t[i]);}
+ var d=CF_TREND_CHANNELS_12OQ[key],current=null;try{current=d?cfTrendFinite12OQ(d.get()):null;}catch(e){}
+ return {values:v,times:ts,current:current,descriptor:d||null,missingTimestamps:mismatch};
+}
+var CF_TREND_UI_12OQ={timer:null,label:'',unit:'',key:null,live:true,lastSignature:null};
+function cfTrendStopTimer12OQ(){if(CF_TREND_UI_12OQ.timer){clearInterval(CF_TREND_UI_12OQ.timer);CF_TREND_UI_12OQ.timer=null;}}
+function cfTrendStartTimer12OQ(){if(CF_TREND_UI_12OQ.timer)return;CF_TREND_UI_12OQ.timer=setInterval(function(){var p=document.getElementById('trendpanel');if(!p||p.style.display==='none'){cfTrendStopTimer12OQ();return;}if(CF_TREND_UI_12OQ.live)cfRenderTrend12OQ();},1000);}
+function cfRenderTrend12OQ(){
+ var ui=CF_TREND_UI_12OQ,key=ui.key;if(!key)return;
+ var body=document.getElementById('trendBody'),snapshot=cfTrendSnapshot12OQ(key),a=snapshot.values,t=snapshot.times,now=cfSimulationTimestamp12OO();if(!body)return;
+ var latest=t.length?t[t.length-1]:now,earliest=t.length?t[0]:now,span=TREND_VIEW.spanMs||600000;
+ if(ui.live||!Number.isFinite(TREND_VIEW.endMs))TREND_VIEW.endMs=Math.max(latest,now);
+ else TREND_VIEW.endMs=Math.max(earliest,Math.min(Math.max(latest,now),TREND_VIEW.endMs));
+ var end=TREND_VIEW.endMs,start=end-span,values=[],times=[];
+ for(var i=0;i<a.length;i++)if(t[i]>=start&&t[i]<=end){values.push(a[i]);times.push(t[i]);}
+ // A live endpoint is the current sample time, not a fabricated historical backfill.
+ if(ui.live&&values.length&&snapshot.current!==null&&now>times[times.length-1]){values.push(snapshot.current);times.push(now);}
+ var esc=cfReadoutEscape12NK,status=snapshot.missingTimestamps?'Retained legacy samples lack matching timestamps; no dates have been invented.':!a.length?'No recorded samples yet. Missing/unmodeled values are not replaced with zero.':values.length<2?'Collecting history; live sampling continues without reopening.':ui.live?'LIVE - follows the simulation timeline.':'HOLD - historical window; click NOW to resume.';
+ if(PLANT.simLive===false)status+=' Simulation paused.';
+ var html='<div data-trend-status12oq role="status" style="padding:8px 0;font-size:12px">'+esc(status)+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"><label style="display:flex;gap:6px"><input id="trendLive12OQ" type="checkbox" '+(ui.live?'checked':'')+'>Live</label><button data-trendnav="back">&#9664; 3h</button><button data-trendnav="now">NOW</button>';
+ [600000,1800000,3600000,10800000,43200000,86400000,259200000].forEach(function(ms){var text=ms<3600000?ms/60000+'m':ms/3600000+'h';html+='<button data-trendspan="'+ms+'" aria-pressed="'+(span===ms)+'">'+text+'</button>';});html+='<button data-trendnav="fwd">3h &#9654;</button></div>';
+ var w=700,h=250,l=60,r=18,top=24,bot=42,lo=0,hi=1,cur=snapshot.current;
+ function px(tt){return l+(tt-start)/span*(w-l-r);}function py(vv){return top+(1-(vv-lo)/(hi-lo))*(h-top-bot);}
+ if(values.length){var min=Math.min.apply(null,values),max=Math.max.apply(null,values),floor=trendEngineeringFloor(ui.unit,values[values.length-1]),mid=(min+max)/2,range=Math.max(floor,max-min);lo=mid-range*.6;hi=mid+range*.6;if(key==='fit1045a'){lo=0;hi=250;}
+ html+='<svg id="trendSvg" data-key="'+esc(key)+'" viewBox="0 0 700 250" style="width:100%;background:#060a0f;border:1px solid #28333f;border-radius:6px;touch-action:none"><defs><clipPath id="trendClip12OQ"><rect x="60" y="24" width="622" height="184"/></clipPath></defs>';
+ for(var j=0;j<=4;j++){var yy=top+j*(h-top-bot)/4;html+='<line x1="60" x2="682" y1="'+yy+'" y2="'+yy+'" stroke="#26333d"/>';}
+ if(span>=10800000){for(var gt=Math.ceil(start/10800000)*10800000;gt<end;gt+=10800000){html+='<line data-three-hour-guide12oq x1="'+px(gt)+'" x2="'+px(gt)+'" y1="24" y2="208" stroke="#405361" stroke-dasharray="3 4"/>';}}
+ html+='<text x="3" y="24" fill="#96aebf" font-size="10">'+hi.toFixed(2)+'</text><text x="3" y="208" fill="#96aebf" font-size="10">'+lo.toFixed(2)+'</text><g clip-path="url(#trendClip12OQ)">';
+ // Break gaps rather than drawing an invented continuous reading across missing minutes.
+ var segments=[],pts=[];for(var j=0;j<values.length;j++){if(j&&times[j]-times[j-1]>TREND_MIN_SAMPLE_MS*2.1){if(pts.length)segments.push(pts);pts=[];}pts.push(px(times[j]).toFixed(2)+','+py(values[j]).toFixed(2));}if(pts.length)segments.push(pts);
+ segments.forEach(function(seg){html+='<polyline points="'+seg.join(' ')+'" fill="none" stroke="#3fd0ff" stroke-width="1.8"/>';});
+ html+='<line id="trendCursorLine" x1="'+px(times[times.length-1])+'" x2="'+px(times[times.length-1])+'" y1="24" y2="208" stroke="#ffd36a" stroke-dasharray="4 3"/><circle id="trendCursorDot" cx="'+px(times[times.length-1]).toFixed(2)+'" cy="'+py(values[values.length-1]).toFixed(2)+'" r="4" fill="#ffd36a"/></g><text x="60" y="240" fill="#96aebf" font-size="10">'+esc(new Date(start).toLocaleString())+'</text><text x="682" y="240" text-anchor="end" fill="#96aebf" font-size="10">'+esc(new Date(end).toLocaleString())+'</text></svg>';
+ html+='<div id="trendPointReadout" style="padding:10px;font:13px monospace">WINDOW LAST: '+values[values.length-1].toFixed(3)+' '+esc(ui.unit)+'</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">MIN '+min.toFixed(2)+' / MAX '+max.toFixed(2)+' <strong>CURRENT '+(cur===null?(a.length?a[a.length-1].toFixed(3)+' (last recorded)':'Not assigned'):cur.toFixed(3))+' '+esc(ui.unit)+'</strong></div>';
+ }else html+='<div style="padding:30px;border:1px dashed #516273">No samples in this window. Earlier samples are retained; use NOW or another span.</div>';
+ html+='<p style="font-size:11px;color:#a3bacb">Simulation timeline; 72-hour retention / one-minute history, with a live current endpoint. Small changes retain the engineering-scale minimum span. A steady signal is a valid flat trend; no motion is added.</p><p style="font-size:11px">'+esc(snapshot.descriptor?snapshot.descriptor.basis:'Existing retained trend key; no new instrument mapping inferred.')+'</p><button id="trendBrainInstall">Install this window in Ryan\'s brain</button><span id="trendBrainStatus" style="display:block;font-size:11px">Source-labelled simulator history only.</span>';
+ var scroll=body.scrollTop;body.innerHTML=html;body.scrollTop=scroll;
+ body.querySelector('#trendLive12OQ').onchange=function(e){ui.live=e.target.checked;cfRenderTrend12OQ();};
+ body.querySelectorAll('[data-trendspan]').forEach(function(b){b.onclick=function(){TREND_VIEW.spanMs=Number(b.dataset.trendspan);cfRenderTrend12OQ();};});
+ body.querySelectorAll('[data-trendnav]').forEach(function(b){b.onclick=function(){var n=b.dataset.trendnav;if(n==='now'){ui.live=true;TREND_VIEW.endMs=now;}else{ui.live=false;TREND_VIEW.endMs+=(n==='back'?-1:1)*10800000;}cfRenderTrend12OQ();};});
+ var svg=body.querySelector('#trendSvg');function inspect12OQ(ev){ui.live=false;body.querySelector('#trendLive12OQ').checked=false;var rect=svg.getBoundingClientRect(),target=start+Math.max(0,Math.min(1,((ev.clientX-rect.left)/rect.width*w-l)/(w-l-r)))*span,ix=0;for(var j=1;j<times.length;j++)if(Math.abs(times[j]-target)<Math.abs(times[ix]-target))ix=j;var dot=body.querySelector('#trendCursorDot');dot.setAttribute('cx',px(times[ix]));dot.setAttribute('cy',py(values[ix]));var line=body.querySelector('#trendCursorLine');if(line){line.setAttribute('x1',px(times[ix]));line.setAttribute('x2',px(times[ix]));}body.querySelector('#trendPointReadout').textContent='SELECTED: '+new Date(times[ix]).toLocaleString()+' | '+values[ix].toFixed(3)+' '+ui.unit;body.querySelector('[data-trend-status12oq]').textContent='HOLD - inspecting a recorded sample. Click NOW to resume.';}if(svg){svg.addEventListener('click',inspect12OQ);svg.addEventListener('pointermove',function(e){if(e.buttons)inspect12OQ(e);});}
+ body.querySelector('#trendBrainInstall').onclick=function(){var st=body.querySelector('#trendBrainStatus');st.textContent='Installing selected source-labelled window...';ryanInstallTrendWindow(key,ui.label,ui.unit,start,end,{autoInstalled:false},function(items,err){st.textContent=err||('Installed/updated '+((items&&items.length)||0)+' retained trend record.');});};
+ // Retain the long-window automatic episode feature, but only once per new minute/window.
+ if(span>=43200000&&a.length>=2){var sig=key+'|'+span+'|'+Math.floor(end/60000);if(ui.lastSignature!==sig){ui.lastSignature=sig;ryanInstallTrendWindow(key,ui.label,ui.unit,start,end,{autoInstalled:true},function(){});}}
+}
+function cfInstallTrendDiagnostics12OQ(){window.CFTrends12OQ={status:function(){return {build:'12OQ',channels:Object.keys(CF_TREND_CHANNELS_12OQ).length,samplingSteps:CF_TREND_STATUS_12OQ.samples,lastSample:CF_TREND_STATUS_12OQ.lastSample,unavailable:CF_TREND_STATUS_12OQ.unavailable.slice(),conflicts:CF_TREND_STATUS_12OQ.conflicts.slice(),historyReset:false};},channel:function(k){var d=CF_TREND_CHANNELS_12OQ[k];return d?{key:k,label:d.label,unit:d.unit,basis:d.basis,screen:d.screen}:null;}};}
+
+cfTrendRegister12OQ("si5060","SI-5060","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","si5060"]]))return null;return (((PLANT).v)).si5060;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("si5065","SI-5065","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","si5065"]]))return null;return (((PLANT).v)).si5065;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("tit5055in","TIT-5055 IN","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5055in"]]))return null;return (((PLANT).v)).tit5055in;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("tit5060cout","TIT-5060C OUT","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5060c"]]))return null;return (((PLANT).v)).tit5060c;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("fit5500","FIT-5500","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit5500"]]))return null;return (((PLANT).v)).fit5500;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("fqi5500","FQI-5500","MMSCF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi5500"]]))return null;return (((PLANT).v)).fqi5500;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("pit5900a","PIT-5900A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit5900a"]]))return null;return (((PLANT).v)).pit5900a;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("pit5900b","PIT-5900B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit5900b"]]))return null;return (((PLANT).v)).pit5900b;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("pit5700a","PIT-5700A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit5700a"]]))return null;return (((PLANT).v)).pit5700a;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("pit5700b","PIT-5700B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit5700b"]]))return null;return (((PLANT).v)).pit5700b;},"Existing shared simulator channel.","pmps");
+cfTrendRegister12OQ("pt1460a","PT-1460A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1460","pv"]]))return null;return ((((PLANT).L)).PIC1460).pv;},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("pt1460b","PT-1460B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1460b"],["PLANT","v","pt1460b"]]))return null;return (((((PLANT).v)).pt1460b!=null)?(((PLANT).v)).pt1460b:"--");},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("lg1460","LG-1460","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","v1460Level"],["PLANT","v","v1460Level"]]))return null;return (((((PLANT).v)).v1460Level!=null)?(((PLANT).v)).v1460Level:"--");},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("tit1227b","TIT-1227B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit1227b"]]))return null;return (((PLANT).v)).tit1227b;},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("te1227c","TE-1227C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1227c"]]))return null;return (((PLANT).v)).te1227c;},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("pt1227","PT-1227","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1227"]]))return null;return (((PLANT).v)).pt1227;},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("te1227","TE-1227","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","L","TIC1227","pv"]]))return null;return ((((PLANT).L)).TIC1227).pv;},"Existing shared simulator channel.","fuelgas");
+cfTrendRegister12OQ("te1421","TE-1421","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","L","TIC1421","pv"]]))return null;return ((((PLANT).L)).TIC1421).pv;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("pt1421","PT-1421","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1421","pv"]]))return null;return ((((PLANT).L)).PIC1421).pv;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("te1421a","TE-1421A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1421a"]]))return null;return (((PLANT).v)).te1421a;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("pic1421","PIC-1421","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1421","pv"]]))return null;return ((((PLANT).L)).PIC1421).pv;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("lt1421","LT-1421","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1421","pv"]]))return null;return ((((PLANT).L)).LIC1421).pv;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("lic1421","LIC-1421","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1421","pv"]]))return null;return ((((PLANT).L)).LIC1421).pv;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("ft1421","FT-1421","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1421"]]))return null;return (((PLANT).v)).ft1421;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("ft1421a","FT-1421A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1421a"]]))return null;return (((PLANT).v)).ft1421a;},"Existing shared simulator channel.","coldsep");
+cfTrendRegister12OQ("pt1121e","PT-1121E","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1121E","pv"]]))return null;return ((((PLANT).L)).PIC1121E).pv;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("te1121a","TE-1121A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1121a"]]))return null;return (((PLANT).v)).te1121a;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pdt1121b","PDT-1121B","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1121b"]]))return null;return (((PLANT).v)).pdt1121b;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pt1121b","PT-1121B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1121b"]]))return null;return (((PLANT).v)).pt1121b;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("te1121d","TE-1121D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1121d"]]))return null;return (((PLANT).v)).te1121d;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pt1121d","PT-1121D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1121d"]]))return null;return (((PLANT).v)).pt1121d;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pt1121a","PT-1121A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1121a"]]))return null;return (((PLANT).v)).pt1121a;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pdt1121a","PDT-1121A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1121a"]]))return null;return (((PLANT).v)).pdt1121a;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("te1321","TE-1321","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1321"]]))return null;return (((PLANT).v)).te1321;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("pt1321","PT-1321","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1321"]]))return null;return (((PLANT).v)).pt1321;},"Existing shared simulator channel.","expander");
+cfTrendRegister12OQ("te1223a","TE-1223A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1223a"]]))return null;return (((PLANT).v)).te1223a;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("pdt1223a","PDT-1223A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1223a"]]))return null;return (((PLANT).v)).pdt1223a;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1224c","TE-1224C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1224c"]]))return null;return (((PLANT).v)).te1224c;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1224a","TE-1224A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1224a"]]))return null;return (((PLANT).v)).te1224a;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1223c","TE-1223C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1223c"]]))return null;return (((PLANT).v)).te1223c;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1223b","TE-1223B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1223b"]]))return null;return (((PLANT).v)).te1223b;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1224b","TE-1224B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1224b"]]))return null;return (((PLANT).v)).te1224b;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("tdi1224b","TDI-1224B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1223a"],["PLANT","v","te1224b"]]))return null;return ((Math).abs(((((PLANT).v)).te1223a-(((PLANT).v)).te1224b)));},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1125","TE-1125","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1225"]]))return null;return (((PLANT).v)).te1225;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1125d","TE-1125D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1225d"]]))return null;return (((PLANT).v)).te1225d;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("te1125c","TE-1125C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1225c"]]))return null;return (((PLANT).v)).te1225c;},"Existing shared simulator channel.","reb");
+cfTrendRegister12OQ("pt1410a","PT-1410A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","p1410"]]))return null;return (((PLANT).v)).p1410;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("pdt1410","PDT-1410","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1410"]]))return null;return (((PLANT).v)).pdt1410;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("pt1410b","PT-1410B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","p1410"]]))return null;return ((((PLANT).v)).p1410-1.9);},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("lt1410","LT-1410","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lvl1410"]]))return null;return (((PLANT).v)).lvl1410;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("pit1400a","PIT-1400A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","p1410"]]))return null;return ((((PLANT).v)).p1410-14);},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("tit1400a","TIT-1400A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","t1400"]]))return null;return (((PLANT).v)).t1400;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("fit1400a","FIT-1400A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit1400"]]))return null;return (((PLANT).v)).fit1400;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("fqi1400a","FQI-1400A","MMSCF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi1400"]]))return null;return (((PLANT).v)).fqi1400;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("lt1412a","LT-1412A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lvl1412a"]]))return null;return (((PLANT).v)).lvl1412a;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("lt1412b","LT-1412B","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lvl1412b"]]))return null;return (((PLANT).v)).lvl1412b;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("pdt1412","PDT-1412","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1412"]]))return null;return (((PLANT).v)).pdt1412;},"Existing shared simulator channel.","inlsys");
+cfTrendRegister12OQ("ft1711","FT-1711","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1711"]]))return null;return (((PLANT).v)).ft1711;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("te1711","TE-1711","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1711"]]))return null;return (((PLANT).v)).te1711;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("pt1711a","PT-1711A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1711a"]]))return null;return (((PLANT).v)).pt1711a;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("te1417","TE-1417","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1417"]]))return null;return (((PLANT).v)).te1417;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("pdt1416a","PDT-1416A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1416a"]]))return null;return (((PLANT).v)).pdt1416a;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("te1416","TE-1416","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1416"]]))return null;return (((PLANT).v)).te1416;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("ti1416","TI-1416","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ti1416"]]))return null;return (((PLANT).v)).ti1416;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("me1416","ME-1416","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","me1416"]]))return null;return (((PLANT).v)).me1416;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("pt1416","PT-1416","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1416"]]))return null;return (((PLANT).v)).pt1416;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("ft1416","FT-1416","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1416"]]))return null;return (((PLANT).v)).ft1416;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("ft1416comp","FT-1416-COMP","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1416comp"]]))return null;return (((PLANT).v)).ft1416comp;},"Existing shared simulator channel.","dehy");
+cfTrendRegister12OQ("pit5010d","PIT-5010D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC5010D","pv"]]))return null;return (((((PLANT).L)).PIC5010D?((((PLANT).L)).PIC5010D).pv:263));},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("lit5010c","LIT-5010C","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC5010G","pv"]]))return null;return ((((((PLANT).L)).LIC5010G?((((PLANT).L)).LIC5010G).pv:32))+14);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","stabinlet");
+cfTrendRegister12OQ("lit5010b","LIT-5010B","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC5010G","pv"],["PLANT","v","stabVaporLoad"]]))return null;return clmp(((7.18+(((((((PLANT).L)).LIC5010G?((((PLANT).L)).LIC5010G).pv:32))-32)*0.04))+((((PLANT).v)).stabVaporLoad*0.008)),0,25);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","stabinlet");
+cfTrendRegister12OQ("pit5010a","PIT-5010A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC5010D","pv"]]))return null;return ((((((PLANT).L)).PIC5010D?((((PLANT).L)).PIC5010D).pv:263))-0.3);},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("lit5010a","LIT-5010A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC5010G","pv"]]))return null;return (((((PLANT).L)).LIC5010G?((((PLANT).L)).LIC5010G).pv:32));},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("tit5000d","TIT-5000D","°F",function(){if(!cfTrendDependencies12OQ([["PLANT","L","TIC5000D","pv"]]))return null;return ((((PLANT).L)).TIC5000D?((((PLANT).L)).TIC5000D).pv:69);},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("fqi5000a","FQI-5000A","GAL",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi5000a"]]))return null;return (((PLANT).v)).fqi5000a;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("fit5000a","FIT-5000A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit5000a"]]))return null;return (((PLANT).v)).fit5000a;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("tit5000a","TIT-5000A","°F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5000a"]]))return null;return (((PLANT).v)).tit5000a;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("pit5000a","PIT-5000A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit5000a"]]))return null;return (((PLANT).v)).pit5000a;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("tit5000c","TIT-5000C","°F",function(){if(!cfTrendDependencies12OQ([["PLANT","L","TIC5000C","pv"]]))return null;return ((((PLANT).L)).TIC5000C?((((PLANT).L)).TIC5000C).pv:62);},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("tit5005b","TIT-5005B","°F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5005b"]]))return null;return (((PLANT).v)).tit5005b;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("tit5000b","TIT-5000B","°F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5000b"]]))return null;return (((PLANT).v)).tit5000b;},"Existing shared simulator channel.","stabinlet");
+cfTrendRegister12OQ("fit5020b","FIT-5020B","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","L","FIC5020B","pv"]]))return null;return ((((PLANT).L)).FIC5020B?((((PLANT).L)).FIC5020B).pv:9.6);},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5030d","TIT-5030D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5030d"]]))return null;return (((PLANT).v)).tit5030d;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("pit5030b","PIT-5030B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC5030A","pv"]]))return null;return ((((((PLANT).L)).PIC5030A?((((PLANT).L)).PIC5030A).pv:210))+0.9);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","stab");
+cfTrendRegister12OQ("pit5030a","PIT-5030A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC5030A","pv"]]))return null;return (((((PLANT).L)).PIC5030A?((((PLANT).L)).PIC5030A).pv:210));},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5030b","TIT-5030B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5030b"]]))return null;return (((PLANT).v)).tit5030b;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5030c","TIT-5030C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5030c"]]))return null;return (((PLANT).v)).tit5030c;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("pdit5040a","PDIT-5040A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","FIC5020A","pv"],["PLANT","L","TIC5040A","pv"]]))return null;return clmp(((0.18+((Math).pow((Math).max(0.25,(((((PLANT).L)).FIC5020A?((((PLANT).L)).FIC5020A).pv:55)/55)),1.7)*0.42))+((Math).max(0,(((((PLANT).L)).TIC5040A?((((PLANT).L)).TIC5040A).pv:262)-250))*0.004)),0.05,4);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","stab");
+cfTrendRegister12OQ("lit5020a","LIT-5020A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC5040A","pv"]]))return null;return (((((PLANT).L)).LIC5040A?((((PLANT).L)).LIC5040A).pv:47));},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("fit5020a","FIT-5020A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","L","FIC5020A","pv"]]))return null;return ((((PLANT).L)).FIC5020A?((((PLANT).L)).FIC5020A).pv:6.24);},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5020a","TIT-5020A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5020a"]]))return null;return (((PLANT).v)).tit5020a;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5020c","TIT-5020C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5020c"]]))return null;return (((PLANT).v)).tit5020c;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5020d","TIT-5020D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5020d"]]))return null;return (((PLANT).v)).tit5020d;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5020f","TIT-5020F","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5020f"]]))return null;return (((PLANT).v)).tit5020f;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("lit5040a","LIT-5040A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit5040a"]]))return null;return (clmp(Number((((PLANT).v)).lit5040a),0,100));},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","stab");
+cfTrendRegister12OQ("tit5040c","TIT-5040C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5040c"]]))return null;return (((PLANT).v)).tit5040c;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5040a","TIT-5040A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","L","TIC5040A","pv"]]))return null;return ((((PLANT).L)).TIC5040A?((((PLANT).L)).TIC5040A).pv:279.34);},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5040e","TIT-5040E","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5040e"]]))return null;return (((PLANT).v)).tit5040e;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5040d","TIT-5040D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5040d"]]))return null;return (((PLANT).v)).tit5040d;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("tit5030e","TIT-5030E","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit5030e"]]))return null;return (((PLANT).v)).tit5030e;},"Existing shared simulator channel.","stab");
+cfTrendRegister12OQ("vt1311a","VT-1311A","IN/SEC",function(){if(!cfTrendDependencies12OQ([["PLANT","v","vt1311a"]]))return null;return (((PLANT).v)).vt1311a;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("vt1311b","VT-1311B","IN/SEC",function(){if(!cfTrendDependencies12OQ([["PLANT","v","vt1311b"]]))return null;return (((PLANT).v)).vt1311b;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("te1311a","TE-1311A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1311a"]]))return null;return (((PLANT).v)).te1311a;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("te1311b","TE-1311B","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1311b"]]))return null;return (((PLANT).v)).te1311b;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("lt1418","LT-1418","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lt1418"]]))return null;return (((PLANT).v)).lt1418;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("te1111","TE-1111","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1111"]]))return null;return (((PLANT).v)).te1111;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("pt1111a","PT-1111A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1111a"]]))return null;return (((PLANT).v)).pt1111a;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("ft1111a","FT-1111A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1111a"]]))return null;return (((PLANT).v)).ft1111a;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("te1111a","TE-1111A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1111a"]]))return null;return (((PLANT).v)).te1111a;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("pit6805a","PIT-6805A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC6805A","pv"]]))return null;return PLANT.L.PIC6805A.pv;},"Existing shared simulator channel.","regen");
+cfTrendRegister12OQ("pt1140d","PT-1140D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1140D","pv"]]))return null;return ((((PLANT).L)).PIC1140D?((((PLANT).L)).PIC1140D).pv:196.4);},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("pic1140d","PIC-1140D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1140D","pv"]]))return null;return ((((PLANT).L)).PIC1140D?((((PLANT).L)).PIC1140D).pv:199.92);},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("pic1342","PIC-1342","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1343","pv"]]))return null;return ((((PLANT).L)).PIC1343?((((PLANT).L)).PIC1343).pv:204.36);},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("condensingt","Condensing T","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","refrigCondensingTemp"],["PLANT","v","refrigCondensingTemp"],["QHD","tcond"]]))return null;return ((((PLANT).v&&isFinite(((PLANT).v).refrigCondensingTemp))?((PLANT).v).refrigCondensingTemp:(QHD?(QHD).tcond:120)));},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("heatreject","Heat Reject","TON",function(){if(!cfTrendDependencies12OQ([["PLANT","v","refrigCondenserHeatRejectTons"]]))return null;return ((PLANT).v&&((PLANT).v).refrigCondenserHeatRejectTons);},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("pt1444","PT-1444","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PCV1444","pv"]]))return null;return PLANT.L.PCV1444.pv;},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("v1444lvl","V-1444 lvl","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lt1444"]]))return null;return (((PLANT).v)).lt1444;},"Existing shared simulator channel.","refcond");
+cfTrendRegister12OQ("pt1521d","PT-1521D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1521d"]]))return null;return (((PLANT).v)).pt1521d;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1222j","TE-1222J","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1222j"]]))return null;return (((PLANT).v)).te1222j;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("screen_gasgas_te1222j","TE-1222J","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","rsvExchOutT"]]))return null;return ((((PLANT).v)).rsvExchOutT);},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("te1222k","TE-1222K","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1222k"]]))return null;return (((PLANT).v)).te1222k;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1222d","TE-1222D","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1222d"]]))return null;return (((PLANT).v)).te1222d;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1224sidedraw","TE-1224 SIDE DRAW","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","sideRebDrawT"]]))return null;return (((PLANT).v)).sideRebDrawT;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1224sidereturn","TE-1224 SIDE RETURN","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","sideRebReturnT"]]))return null;return (((PLANT).v)).sideRebReturnT;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("bottomreboilert","BOTTOM REBOILER T","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","bottomRebDrawT"]]))return null;return Number((((PLANT).v)).bottomRebDrawT);},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("pdt1521","PDT-1521","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1521"]]))return null;return (((PLANT).v)).pdt1521;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1521f","TE-1521F","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","demBot"]]))return null;return (((((PLANT).v)).demBot)+0.4);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","demeth");
+cfTrendRegister12OQ("te1521e","TE-1521E","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","demBot"]]))return null;return ((((PLANT).v)).demBot);},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("pt1521a","PT-1521A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1521a"]]))return null;return (((PLANT).v)).pt1521a;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1422","TE-1422","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1422"]]))return null;return (((PLANT).v)).te1422;},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("lt1422a","LT-1422A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1422","pv"]]))return null;return (((((PLANT).L)).LIC1422).pv);},"Existing shared simulator channel.","demeth");
+cfTrendRegister12OQ("te1221a","TE-1221A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1221a"]]))return null;return ((((PLANT).v)).te1221a);},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("te1221d","TE-1221D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1221d"]]))return null;return (((PLANT).v)).te1221d;},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("te1221b","TE-1221B","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1221b"]]))return null;return ((((PLANT).v)).te1221b);},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("pdt1221","PDT-1221","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1221"]]))return null;return (((PLANT).v)).pdt1221;},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("te1221f","TE-1221F","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1221f"]]))return null;return ((((PLANT).v)).te1221f);},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("pdt1221b","PDT-1221B","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tcv1221Flow"],["PLANT","v","cryoMoistureRestriction"]]))return null;return clmp(((0.83*(Math).pow((Math).max(0.2,((((PLANT).v)).tcv1221Flow/(222*0.6))),1.55))*(1+((((PLANT).v)).cryoMoistureRestriction*0.35))),0.15,4);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","gasgas");
+cfTrendRegister12OQ("ft1222comp","FT-1222-COMP","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1222comp"]]))return null;return (((PLANT).v)).ft1222comp;},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("pdt1222b","PDT-1222B","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PDIC1222B","pv"]]))return null;return ((((PLANT).L)).PDIC1222B?((((PLANT).L)).PDIC1222B).pv:0.62);},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("pdt1222c","PDT-1222C","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tcv1223Flow"]]))return null;return clmp((17.51*(Math).pow((Math).max(0.2,((((PLANT).v)).tcv1223Flow/(222*0.4))),1.55)),0.25,30);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","gasgas");
+cfTrendRegister12OQ("pdt1222a","PDT-1222A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tcv1223Flow"]]))return null;return clmp((0.76*(Math).pow((Math).max(0.2,((((PLANT).v)).tcv1223Flow/(222*0.4))),1.45)),0.1,5);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","gasgas");
+cfTrendRegister12OQ("tdi1221a","TDI-1221A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1221a"],["PLANT","v","te1221b"]]))return null;return ((((((PLANT).v)).te1221a)-((((PLANT).v)).te1221b)));},"Existing shared simulator channel.","gasgas");
+cfTrendRegister12OQ("pt1438","PT-1438","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1438"]]))return null;return (((PLANT).v)).pt1438;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("pt1438a","PT-1438A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1438a"]]))return null;return (((PLANT).v)).pt1438a;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("pdt1438","PDT-1438","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1438"]]))return null;return (((PLANT).v)).pdt1438;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("lt1438a","LT-1438A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lic1438a"]]))return null;return (((PLANT).v)).lic1438a;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("lic1438a","LIC-1438A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1438A","pv"]]))return null;return ((((PLANT).L)).LIC1438A).pv;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("ft1438","FT-1438","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1438"]]))return null;return (((PLANT).v)).ft1438;},"Existing shared simulator channel.","rsv");
+cfTrendRegister12OQ("pit8000a","PIT-8000A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8000a"]]))return null;return (((PLANT).v)).pit8000a;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("fit8000a","FIT-8000A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit8000a"]]))return null;return (((PLANT).v)).fit8000a;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("tit8000a","TIT-8000A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit8000a"]]))return null;return (((PLANT).v)).tit8000a;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8000b","PIT-8000B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8000"]]))return null;return (((PLANT).v)).pit8000;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("fqi8000a","FQI-8000A","GAL",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi8000a"]]))return null;return (Math).round((((PLANT).v)).fqi8000a);},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8000f","PIT-8000F","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8000f"]]))return null;return (((PLANT).v)).pit8000f;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8210a","PIT-8210A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8210a"]]))return null;return (((PLANT).v)).pit8210a;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("tit8210a","TIT-8210A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit8210a"]]))return null;return (((PLANT).v)).tit8210a;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("fit8210a","FIT-8210A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","resRate"]]))return null;return (((PLANT).v)).resRate;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8200","PIT-8200","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8200"]]))return null;return (((PLANT).v)).pit8200;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8220c","PIT-8220C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8220c"]]))return null;return (((PLANT).v)).pit8220c;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("fit8220b","FIT-8220B","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit8220b"]]))return null;return (((PLANT).v)).fit8220b;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit8220d","PIT-8220D","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8220d"]]))return null;return (((PLANT).v)).pit8220d;},"Existing shared simulator channel.","outlet");
+cfTrendRegister12OQ("pit1040a","PIT-1040A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","inletSuc"]]))return null;return ((((PLANT).v)).inletSuc);},"Existing shared simulator channel.","inlsep");
+cfTrendRegister12OQ("screen_plinlet_pit1040a","PIT-1040A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1010a"]]))return null;return ((((PLANT).v)).pit1010a);},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pdit1040b","PDIT-1040B","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdit1040b"]]))return null;return (((PLANT).v)).pdit1040b;},"Existing shared simulator channel.","inlsep");
+cfTrendRegister12OQ("ti1040","TI-1040","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ti1040"]]))return null;return (((PLANT).v)).ti1040;},"Existing shared simulator channel.","inlsep");
+cfTrendRegister12OQ("lit1040a","LIT-1040A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1040","pv"]]))return null;return PLANT.L.LIC1040.pv;},"Existing shared simulator channel.","inlsep");
+cfTrendRegister12OQ("pit7500a","PIT-7500A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit7500a"]]))return null;return (((PLANT).v)).pit7500a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("tit7500a","TIT-7500A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit7500a"]]))return null;return (((PLANT).v)).tit7500a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("lit7505a","LIT-7505A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit7505a"]]))return null;return (((PLANT).v)).lit7505a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7100a","FIT-7100A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7100a"]]))return null;return (((PLANT).v)).fit7100a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7100b","FIT-7100B","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7100b"]]))return null;return (((PLANT).v)).fit7100b;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7600a","FIT-7600A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7600a"]]))return null;return (((PLANT).v)).fit7600a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("pdit7600a","PDIT-7600A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdit7600a"]]))return null;return (((PLANT).v)).pdit7600a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("pit7410b","PIT-7410B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit7410b"]]))return null;return (((PLANT).v)).pit7410b;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7410a","FIT-7410A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7410a"]]))return null;return (((PLANT).v)).fit7410a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("pit7420b","PIT-7420B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit7420b"]]))return null;return (((PLANT).v)).pit7420b;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7420a","FIT-7420A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7420a"]]))return null;return (((PLANT).v)).fit7420a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("pit7410a","PIT-7410A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit7410a"]]))return null;return (((PLANT).v)).pit7410a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("pit7420a","PIT-7420A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit7420a"]]))return null;return (((PLANT).v)).pit7420a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("te202","TE-202","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","hotOilT"]]))return null;return (((PLANT).v)).hotOilT;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fqi7105a","FQI-7105A","MMSCF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi7105a"]]))return null;return (((PLANT).v)).fqi7105a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit7105a","FIT-7105A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit7105a"]]))return null;return (((PLANT).v)).fit7105a;},"Existing shared simulator channel.","hotoil");
+cfTrendRegister12OQ("fit1650","FIT-1650","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit1650"]]))return null;return (((PLANT).v)).fit1650;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fit8100","FIT-8100","SCFH",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit8100"]]))return null;return (((PLANT).v)).fit8100;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit8100c","PIT-8100C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC8100C","pv"]]))return null;return ((((PLANT).L)).PIC8100C).pv;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit8100a","PIT-8100A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8100a"]]))return null;return (((PLANT).v)).pit8100a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit8100b","PIT-8100B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit8100b"]]))return null;return (((PLANT).v)).pit8100b;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("lit8100","LIT-8100","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit8100"]]))return null;return (((PLANT).v)).lit8100;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("tit1650a","TIT-1650A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit1650a"]]))return null;return (((PLANT).v)).tit1650a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit9241a","PIT-9241A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit9241a"]]))return null;return (((PLANT).v)).pit9241a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit1650a","PIT-1650A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1650a"]]))return null;return (((PLANT).v)).pit1650a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("tit9210d","TIT-9210D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit9210disch"]]))return null;return (((PLANT).v)).tit9210disch;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("tit9220d","TIT-9220D","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit9220disch"]]))return null;return (((PLANT).v)).tit9220disch;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fit9000a","FIT-9000A","SCFH",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit9000a"]]))return null;return (((PLANT).v)).fit9000a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fit8110","FIT-8110","SCFH",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit8110"]]))return null;return (((PLANT).v)).fit8110;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("lit8110","LIT-8110","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit8110"]]))return null;return (((PLANT).v)).lit8110;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("lit9100a","LIT-9100A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit9100a"]]))return null;return (((PLANT).v)).lit9100a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fqi9110a","FQI-9110A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi9110a"]]))return null;return (((PLANT).v)).fqi9110a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fit9110a","FIT-9110A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit9110a"]]))return null;return (((PLANT).v)).fit9110a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit9110a","PIT-9110A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit9110a"]]))return null;return (((PLANT).v)).pit9110a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("tit9110a","TIT-9110A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit9110a"]]))return null;return (((PLANT).v)).tit9110a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("fit9111a","FIT-9111A","SCFH",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit9111a"]]))return null;return (((PLANT).v)).fit9111a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("tit9300a","TIT-9300A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit9300a"]]))return null;return (((PLANT).v)).tit9300a;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("lit9300b","LIT-9300B","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit9300b"]]))return null;return (((PLANT).v)).lit9300b;},"Existing shared simulator channel.","util");
+cfTrendRegister12OQ("pit1000","PIT-1000","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1000"]]))return null;return ((((PLANT).v)).pit1000);},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pdi1000a","PDI-1000A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1000a"],["PLANT","v","pit1010b"]]))return null;return (((((PLANT).v)).pit1000a-(((PLANT).v)).pit1010b));},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pit1000a","PIT-1000A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1000a"]]))return null;return (((PLANT).v)).pit1000a;},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pit1010b","PIT-1010B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1010b"]]))return null;return (((PLANT).v)).pit1010b;},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pit1010c","PIT-1010C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1010a"]]))return null;return (((((PLANT).v)).pit1010a)+0.3);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","plinlet");
+cfTrendRegister12OQ("pit1010a","PIT-1010A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1010a"]]))return null;return ((((PLANT).v)).pit1010a);},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pit1040b","PIT-1040B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1040b"]]))return null;return (((PLANT).v)).pit1040b;},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pdi1040a","PDI-1040A","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","flowInlet"],["PLANT","in","flow"]]))return null;return clmp((0.26*(Math).pow((Math).max(0.3,((((PLANT).v).flowInlet||((PLANT).in).flow)/222)),1.7)),0.05,3);},"Existing HMI expression; may be a derived simulator proxy, not a separate instrument.","plinlet");
+cfTrendRegister12OQ("pdit1051","PDIT-1051","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","filterHealth","slug","service"]]))return null;return filterDP((((((PLANT).filterHealth).slug).service||"f1050")));},"Existing shared simulator channel.","plinlet");
+cfTrendRegister12OQ("pit6050b","PIT-6050B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit6050b"]]))return null;return (((PLANT).v)).pit6050b;},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("pit6050c","PIT-6050C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit6050c"]]))return null;return (((PLANT).v)).pit6050c;},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("pit6050a","PIT-6050A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC6050A","pv"]]))return null;return ((((PLANT).L)).PIC6050A?((((PLANT).L)).PIC6050A).pv:973);},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("pdit6800a","PDIT-6800A","PSID",function(){if(!cfTrendDependencies12OQ([]))return null;return (filterDP("f6800"));},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("lit6800a","LIT-6800A","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit6800a"]]))return null;return (((PLANT).v)).lit6800a;},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("lit6800b","LIT-6800B","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lit6800b"]]))return null;return (((PLANT).v)).lit6800b;},"Existing shared simulator channel.","rescomp");
+cfTrendRegister12OQ("pit1045a","PIT-1045A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","inletSuc"]]))return null;return ((((PLANT).v)).inletSuc);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("tit1045a","TIT-1045A","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit1045a"]]))return null;return ((((PLANT).v)).tit1045a);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("fit1045a","FIT-1045A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","in","flow"]]))return null;return (((PLANT).in).flow);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("fqi1045a","FQI-1045A","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fqi1045a"]]))return null;return (((PLANT).v)).fqi1045a;},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("pit6810a","PIT-6810A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC6810A","pv"]]))return null;return ((((PLANT).L)).PIC6810A?((((PLANT).L)).PIC6810A).pv:443.5);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("pit4250a","PIT-4250A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC4250A","pv"]]))return null;return (((((PLANT).L)).PIC4250A?((((PLANT).L)).PIC4250A).pv:929));},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("pit4250b","PIT-4250B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit4250b"]]))return null;return ((((PLANT).v)).pit4250b);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("pit4250c","PIT-4250C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit4250c"]]))return null;return ((((PLANT).v)).pit4250c);},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("tit9300c","TIT-9300C","DEG F",function(){if(!cfTrendDependencies12OQ([["PLANT","v","tit9300c"]]))return null;return (((PLANT).v)).tit9300c;},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("me1101","ME-1101","MMSCFD",function(){if(!cfTrendDependencies12OQ([["PLANT","v","me1101"]]))return null;return (((PLANT).v)).me1101;},"Existing shared simulator channel.","inlcomp");
+cfTrendRegister12OQ("pit1630a","PIT-1630A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1630a"]]))return null;return (((PLANT).v)).pit1630a;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("pit1635a","PIT-1635A","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pit1635a"]]))return null;return (((PLANT).v)).pit1635a;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("pt1630b","PT-1630B","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pt1630b"]]))return null;return (((PLANT).v)).pt1630b;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("fit1630a","FIT-1630A","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","fit1630a"]]))return null;return (((PLANT).v)).fit1630a;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("te1322b","TE-1322B","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1322b"]]))return null;return (((PLANT).v)).te1322b;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("te1322c","TE-1322C","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1322c"]]))return null;return (((PLANT).v)).te1322c;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("ft1422","FT-1422","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","v","ft1422"]]))return null;return (((PLANT).v)).ft1422;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("pic1623","PIC-1623","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1623","pv"]]))return null;return ((((PLANT).L)).PIC1623).pv;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("pic1624","PIC-1624","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1624","pv"]]))return null;return ((((PLANT).L)).PIC1624).pv;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("lt1422","LT-1422","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LIC1422","pv"]]))return null;return ((((PLANT).L)).LIC1422).pv;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("c2inngl","C2 in NGL","mol%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","c2ngl"]]))return null;return (((PLANT).v)).c2ngl;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("boostervfd","Booster VFD","% spd",function(){if(!cfTrendDependencies12OQ([["PLANT","v","nglPumpSpd"]]))return null;return (((PLANT).v)).nglPumpSpd;},"Existing shared simulator channel.","prodpump");
+cfTrendRegister12OQ("pt1441c","PT-1441C","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PIC1441C","pv"]]))return null;return ((((PLANT).L)).PIC1441C).pv;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("te1241d","TE-1241D","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1241d"]]))return null;return (((PLANT).v)).te1241d;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("pdt1441","PDT-1441","PSID",function(){if(!cfTrendDependencies12OQ([["PLANT","v","pdt1441"]]))return null;return (((PLANT).v)).pdt1441;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("pt1441","PT-1441","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PCV1441B","pv"]]))return null;return ((((PLANT).L)).PCV1441B).pv;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("pt1442","PT-1442","PSIG",function(){if(!cfTrendDependencies12OQ([["PLANT","L","PCV1442","pv"]]))return null;return ((((PLANT).L)).PCV1442).pv;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("te1241a","TE-1241A","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1241a"]]))return null;return (((PLANT).v)).te1241a;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("te1241c","TE-1241C","DEGF",function(){if(!cfTrendDependencies12OQ([["PLANT","v","te1241c"]]))return null;return (((PLANT).v)).te1241c;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("lt1241","LT-1241","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LCV1241","pv"]]))return null;return ((((PLANT).L)).LCV1241).pv;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("lt1442","LT-1442","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LCV1442","pv"]]))return null;return ((((PLANT).L)).LCV1442).pv;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("lt1444","LT-1444","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lt1444"]]))return null;return (((PLANT).v)).lt1444;},"Existing shared simulator channel.","refsys");
+cfTrendRegister12OQ("se1121","SE-1121","RPM",function(){if(!cfTrendDependencies12OQ([["EXP","rpm"]]))return null;return EXP.rpm;},"Existing expander speed state.","expander");
+cfTrendRegister12OQ("fit5060","FIT-5060","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","in","p5060run"],["PLANT","in","p5065run"],["PLANT","L","FIC5060A","pv"]]))return null;return ((PLANT.in.p5060run||PLANT.in.p5065run)?Math.max(0,PLANT.L.FIC5060A.pv*0.9):0);},"Existing screen derived 0.9 x FIC-5060A proxy, excluding render-only random jitter. Not an independent pump meter.","pmps");
+cfTrendRegister12OQ('te1241c','TE-1241C','DEGF',function(){return PLANT.L.TIC1241C&&PLANT.L.TIC1241C.pv;},'Exact existing cfTxDisplay binding: TIC1241C.pv.');
+cfTrendRegister12OQ('pdt1438','PDT-1438','PSID',function(){return filterDP('f1438');},'Exact existing cfTxDisplay binding: operating filter DP, not reference restriction.');
+cfTrendRegister12OQ('pt1521d','PT-1521D','PSIG',function(){return PLANT.L.PIC1521&&PLANT.L.PIC1521.pv;},'Exact existing cfTxDisplay binding: PIC1521.pv.');
+[1020,1025,1030].forEach(function(n){cfTrendRegister12OQ('lit'+n,'LIT-'+n,'%',function(){return PLANT.L['LIC'+n]&&PLANT.L['LIC'+n].pv;},'Existing individual slug-catcher loop PV.');});
+CF_TREND_SCREEN_KEYS_12OQ={"gasgas":{"te1222j":"screen_gasgas_te1222j"},"plinlet":{"pit1040a":"screen_plinlet_pit1040a"}};
+CF_TREND_STATUS_12OQ.conflicts=[{"tag":"TE-1222J","firstScreen":"SCR.demeth","screen":"SCR.gasgas","key":"screen_gasgas_te1222j","basis":"Same printed label has different retained screen expressions. Kept separate rather than silently equated."},{"tag":"PIT-1040A","firstScreen":"SCR.inlsep","screen":"SCR.plinlet","key":"screen_plinlet_pit1040a","basis":"Same printed label has different retained screen expressions. Kept separate rather than silently equated."}];
+['c41','c42','c61','c62','c63','c57'].forEach(function(k){var fields={suction:'suc',discharge:'dis',oiltemp:'oilT',gasdischt:'discT'};var names={c41:'C-4100',c42:'C-4200',c61:'C-6100',c62:'C-6200',c63:'C-6300',c57:'C-5700'};Object.keys(fields).forEach(function(t){cfTrendRegister12OQ(cfTrendKey12OQ(t+names[k]),t+' '+names[k],/temp|discht/.test(t)?'DEGF':'PSIG',function(){var c=PLANT.cmp[k];return c&&c[fields[t]];});});});
+['c1140','c1141','c1142'].forEach(function(k){var m={sucp:'sucP',discp:'discP',oilp:'oilP',oilfiltp:'oilFiltP',suct:'sucT',disct:'discT',oilt:'oilT',sept:'sepT'};Object.keys(m).forEach(function(f){cfTrendRegister12OQ(k+f,k+' '+f,/p$/.test(f)?'PSIG':'DEGF',function(){return REFRIG_UNIT_DATA[k]&&REFRIG_UNIT_DATA[k][m[f]];});});});
+
 function trendAvg(key){
  /* Honest approximation, not a real time-windowed shift average: TREND_LOG only
     keeps a timestamped rolling 72-hour history, so
@@ -22197,8 +22489,9 @@ function shiftExportCSV(){
  URL.revokeObjectURL(url);
 }
 function recordTrend(key, value){
- if(value==null || isNaN(value)) return;
- var now=Date.now();
+ if(!CF_TREND_RECORDING_12OQ||typeof value!=='number'||!Number.isFinite(value))return;
+ if(CF_TREND_CHANNELS_12OQ[key]&&!CF_TREND_SAMPLING_12OQ)return;
+ var now=cfSimulationTimestamp12OO();
  var arr=TREND_LOG[key];if(!arr){arr=[];TREND_LOG[key]=arr;}
  var ta=TREND_TIME[key];if(!ta){ta=[];TREND_TIME[key]=ta;}
  /* Keep long trends readable and browser-friendly: one point every 60 s, but update
@@ -22209,6 +22502,7 @@ function recordTrend(key, value){
  while(ta.length && (ta[0]<cutoff || arr.length>TREND_MAX)){ta.shift();arr.shift();}
 }
 function recordAllTrends(){
+ CF_TREND_RECORDING_12OQ=true;try{
  var V=PLANT.v, L=PLANT.L;
  ['pdt1221','pdt1223a','te1221b','te1224b','te1224c','te1241a','te1241c'].forEach(function(k){if(Number.isFinite(V[k]))recordTrend(k,V[k]);});
  [['tcv1221flow',V.tcv1221Flow],['tcv1223flow',V.tcv1223Flow],['chillergasdp12mz',V.chillerGasDP12MZ],['tic1224bsp',L.TIC1224B.sp],['tcv1223travel',PLANT.in.tcv1223]].forEach(function(a){if(Number.isFinite(a[1]))recordTrend(a[0],a[1]);});
@@ -22285,6 +22579,9 @@ function recordAllTrends(){
   recordTrend(k+'sucp',d.sucP); recordTrend(k+'discp',d.discP); recordTrend(k+'oilp',d.oilP); recordTrend(k+'oilfiltp',d.oilFiltP);
   recordTrend(k+'suct',d.sucT); recordTrend(k+'disct',d.discT); recordTrend(k+'oilt',d.oilT); recordTrend(k+'sept',d.sepT);
  });
+
+ cfRecordControlTrends12OQ();
+ }finally{CF_TREND_RECORDING_12OQ=false;}
 }
 /* ---------- render helpers ---------- */
 function EB(l,v,u){return '<div class="eb"><span>'+l+'</span><b>'+cfFormatReadout12NK(v,u)+'</b> '+(u||'')+'</div>';}
@@ -22370,7 +22667,7 @@ SCR.pmps=function(){
  s+=mPipe('M500 170 H790');
  /* Return-to-stabilizer branch on the LOWER line. */
  s+=mPipe('M640 170 V292 H510');
- s+=pt(485,150,'FIT-5060',(_p56Any?Math.max(0,L.FIC5060A.pv*0.9+(Math.random()-0.5)*0.02):0).toFixed(2),'GPM');
+ s+=pt(485,150,'FIT-5060',(_p56Any?Math.max(0,L.FIC5060A.pv*0.9):0).toFixed(2),'GPM');
  s+=ctl(550,210,'FIC-5060A','FIC5060A','GPM');
  s+=mTCV(500,292,'FV-5030A',L.FIC5060A?L.FIC5060A.out:0);
  s+='<text x="500" y="282" fill="#283038" font-size="6.5" text-anchor="middle">FV-5030A · RETURN TO T-5030</text>';
@@ -22626,8 +22923,66 @@ function manualCvButtons(x,y,key,w){
  '</g>';
 }
 function openScreen(id){eqtCur=id;PLANT.popup=null;renderNav();renderScreen();}
-var plantRuntimeTimer=null,plantRuntimeLastMs=null,plantRuntimeDebt=0;
-function startPlantRuntime(){if(plantRuntimeTimer||IS_CLIENT)return;plantRuntimeLastMs=Date.now();plantRuntimeTimer=setInterval(function(){var now=Date.now(),elapsed=Math.max(0,now-plantRuntimeLastMs);plantRuntimeLastMs=now;if(!PLANT.simLive)return;plantRuntimeDebt+=elapsed/1000*(PLANT.simSpeed||1);var steps=Math.min(120,Math.floor(plantRuntimeDebt));for(var i=0;i<steps;i++)PLANT.tick();plantRuntimeDebt-=steps;},1000);}
+/* 12OO: one fixed one-second process clock. Retained per-tick coefficients are
+   not retuned. Speed applies only when elapsed time enters the queue. */
+function cfCreateSimulationClock12OO(host){
+ var last=host.now(),live=host.isLive(),rate=host.speed(),queue=[],debt=0,steps=0,activeWall=0,busy=false,fault='',baseSim=host.simSeconds(),baseEpoch=host.wallNow(),session='sim-'+baseEpoch+'-'+Math.random().toString(36).slice(2);
+ function speed(n){return [1,2,5,10].indexOf(Number(n))>=0?Number(n):1;}
+ rate=speed(rate);
+ function capture(){
+  var t=host.now(),elapsed=Math.max(0,(t-last)/1000);if(Number.isFinite(t))last=Math.max(last,t);
+  if(!Number.isFinite(elapsed)){fault='Non-finite clock interval';return;}
+  if(live&&elapsed>0){var sec=elapsed*rate,tail=queue[queue.length-1];if(tail&&tail.rate===rate)tail.seconds+=sec;else queue.push({seconds:sec,rate:rate});debt+=sec;}
+  live=host.isLive();rate=speed(host.speed());
+ }
+ function consume(){var remain=1,wall=0;while(remain>1e-9&&queue.length){var q=queue[0],take=Math.min(remain,q.seconds);q.seconds-=take;remain-=take;wall+=take/q.rate;if(q.seconds<1e-9)queue.shift();}debt=Math.max(0,debt-1);return wall;}
+ function drain(){
+  if(busy||fault||!host.isLive())return status();busy=true;var start=host.now(),n=0;
+  try{while(debt>=1-1e-9&&host.isLive()&&n<12){
+   var before=host.simSeconds();host.step(1);
+   if(Math.abs(host.simSeconds()-before-1)>1e-7)throw Error('Process step did not advance exactly one simulation second.');
+   var wall=consume();steps++;n++;activeWall+=wall;
+   if(host.afterStep)host.afterStep(1,wall);
+   if(host.now()-start>=8)break;
+  }}catch(e){fault=String(e&&e.message||e);if(host.fail)host.fail(fault);}finally{busy=false;}
+  return status();
+ }
+ function status(){return {build:'12OO',stepSeconds:1,completedSteps:steps,simulationSeconds:host.simSeconds(),pendingSimulationSeconds:debt,activeWallSeconds:activeWall,live:host.isLive(),speed:speed(host.speed()),fault:fault,session:session,timestampBasis:'SIMULATION_TIMELINE_ANCHORED_AT_PAGE_START',historyEpochMs:baseEpoch+1000*(host.simSeconds()-baseSim),suspensionPolicy:'Queue elapsed active time; repay in bounded batches; never count paused time; no server execution while the page is closed.'};}
+ return {capture:capture,drain:drain,status:status,hasDebt:function(){return debt>=1-1e-9;},setLive:function(v){capture();host.setLive(!!v);live=!!v;if(live)fault='';},setSpeed:function(v){capture();rate=speed(v);host.setSpeed(rate);},timestamp:function(){return baseEpoch+1000*(host.simSeconds()-baseSim);}};
+}
+var plantRuntimeTimer=null,plantRuntimeLastMs=null,plantRuntimeDebt=0,plantRuntimeContinuation12OO=null,plantClock12OO=null;
+function cfClockNow12OO(){return typeof performance!=='undefined'&&typeof performance.now==='function'?performance.now():Date.now();}
+function cfSimulationTimestamp12OO(){return plantClock12OO?plantClock12OO.timestamp():Date.now();}
+function cfSimulationClockStatus12OO(){return plantClock12OO?plantClock12OO.status():{build:'12OO',simulationSeconds:Number(PLANT.simSeconds)||0,pendingSimulationSeconds:0,activeWallSeconds:0,session:'not-started',fault:''};}
+function cfUpdateClockNotice12OO(){
+ var s=cfSimulationClockStatus12OO(),e=document.getElementById('cfSimulationClockStatus12OO');plantRuntimeDebt=s.pendingSimulationSeconds;
+ if(e)e.textContent=(s.fault?'CLOCK STOPPED: '+s.fault+'. ':'')+'Simulation: '+s.simulationSeconds.toFixed(0)+' s | '+(s.pendingSimulationSeconds>=1?'Catching up: '+s.pendingSimulationSeconds.toFixed(1)+' simulated seconds pending.':'Clock synchronized.')+' Pause freezes processing; earned backlog is retained. Trends use simulation time; wall-clock audit dates remain wall time.';
+}
+function cfDrainPlantRuntime12OO(){
+ if(!plantClock12OO||IS_CLIENT)return;
+ plantClock12OO.drain();cfUpdateClockNotice12OO();
+ var s=plantClock12OO.status();
+ if(plantClock12OO.hasDebt()&&PLANT.simLive!==false&&!s.fault&&!plantRuntimeContinuation12OO)
+  plantRuntimeContinuation12OO=setTimeout(function(){plantRuntimeContinuation12OO=null;cfDrainPlantRuntime12OO();},16);
+}
+function cfSetSimulationLive12OO(value){
+ if(plantClock12OO)plantClock12OO.setLive(value);else PLANT.simLive=!!value;
+ if(!PLANT.simLive&&plantRuntimeContinuation12OO){clearTimeout(plantRuntimeContinuation12OO);plantRuntimeContinuation12OO=null;}
+ if(PLANT.simLive)cfDrainPlantRuntime12OO();cfUpdateClockNotice12OO();
+}
+function cfSetSimulationSpeed12OO(value){if(plantClock12OO)plantClock12OO.setSpeed(value);else PLANT.simSpeed=[1,2,5,10].indexOf(Number(value))>=0?Number(value):1;cfUpdateClockNotice12OO();}
+function startPlantRuntime(){
+ if(plantRuntimeTimer||IS_CLIENT)return;
+ plantClock12OO=cfCreateSimulationClock12OO({now:cfClockNow12OO,wallNow:Date.now,isLive:function(){return PLANT.simLive!==false;},speed:function(){return PLANT.simSpeed||1;},simSeconds:function(){return Number(PLANT.simSeconds)||0;},setLive:function(v){PLANT.simLive=v;},setSpeed:function(v){PLANT.simSpeed=v;},step:function(dt){PLANT.tick(dt);},afterStep:function(dt,wall){
+   // Preserve the deliberately independent active-real-time training tools/rates.
+   if(typeof outageTick==='function'&&PLANT.outageState)outageTick(wall);
+   if(typeof leadAutoTick==='function'&&window.CMD_LEAD_STATE)leadAutoTick(wall);
+  },fail:function(message){PLANT.simLive=false;console.error('[Clear Fork simulation clock]',message);if(typeof updateLiveBtn==='function')updateLiveBtn();}});
+ window.CFSimulationClock12OO={status:cfSimulationClockStatus12OO};
+ plantRuntimeLastMs=Date.now();
+ plantRuntimeTimer=setInterval(function(){plantRuntimeLastMs=Date.now();plantClock12OO.capture();cfDrainPlantRuntime12OO();},1000);
+}
+
 function openEQT(){document.getElementById('eqt').style.display='block';renderNav();renderScreen();startPlantRuntime();if(!eqtTimer)eqtTimer=setInterval(function(){var eqtVisible=document.getElementById('eqt').style.display!=='none';if(eqtVisible){var _holdLongPopup=(PLANT.popup==='shiftdash'||PLANT.popup==='schedule');if(!_holdLongPopup)renderScreen();var c=document.getElementById('eqtclk');if(c){var d=new Date();function p(n){return(n<10?'0':'')+n;}c.textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}}},1000);}
 function closeEQT(){document.getElementById('eqt').style.display='none';}
 startPlantRuntime(); /* Netlify/static hosting: physics runs continuously for the lifetime of this open browser page. */ /* Deliberately does NOT clearInterval anymore -- previously closing the DCS overlay (e.g. to look at the 3D model) froze the entire plant physics, not just the display, which was inconsistent with the weather and outage-aging systems that were specifically built to keep running in the background for this exact reason. PLANT.tick() and trend recording now keep running continuously once started; only the (comparatively cheap) screen re-render is skipped while hidden, restored automatically on next openEQT(). */
@@ -22775,10 +23130,10 @@ var ALARM_HISTORY=[];
 try{ALARM_HISTORY=JSON.parse(localStorage.getItem('clearforkAlarmHistory')||'[]');if(!Array.isArray(ALARM_HISTORY))ALARM_HISTORY=[];}catch(_ah){ALARM_HISTORY=[];}
 function alarmHistSave(){try{localStorage.setItem('clearforkAlarmHistory',JSON.stringify(ALARM_HISTORY.slice(-1500)));}catch(_e){}}
 function alarmType(m){var x=String(m||'').toUpperCase();return /ESD/.test(x)?'ESD':(/TRIP|SHUTDOWN|HI-HI|LO-LO|HIHI|LOLO/.test(x)?'TRIP':(/ACK|RESET|START|STOP/.test(x)?'EVENT':'ALARM'));}
-function alarmHistoryRecord(m){var now=Date.now(),last=ALARM_HISTORY[ALARM_HISTORY.length-1];if(last&&last.m===m&&!last.clearAt){last.lastSeen=now;last.count=(last.count||1)+1;}else ALARM_HISTORY.push({firstIn:now,lastSeen:now,m:m,type:alarmType(m),ackAt:0,clearAt:0,count:1});if(ALARM_HISTORY.length>1500)ALARM_HISTORY.splice(0,ALARM_HISTORY.length-1500);alarmHistSave();}
+function alarmHistoryRecord(m){var now=Date.now(),last=ALARM_HISTORY[ALARM_HISTORY.length-1];if(last&&last.m===m&&!last.clearAt){last.lastSeen=now;last.count=(last.count||1)+1;}else ALARM_HISTORY.push({firstIn:now,lastSeen:now,m:m,type:alarmType(m),ackAt:0,clearAt:0,count:1,simSession12OO:cfSimulationClockStatus12OO().session,firstInSimSeconds12OO:Number(PLANT.simSeconds)||0});if(ALARM_HISTORY.length>1500)ALARM_HISTORY.splice(0,ALARM_HISTORY.length-1500);alarmHistSave();}
 function alarmHistAck(){var now=Date.now();ALARM_HISTORY.forEach(function(x){if(!x.clearAt&&!x.ackAt)x.ackAt=now;});alarmHistSave();}
-function alarmHistClear(){var now=Date.now();ALARM_HISTORY.forEach(function(x){if(!x.clearAt)x.clearAt=now;});alarmHistSave();}
-function openAlarmTrend(){var old=document.getElementById('alarmTrendPanel');if(old)old.remove();var el=document.createElement('div');el.id='alarmTrendPanel';el.style.cssText='position:fixed;inset:2vh 2vw;z-index:99999;background:#0b1016;border:1px solid #405060;border-radius:8px;color:#dce6ee;padding:14px;overflow:auto;font:12px Consolas,monospace;';function ts(v){return v?new Date(v).toLocaleString():'—';}function dur(x){var e=x.clearAt||Date.now(),s=x.firstIn||e;var q=Math.max(0,Math.round((e-s)/1000));return q<60?q+'s':(q<3600?(q/60).toFixed(1)+'m':(q/3600).toFixed(1)+'h');}var rows=ALARM_HISTORY.slice().reverse().map(function(x){return '<tr><td>'+ts(x.firstIn)+'</td><td>'+x.type+'</td><td style="min-width:420px">'+String(x.m).replace(/</g,'&lt;')+'</td><td>'+ts(x.ackAt)+'</td><td>'+ts(x.clearAt)+'</td><td>'+dur(x)+'</td><td>'+x.count+'</td></tr>';}).join('');el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h2>ALARM / EVENT TREND — retained chronological history</h2><button id="alarmTrendClose">CLOSE</button></div><div style="color:#8fa0b0;margin-bottom:10px">ACK does not erase history. RESET marks active events clear. Repeated active calls increment Hits; every later recurrence creates a new chronological event.</div><table style="width:100%;border-collapse:collapse"><thead><tr><th>FIRST IN</th><th>TYPE</th><th>ALARM / EVENT</th><th>ACK</th><th>CLEAR / RESET</th><th>DURATION</th><th>HITS</th></tr></thead><tbody>'+rows+'</tbody></table>';document.body.appendChild(el);document.getElementById('alarmTrendClose').onclick=function(){el.remove();};}
+function alarmHistClear(){var now=Date.now(),s=cfSimulationClockStatus12OO();ALARM_HISTORY.forEach(function(x){if(!x.clearAt){x.clearAt=now;if(x.simSession12OO===s.session)x.clearSimSeconds12OO=s.simulationSeconds;}});alarmHistSave();}
+function openAlarmTrend(){var old=document.getElementById('alarmTrendPanel');if(old)old.remove();var el=document.createElement('div');el.id='alarmTrendPanel';el.style.cssText='position:fixed;inset:2vh 2vw;z-index:99999;background:#0b1016;border:1px solid #405060;border-radius:8px;color:#dce6ee;padding:14px;overflow:auto;font:12px Consolas,monospace;';function ts(v){return v?new Date(v).toLocaleString():'—';}function dur(x){var e=x.clearAt||Date.now(),s=x.firstIn||e,c=cfSimulationClockStatus12OO();var q=x.simSession12OO===c.session&&Number.isFinite(x.firstInSimSeconds12OO)?Math.max(0,Math.round((x.clearSimSeconds12OO==null?c.simulationSeconds:x.clearSimSeconds12OO)-x.firstInSimSeconds12OO)):Math.max(0,Math.round((e-s)/1000));return q<60?q+'s':(q<3600?(q/60).toFixed(1)+'m':(q/3600).toFixed(1)+'h');}var rows=ALARM_HISTORY.slice().reverse().map(function(x){return '<tr><td>'+ts(x.firstIn)+'</td><td>'+x.type+'</td><td style="min-width:420px">'+String(x.m).replace(/</g,'&lt;')+'</td><td>'+ts(x.ackAt)+'</td><td>'+ts(x.clearAt)+'</td><td>'+dur(x)+'</td><td>'+x.count+'</td></tr>';}).join('');el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><h2>ALARM / EVENT TREND — retained chronological history</h2><button id="alarmTrendClose">CLOSE</button></div><div style="color:#8fa0b0;margin-bottom:10px">ACK does not erase history. RESET marks active events clear. Dates are wall-clock audit times; duration uses simulation seconds for events from this page session, wall time for older records. Repeated active calls increment Hits; every later recurrence creates a new chronological event.</div><table style="width:100%;border-collapse:collapse"><thead><tr><th>FIRST IN</th><th>TYPE</th><th>ALARM / EVENT</th><th>ACK</th><th>CLEAR / RESET</th><th>DURATION</th><th>HITS</th></tr></thead><tbody>'+rows+'</tbody></table>';document.body.appendChild(el);document.getElementById('alarmTrendClose').onclick=function(){el.remove();};}
 function alarm(m){
  alarmHistoryRecord(m);
  /* Real bug fix (from the ChatGPT alarm-banner note, verified against actual
@@ -26245,7 +26600,7 @@ function mExch(x,y,w,hh,lab){var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" heig
 function mComp(x,y,lab){return '<circle cx="'+x+'" cy="'+y+'" r="21" fill="#fbfbfc" stroke="#1b1f24" stroke-width="2"/><path d="M'+(x-11)+' '+(y-10)+' L'+(x+13)+' '+y+' L'+(x-11)+' '+(y+10)+' Z" fill="#c2c8cc" stroke="#1b1f24"/><text x="'+x+'" y="'+(y+36)+'" fill="#10151b" font-size="10.5" text-anchor="middle">'+lab+'</text>';}
 function mFan(x,y,lab){return '<rect x="'+(x-26)+'" y="'+(y-9)+'" width="52" height="18" rx="3" fill="#fbfbfc" stroke="#1b1f24" stroke-width="1.5"/><line x1="'+(x-18)+'" y1="'+y+'" x2="'+(x+18)+'" y2="'+y+'" stroke="#5a6671" stroke-width="2"/><text x="'+x+'" y="'+(y+22)+'" fill="#10151b" font-size="9.5" text-anchor="middle">'+lab+'</text>';}
 function mValve(x,y,vk){var op=PLANT.valves[vk];var col=op?'#1ea84a':'#c0392b';return '<g data-act="valve" data-v="'+vk+'" style="cursor:pointer"><path d="M'+(x-10)+' '+(y-9)+' L'+x+' '+y+' L'+(x-10)+' '+(y+9)+' Z" fill="'+col+'" stroke="#1b1f24"/><path d="M'+(x+10)+' '+(y-9)+' L'+x+' '+y+' L'+(x+10)+' '+(y+9)+' Z" fill="'+col+'" stroke="#1b1f24"/><text x="'+x+'" y="'+(y-13)+'" fill="#10151b" font-size="8.5" text-anchor="middle">'+vk.toUpperCase()+'</text></g>';}
-function mTag(x,y,lab,val,unit){var raw='<g><text x="'+(x+2)+'" y="'+(y+8)+'" fill="#26303a" font-size="8.5">'+lab+'</text><rect x="'+x+'" y="'+(y+11)+'" width="96" height="21" rx="2" fill="#0a0d10" stroke="#3a4148"/>'+cfReadoutSvg12NK(x+5,y+26,86,val,unit,13,8,'#22e34a','#7fb0c0',0)+'</g>';var n=parseFloat(String(val).replace(/,/g,''));if(isFinite(n)&&unit){var k=lab.replace(/[^A-Za-z0-9]/g,'').toLowerCase();recordTrend(k,n);return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+raw+'</g>';}return raw;}
+function mTag(x,y,lab,val,unit){var raw='<g><text x="'+(x+2)+'" y="'+(y+8)+'" fill="#26303a" font-size="8.5">'+lab+'</text><rect x="'+x+'" y="'+(y+11)+'" width="96" height="21" rx="2" fill="#0a0d10" stroke="#3a4148"/>'+cfReadoutSvg12NK(x+5,y+26,86,val,unit,13,8,'#22e34a','#7fb0c0',0)+'</g>';var n=parseFloat(String(val).replace(/,/g,''));if(isFinite(n)&&unit){var k=arguments[5]||lab.replace(/[^A-Za-z0-9]/g,'').toLowerCase();recordTrend(k,n);return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+'" data-unit="'+(unit||'')+'" style="cursor:pointer">'+raw+'</g>';}return raw;}
 function mArr(x,y,lab,left){var p=left?('M'+(x+20)+' '+(y-7)+' L'+x+' '+y+' L'+(x+20)+' '+(y+7)+' Z'):('M'+x+' '+(y-7)+' L'+(x+20)+' '+y+' L'+x+' '+(y+7)+' Z');return '<path d="'+p+'" fill="#1b1f24"/><text x="'+(left?x+24:x-4)+'" y="'+(y+3)+'" fill="#26303a" font-size="8.5" text-anchor="'+(left?'start':'end')+'">'+lab+'</text>';}
 /* ===== Interlock engine (new) =====
    Real, live-evaluated permissive lists for ESD-1000D, XV-1410, and XV-1040A, built
@@ -27091,7 +27446,7 @@ SCR.outlet=function(){var V=PLANT.v;var s=mTitle('PLANT OUTLET - CUSTODY METERIN
  return svg;};
 function mVstat(x,y,lab,open){var c=open?'#1ea84a':'#c0392b';return '<g data-act="cvinfo" data-v="'+lab+'" data-o="'+(open?1:0)+'" style="cursor:pointer"><path d="M'+(x-9)+' '+(y-8)+' L'+x+' '+y+' L'+(x-9)+' '+(y+8)+' Z" fill="'+c+'" stroke="#1b1f24"/><path d="M'+(x+9)+' '+(y-8)+' L'+x+' '+y+' L'+(x+9)+' '+(y+8)+' Z" fill="'+c+'" stroke="#1b1f24"/><text x="'+x+'" y="'+(y-11)+'" fill="#10151b" font-size="8" text-anchor="middle">'+lab+'</text></g>';}
 function mCompUnit(x,c,rcyk,nfan){var on=c.run;var s='';
- function tg(xx,yy,lab,val,unit){val=cfTxDisplay(lab,val,unit);var k=(lab+c.name).replace(/[^A-Za-z0-9]/g,'').toLowerCase();return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+' ('+c.name+')" data-unit="'+(unit||'')+'" style="cursor:pointer">'+mTag(xx,yy,lab,val,unit)+'</g>';}
+ function tg(xx,yy,lab,val,unit){val=cfTxDisplay(lab,val,unit);var k=(lab+c.name).replace(/[^A-Za-z0-9]/g,'').toLowerCase();return '<g data-act="trend" data-key="'+k+'" data-label="'+lab+' ('+c.name+')" data-unit="'+(unit||'')+'" style="cursor:pointer">'+mTag(xx,yy,lab,val,unit,k)+'</g>';}
  s+=mPipe('M'+x+' 85 V155')+mVstat(x,120,'SUCT',on);
  s+=mComp(x,185,c.name.split(' ')[0]);
  s+=mPipe('M'+x+' 206 V236')+'<rect x="'+(x-52)+'" y="236" width="104" height="34" fill="#fbfbfc" stroke="#1b1f24" stroke-width="1.5"/>';
@@ -28426,11 +28781,8 @@ function outageComplete(id){
  alarm('OUTAGE COMPLETE: '+def.name+(def.scope==='facility'?' \u2014 facility restart still requires normal permissives/checks':' \u2014 lockout released, ready to restart'));
  renderOutagePanel();renderScreen();
 }
-function outageTick(){
- var nowMs=Date.now();
- if(PLANT._outageLastMs==null)PLANT._outageLastMs=nowMs;
- var dtSec=Math.max(0,Math.min(5,(nowMs-PLANT._outageLastMs)/1000));
- PLANT._outageLastMs=nowMs; /* always advance the clock, even while paused/disabled below -- otherwise paused real time gets "caught up" all at once the moment Play/Aging is switched back on, which would be a real bug, not a feature. */
+function outageTick(activeWallSeconds){
+ var dtSec=Number(activeWallSeconds);if(!Number.isFinite(dtSec)||dtSec<=0)return;
  if(!PLANT.maintAging||!PLANT.simLive)return;
  var dtHours=dtSec*0.02*(PLANT.outageSpeed||1); /* ~50 real seconds per sim-hour at 1x */
  var panelOpen=document.getElementById('outagePanel').style.display!=='none';
@@ -28441,7 +28793,7 @@ function outageTick(){
  });
  if(panelOpen)renderOutagePanel();
 }
-setInterval(outageTick,1000);
+/* 12OO: called once by the master clock; no second outage timer. */
 function renderOutagePanel(){
  var body=document.getElementById('outageBody');if(!body)return;
  var html='<div style="font-size:11px;color:#9aa6b2;margin-bottom:12px;">Only the compressor oil/filter PM and the dehy molecular-sieve replacement below have a confirmed real interval and duration (Ryan, direct operator knowledge). Everything else is an explicitly-marked placeholder example.</div>';
@@ -28516,11 +28868,8 @@ function flashCommandCenterStop(){
  if(CMD_FLASH_IV){clearInterval(CMD_FLASH_IV);CMD_FLASH_IV=null;}
  var btn=document.getElementById('cmdcenterbtn'); if(btn){btn.style.background='#1c3a5c';btn.style.color='#bfe0ff';btn.style.boxShadow='none';}
 }
-function leadAutoTick(){
- var nowMs=Date.now();
- if(PLANT._leadLastMs==null){PLANT._leadLastMs=nowMs;return;}
- var dtMs=nowMs-PLANT._leadLastMs;
- PLANT._leadLastMs=nowMs; /* same "always advance the clock" pattern as outageTick -- paused time must not bank up and fire a call the instant Play resumes */
+function leadAutoTick(activeWallSeconds){
+ var dtMs=Number(activeWallSeconds)*1000;if(!Number.isFinite(dtMs)||dtMs<=0)return;
  if(!PLANT.simLive||window.CMD_LEAD_STATE.active)return;
  window.CMD_LEAD_STATE.nextCallInMs-=dtMs;
  if(window.CMD_LEAD_STATE.nextCallInMs<=0){
@@ -28534,7 +28883,7 @@ function leadAutoTick(){
   alarmToast('SYSTEM LEAD CALLING \u2014 open Command Center \u2192 System Lead');
  }
 }
-setInterval(leadAutoTick,5000);
+/* 12OO: called by the master clock with active-real-time equivalent. */
 function renderLivePanel(){
  var body=document.getElementById('liveBody'); if(!body)return;
  var live=PLANT.simLive;
@@ -28548,8 +28897,9 @@ function renderLivePanel(){
   (live?'<div style="font-size:11.5px;color:#9aa6b2;text-align:center;">Next possible System Lead call in about '+nextMin.toFixed(0)+' min (random \u2014 10\u201330 min apart, resets after each call).</div>':'')+
   '<hr style="border-color:#2a3542;margin:16px 0;">'+
   '<div style="font-size:11px;color:#6a7684;">This is the master switch for "the plant runs on its own." The separate Maintenance Aging toggle in the top bar still controls whether scheduled/PM outages age at all \u2014 Pause here freezes them too, on top of that. Reset from a System Lead call itself doesn\u2019t need Pause \u2014 just click "End call" in Command Center \u2192 System Lead.</div>';
+ var clockNote=document.createElement('div');clockNote.id='cfSimulationClockStatus12OO';clockNote.style.cssText='padding:10px;margin:10px 0;border:1px solid #496278;border-radius:6px;font:12px/1.5 system-ui';body.appendChild(clockNote);cfUpdateClockNotice12OO();
  var tb=document.getElementById('liveToggleBtn');
- if(tb)tb.addEventListener('click',function(){PLANT.simLive=!PLANT.simLive;updateLiveBtn();renderLivePanel();});
+ if(tb)tb.addEventListener('click',function(){cfSetSimulationLive12OO(!PLANT.simLive);updateLiveBtn();renderLivePanel();});
 }
 function updateLiveBtn(){
  var btn=document.getElementById('cfLiveBtn'); if(!btn)return;
@@ -28595,7 +28945,7 @@ function renderSpeedPanel(){
  body.innerHTML=html;
  body.querySelectorAll('[data-speed]').forEach(function(b){
   b.addEventListener('click',function(){
-   PLANT.simSpeed=parseInt(b.getAttribute('data-speed'),10)||1;
+   cfSetSimulationSpeed12OO(parseInt(b.getAttribute('data-speed'),10)||1);
    updateSpeedBtn();renderSpeedPanel();
   });
  });
@@ -28611,7 +28961,7 @@ document.getElementById('cfSpeedBtn').addEventListener('click',function(){
     for picking a specific speed directly. Simplest reliable version: click = open panel
     AND advance one step, so a single click both shows current state and moves it along. */
  var idx=SPEED_STEPS.indexOf(PLANT.simSpeed||1);
- PLANT.simSpeed=SPEED_STEPS[(idx+1)%SPEED_STEPS.length];
+ cfSetSimulationSpeed12OO(SPEED_STEPS[(idx+1)%SPEED_STEPS.length]);
  updateSpeedBtn();
  openSpeedPanel();
 });
@@ -45195,7 +45545,7 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12OL',baseline:'12OK',trainerR
 
 /*12OL: current UI release, independent of retained engineering/source revision.*/
 window.CFTrainerStudy12OL={build:'12OL',baseline:'12OK',scope:'Existing sixteen internal lessons; working-only menu and common source-owned study tools',sourceFactsAdded:0,plantControlsChanged:false};
-window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-05-12OM',signature:'CF-RYAN-VESSEL-OCCLUSION-12OM-20261105',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-05-12OQ',signature:'CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
 
 /*12OM: coordinate-bound and depth-correct main-model vessel inspection.*/
 if(window.CFVesselInspection12OM){
@@ -45208,6 +45558,126 @@ window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
 document.title='12OM | Clear Fork - Vessel position and transparency repair';
 if(typeof cfHeading12NM!=='undefined'&&cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
 if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+
+/* 12ON: one retained strainer on its exact, already rerouted M2680/M2045 service.
+ * Coordinates are schematic model coordinates, not surveyed field dimensions.
+ * No pipe topology, operating state, manufacturer identity or source fact changes. */
+var CF_SP2045B_PLAN_12ON={build:'12ON',baseline:'12OM',owner:'cf3d_hn_sp2045b',tag:'SP-2045B',kind:'strainer',routeKey:'pipeTo_inlsuchdr_6810',routeId:'pipe12hn_71',upstreamKey:'cf3d_hn_mv204501',upstreamTag:'204501',before:[41.825,2.64,-120.9],upstreamCenter:[60,1.8,-121.8],center:[60,1.8,-119.3],direction:[0,0,1],leadStart:[60,1.8,-125.2],leadEnd:[60,1.8,-117.2],nominalInches:10,sourceDrawing:'020185-AE-DW-M2045',sourceFact:'residue_return',sourceDefinition:'CF3D_PID_SOURCE_12HN',placementBasis:'Existing 1017 return lead from the M2680 model reconciliation; retain the prior 2.5-model-unit separation downstream of block 204501. Exact installed chainage and strainer construction remain unverified.',sourceFactsAdded:0,pipeRoutesChanged:0};
+function cfSp2045BPlan12ON(route,upstream,record){
+ var P=CF_SP2045B_PLAN_12ON,errors=[],toArray=function(p){return Array.isArray(p)?p.slice():p&&typeof p.toArray==='function'?p.toArray():null;},same=function(a,b){return a&&b&&a.length===3&&a.every(function(n,i){return Number.isFinite(n)&&Math.abs(n-b[i])<1e-6;});};
+ if(!record||(record.assetId||record.key)!==P.owner||record.tag!==P.tag||record.kind!=='strainer'||!(record.drawings||[]).includes(P.sourceDrawing))errors.push('Exact retained SP-2045B strainer/source identity is unavailable.');
+ if(!route||route.key!==P.routeKey||((route.id||route.routeId12HN)&&(route.id||route.routeId12HN)!==P.routeId))errors.push('Exact retained 1017 return route is unavailable.');
+ var points=(route&&route.points||[]).map(toArray),segments=[];
+ for(var i=1;i<points.length;i++)if(same(points[i-1],P.leadStart)&&same(points[i],P.leadEnd))segments.push(i-1);
+ if(segments.length!==1)errors.push('The documented M2680 lead is missing or ambiguous; no nearest-pipe attachment is allowed.');
+ if(!upstream||upstream.key!==P.upstreamKey||upstream.tag!==P.upstreamTag||upstream.pipeKey!==P.routeKey||!same(toArray(upstream.center),P.upstreamCenter))errors.push('Upstream block 204501 is not at the retained rerouted location.');
+ // The host is still the ten-inch lead; the 6/10/14-inch control station stays downstream.
+ if(route&&Array.isArray(route.diameterSections12HN)){
+  var sections=route.diameterSections12HN.filter(function(s){return same(toArray(s.a),P.leadStart)&&same(toArray(s.b),P.leadEnd);});
+  if(sections.length!==1||sections[0].nps!==P.nominalInches)errors.push('The named lead no longer has the retained ten-inch size.');
+ }else if(route&&Number.isFinite(route.radius)&&Math.abs(route.radius-P.nominalInches/24)>1e-6)errors.push('The reference route radius disagrees with the ten-inch lead.');
+ return {ok:errors.length===0,errors:errors,owner:P.owner,route:P.routeKey,routeId:P.routeId,segmentIndex:segments[0],center:P.center.slice(),direction:P.direction.slice(),start:points[0]||null,end:points[points.length-1]||null};
+}
+function cfApplySp2045BReference12ON(H,plan){
+ var P=CF_SP2045B_PLAN_12ON,records=H.records||H.components||{},rows=Array.isArray(records)?records:Object.values(records),hits=rows.filter(function(r){return r&&(r.assetId||r.key)===P.owner;}),info=H.info||H.referenceNotes||{};
+ if(!plan||!plan.ok||hits.length!==1||hits[0].tag!==P.tag)return {applied:false,reason:'Exact verified model placement and owner required.'};
+ var r=hits[0],location='On the 10-inch 1017 return from F-6800, after 204501 and before PV-6810A. Schematic model center [60, 1.8, -119.3]; not a surveyed field position.',binding={build:P.build,routeKey:P.routeKey,routeId:P.routeId,segmentIndex:plan.segmentIndex,center:plan.center.slice(),direction:plan.direction.slice(),basis:P.placementBasis,sourceDefinition:P.sourceDefinition,sourceFact:P.sourceFact};
+ r.location=location;r.pipeKey=P.routeKey;r.modelPlacement12ON=binding;
+ if(r.sourceRecord){r.sourceRecord.center=plan.center.slice();r.sourceRecord.direction=plan.direction.slice();r.sourceRecord.pipeKey=P.routeKey;r.sourceRecord.routeStart=plan.start.slice();r.sourceRecord.routeEnd=plan.end.slice();}
+ if(H.deviceData&&H.deviceData[P.owner])Object.assign(H.deviceData[P.owner],{location:location,modelPlacement12ON:binding});
+ if(H.trace&&H.trace.components&&H.trace.components[P.owner])Object.assign(H.trace.components[P.owner],{location:location,modelPlacement12ON:binding});
+ var n=info[P.owner];if(n){n.modelPlacement12ON=binding;var prefix='MODEL PLACEMENT 12ON: ';var text=prefix+location;if(!Array.isArray(n.d))n.d=[];n.d=n.d.filter(function(t){return String(t).indexOf(prefix)!==0;});n.d.push(text);}
+ return {applied:true,owner:P.owner,route:P.routeKey,center:plan.center.slice(),newPhysicalEquipment:0,sourceFactsAdded:0};
+}
+
+function cfRelocateSp2045B12ON(H){
+ var P=CF_SP2045B_PLAN_12ON,T=H.THREE,group=H.plant,records=H.records||{},run=(H.runs||[]).filter(function(r){return r.key===P.routeKey;}),blocks=(H.fields||[]).filter(function(v){return v.key===P.upstreamKey;}),report={build:P.build,owner:P.owner,route:P.routeKey,applied:false,movedMeshes:0,errors:[]};
+ var plan=cfSp2045BPlan12ON(run.length===1?run[0]:null,blocks.length===1?blocks[0]:null,records[P.owner]);report.errors=plan.errors.slice();if(!plan.ok)return report;
+ var anchor=H.anchors&&H.anchors[P.owner],center=anchor&&anchor.top;
+ if(!T||!group||!center||!Number.isFinite(center.x)||!Number.isFinite(center.y)||!Number.isFinite(center.z)){report.errors.push('Exact existing strainer anchor/plant frame unavailable.');return report;}
+ var old=center.clone(),target=new T.Vector3().fromArray(plan.center),original=new T.Vector3().fromArray(P.before);
+ if(old.distanceTo(original)>1e-6&&old.distanceTo(target)>1e-6){report.errors.push('Unexpected existing strainer location; do not relocate an unrecognized revision.');return report;}
+ var nodes=Array.from(new Set((H.byKey[P.owner]||[]).concat((H.sprites||[]).filter(function(n){return n&&n.userData&&n.userData.key===P.owner;})))).filter(function(n){return n&&n.parent;});
+ if(!nodes.length){report.errors.push('Existing SP-2045B geometry unavailable; no duplicate strainer created.');return report;}
+ function inPlant(n){for(var p=n;p;p=p.parent)if(p===group)return true;return false;}
+ if(nodes.some(function(n){return !inPlant(n)||!n.userData||n.userData.key!==P.owner||(n.userData.sharedPipeKeys||[]).some(function(k){return k!==P.owner;});})){report.errors.push('Mixed or unverified object ownership; geometry unchanged.');return report;}
+ var roots=nodes.filter(function(n){for(var p=n.parent;p;p=p.parent)if(nodes.includes(p))return false;return true;});
+ group.updateMatrixWorld(true);var worldDelta=group.localToWorld(target.clone()).sub(group.localToWorld(old.clone())),moves=[];
+ try{roots.forEach(function(n){var at=n.getWorldPosition(new T.Vector3()).add(worldDelta),local=n.parent.worldToLocal(at);if(![local.x,local.y,local.z].every(Number.isFinite))throw Error('Nonfinite target transform');moves.push({node:n,local:local});});}catch(e){report.errors.push(String(e.message||e));return report;}
+ // Move the original objects together: geometry/material/picking references are retained.
+ if(old.distanceTo(target)>1e-8)moves.forEach(function(m){m.node.position.copy(m.local);m.node.updateMatrixWorld(true);report.movedMeshes++;});
+ center.copy(target);group.updateMatrixWorld(true);
+ report.reference=cfApplySp2045BReference12ON({records:records,deviceData:H.deviceData,info:H.info,trace:H.trace},plan);
+ report.applied=report.reference.applied;report.from=old.toArray();report.to=target.toArray();report.direction=plan.direction;report.componentObjectCount=nodes.length;report.exactMeshReuse=true;report.pipesMoved=0;report.fieldPositionVerified=false;
+ return report;
+}
+function cfInstallSp2045B12ON(){
+ var report=cfRelocateSp2045B12ON({THREE:THREE,plant:plant,runs:CF3D_PIPE_RUNS,fields:CF3D_FIELD_DEVICES,records:CF3D_DEVICE_RECORDS,deviceData:CF3D_DEVICE_DATA,info:INFO,trace:CF_TRACE_DATA_12IZ,anchors:ANCH,byKey:byKey,sprites:sprites});
+ window.CFSp2045BRepair12ON={status:function(){return JSON.parse(JSON.stringify(report));}};
+ if(!report.applied){var err=new Error(report.errors.join('; ')||'SP-2045B repair did not apply');if(window.CFStartup12LJ)window.CFStartup12LJ.note('SP-2045B exact-route placement',err);console.error('12ON SP-2045B',err);return report;}
+ if(typeof CF3D_ASSOC!=='undefined')CF3D_ASSOC.dirty=true;
+ if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+ if(typeof LIB_STATIC_TAG_CACHE!=='undefined')LIB_STATIC_TAG_CACHE=null;
+ if(typeof CF_EQUIPMENT_INFORMATION_12MD!=='undefined')CF_EQUIPMENT_INFORMATION_12MD.index=null;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+ if(window.CFComponentFinder12IK)window.CFComponentFinder12IK.rebuild();
+ return report;
+}
+try{cfInstallSp2045B12ON();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('SP-2045B exact-route placement',e);console.error('12ON SP-2045B',e);}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OM',backendBuild:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,strainerPlacementRepair:CF_SP2045B_PLAN_12ON});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,strainerPlacementRepair:CF_SP2045B_PLAN_12ON}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title='12OP | Clear Fork - Runtime acceptance and startup diagnostics';
+if(typeof cfHeading12NM!=='undefined'&&cfHeading12NM)cfHeading12NM.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+
+
+/* 12OO priority 1: server-managed authorization and fixed-step simulation time. */
+try{if(window.CF_CURRENT_RELEASE_12JT)window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:'12OP',backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE}));}catch(_oo){}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12ON',priority1Repair:{authenticationVersion:2,clockStepSeconds:1,engineeringFactsChanged:false}});
+window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+/* 12OP: final-scope observation adapter. No scene edits, process commands or persistence. */
+function cfRuntimeAcceptanceProbe12OP(){
+ var g=ren&&ren.getContext&&ren.getContext(),clock=window.CFSimulationClock12OO&&window.CFSimulationClock12OO.status(),catalog=cfEquipmentTrainingData12MP(),info=ren&&ren.info||{};
+ return {application:CF_APPLICATION_BUILD_12OA,referenceBuild:window.CF_CURRENT_RELEASE_12JT&&window.CF_CURRENT_RELEASE_12JT.sourceIndexBuild||null,trainerBuild:catalog.build,counts:{components:Object.keys(CF3D_DEVICE_RECORDS||{}).length,pipes:Array.isArray(CF_TRACE_DATA_12IZ.pipes)?CF_TRACE_DATA_12IZ.pipes.length:Object.keys(CF_TRACE_DATA_12IZ.pipes||{}).length,sourceDefinitions:cfSourceDefinitions12HO().length,trainers:catalog.models.length},selectedOwner:selKey||null,libraryOwner:libSel&&libSel.key||null,clock:clock?{simulationSeconds:clock.simulationSeconds,pendingSimulationSeconds:clock.pendingSimulationSeconds,live:clock.live,speed:clock.speed,fault:!!clock.fault}:null,renderer:{contextLost:!g||g.isContextLost(),calls:info.render&&info.render.calls,triangles:info.render&&info.render.triangles,geometries:info.memory&&info.memory.geometries,textures:info.memory&&info.memory.textures},features:{componentFinder:!!window.CFComponentFinder12IK,library:!!document.getElementById('library'),trainers:!!window.CFCompressorTrainer12MO,clock:!!window.CFSimulationClock12OO,equipmentVisuals:!!window.CFEquipmentFinish12OI,pipingVisuals:!!window.CFPipeFinish12OJ,detailVisuals:!!window.CFDetailFinish12OK,vesselInspection:!!window.CFVesselInspection12OM,strainerRepair:!!window.CFSp2045BRepair12ON&&window.CFSp2045BRepair12ON.status().applied}};
+}
+function cfAcceptanceRayTarget12OP(key){
+ if(!key||!CF3D_DEVICE_RECORDS[key]||!ren||!cam)return null;
+ var rect=ren.domElement.getBoundingClientRect(),T=THREE,candidates=[];
+ if(!rect.width||!rect.height)return null;
+ scene.updateMatrixWorld(true);cam.updateMatrixWorld(true);
+ (byKey[key]||[]).forEach(function(root){root.traverse(function(m){
+  if(!m.isMesh||!m.geometry||candidates.length>70)return;
+  for(var q=m;q;q=q.parent)if(!q.visible)return;
+  if(m.userData&&m.userData.key!==key)return;
+  if(!m.geometry.boundingSphere)m.geometry.computeBoundingSphere();
+  var b=m.geometry.boundingSphere;if(!b)return;var v=b.center.clone().applyMatrix4(m.matrixWorld).project(cam);
+  if(v.z>=-1&&v.z<=1&&Math.abs(v.x)<.95&&Math.abs(v.y)<.95)candidates.push(v);
+ });});
+ var ray=new T.Raycaster(),leaves=(typeof CF_PICK_LEAVES_12JG!=='undefined'?CF_PICK_LEAVES_12JG:[]).filter(function(m){return cfIsAttached12JG(m)&&cf3dEffectivelyVisible(m)&&!m.userData.qualityCulled12JG&&(!m.layers||!cam.layers||m.layers.test(cam.layers));});
+ if(!leaves.length)return null;
+ for(var i=0;i<candidates.length;i++){
+  var v=candidates[i];ray.setFromCamera(new T.Vector2(v.x,v.y),cam);
+  var hits=ray.intersectObjects(leaves,false);
+  if(hits.length){var o=hits[0].object;while(o&&!(o.userData&&o.userData.key))o=o.parent;var owner=o&&o.userData&&o.userData.key;if(owner===key)return {owner:key,x:rect.left+(v.x+1)*rect.width/2,y:rect.top+(1-v.y)*rect.height/2,basis:'Candidate verified by native THREE.Raycaster; subsequent actual pointer click is still required.'};}
+ }
+ return null;
+}
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OO',priority2Acceptance:{instrumentation:'12OP',nativeAcceptance:'Requires execution of full-page suite; not implied by build'}});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,priority2Diagnostics:'12OP'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+/*12OQ collapses controls only. Existing phase APIs, meshes and event handlers are reused.*/
+function cfInstallVisualDisclosures12OQ(){
+ var doc=document,specs=[['cfEquipmentFinish12OI','PHASE 1 / EQUIPMENT','cfEquipmentEnhanced12OI','cfEquipmentQuality12OI'],['cfPipeFinish12OJ','PHASE 2 / PIPING','cfPipingEnhanced12OJ','cfPipingQuality12OJ'],['cfDetailFinish12OK','PHASE 3 / CONNECTIONS & DETAILS','cfDetailsEnhanced12OK','cfDetailsQuality12OK']];
+ var made=[];specs.forEach(function(s){var host=doc.getElementById(s[0]);if(!host||host.dataset.collapsible12oq)return;host.dataset.collapsible12oq='true';var details=doc.createElement('details');details.id=s[0]+'Disclosure12OQ';details.className='cf-visual-disclosure12oq';var summary=doc.createElement('summary');summary.style.cssText='cursor:pointer;min-height:44px;padding:10px 14px;color:#dbeff4;display:list-item;font:600 12px/1.6 system-ui;';var title=doc.createElement('span');title.textContent=s[1];summary.appendChild(title);var status=doc.createElement('span');status.style.cssText='font-weight:400;margin-left:10px;color:#a9c4cd';summary.appendChild(status);details.appendChild(summary);details.style.cssText='margin:7px 0;border:1px solid #426075;border-radius:9px;background:#12232e;min-width:0;';host.parentNode.insertBefore(details,host);details.appendChild(host);host.style.margin='0';host.style.border='0';host.style.borderTop='1px solid #426075';host.style.borderRadius='0 0 9px 9px';var oldTitle=host.querySelector(':scope > strong');if(oldTitle)oldTitle.style.display='none';
+ function refresh(){var c=doc.getElementById(s[2]),q=doc.getElementById(s[3]);if(!q)q=host.querySelector('select');status.textContent=(c&&c.checked?'Enhanced':'Original')+' / '+(q&&q.value==='fine'?'Fine':'Balanced')+(details.open?'':' - expand');}
+ host.addEventListener('change',refresh);details.addEventListener('toggle',refresh);refresh();made.push(details.id);
+ });return made;
+}
+
+cfInstallVisualDisclosures12OQ();cfInstallTrendDiagnostics12OQ();
+document.title='12OQ | Clear Fork - Focused Ryan evidence, live trends and compact visual controls';
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OP',priority3:'Bounded exact-owner evidence selection; centralized trend registry; collapsible visual panels'});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE}));
+if(window.CFAcceptance12OP){window.CFAcceptance12OP.raycastTarget=cfAcceptanceRayTarget12OP;window.CFAcceptance12OP.finishMain(cfRuntimeAcceptanceProbe12OP);}
 
 })(); // 12JJ close the shared application scope AFTER both visual mounts
 
