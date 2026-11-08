@@ -1,5 +1,5 @@
 'use strict';
-/* Clear Fork 12OQ. Read-only retrieval over the final retained reference state.
+/* Clear Fork 12OS. Lossless indexed candidate selection; retained 12OQ evidence format. Read-only retrieval over the final retained reference state.
  * No external search, source mutation, embeddings, paid calls, or storage writes.
  * Whole evidence units are admitted with their qualification bundle; never cut a fact
  * mid-sentence to satisfy a budget. This is retrieval, not engineering verification. */
@@ -24,13 +24,19 @@ function createEvidenceRouter(ref, genericProvider) {
  let index=null, builds=0, last=null;
  function build(){
   if(index)return index;
-  const docs=[],owners=new Map(),aliases=new Map(),notes=ref.referenceNotes||{},flags=ref.referenceReviewFlags||{};
+  const docs=[],owners=new Map(),aliases=new Map(),termIndex=new Map(),ownerIndex=new Map(),noteIndex=new Map(),notes=ref.referenceNotes||{},flags=ref.referenceReviewFlags||{};
   function alias(k,id){k=norm(k);if(!k)return;let a=aliases.get(k);if(!a)aliases.set(k,a=[]);if(!a.includes(id))a.push(id);}
   function add(id,title,payload,ownerKeys=[],qualification={}){
    if(payload==null)return;
    const doc={id,title,owners:[...new Set(ownerKeys.filter(Boolean))],payload,qualification};
    const text=json(doc);if(text.length>120000)return; // Oversized source stays in Library, never blindly serialized.
-   docs.push({doc,terms:new Set(tokens(title+' '+json(payload))),titleTerms:new Set(tokens(title)),size:text.length,text:text.toLowerCase()});
+   const row={doc,terms:new Set(tokens(title+' '+json(payload))),titleTerms:new Set(tokens(title)),size:text.length,text:text.toLowerCase(),payloadJSON:json(payload),qualificationJSON:json(qualification)},position=docs.length;
+   docs.push(row);
+   function post(map,key){let a=map.get(key);if(!a)map.set(key,a=[]);a.push(position);}
+   for(const t of row.terms)post(termIndex,t);
+   for(const owner of doc.owners)post(ownerIndex,owner);
+   // Preserve the old startsWith('note:'+linked+'.') rule, including dotted note keys.
+   if(id.startsWith('note:'))for(let i=5;i<id.length;i++)if(id[i]==='.')post(noteIndex,id.slice(5,i));
   }
   for(const r of ref.components||[]){
    const id=r.assetId||r.key;if(!id)continue;owners.set(id,r);alias(id,id);alias(r.tag,id);for(const a of r.aliases||[])alias(a,id);
@@ -67,7 +73,7 @@ function createEvidenceRouter(ref, genericProvider) {
   }
   // Explicit endpoints, not a guessed nearest-equipment graph. No rendered points included.
   for(const p of ref.pipes||[]){let o={};for(const k of ['id','key','title','name','tag','line','nominal','size','nps','upstream','downstream','from','to','drawings','source','sourceDefinition','sourceFact','status','sourceReviewRequired','bidirectional'])if(p[k]!==undefined)o[k]=p[k];if(Object.keys(o).length)add('pipe:'+(p.id||p.key),p.title||p.name||p.key,o,[],{basis:'Retained route metadata; coordinates/nearby objects do not prove field topology.'});}
-  index={docs,owners,aliases};builds++;return index;
+  index={docs,owners,aliases,termIndex,ownerIndex,noteIndex};builds++;return index;
  }
  function select(message,context,mode){
   const ix=build(),q=String(message||''),qt=tokens(q),tagMatches=q.match(/\b(?:[A-Z]{1,6}[- ]?\d{3,5}[A-Z]?)\b/gi)||[];
@@ -84,8 +90,13 @@ function createEvidenceRouter(ref, genericProvider) {
   const mk=String(mode||'qa'),budget=identityQuery?14000:/audit|scan|loto/.test(mk)?LIMITS.audit:/recommend|forecast|health|maintenance|instructor|what_changed|readiness|brief/.test(mk)?LIMITS.diagnostic:mk==='qa_fast'?LIMITS.qa_fast:LIMITS.qa;
   const linked=new Set(),linkedSources=new Set();
   for(const id of exact){const r=ix.owners.get(id)||{},n=ref.referenceNotes[id]||{};for(const obj of [r,n])for(const[k,v]of Object.entries(obj)){if(/^referenceLinks/.test(k)&&Array.isArray(v))v.forEach(x=>linked.add(x));if(/^sourceReview|^fieldPlate/.test(k)&&v&&v.definition)linkedSources.add(v.definition);}}
-  const candidates=[];
-  for(const d of ix.docs){let score=0,matched=0;for(const t of qt){if(d.terms.has(t)){score+=2;matched++;}if(d.titleTerms.has(t))score+=5;}
+  const candidates=[],positions=new Set();
+  function include(map,key){for(const p of map.get(key)||[])positions.add(p);}
+  for(const t of qt)include(ix.termIndex,t);
+  for(const owner of exact)include(ix.ownerIndex,owner);
+  for(const key of linked)include(ix.noteIndex,key);
+  // Stable original order matters when source IDs and scores coincide.
+  for(const position of [...positions].sort((a,b)=>a-b)){const d=ix.docs[position];let score=0,matched=0;for(const t of qt){if(d.terms.has(t)){score+=2;matched++;}if(d.titleTerms.has(t))score+=5;}
    const own=d.doc.owners.some(x=>exact.has(x)),ln=[...linked].some(x=>d.doc.id.startsWith('note:'+x+'.'));
    if(own)score+=50;if(d.doc.owners.some(x=>focusOwners.has(x)))score+=90;if(ln)score+=45;if([...linkedSources].some(x=>d.doc.id.startsWith(x+'.')))score+=12;
    if(!matched&&!own&&!ln)continue;
@@ -98,15 +109,15 @@ function createEvidenceRouter(ref, genericProvider) {
    if(score>3)candidates.push({d,score});
   }
   candidates.sort((a,b)=>b.score-a.score||a.d.doc.id.localeCompare(b.d.doc.id));
-  const evidence=[],qualificationBundles={},seen=new Set();let used=0,omitted=0;
-  for(const {d}of candidates){if(seen.has(json(d.doc.payload)))continue;const qstr=json(d.doc.qualification);let qid=Object.keys(qualificationBundles).find(k=>json(qualificationBundles[k])===qstr);const newQ=!qid;if(newQ)qid='Q'+(Object.keys(qualificationBundles).length+1);
+  const evidence=[],qualificationBundles={},qualificationIds=new Map(),seen=new Set();let used=0,omitted=0;
+  for(const {d}of candidates){if(seen.has(d.payloadJSON))continue;const qstr=d.qualificationJSON;let qid=qualificationIds.get(qstr);const newQ=!qid;if(newQ)qid='Q'+(Object.keys(qualificationBundles).length+1);
    const item={id:d.doc.id,title:d.doc.title,owners:d.doc.owners,qualification:qid,content:d.doc.payload};const extra=length(item)+(newQ?qstr.length+20:0);
-   if(used+extra>budget||evidence.length>=(identityQuery?18:40)){omitted++;continue;}if(newQ)qualificationBundles[qid]=d.doc.qualification;evidence.push(item);used+=extra;seen.add(json(d.doc.payload));
+   if(used+extra>budget||evidence.length>=(identityQuery?18:40)){omitted++;continue;}if(newQ){qualificationBundles[qid]=d.doc.qualification;qualificationIds.set(qstr,qid);}evidence.push(item);used+=extra;seen.add(d.payloadJSON);
   }
   const genericText=generic&&genericProvider?genericProvider(q):null;
   const out={evidenceSelection12OQ:{query:q.slice(0,1500),mode:mk,exactOwners:[...exact],ambiguousTags:ambiguous,policy:RULES,budgetCharacters:budget,qualificationBundles,evidence,omittedCandidateCount:omitted,selectionIsCompleteLibrary:false,requestedChildRole:role,requestedOwnerAmbiguity:/valve.*serial|serial.*valve/i.test(q)&&[...exact].some(k=>!/(?:valve|regulator)/i.test((ix.owners.get(k)||{}).kind||''))?'A parent asset was identified but an exact child valve was not. Do not answer with the parent serial; require the exact valve owner.':null,referenceBuild:ref.sourceIndexBuild||'12OH'}};
   if(genericText&&length(genericText)<=12000)out.genericRetainedFramework=genericText;
-  last={query:q.slice(0,200),mode:mk,exactOwners:[...exact],evidenceUnits:evidence.length,selectedCharacters:length(out),omittedCandidateCount:omitted,indexDocuments:ix.docs.length,indexBuilds:builds};return out;
+  last={query:q.slice(0,200),mode:mk,exactOwners:[...exact],evidenceUnits:evidence.length,selectedCharacters:length(out),omittedCandidateCount:omitted,indexDocuments:ix.docs.length,candidateDocuments:positions.size,indexBuilds:builds};return out;
  }
  // User-owned learned/browser facts are never silently flattened or made verified.
  function boundSupplement(value,budget,query,label){
@@ -114,8 +125,8 @@ function createEvidenceRouter(ref, genericProvider) {
   const contextMeta=!Array.isArray(value)&&value&&typeof value==='object'?meta(value):{};let baseSize=length(contextMeta);
   if(baseSize>budget)return {sourceClass:label,items:[],omittedItems:arr.length,warning:'Qualification envelope exceeds budget; source not excerpted without its limitations.'};
   let input=arr;if(!Array.isArray(value)&&value&&typeof value==='object'&&length(value)>budget){input=[];for(const [k,v]of Object.entries(value)){if(Array.isArray(v))v.forEach((item,i)=>input.push({path:k+'['+i+']',value:item}));else input.push({path:k,value:v});}}
-  const qt=tokens(query),ordered=input.map((v,i)=>({v,i,score:qt.reduce((n,t)=>n+(json(v).toLowerCase().includes(t)?1:0),0)})).sort((a,b)=>b.score-a.score||a.i-b.i),items=[];let used=baseSize,omitted=0;
-  for(const x of ordered){const n=length(x.v);if(used+n+1>budget){omitted++;continue;}items.push(x.v);used+=n+1;}
+  const qt=tokens(query),ordered=input.map((v,i)=>{const serialized=json(v),lower=serialized.toLowerCase();return {v,i,size:serialized.length,score:qt.reduce((n,t)=>n+(lower.includes(t)?1:0),0)};}).sort((a,b)=>b.score-a.score||a.i-b.i),items=[];let used=baseSize,omitted=0;
+  for(const x of ordered){const n=x.size;if(used+n+1>budget){omitted++;continue;}items.push(x.v);used+=n+1;}
   return {sourceClass:label,contextMetadata:contextMeta,items,omittedItems:omitted,budgetCharacters:budget,qualification:'Bounded retrieved evidence; omitted items remain in original storage. Not a complete inventory or field verification.'};
  }
  return {select,boundSupplement,limits:LIMITS,status:()=>last&&Object.assign({},last),rules:RULES};
