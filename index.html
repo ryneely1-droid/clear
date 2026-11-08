@@ -3,6 +3,7 @@
 <html lang="en">
 <!--12KE: cumulative source-only filter plate and PetroSkills delta; no geometry/control/storage migration.--> 
 <head>
+<!--12OX: cumulative12OW; source-linked board-operator quiz. No process/control changes.--> 
 <!--12OW: cumulative12OV; grouped workspace and existing-ring fan fit. Original controls, routes, logic and access security retained.--> 
 <!--12OO: Priority 1. Dedicated server signing secret required; fixed-step process clock. Preserve saved data.--> 
 <!--12ON: relocate the existing SP-2045B onto its exact 1017 return lead; all 12OM vessel fixes retained.--> 
@@ -56,7 +57,7 @@
 <!-- 12LL: rendered NGL transform/legacy cleanup, source-sized outlet station and navigation repair. All prior restoration retained. -->
 <!-- 12LK: cumulative 12LI/12LJ plus repaired source/model initialization order, restored cold/flare/flow runtime, and live feature checks. No source facts, equipment routes, controls or user data removed. -->
 <!-- 12LJ: TK-8100 same-plate corroboration, oil relief loops and protection verification. Preserve 12LH and match main/Ryan 12LJ. -->
-<meta name="cf-deployment-package" content="12OW-ROOT">
+<meta name="cf-deployment-package" content="12OY-ROOT">
 <!-- 12KQ: existing expander/booster vendor refinement. Frick 12KP retained; no main-process/control/storage changes. -->
 <!-- 12KP: Frick C-1140/1141/1142 vendor presentation and XV-1000B body plate. Expander untouched; controls/history/storage preserved. Match RYAN-2026-10-13-12KP. -->
 <!--12KM: existing residue suction XV/PV geometry reconciled, body plate source, and deduplicated fractionator-control references. Baseline12KL preserved.-->
@@ -104,13 +105,13 @@
 <link rel="preload" as="script" href="./data-13-cf_plate_audit_12kb.js">
 <link rel="preload" as="script" href="./data-14-cf_source_12ko.js">
 <link rel="preload" as="script" href="./data-15-cf_source_12kp.js">
-<link rel="preload" as="script" href="./clearfork-main.js?v=12OW">
+<link rel="preload" as="script" href="./clearfork-main.js?v=12OY">
 <!-- 12IA: expander visual enhancement; M2145 and targeted M2140 source review; XV-6060 and PV-6050A photos. Paired backend RYAN-2026-10-06-12II. -->
 <!-- 12HW: FCV-1422 actuator-only source; M2120 Rev 8 heater refinement. Matched with RYAN-2026-10-06-12II. No process/storage change. -->
 <!-- 12HU: filter flare clearance / M2110 Rev 8 / XV-1438B. Startup password deferred. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 12HP: matched learn-only handoff release, continuing the 12HO frontend and 12HN backend. Original P&ID PDFs, previews and nameplate photographs remain omitted. Source facts, identities, geometry, controls, history and storage compatibility are retained. Deploy with RYAN-2026-10-06-12II. -->
-<title>12OW | Clear Fork - Organized workspace and cooler fan fit</title>
+<title>12OY | Clear Fork - Settings, board practice and shift workspace</title>
 <!--
   ============================================================
   CLEARFORK PROCESSING FACILITY - CRYOGENIC UNIT #1
@@ -786,6 +787,62 @@ window.CFAcceptance12OP=CFCreateAcceptance12OP(window,document);
 .ou-filtergrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));gap:10px}.ou-filtergrid article{display:flex;flex-direction:column;gap:6px;border:1px solid #3a5362;padding:12px;border-radius:9px;background:#102936}.ou-filtergrid strong{font-size:21px;color:#9be2d1}.ou-filtergrid span,.ou-filtergrid small{color:#b8cbd6}
 
 </style>
+<style id="cfBoardOP12OX">
+/*12OX scoped quiz/navigation styling only.*/
+#quizpanel>div{max-height:96dvh}#quizpanel #quizBody{min-height:0;overscroll-behavior:contain;scrollbar-gutter:stable}
+#cfQuizTabs12OX{display:flex;gap:6px;padding:10px 16px;background:#101e2a;border-bottom:1px solid #345164;flex:0 0 auto;flex-wrap:wrap}
+#cfQuizTabs12OX button{flex:1;min-width:190px;min-height:44px;font:600 13px/1.4 'Segoe UI',sans-serif;color:#bfd5e6;background:#172c3b;border:1px solid #34576b;border-radius:7px;padding:9px 12px;white-space:normal}
+#cfQuizTabs12OX button[aria-selected=true]{background:#20585b;color:#effffb;border-color:#67c7b6;box-shadow:inset 0 -2px #67c7b6}
+#cfQuizTabs12OX button:focus-visible,.cf-board-study12ox :focus-visible{outline:3px solid #f1c36b;outline-offset:2px}
+.cf-board-intro12ox{border-left:4px solid #69cdb7!important;color:#d5f3eb!important;line-height:1.7!important}
+.cf-board-intro12ox button{display:block;margin-top:8px;min-height:36px;font-size:12px;background:#1d424b;border-color:#497580;color:#e0f6f4}
+.cf-board-study12ox{font:14px/1.65 'Segoe UI',sans-serif;color:#d6e8f3;padding:10px;max-width:100%}.cf-board-study12ox h2{color:#c2eee5;margin:0 0 8px}.cf-board-study12ox button{font:600 12px/1.4 'Segoe UI',sans-serif;min-height:40px;padding:8px 12px;margin:8px 0;background:#204750;border:1px solid #537886;color:#e4f6fc}
+.cf-board-search12ox{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.cf-board-search12ox input,.cf-board-search12ox select{flex:1;min-width:170px;width:auto;max-width:100%;padding:10px;min-height:42px;background:#102334;border:1px solid #517086;border-radius:7px;color:#e0ecf6;font:14px 'Segoe UI',sans-serif}
+.cf-board-item12ox{padding:12px 14px;margin:9px 0;background:#142b39;border:1px solid #365569;border-radius:8px}.cf-board-item12ox summary{cursor:pointer;color:#e1f4fb;font-weight:600;min-height:24px}.cf-board-item12ox strong,.cf-board-item12ox small{display:block;margin-top:10px}.cf-board-item12ox strong{color:#9ce6cd}.cf-board-item12ox small{color:#aec6d6;overflow-wrap:anywhere}
+@media(max-width:650px){#cfQuizTabs12OX{padding:8px;gap:5px}#cfQuizTabs12OX button{min-width:0;font-size:11.5px;padding:8px;flex-basis:45%}#quizpanel #quizTools12KL{gap:6px!important;padding:8px!important}#quizTools12KL>span{font-size:10px;line-height:1.4}#quizTools12KL label{flex:1;min-width:0;flex-wrap:wrap}#quizTools12KL #quizScope12KL{min-width:0!important;max-width:100%!important;width:100%}#quizpanel #quizBody{padding:12px!important}.cf-board-study12ox{padding:6px}.cf-board-search12ox input,.cf-board-search12ox select{min-width:0;flex-basis:100%}}
+@media(max-height:480px){#cfQuizTabs12OX{padding:4px 8px}#cfQuizTabs12OX button{min-height:32px;padding:5px 8px}#quizpanel #quizTools12KL{padding:5px 8px!important}#quizTools12KL>span{display:block;font-size:10px}#quizpanel>div>div:first-child{padding:6px 12px!important}#quizpanel #quizClose{min-height:32px!important;padding:5px 12px!important}}
+
+</style>
+<style id="cfWorkspaceStudy12OY">
+/* Settings holds the existing nodes and phase listeners; no rendering state is set here. */
+#toolDeck12KL .deck-cell12kl:has([data-visual-settings12oy]),#toolDeck12KL .deck-cell12kl:has(#cfQuickFind12ML){grid-column:1/-1;display:block}
+#toolDeck12KL [data-visual-settings12oy]{width:100%;margin:0!important;border:0!important;border-radius:7px!important}
+#toolDeck12KL [data-visual-settings12oy]>summary{padding:13px 15px!important;background:#193445}
+#toolDeck12KL [data-visual-settings12oy]>section,#toolDeck12KL [data-visual-settings12oy]>div{max-width:100%;min-width:0}
+#toolDeck12KL [data-visual-settings12oy] label{white-space:normal;color:#d8edf6}
+#toolDeck12KL #cfQuickFind12ML{margin:0;padding:13px 15px;border:0;border-radius:0;width:100%}
+#toolDeck12KL .deck-foot12kl{padding:8px 14px;font-size:11px}
+#toolDeck12KL .deck-nav12kl button:first-child{font-weight:750}
+#eqt .sd-workbench .sd-ready12oy{border-radius:7px!important;background:#16645b!important;color:#edfff9!important;border:1px solid #54b5a2!important;min-height:38px!important;padding:8px 14px!important;font-weight:700!important}
+#eqt .sd-workbench .sd-ready12oy:hover{background:#1d786d!important}
+#eqt .sd-workbench .sd-ready12oy:focus-visible{outline:3px solid #f6cf78!important;outline-offset:2px}
+#eqt .ou-nav button[aria-pressed=true]{background:#256158;color:#effff9;border-color:#64c5ae;box-shadow:inset 0 -2px #64c5ae}
+#eqt .oy-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+#eqt .oy-section-heading h3{margin:3px 0;font-size:18px;color:#e1f2fb}
+#eqt .oy-section-heading>span{font-size:11px;color:#a9c4d2}
+#eqt .oy-metric-section{margin:18px 0}
+#eqt .oy-shift-hero{background:linear-gradient(120deg,#183144,#173631);border-color:#3b6570}
+#eqt .oy-shift-clock{text-align:right;min-width:170px;color:#c7f3e7}
+#eqt .oy-shift-clock strong{display:block;font:700 27px/1.6 Consolas,monospace}
+#eqt .oy-shift-clock span{font-size:11px;color:#adc8cd}
+#eqt .oy-shift-summary small{font-size:10px;color:#abc4cf;display:block;margin-top:4px;line-height:1.5}
+#eqt .oy-table-scroll{max-width:100%;overflow-x:auto;border:1px solid #335168;border-radius:8px}
+#eqt .oy-shift-table{width:100%;border-collapse:collapse;font-size:13px;min-width:590px;color:#dfedf5}
+#eqt .oy-shift-table th,#eqt .oy-shift-table td{padding:12px 13px;text-align:right;border-bottom:1px solid #2d475b}
+#eqt .oy-shift-table thead th{background:#193349;font-size:11px;color:#bad6e3}
+#eqt .oy-shift-table th:first-child{text-align:left}
+#eqt .oy-shift-table tbody th{font-weight:600;max-width:230px}
+#eqt .oy-shift-table small{display:block;color:#9bbac9;font-size:10px}
+#eqt .oy-shift-table td{font-family:Consolas,monospace;white-space:nowrap}
+#eqt .oy-shift-critical{border-left:4px solid #ed8e81;background:#39272b;color:#ffe4df}
+#eqt .oy-handover-list{padding:0;list-style:none;display:grid;gap:8px;margin:12px 0}
+#eqt .oy-handover-list li{padding:10px 12px;border:1px solid #405160;border-radius:7px;background:#182938}
+#eqt .oy-handover-list .ou-badge{margin-right:7px}
+.cf-board-evidence12oy{border-left:3px solid #46788b;padding:8px 12px;margin:8px 0;color:#b6d4e1}
+.cf-board-evidence12oy summary{font-size:12px;font-weight:600}
+@media(max-width:650px){#eqt .oy-shift-clock{text-align:left}#eqt .oy-shift-clock strong{font-size:23px}#eqt .oy-section-heading h3{font-size:16px}#toolDeck12KL [data-visual-settings12oy]>summary{font-size:11px!important;padding:11px!important}#toolDeck12KL [data-visual-settings12oy] button{max-width:100%;white-space:normal}}
+
+</style>
 </head>
 <body>
 <!-- 12JK: source-supported NGL pig-launcher station. Existing controls and12JJ flow-popup fix preserved. -->
@@ -1326,7 +1383,7 @@ window.CFAcceptance12OP=CFCreateAcceptance12OP(window,document);
 <script id="cfDashboardBootstrap12LJ">
 /* 12LJ: index/main startup visibility. Diagnostic only; no storage reset or commands. */
 (function(){
- 'use strict';var expected='12OW',problems=[],loaded=false;
+ 'use strict';var expected='12OY',problems=[],loaded=false;
  function text(x){return String(x||'').slice(0,800);}
  var api={expected:expected,errors:problems,note:function(stage,error){var msg=text(error&&error.message||error);if(!problems.some(function(x){return x.stage===stage&&x.message===msg;}))problems.push({stage:stage,message:msg});},snapshot:function(){var m=window.CFMainScript12LJ||{},r=window.CF_CURRENT_RELEASE_12JT||{};return {index:expected,main:m.build||null,compressorTraining:(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR)?(window.CFEquipmentTrainer12MU||window.CFEquipmentTrainer12MR).status():null,kbzModel:window.CFKbzVisual12MN?window.CFKbzVisual12MN.audit():null,regenModel:window.CFRegenVisual12MM?window.CFRegenVisual12MM.audit():null,equipmentInformation:window.CFEquipmentInformation12MD?window.CFEquipmentInformation12MD.status():null,primaryInspection:window.CFInspection12MC?window.CFInspection12MC.audit():null,navigation:window.CFNavigation12MJ?window.CFNavigation12MJ.status():null,workspace:window.CFWorkspace12MK?window.CFWorkspace12MK.status():null,performance:window.CFPerformance12ML?window.CFPerformance12ML.status():null,mainPhase:m.phase||'not started',referenceBuild:r.frontend||null,backendExpected:r.backend||null,dashboard:!!document.getElementById('toolDeck12KL'),valvePositions:!!window.CFValvePositions12KI,mainFinished:!!(window.CFMainScript12LJ&&window.CFMainScript12LJ.endReached12OP),features:window.CFAppReady12LJ&&window.CFAppReady12LJ.features||{},restorationAudit:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.report||null,visualRuntimeErrors:window.CFVisualIntegrity12LK&&window.CFVisualIntegrity12LK.runtimeErrors||[],errors:problems.slice(),scope:'Local initialization and feature presence only; not a live deployment or integrated plant certification.'};},paint:function(){
   var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - '+expected;
@@ -1347,8 +1404,8 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
  'use strict';options=options||{};
  if(D.getElementById('toolDeck12KL'))return D.getElementById('toolDeck12KL')._api;
  var root=D.querySelector('.bar3'),primary=D.querySelector('.bar');if(!root||!primary)return null;
- var categories=[['display','Display & motion','Scene visibility and animation'],['areas','Plant areas','Equipment areas and utilities'],['compressors','Compressors','Machine views and retained references'],['valves','Valves & plates','Valve indication and equipment evidence'],['training','Training','Lessons, practice and study references'],['tools','Site & tools','Navigation, operating tools and workspace']];
- var groups={display:[['visibility','Visibility & layers'],['motion','Motion & appearance'],['reference','Scene status & legends']],areas:[['process','Process areas'],['utilities','Utilities & site systems']],compressors:[['controls','Machine controls'],['views','Equipment views & references']],valves:[['status','Valve indication'],['evidence','Plates, sources & audits']],training:[['lessons','Equipment lessons'],['practice','Practice & assessments'],['study','Study references']],tools:[['navigate','Navigate & inspect'],['operate','Operating tools'],['workspace','Workspace & files'],['maintenance','Maintenance & status'],['scope','Model scope & references'],['outdoors','Outdoor activities']]};
+ var categories=[['display','Settings','Visual settings only / your original controls and current choices'],['areas','Plant areas','Equipment areas and utilities'],['compressors','Compressors','Machine views and retained references'],['valves','Valves & plates','Valve indication and equipment evidence'],['training','Training','Lessons, practice and study references'],['tools','Site & tools','Navigation, operating tools and workspace']];
+ var groups={display:[['quality','Appearance & rendering'],['visibility','Visibility & layers'],['motion','Animation & motion'],['reference','Scene status & legends']],areas:[['process','Process areas'],['utilities','Utilities & site systems']],compressors:[['controls','Machine controls'],['views','Equipment views & references']],valves:[['status','Valve indication'],['evidence','Plates, sources & audits']],training:[['lessons','Equipment lessons'],['practice','Practice & assessments'],['study','Study references']],tools:[['navigate','Navigate & inspect'],['operate','Operating tools'],['workspace','Workspace & files'],['maintenance','Maintenance & status'],['scope','Model scope & references'],['outdoors','Outdoor activities']]};
  var oldRoot=Array.from(root.children),oldPrimary=Array.from(primary.children),entries=[],buttons={},panels={},active='',searchText='',seq=0,observer=null,timer=null,disposed=false;
  var lookup=new WeakMap(),pinned=new Set(['eqtbtn','askryanbtn','libbtn','cfLiveBtn','cfSpeedBtn','psvAuditButton12IJ','startupCheckButton12LJ']);
  function el(t,txt,p,cls){var n=D.createElement(t);if(txt!=null)n.textContent=txt;if(cls)n.className=cls;if(p)p.appendChild(n);return n;}
@@ -1360,7 +1417,7 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
  function searchValue(n){return norm(n.textContent+' '+n.id+' '+(n.title||'')+' '+Array.from(n.querySelectorAll('[id]')).map(function(x){return x.id;}).join(' '));}
  function classify(n){var forced=n.dataset.toolGroup;if(groups[forced])return forced;var id=n.id||'',t=norm(n.textContent),ids=id+' '+Array.from(n.querySelectorAll('[id]')).map(function(x){return x.id;}).join(' ');
   if(/^(rodbtn|bowbtn|pbbtn|trophybtn)$/.test(id))return 'tools';
-  if(id==='flowpathbtn')return 'display';
+  if(id==='flowpathbtn'||n.hasAttribute('data-visual-settings12oy'))return 'display';
   if(/vendorUnit12J[YZ]|frickUnit|heaterUnit/.test(ids)||/vendor info|vendor notebook|view compressor|view expander|frick|expander vendor|c-5700|quantum|acmtc|ariel kbz/i.test(t+' '+id))return 'compressors';
   if(/quiz|official test|training|startup|study|petroskills/i.test(t+' '+id))return 'training';
   if(/plate|audit|valve.position|all valve coverage|separator psv/i.test(t+' '+id)||/valvePositions12KI/.test(ids))return 'valves';
@@ -1369,8 +1426,8 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
   return 'tools';
  }
  function subgroup(n,cat){var t=norm(n.textContent+' '+n.id+' '+Array.from(n.querySelectorAll('[id]')).map(function(x){return x.id;}).join(' '));
-  if(cat==='tools'){if(/rodbtn|bowbtn|pbbtn|trophybtn/.test(n.id||''))return 'outdoors';if(/walk mode|walkbtn|overview|plot plan|quick jump|jumpbtn|component finder|trace this|focus selected/.test(t))return 'navigate';if(/controls &|c2 calculator|command center/.test(t))return 'operate';if(/maintenance|outages|status/.test(t))return 'maintenance';if(/model coverage|source scope|reference|review/.test(t))return 'scope';return 'workspace';}
-  if(cat==='display'){if(/legend|conventions|run states|proxy|proxies|scope/.test(t))return 'reference';return /motion|animation|render|weather|shaft|fan|frost|cold|quality|performance|flowpathbtn/.test(t)?'motion':'visibility';}
+  if(cat==='tools'){if(/rodbtn|bowbtn|pbbtn|trophybtn/.test(n.id||''))return 'outdoors';if(/walk mode|walkbtn|overview|plot plan|quick jump|jumpbtn|cfquickfind|component finder|trace this|focus selected/.test(t))return 'navigate';if(/controls &|c2 calculator|command center/.test(t))return 'operate';if(/maintenance|outages|status/.test(t))return 'maintenance';if(/model coverage|source scope|reference|review/.test(t))return 'scope';return 'workspace';}
+  if(cat==='display'){if(n.hasAttribute('data-visual-settings12oy')||/cfperformancepanel|renderquality|picture quality/.test(t))return 'quality';if(/legend|conventions|run states|proxy|proxies|scope/.test(t))return 'reference';return /motion|animation|render|weather|shaft|fan|frost|cold|quality|performance|flowpathbtn/.test(t)?'motion':'visibility';}
   if(cat==='areas')return /air|flare|drain|fuel|oil|utility|utilities|gc |building/.test(t)?'utilities':'process';
   if(cat==='compressors')return /quantum|controller|acmtc/.test(t)?'controls':'views';
   if(cat==='valves')return /position|indication|separator psv/.test(t)?'status':'evidence';
@@ -1386,7 +1443,7 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
   '#toolDeck12KL .deck-cell12kl:has(select),#toolDeck12KL .deck-cell12kl:has(details),#toolDeck12KL .deck-cell12kl:has(.legend){grid-column:1/-1}#toolDeck12KL .deck-cell12kl details{width:100%;max-width:100%;padding:9px 12px}#toolDeck12KL .deck-cell12kl details summary{cursor:pointer;font-size:12px;min-height:24px;line-height:1.5}#toolDeck12KL .deck-cell12kl .legend{margin:9px 0;max-width:100%;gap:9px;font-size:11px}#toolDeck12KL .deck-cell12kl .legend span{white-space:normal}#toolDeck12KL .deck-cell12kl details p{max-width:100%;font-size:12px!important;color:#adc3d3}#toolDeck12KL .deck-note12kl{font-size:12px;color:#9bb5c8;margin:0}'+
   '#toolDeck12KL .deck-foot12kl{display:flex;align-items:center;gap:10px;padding:9px 15px;border-top:1px solid #253e50;background:#0e1c27;font-size:11px;color:#9dbccc}#toolDeck12KL .deck-foot12kl button{margin-left:auto;min-height:30px!important;padding:4px 8px!important;font-size:11px!important;border:1px solid #355064!important;background:#162b3a!important}#toolDeck12KL .deck-empty12ow{margin:14px 16px;padding:16px;color:#bed2df;border:1px dashed #4a6577;border-radius:8px;font-size:13px}#toolDeck12KL button:focus-visible,#toolDeck12KL input:focus-visible,#toolDeck12KL select:focus-visible,#toolDeck12KL summary:focus-visible{outline:2px solid #9ae1e8;outline-offset:-3px}'+
   '@media(max-width:650px){header{padding:12px 10px 4px!important}body>.bar{padding:8px 10px!important}body>.bar2{padding:4px 10px 8px!important}body>.bar3{padding:0 10px 10px!important}#toolDeck12KL .deck-head12kl{flex-wrap:wrap;padding:12px}#toolDeck12KL .deck-search12kl{max-width:none;flex-basis:100%}#toolDeck12KL .deck-nav12kl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}#toolDeck12KL .deck-nav12kl button{min-width:0;white-space:normal;font-size:11px!important;padding:10px 4px!important}#toolDeck12KL .deck-panel12kl{padding:12px}#toolDeck12KL .deck-group-grid12ow{grid-template-columns:repeat(2,minmax(0,1fr))}#toolDeck12KL .deck-cell12kl button{font-size:11.5px!important;padding:9px!important}#toolDeck12KL .deck-foot12kl{align-items:flex-start;padding:10px 12px}#wrap{margin:0 10px!important}}@media(max-width:390px){#toolDeck12KL .deck-group-grid12ow{grid-template-columns:1fr}#toolDeck12KL .deck-cell12kl button{min-height:44px!important}}@media(prefers-reduced-motion:reduce){#toolDeck12KL *{transition:none!important}}';
- var deck=el('section',null,root);deck.id='toolDeck12KL';deck.setAttribute('aria-label','Organized 3D tools');deck.dataset.workspaceBuild='12OW';var head=el('div',null,deck,'deck-head12kl');el('span','3D WORKSPACE',head,'deck-title12kl');var form=el('div',null,head,'deck-search12kl'),search=el('input',null,form);search.type='search';search.placeholder='Find a tool, area or reference...';search.setAttribute('aria-label','Search all dashboard tools');var clear=el('button','Clear',form);clear.type='button';var nav=el('div',null,deck,'deck-nav12kl');nav.setAttribute('aria-label','3D tool categories');
+ var deck=el('section',null,root);deck.id='toolDeck12KL';deck.setAttribute('aria-label','Organized 3D tools');deck.dataset.workspaceBuild='12OY';var head=el('div',null,deck,'deck-head12kl');el('span','3D WORKSPACE',head,'deck-title12kl');var form=el('div',null,head,'deck-search12kl'),search=el('input',null,form);search.type='search';search.placeholder='Find a tool, area or reference...';search.setAttribute('aria-label','Search all dashboard tools');var clear=el('button','Clear',form);clear.type='button';var nav=el('div',null,deck,'deck-nav12kl');nav.setAttribute('aria-label','3D tool categories');
  categories.forEach(function(c){var b=el('button',c[1],nav);b.type='button';b.dataset.toolCategory=c[0];b.id='deckTab12KL_'+c[0];b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','deckPanel12KL_'+c[0]);buttons[c[0]]=b;var p=el('section',null,deck,'deck-panel12kl');p.id='deckPanel12KL_'+c[0];p.setAttribute('aria-labelledby',b.id);p.hidden=true;el('h3',c[2],p);var obj={root:p,grid:el('div',null,p,'deck-grid12kl'),groups:{}};panels[c[0]]=obj;groups[c[0]].forEach(function(g){var s=el('section',null,obj.grid,'deck-group12ow');s.dataset.workspaceGroup=g[0];var h=el('h4',g[1],s,'deck-group-head12ow');obj.groups[g[0]]={root:s,count:el('span','',h,'deck-group-count12ow'),grid:el('div',null,s,'deck-group-grid12ow')};});b.addEventListener('click',function(){search.value='';searchText='';active=active===c[0]?'':c[0];save();paint();});});
  var empty=el('div','No matching tools. Try an equipment tag or another tool name.',deck,'deck-empty12ow');empty.hidden=true;empty.setAttribute('role','status');var foot=el('div',null,deck,'deck-foot12kl'),count=el('span','',foot);count.setAttribute('aria-live','polite');var collapse=el('button','Collapse tools',foot);collapse.type='button';collapse.onclick=function(){active='';searchText='';search.value='';save();paint();};
  function register(n,forced){if(!n||n.nodeType!==1||n===deck||n.dataset.deckRegistered12kl)return;if(n.matches('script,style'))return;
@@ -1402,14 +1459,14 @@ window.CFCreateDashboard12KL=function cfCreateDashboard12KL(D,options){
  var quick=el('button','Pop Quiz',primary);quick.type='button';quick.id='quizQuick12KL';quick.title='Open the existing quiz panel';quick.onclick=function(){var b=D.getElementById('quizbtn');if(b)b.click();};
  function save(){try{if(options.storage!==false)localStorage.setItem('cfDashboard12KL',JSON.stringify({active:active}));}catch(_e){}}
  function setHidden(n,v){if(n.hidden!==v)n.hidden=v;}
- function paint(){if(disposed)return;var matches=0,total=0,terms=searchText.split(' ').filter(Boolean);entries.forEach(function(e){e.available=available(e);e.text=searchValue(e.node);e.matches=e.available&&terms.every(function(t){return e.text.indexOf(t)>=0;});if(e.available)total++;setHidden(e.cell,!e.matches);});categories.forEach(function(c){var ps=panels[c[0]],visible=0;groups[c[0]].forEach(function(g){var n=entries.filter(function(e){return e.category===c[0]&&e.group===g[0]&&e.matches;}).length;var gs=ps.groups[g[0]];setHidden(gs.root,n===0);if(gs.count.textContent!==String(n))gs.count.textContent=String(n);visible+=n;});var open=searchText?visible>0:active===c[0];setHidden(ps.root,!open);buttons[c[0]].setAttribute('aria-expanded',String(open));matches+=visible;});setHidden(empty,!searchText||matches>0);var text=searchText?matches+' matching tools across all categories':total+' available tools - original settings and actions retained';if(count.textContent!==text)count.textContent=text;}
+ function paint(){if(disposed)return;var matches=0,total=0,terms=searchText.split(' ').filter(Boolean);entries.forEach(function(e){e.available=available(e);e.text=searchValue(e.node);e.matches=e.available&&terms.every(function(t){return e.text.indexOf(t)>=0;});if(e.available)total++;setHidden(e.cell,!e.matches);});categories.forEach(function(c){var ps=panels[c[0]],visible=0;groups[c[0]].forEach(function(g){var n=entries.filter(function(e){return e.category===c[0]&&e.group===g[0]&&e.matches;}).length;var gs=ps.groups[g[0]];setHidden(gs.root,n===0);if(gs.count.textContent!==String(n))gs.count.textContent=String(n);visible+=n;});var open=searchText?visible>0:active===c[0];setHidden(ps.root,!open);buttons[c[0]].setAttribute('aria-expanded',String(open));matches+=visible;});setHidden(empty,!searchText||matches>0);setHidden(collapse,!active&&!searchText);var text=searchText?matches+' matching tools across all categories':active?'Original controls and settings retained':'Select a tab / visual options are in Settings';if(count.textContent!==text)count.textContent=text;}
  function schedule(){if(timer!==null||disposed)return;timer=setTimeout(function(){timer=null;paint();},80);}
  search.addEventListener('input',function(){searchText=norm(search.value);paint();});clear.onclick=function(){searchText='';search.value='';paint();search.focus();};search.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();clear.click();}});
  nav.addEventListener('keydown',function(e){if(!['ArrowRight','ArrowLeft','Home','End'].includes(e.key))return;var a=Array.from(nav.children),i=a.indexOf(D.activeElement);if(i<0)return;e.preventDefault();var next=e.key==='Home'?0:e.key==='End'?a.length-1:(i+(e.key==='ArrowRight'?1:a.length-1))%a.length;a[next].focus();});
  try{if(options.storage!==false){var state=JSON.parse(localStorage.getItem('cfDashboard12KL')||'null');if(state&&buttons[state.active])active=state.active;}}catch(_e){}
  function owner(n){for(var x=n&&n.nodeType===1?n:n&&n.parentElement;x&&x!==root&&x!==primary;x=x.parentElement)if(lookup.has(x))return lookup.get(x);return null;}
  if(typeof MutationObserver!=='undefined'&&options.observe!==false){observer=new MutationObserver(function(ms){var changed=false;ms.forEach(function(m){if(m.type==='childList'&&(m.target===root||m.target===primary))Array.from(m.addedNodes).forEach(function(n){if(n.nodeType!==1||n===deck||n.id==='quizQuick12KL'||pinned.has(n.id))return;register(n);changed=true;});var e=owner(m.target);if(e&&(available(e)!==e.available||searchValue(e.node)!==e.text))changed=true;});if(changed)schedule();});[root,primary].forEach(function(n){observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden','style','class','title']});});}
- paint();var api={summary:function(){return {build:'12OW',controls:entries.length,availableControls:entries.filter(available).length,active:active,categories:categories.map(function(c){return {key:c[0],title:c[1],controls:entries.filter(function(e){return e.category===c[0];}).length,available:entries.filter(function(e){return e.category===c[0]&&available(e);}).length};})};},open:function(k){if(buttons[k]){active=k;search.value='';searchText='';paint();save();}},collapse:function(){collapse.click();},entries:function(){return entries.slice();},refresh:function(){Array.from(root.children).concat(Array.from(primary.children)).forEach(function(n){if(n!==deck&&n.id!=='quizQuick12KL'&&!pinned.has(n.id))register(n);});paint();},destroyObserver:function(){if(observer)observer.disconnect();if(timer!==null){clearTimeout(timer);timer=null;}}};deck._api=api;return api;
+ paint();var api={summary:function(){return {build:'12OY',controls:entries.length,availableControls:entries.filter(available).length,active:active,categories:categories.map(function(c){return {key:c[0],title:c[1],controls:entries.filter(function(e){return e.category===c[0];}).length,available:entries.filter(function(e){return e.category===c[0]&&available(e);}).length};})};},open:function(k){if(buttons[k]){active=k;search.value='';searchText='';paint();save();}},collapse:function(){collapse.click();},entries:function(){return entries.slice();},registerControl:function(n,category){if(!n)return false;var old=entries.find(function(e){return e.node===n;});if(old)return true;if(n.dataset)n.removeAttribute('data-deck-registered12kl');register(n,category);paint();return entries.some(function(e){return e.node===n;});},refresh:function(){Array.from(root.children).concat(Array.from(primary.children)).forEach(function(n){if(n!==deck&&n.id!=='quizQuick12KL'&&!pinned.has(n.id))register(n);});paint();},destroyObserver:function(){if(observer)observer.disconnect();if(timer!==null){clearTimeout(timer);timer=null;}}};deck._api=api;return api;
 };
 try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){window.CFStartup12LJ.note("Early dashboard",e);}
 </script>
@@ -1424,8 +1481,8 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
   var failure = null;
   var expected = ["CF_TEXT_POOL_12KG","CF_COLOR_PLAN_12JF","CF_DRAIN_AUDIT_12JL","CF_DRAIN_AUDIT_12JN","CF_DRAIN_AUDIT_12JR","CF_SOURCE_12JV","CF_SOURCE_12JW","CF_SOURCE_12JX","CF_MODEL_12JY","CF_MODEL_12JZ","CF_TRACE_DATA_12IZ","CF_PHASE_PLAN_12JH","CF_PLATE_AUDIT_12KB","CF_SOURCE_12KO","CF_SOURCE_12KP"];
   window.CF12KQDeploymentD1 = {
-    package: '12OW-ROOT',
-    applicationRelease: '12OW',
+    package: '12OY-ROOT',
+    applicationRelease: '12OY',
     pending: pending,
     fail: function (name) {
       failure = String(name);
@@ -1437,14 +1494,14 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
         box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:999999;padding:16px;border:2px solid #b64030;background:#fff2e8;color:#38150c;font:16px/1.5 Arial,sans-serif;white-space:pre-wrap';
         (document.body || document.documentElement).appendChild(box);
       }
-      box.textContent = 'Clear Fork 12OW-ROOT: a required local file did not load: ' + failure +
+      box.textContent = 'Clear Fork 12OY-ROOT: a required local file did not load: ' + failure +
         '\nKeep clearfork-main.js and all 15 data-*.js files in the SAME folder as index.html, using their original filenames. Do not upload the index alone.' +
         '\nThis message does not clear or change saved browser data.';
     },
     take: function (name) {
       if (!Object.prototype.hasOwnProperty.call(pending, name)) {
         this.fail(name);
-        throw new Error('12OW-ROOT required static data not loaded: ' + name);
+        throw new Error('12OY-ROOT required static data not loaded: ' + name);
       }
       var value = pending[name];
       delete pending[name];
@@ -1452,7 +1509,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
       return value;
     },
     status: function () {
-      return { package: '12OW-ROOT', applicationRelease: '12OW', expectedDataAssets: expected.length,
+      return { package: '12OY-ROOT', applicationRelease: '12OY', expectedDataAssets: expected.length,
         availableDataAssets: Object.keys(pending).length, consumedDataAssets: consumed.length,
         failedAsset: failure,
         note: 'Packaging diagnostic only. Loaded files do not establish correct process behavior or field authorization.' };
@@ -1475,7 +1532,7 @@ try{window.CFDashboard12KL=window.CFCreateDashboard12KL(document);}catch(e){wind
 <script data-cf-asset12op="data-13-cf_plate_audit_12kb.js" src="./data-13-cf_plate_audit_12kb.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-13-cf_plate_audit_12kb.js',true)" onerror="window.CFAcceptance12OP.asset('data-13-cf_plate_audit_12kb.js',false);window.CF12KQDeploymentD1.fail('data-13-cf_plate_audit_12kb.js')"></script>
 <script data-cf-asset12op="data-14-cf_source_12ko.js" src="./data-14-cf_source_12ko.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-14-cf_source_12ko.js',true)" onerror="window.CFAcceptance12OP.asset('data-14-cf_source_12ko.js',false);window.CF12KQDeploymentD1.fail('data-14-cf_source_12ko.js')"></script>
 <script data-cf-asset12op="data-15-cf_source_12kp.js" src="./data-15-cf_source_12kp.js" onload="window.CFLoadProgress12ML.asset();window.CFAcceptance12OP.asset('data-15-cf_source_12kp.js',true)" onerror="window.CFAcceptance12OP.asset('data-15-cf_source_12kp.js',false);window.CF12KQDeploymentD1.fail('data-15-cf_source_12kp.js')"></script>
-<script data-cf-asset12op="main" src="./clearfork-main.js?v=12OW" onload="window.CFAcceptance12OP.asset('main',true)" onerror="window.CFAcceptance12OP.asset('main',false);window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
+<script data-cf-asset12op="main" src="./clearfork-main.js?v=12OY" onload="window.CFAcceptance12OP.asset('main',true)" onerror="window.CFAcceptance12OP.asset('main',false);window.CF12KQDeploymentD1.fail('clearfork-main.js')"></script><!-- BATCH UPDATE 1/5: popup-scroll + plant-inlet labels + E221 labels + coldsep arrows -->
 
 <script>
 window.PETROSKILLS_12BX_REFERENCE = {
