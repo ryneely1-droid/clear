@@ -1,6 +1,6 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12OQ';
+const CF_APPLICATION_BUILD_12OA='12OS';
 if(window.CFAcceptance12OP&&!window.CFAcceptance12OP.enterMain(CF_APPLICATION_BUILD_12OA))return;
 /*12OH: inlet receiver closure plate only; previous source and trainer behavior retained.*/
 var CF_SOURCE_12OH={"build":"12OH","baseline":"12OG","date":"2026-11-01","id":"v1000_tdw_closure_plate_12oh","title":"V-1000 inlet pig receiver / individual D2000 closure plate","sourceClass":"USER_PHOTOGRAPHS_WITH_OPERATOR_RECEIVER_ASSOCIATION","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["oh_v1000_closure"],"parentOwnerKeys":["v1000"],"existingSourceRefs":["CF3D_PID_M2000_12HI"],"plate":{"ownerKey":"oh_v1000_closure","parentOwnerKey":"v1000","referenceKey":"oh_v1000_closure","role":"Quick-actuating closure; NOT the complete receiver pressure vessel","certifiedBy":"T.D. Williamson","model":"D2000","descriptionLiteral":"D2000 QUICK-ACTUATING CLOSURE","sizeLiteral":"30\" (750 MM)","partNumber":"12342150","serial":"30UJD085","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121],"designCodesLiteral":["ASME B31.4/B31.8","CSA Z662 CAT 11"],"designFactorRows":[{"printedFactor":"0.60","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]},{"printedFactor":"0.50","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]}],"printedPlantTag":null,"yearBuilt":null,"unreadableUpperRightField":null,"association":"Operator identifies the photographed closure as belonging to the inlet pig receiver. Existing M2000 record identifies that receiver as V-1000 and separately records a 30-inch quick-opening closure.","photos":[{"name":"IMG_0784.jpeg","sha256":"9837e35298edc92bd17f6fb4c31d71ef8b2c18cddab567f52ea2442bdd65880b","byteLength":453904,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false},{"name":"IMG_0785.jpeg","sha256":"de23f6e41068513241bdae9b201fb9d449f98aee2be38299efeaf40645d5acaf","byteLength":457772,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false}],"qualifications":["Two photographs show one plate and one individual closure. No second closure or receiver is created.","Individual closure serial, part number, maker and ratings belong only to oh_v1000_closure. They are not the receiver shell identity, a valve identity or a sister launcher identity.","The plate prints 1480 PSI / 102 BAR. Preserve the PSI label literally rather than silently changing its pressure basis to PSIG.","The separate M2000 receiver drawing reference of 1440 PSIG at 130 F and the existing PSV-1000 record remain unchanged. Closure MAWP is not a receiver rerating, operating target, trip, isolation authorization or relief setting.","Both printed design-factor rows (0.60 and 0.50) are retained; no active installed design-factor case is selected or inferred. CSA CAT 11 is a literal transcription, not a standards interpretation.","30-inch (750 MM) is retained exactly as printed, not replaced with a recalculated unit conversion.","The upper-right field cannot be confidently read. No fabrication year, material, hydrotest, barrel serial or National Board number is inferred.","Only the closed closure face and readable plaque are represented. The existing end-cap silhouette is retained; end assignment, dimensions and mounting are schematic. No inferred hinge/locking mechanism or opening sequence is implemented."]},"pending":["V-1000 receiver-shell identity/rating plate, serial/NB/MDMT where applicable; this closure plate does not replace it.","Applicable D2000 serial-specific vendor assembly/GA, measured door/end correspondence, hinge/locking details, seals/materials and installed closure accessories.","Unreadable upper-right plate marking and applicable design-factor case; not resolved by matching a generic catalog."],"policy":["One canonical closure source and one photo-ledger group with two corroborating views. Existing receiver and launcher records remain separate.","Index the existing receiver closure as a child of v1000 for independent picking and reference; no second receiver, closure body or process route.","No process, protection, pressure setting, opening control, training runtime, quiz, saved-data or authentication changes."],"newEntries":[{"id":"oh.closure","title":"Individual inlet pig receiver closure identity","ownerKeys":["oh_v1000_closure"],"tags":["V-1000 closure"],"text":"IMG_0784 and IMG_0785 corroborate one T.D. Williamson D2000 quick-actuating closure, part 12342150, serial 30UJD085, 30-inch (750 MM), with the two printed rating/design-factor cases retained under plate. Operator associates it with inlet pig receiver V-1000; receiver vessel identity and ratings remain separate.","authority":"USER_PHOTOS / OPERATOR_PARENT_ASSOCIATION","referenceKey":"oh_v1000_closure"}]};
@@ -14581,10 +14581,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-05-12OQ';
+var RYAN_BUILD_ID='RYAN-2026-11-07-12OS';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-RELIABILITY-SCAN-12OS-20261107';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -15265,6 +15265,8 @@ function askRyanRender(){
  var digestBtn=body.querySelector('[data-ryandigest]'); if(digestBtn)digestBtn.addEventListener('click',doRyanDigest);
  var reportBtn=body.querySelector('[data-ryanreports]');if(reportBtn)reportBtn.addEventListener('click',doRyanShiftReports);
  body.querySelectorAll('[data-ryanscan]').forEach(function(b){b.addEventListener('click',function(){doRyanScan(b.getAttribute('data-ryanscan'));});});
+ var diagnostic=document.createElement('details');diagnostic.className='cf-disclosure12mk';diagnostic.innerHTML='<summary>Ryan connection check</summary><div style="padding:12px"><button type="button" id="ryanConnectionCheck12OS">Check Ryan configuration (no AI charge)</button><pre id="ryanConnectionResult12OS" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 system-ui">Read-only configuration check. It does not send a paid question or test cloud storage.</pre></div>';body.appendChild(diagnostic);
+ document.getElementById('ryanConnectionCheck12OS').addEventListener('click',ryanCheckConnection12OS);
  cfOrganizeRyanWorkspace12MK(body);
 }
 function doAskRyanSearch(){
@@ -15728,10 +15730,9 @@ function ryanPrepareImageForUpload(attachment,cb){
 
 function ryanReadHttpResponse(r){
  return r.text().then(function(raw){
-  var ct=(r.headers&&r.headers.get?r.headers.get('content-type'):'')||'';
-  var d=null;
-  if(raw){try{d=JSON.parse(raw);}catch(_e){var compact=String(raw).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,700);d={error:'Ryan backend returned '+(ct||'non-JSON')+' HTTP '+r.status+(compact?': '+compact:'')};}}
-  if(!d)d={error:(r.status===413?'Ryan upload was rejected before the function ran because the request body was too large (HTTP 413). Image learning now auto-optimizes large photos; crop tightly around the valve/nameplate and retry if this still appears.':'Ryan backend returned an empty HTTP '+r.status+' response.')};
+  var ct=(r.headers&&r.headers.get?r.headers.get('content-type'):'')||'',d=null;
+  try{d=JSON.parse(raw);}catch(_e){}
+  if(!d||typeof d!=='object'||Array.isArray(d))return {ok:false,status:r.status,d:{error:r.status===413?'Ryan upload was rejected because the request body was too large (HTTP 413). Existing history is unchanged.':'Ryan returned an invalid or empty response (HTTP '+r.status+'). No automatic repeat was sent; check Questions Asked before resubmitting.',code:'RYAN_RESPONSE_FORMAT'},contentType:ct};
   return {ok:r.ok,status:r.status,d:d,contentType:ct};
  });
 }
@@ -15749,28 +15750,29 @@ function ryanPidReferenceContext(query){
 }
 function ryanFetch(body){
  body=Object.assign({},body||{});
- var authMode=String(body.mode||'qa').toLowerCase()==='auth';
+ var requestMode=String(body.mode||'qa').toLowerCase(),authMode=requestMode==='auth',diagnosticMode=authMode||requestMode==='health';
  if(!authMode){delete body.password;if(ryanAiSessionExpired()){ryanAiLock();return Promise.resolve({ok:false,status:403,d:{error:'Ryan session expired. Sign in again; your saved data is unchanged.',authRequired:true}});}}
- var _deviceFacts;try{_deviceFacts=cf3dDeviceKnowledge12GI(body.message||body.question||'');}catch(e){e.ryanPhase='context';return Promise.reject(e);}
+ var _deviceFacts;try{_deviceFacts=diagnosticMode?'':cf3dDeviceKnowledge12GI(body.message||body.question||'');}catch(e){e.ryanPhase='context';return Promise.reject(e);}
  if(_deviceFacts)body.context=_deviceFacts+'\n\n'+String(body.context||'');
  body.clientBuild=RYAN_BUILD_ID;
  if(cfRyanSharedEligible12NG(body)){body.sharedQuestionId=body.sharedQuestionId||cfRyanNewId12NG();body.sharedLive=ryanQaIsLiveQuestion(body.message,body.mode);body.sharedFollowup=ryanQaIsFollowup(body.message);}
  if(!authMode&&RYAN_AI_AUTH_TOKEN&&!body.authToken)body.authToken=RYAN_AI_AUTH_TOKEN;
- var timeoutMs=(body&&['shift_report','shift_report_chunk','shift_report_synthesis','operating_memory_extract'].indexOf(body.mode)>=0)?24000:((body&&(body.mode==='digest_prepare'||body.mode==='digest_pass'||body.mode==='image_learn'))?30000:((body&&(body.mode==='digest'||body.mode==='scan'||body.mode==='loto_workplan'))?30000:26000));
+ //12OR: server has a 45s request budget, browser allows transit and body decoding.
+ var timeoutMs=authMode?15000:55000;
  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
- var timer=ctrl?setTimeout(function(){ctrl.abort();},timeoutMs):null;
- return fetch(RYANFN_URL,{method:'POST',headers:{'content-type':'application/json','x-ryan-client-build':RYAN_BUILD_ID,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined})
-  .then(function(r){if(timer)clearTimeout(timer);return ryanReadHttpResponse(r).then(function(res){
+ var timer=null,expired=false;
+ var transport=fetch(RYANFN_URL,{method:'POST',headers:{'content-type':'application/json','x-ryan-client-build':RYAN_BUILD_ID,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined})
+  .then(function(r){return ryanReadHttpResponse(r).then(function(res){
+    if(expired){var late=new Error('Ryan response arrived after its deadline; no state or history queue was changed.');late.ryanPhase='transport';throw late;}
     var serverBuild=(r.headers&&r.headers.get?r.headers.get('x-ryan-build'):'')||((res.d&&res.d.buildId)||'');
-    if(serverBuild&&serverBuild!==RYAN_BUILD_ID){res.ok=false;res.status=409;res.d={error:'Ryan version mismatch: browser is '+RYAN_BUILD_ID+' but backend is '+serverBuild+'. Deploy matching index.html, clearfork-main.js and netlify/functions/ryan.js files, redeploy, then hard-refresh.'};}
-    if(res.ok&&res.d&&res.d.codeSignature&&res.d.codeSignature!==RYAN_EXPECTED_SIGNATURE){res.ok=false;res.status=409;res.d={error:'Ryan backend signature mismatch: browser expects '+RYAN_EXPECTED_SIGNATURE+' but backend returned '+res.d.codeSignature+'. Netlify is serving a different backend file.',buildId:serverBuild||''};}
-    if(res.d&&res.d.sharedHistory){var sh=res.d.sharedHistory;if(sh.retry)cfRyanQueue12NG(sh.retry);CF_RYAN_SHARED12NG.status=sh.saved?(sh.status==='complete'?'Question and answer saved in shared history.':'Question saved in shared history; answer status: '+sh.status):'Shared answer save NOT confirmed. Open Questions Asked to retry.';CF_RYAN_SHARED12NG.error='';cfRyanSharedStatus12NG();}
+    if(serverBuild&&serverBuild!==RYAN_BUILD_ID){res.ok=false;res.status=409;res.d={code:'RYAN_VERSION_MISMATCH',error:'Ryan version mismatch: browser is '+RYAN_BUILD_ID+' but backend is '+serverBuild+'. Deploy matching index.html, clearfork-main.js and netlify/functions/ryan.js files, redeploy, then hard-refresh.'};}
+    if(res.ok&&res.d&&res.d.codeSignature&&res.d.codeSignature!==RYAN_EXPECTED_SIGNATURE){res.ok=false;res.status=409;res.d={code:'RYAN_SIGNATURE_MISMATCH',error:'Ryan backend signature mismatch: browser expects '+RYAN_EXPECTED_SIGNATURE+' but backend returned '+res.d.codeSignature+'. Netlify is serving a different backend file.',buildId:serverBuild||''};}
+    if(res.d&&res.d.sharedHistory){var sh=res.d.sharedHistory;if(sh.retry)cfRyanQueue12NG(sh.retry);CF_RYAN_SHARED12NG.status=sh.saved?(sh.status==='complete'?'Question and answer saved in shared history.':'Question saved in shared history; answer status: '+sh.status):(res.d.reply||res.d.workplan?'Answer received. Shared history is pending; use Questions Asked > Retry pending saves. The existing local archive remains available.':'No completed answer received. Shared history is not confirmed.');CF_RYAN_SHARED12NG.error='';cfRyanSharedStatus12NG();}
     if(res.status===403&&res.d&&res.d.authRequired)ryanAiLock();
     return res;
-  });},function(e){
-   if(timer)clearTimeout(timer);
-   var err=(e&&e.name==='AbortError')?new Error('Request timed out after '+(timeoutMs/1000)+'s.'):e;err.ryanPhase='transport';throw err;
-  });
+  });});
+ var deadline=new Promise(function(_,reject){timer=setTimeout(function(){expired=true;if(ctrl)ctrl.abort();var e=new Error('Ryan response was not received within '+(timeoutMs/1000)+' seconds. No automatic repeat was sent; check Questions Asked before resubmitting.');e.ryanPhase='transport';reject(e);},timeoutMs);});
+ return Promise.race([transport,deadline]).then(function(res){clearTimeout(timer);return res;},function(e){clearTimeout(timer);if(e&&typeof e==='object')e.ryanPhase=e.ryanPhase||'transport';throw e;});
 }
 
 function ryanLatestLearnedDocument(){
@@ -15893,9 +15895,9 @@ async function cmdDoAskRyanAI(mode,explicitQuestion,options){
   if(attachment&&attachment.description){sendQ=q+'\n\nOPERATOR ATTACHMENT DESCRIPTION (use this to identify/contextualize the attached source; verify facts against what is actually visible/readable in the source): '+attachment.description;}
   var learnedForQuestion=ryanLearnedFactsForQuestion(q,isSimpleQa?32:48);
   return ryanFetch({message:sendQ, context:context, mode:(isSimpleQa&&!attachment?'qa_fast':mode), history:RYAN_AI_HISTORY, password:RYAN_AI_PW, attachment:attachment, learnedKnowledge:learnedForQuestion}).then(async function(res){
-   if(res.status===403){
+   if(res.status===403&&res.d&&res.d.authRequired){
     ryanAiLock(); askRyanRender();
-    var errEl2=document.getElementById('askRyanPwErr'); if(errEl2)errEl2.textContent='Incorrect password.';
+    var errEl2=document.getElementById('askRyanPwErr'); if(errEl2)errEl2.textContent=String(res.d.error||'Ryan session expired. Sign in again.');
     return;
    }
    if(!res.ok||res.d.error){
@@ -15904,9 +15906,9 @@ async function cmdDoAskRyanAI(mode,explicitQuestion,options){
     if(!backendMsg)backendMsg='HTTP '+String(res.status||0)+' from '+RYANFN_URL+' with no error message. Check the Netlify Function log for ryan.';
     var backendId=(res.d&&res.d.buildId)?String(res.d.buildId):'';
     var backendBuild=backendId?(' | backend '+backendId):'';
-    var isMismatch=(res.status===409)||(backendId&&backendId!==RYAN_BUILD_ID);
+    var isMismatch=!!(backendId&&backendId!==RYAN_BUILD_ID)||/^(?:RYAN_VERSION_MISMATCH|RYAN_SIGNATURE_MISMATCH|RYAN_REFERENCE_MISMATCH)$/.test(String(res.d&&res.d.code||''))||/Ryan (?:version|backend signature|reference snapshot|build) mismatch/i.test(String(backendMsg));
     var isUsageExceeded=/usage[_ -]?exceeded|credit|billing|spend limit|usage limit/i.test(String(backendMsg));
-    var isOverloaded=!isUsageExceeded&&((res.status===503)||/overload|overloaded|temporarily busy|capacity/i.test(String(backendMsg)));
+    var isOverloaded=!isUsageExceeded&&!!(res.d&&(res.d.upstreamStatus===529||res.d.code==='PROVIDER_OVERLOAD'||res.d.retryable===true));
     if(isUsageExceeded){
       out.innerHTML='<div style="background:#342812;border:1px solid #80611d;border-radius:6px;padding:10px 12px;color:#ffd98a;font-size:12.5px;"><b>Ryan API usage/billing limit reached.</b><br>'+ryanEscape(String(backendMsg))+'<br><span style="color:#c9b680;font-size:11px;">Ryan build '+ryanEscape(RYAN_BUILD_ID)+' is connected. Check the Anthropic API account usage/billing limit; redeploying will not fix this. Previously saved Q&amp;A answers can still be reused locally at $0.</span></div>';
     }else if(isOverloaded){
@@ -15923,22 +15925,28 @@ async function cmdDoAskRyanAI(mode,explicitQuestion,options){
    var workplan=res.d.workplan||null, lotoRec=null;
    if(mode==='loto_workplan'){
     if(!workplan){out.innerHTML='<div style="background:#3a1c1c;border:1px solid #6a3030;border-radius:6px;padding:10px 12px;color:#ffb0b0;font-size:12.5px;">Ryan did not return a structured LOTO/work plan. Nothing was saved. Retry the request.</div>';return;}
-    workplan.fieldVerificationRequired=true;workplan.status='DRAFT - NOT APPROVED';workplan.finalWarning='NOT APPROVED — FIELD VERIFICATION REQUIRED';
+    workplan.fieldVerificationRequired=true;workplan.status=workplan.executionBlocked?'DRAFT - INCOMPLETE':'DRAFT - NOT APPROVED';workplan.finalWarning='NOT APPROVED — FIELD VERIFICATION REQUIRED';
     lotoRec=ryanSaveLotoDoc(workplan);reply=(workplan.title||'Draft LOTO / Work Plan')+'\n'+(workplan.scope||'')+'\n\nNOT APPROVED — FIELD VERIFICATION REQUIRED';
    }
    var hasBanner=/NOT APPROVED\s*[—-]\s*FIELD VERIFICATION REQUIRED/i.test(reply);
    if(isLoto&&!hasBanner)reply+='\n\nNOT APPROVED — FIELD VERIFICATION REQUIRED';
    if(!String(reply||'').trim()){out.textContent='Ryan returned an empty answer. Nothing was added to Questions Asked.';return;}
    var qaStop=(res.d.meta&&res.d.meta.stopReason)||res.d.stopReason||'';
-   var qaSaved=await ryanQaArchive(q,reply,mode,res.d.cost,{sharedHistory:res.d.sharedHistory,contextKey:qaContextKey,reusable:!attachment,partial:qaStop==='max_tokens'||qaStop==='pause_turn',workplan:workplan});
-   RYAN_AI_HISTORY.push({role:'user',content:q});
-   RYAN_AI_HISTORY.push({role:'assistant',content:reply,mode:mode,cost:res.d.cost,lotoId:lotoRec?lotoRec.id:null,workplan:workplan,createdAt:lotoRec?lotoRec.createdAt:null,qaArchiveId:qaSaved&&qaSaved.record.id,qaAnsweredAt:qaSaved&&qaSaved.record.answeredAt,qaPartial:qaSaved&&qaSaved.record.partial,qaDurable:qaSaved&&qaSaved.durable});
+   var answerRow={role:'assistant',content:reply,mode:mode,cost:res.d.cost,lotoId:lotoRec?lotoRec.id:null,workplan:workplan,createdAt:lotoRec?lotoRec.createdAt:null,qaDurable:false,qaPartial:qaStop==='max_tokens'||qaStop==='pause_turn'};
+   RYAN_AI_HISTORY.push({role:'user',content:q});RYAN_AI_HISTORY.push(answerRow);
    if(RYAN_AI_HISTORY.length>20)RYAN_AI_HISTORY=RYAN_AI_HISTORY.slice(-20);
-   ryanSaveConversationHistory();
-   ryanSelfLearnFromExchange(q,reply);
-   if(mode==='recommend'){ryanSaveSuggestion(reply,(LAST_RYAN_Q&&LAST_RYAN_Q.trim())?LAST_RYAN_Q:'Plant-wide',res.d.cost);return;}
-   out.innerHTML='';
+   // Show a received answer before secondary local persistence or optional learning.
+   out.innerHTML='';renderRyanAiThread();var localWarnings=[];
+   try{ryanSaveConversationHistory();}catch(e){localWarnings.push('Conversation save not confirmed; the answer remains visible.');}
+   var qaSaved=null;
+   try{qaSaved=await ryanQaArchive(q,reply,mode,res.d.cost,{sharedHistory:res.d.sharedHistory,contextKey:qaContextKey,reusable:!attachment,partial:answerRow.qaPartial,workplan:workplan});}
+   catch(e){localWarnings.push('Local archive save not confirmed. Do not close this answer before copying or exporting it.');}
+   if(qaSaved){answerRow.qaArchiveId=qaSaved.record&&qaSaved.record.id;answerRow.qaAnsweredAt=qaSaved.record&&qaSaved.record.answeredAt;answerRow.qaPartial=qaSaved.record&&qaSaved.record.partial;answerRow.qaDurable=!!qaSaved.durable;}
+   try{ryanSaveConversationHistory();}catch(e){}
+   try{ryanSelfLearnFromExchange(q,reply);}catch(e){localWarnings.push('Optional local learning did not complete; the received answer is preserved.');}
+   if(mode==='recommend'){try{ryanSaveSuggestion(reply,(LAST_RYAN_Q&&LAST_RYAN_Q.trim())?LAST_RYAN_Q:'Plant-wide',res.d.cost);}catch(e){localWarnings.push('Suggestion save not confirmed; the answer remains in this conversation.');}}
    renderRyanAiThread();
+   if(localWarnings.length)out.innerHTML='<div role="status" class="qa-notice">'+localWarnings.map(ryanEscape).join('<br>')+'</div>';
    var thread=document.getElementById('askRyanThread'); if(thread)thread.scrollIntoView({block:'end'});var follow=document.getElementById('askRyanFollowup');if(follow)follow.focus();
   }).catch(function(e){
    var localFallback=ryanLocalLearnedFallback(q,learnedForQuestion);
@@ -44520,10 +44528,34 @@ async function cfRyanSharedApi12NG(body){
  }finally{clearTimeout(timer);}
 }
 function cfRyanPendingLoad12NG(){try{var a=JSON.parse(localStorage.getItem(CF_RYAN_OUTBOX12NG)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
-function cfRyanPendingSave12NG(a){try{localStorage.setItem(CF_RYAN_OUTBOX12NG,JSON.stringify(a));CF_RYAN_SHARED12NG.pending=a;return true;}catch(e){CF_RYAN_SHARED12NG.pending=a;CF_RYAN_SHARED12NG.status='Pending shared save is only in memory. Export your local history before closing.';return false;}}
+function cfRyanPendingSave12NG(a){
+ var S=CF_RYAN_SHARED12NG;S.pending=a;
+ try{localStorage.setItem(CF_RYAN_OUTBOX12NG,JSON.stringify(a));S.pendingDurable12OS=true;return true;}
+ catch(e){S.pendingDurable12OS=false;S.status='NOT SAVED PERSISTENTLY: pending shared saves are only in memory. Export local history before closing.';return false;}
+}
 function cfRyanQueue12NG(body){var a=cfRyanPendingLoad12NG().concat(CF_RYAN_SHARED12NG.pending||[]),map=new Map();a.forEach(function(x){if(x&&x.id)map.set(x.id,x);});map.set(body.id,body);cfRyanPendingSave12NG(Array.from(map.values()));cfRyanSharedStatus12NG();}
-async function cfRyanFlush12NG(){var S=CF_RYAN_SHARED12NG;if(S.flushing)return;S.flushing=true;try{var rows=cfRyanPendingLoad12NG().concat(S.pending||[]),uniq=new Map();rows.forEach(function(x){if(x&&x.id)uniq.set(x.id,x);});for(var b of uniq.values()){try{await cfRyanSharedApi12NG(b);var rec=RYAN_QA_STATE.rows.find(function(r){return r.sharedId===b.id||r.id===b.localId;});if(rec){rec.sharedId=b.id;rec.sharedStatus='saved';await ryanQaPersist([rec]);}uniq.delete(b.id);S.error='';S.status='Pending shared saves confirmed.';cfRyanPendingSave12NG(Array.from(uniq.values()));}catch(e){S.error=String(e.message||e);break;}}}finally{S.flushing=false;cfRyanSharedStatus12NG();}}
-function cfRyanSharedStatus12NG(){var S=CF_RYAN_SHARED12NG,n=Math.max((S.pending||[]).length,cfRyanPendingLoad12NG().length),msg=S.error||S.status;if(n)msg+=' '+n+' shared save(s) pending; not confirmed on other devices.';document.querySelectorAll('[data-qa-shared-status12ng]').forEach(function(e){e.textContent=msg;});}
+async function cfRyanFlush12NG(){
+ var S=CF_RYAN_SHARED12NG;if(S.flushing)return;S.flushing=true;
+ function current(){var map=new Map();cfRyanPendingLoad12NG().concat(S.pending||[]).forEach(function(x){if(x&&x.id)map.set(x.id,x);});return map;}
+ try{
+  var batch=Array.from(current().values());
+  for(var b of batch){try{
+   var sent=JSON.stringify(b),ack=await cfRyanSharedApi12NG(b);
+   if(!ack||ack.saved!==true)throw new Error('Shared save was not acknowledged. The pending item was retained.');
+   var rec=RYAN_QA_STATE.rows.find(function(r){return r.sharedId===b.id||r.id===b.localId;});
+   if(rec){rec.sharedId=b.id;rec.sharedStatus='saved';await ryanQaPersist([rec]);}
+   var latest=current(),queued=latest.get(b.id);
+   if(queued&&JSON.stringify(queued)===sent)latest.delete(b.id);
+   S.error='';S.status='Pending shared saves confirmed.';cfRyanPendingSave12NG(Array.from(latest.values()));
+  }catch(e){S.error=String(e.message||e);break;}}
+ }finally{S.flushing=false;cfRyanSharedStatus12NG();}
+}
+function cfRyanSharedStatus12NG(){
+ var S=CF_RYAN_SHARED12NG,n=Math.max((S.pending||[]).length,cfRyanPendingLoad12NG().length),msg=S.error||S.status||'';
+ if(n)msg+=' '+n+' shared save(s) pending; not confirmed on other devices.';
+ if(n&&S.pendingDurable12OS===false)msg+=' NOT SAVED PERSISTENTLY: pending items are only in memory. Export local history before closing.';
+ document.querySelectorAll('[data-qa-shared-status12ng]').forEach(function(e){e.textContent=msg;});
+}
 async function cfRyanSharedRefresh12NG(more){var S=CF_RYAN_SHARED12NG;if(S.busy)return;S.busy=true;S.status='Loading shared Questions Asked...';cfRyanSharedStatus12NG();try{var d=await cfRyanSharedApi12NG({sharedHistoryAction:'list',month:S.month||undefined,before:more?S.next:undefined});S.month=d.month;S.months=d.months;S.items=more?S.items.concat(d.items):d.items;S.next=d.nextBefore;S.total=d.total;S.last=Date.now();S.error='';S.status='Shared history connected. '+d.total+' question(s) in '+d.month+'.';cfRyanRenderSharedRows12NG();}catch(e){S.error=String(e.message||e);S.status='Shared history unavailable; local records have not been removed.';}finally{S.busy=false;cfRyanSharedStatus12NG();}}
 function cfRyanRenderSharedRows12NG(){var host=document.getElementById('qaSharedRows12ng');if(!host)return;var S=CF_RYAN_SHARED12NG,q=(document.getElementById('qaSharedSearch12ng')||{}).value||'',terms=q.toLowerCase().split(/\s+/).filter(Boolean),rows=S.items.filter(function(r){return terms.every(function(t){return r.question.toLowerCase().includes(t);});});host.textContent='';
  var sel=document.getElementById('qaSharedMonth12ng');if(sel){sel.textContent='';(S.months.length?S.months:[S.month||new Date().toISOString().slice(0,7)]).forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});sel.value=S.month;}
@@ -44538,12 +44570,12 @@ function cfRyanSharedMount12NG(host){if(!host||host.querySelector('#qaShared12ng
 async function cfRyanPublishNew12NG(rec,id){var b={sharedHistoryAction:'publish',id:id||rec.sharedId||cfRyanNewId12NG(),localId:rec.id,record:{question:rec.question,answer:rec.answer,mode:rec.mode,answeredAt:rec.answeredAt,firstAskedAt:rec.firstAskedAt,sourceBuild:rec.sourceBuild,partial:rec.partial,containsLiveSnapshot:rec.containsLiveSnapshot,costUsd:rec.costUsd,workplan:rec.workplan}};try{var d=await cfRyanSharedApi12NG(b);rec.sharedId=d.id;rec.sharedStatus='saved';CF_RYAN_SHARED12NG.error='';CF_RYAN_SHARED12NG.status='Latest question and answer saved in shared history.';await ryanQaPersist([rec]);}catch(e){rec.sharedId=b.id;rec.sharedStatus='pending';await ryanQaPersist([rec]);cfRyanQueue12NG(b);CF_RYAN_SHARED12NG.error=String(e.message||e);}cfRyanSharedStatus12NG();return rec;}
 async function cfRyanShareOld12NG(){await ryanQaReady();await cfRyanFlush12NG();var rows=ryanQaLoad().filter(function(r){return !r.sharedId;});if(!rows.length){alert('No unshared local answers were found.');return;}if(!confirm('Share '+rows.length+' existing local questions and complete answers with EVERYONE who can sign in to this site? This includes historical text and draft work plans. Nothing will be deleted locally.'))return;var button=document.getElementById('qaSharedPublish12ng');if(button)button.disabled=true;try{for(var i=0;i<rows.length;i++){CF_RYAN_SHARED12NG.status='Publishing local answer '+(i+1)+' of '+rows.length;cfRyanSharedStatus12NG();await cfRyanPublishNew12NG(rows[i]);if(rows[i].sharedStatus!=='saved')break;}}finally{if(button)button.disabled=false;cfRyanSharedRefresh12NG(false);}}
 function cfInstallSharedRyan12NG(){if(window.CFRyanShared12NG)return;
- function banner(){var out=document.getElementById('askRyanAiOut');if(out&&out.parentNode&&!document.getElementById('qaSharedNotice12ng')){var notice=document.createElement('div');notice.id='qaSharedNotice12ng';notice.className='qa-notice';notice.innerHTML='<b>Shared Questions Asked:</b> New questions and answers are visible to everyone signed in to this site. Do not include secrets or personal information. <button data-qa-open>Open shared history</button><div data-qa-shared-status12ng role="status"></div>';out.parentNode.insertBefore(notice,out);cfRyanSharedStatus12NG();}}
+ function banner(){var out=document.getElementById('askRyanAiOut');if(out&&out.parentNode&&!document.getElementById('qaSharedNotice12ng')){var notice=document.createElement('div');notice.id='qaSharedNotice12ng';notice.className='qa-notice';notice.innerHTML='<b>Shared Questions Asked:</b> Shared saves are visible to everyone signed in to this site. During a storage outage Ryan can answer with a pending-save warning; check the local-save status shown with the answer. Do not include secrets or personal information. <button data-qa-open>Open shared history</button><div data-qa-shared-status12ng role="status"></div>';out.parentNode.insertBefore(notice,out);cfRyanSharedStatus12NG();}}
  banner();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',banner,{once:true});
 window.CFRyanShared12NG={status:function(){return{status:CF_RYAN_SHARED12NG.status,error:CF_RYAN_SHARED12NG.error,pending:cfRyanPendingLoad12NG().length,last:CF_RYAN_SHARED12NG.last};},refresh:cfRyanSharedRefresh12NG};
  var detailBefore=ryanQaRenderDetail;ryanQaRenderDetail=function(el,key){var ok=detailBefore.apply(this,arguments);if(ok&&key===RYAN_QA_DOC_KEY)cfRyanSharedMount12NG(el);return ok;};
- var askBefore=askRyanRender;askRyanRender=function(){var out=askBefore.apply(this,arguments),body=document.getElementById('askryanBody');if(body&&!body.querySelector('[data-shared-notice12ng]')){var p=document.createElement('div');p.className='qa-notice';p.setAttribute('data-shared-notice12ng','');p.innerHTML='<b>Shared Ryan history</b><br>New questions and answers are visible to all signed-in site visitors on every device. Do not submit secrets or personal details. <button data-qa-open="">Open Questions Asked</button><div data-qa-shared-status12ng role="status"></div>';body.prepend(p);cfRyanSharedStatus12NG();}return out;};
- var noticeBefore=ryanQaChatNotice;ryanQaChatNotice=function(m){var base=noticeBefore.apply(this,arguments);if(!m||!m.qaArchiveId)return base;var r=RYAN_QA_STATE.rows.find(function(x){return x.id===m.qaArchiveId;});return base+(r?'<div class="qa-meta">'+ryanQaEsc(r.sharedStatus==='saved'?'Shared save confirmed; available to signed-in site visitors.':r.sharedStatus==='pending'?'Shared save NOT confirmed. Retry pending saves in Questions Asked.':'Local history only; not yet shared.')+'</div>':'');};
+ var askBefore=askRyanRender;askRyanRender=function(){var out=askBefore.apply(this,arguments),body=document.getElementById('askryanBody');if(body&&!body.querySelector('[data-shared-notice12ng]')){var p=document.createElement('div');p.className='qa-notice';p.setAttribute('data-shared-notice12ng','');p.innerHTML='<b>Shared Ryan history</b><br>Shared saves are visible to all signed-in site visitors. During storage outages, answers remain available with a pending shared-save warning and a separate local-save status. Do not submit secrets or personal details. <button data-qa-open="">Open Questions Asked</button><div data-qa-shared-status12ng role="status"></div>';body.prepend(p);cfRyanSharedStatus12NG();}return out;};
+ var noticeBefore=ryanQaChatNotice;ryanQaChatNotice=function(m){var base=noticeBefore.apply(this,arguments);if(!m||!m.qaArchiveId)return base;var r=RYAN_QA_STATE.rows.find(function(x){return x.id===m.qaArchiveId;});return base+(r?'<div class="qa-meta">'+ryanQaEsc(r.sharedStatus==='saved'?'Shared save confirmed; available to signed-in site visitors.':r.sharedStatus==='pending'?'Answer available locally; shared history is pending. Retry pending saves in Questions Asked without requesting another AI answer.':'Local history only; not yet shared.')+'</div>':'');};
  window.addEventListener('online',function(){cfRyanFlush12NG();});if(cfRyanPendingLoad12NG().length)cfRyanFlush12NG();
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&document.getElementById('qaShared12ng')&&document.getElementById('qaShared12ng').getClientRects().length)cfRyanSharedRefresh12NG(false);});
 }
@@ -45545,7 +45577,7 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12OL',baseline:'12OK',trainerR
 
 /*12OL: current UI release, independent of retained engineering/source revision.*/
 window.CFTrainerStudy12OL={build:'12OL',baseline:'12OK',scope:'Existing sixteen internal lessons; working-only menu and common source-owned study tools',sourceFactsAdded:0,plantControlsChanged:false};
-window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-05-12OQ',signature:'CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-07-12OS',signature:'CF-RYAN-RELIABILITY-SCAN-12OS-20261107',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
 
 /*12OM: coordinate-bound and depth-correct main-model vessel inspection.*/
 if(window.CFVesselInspection12OM){
@@ -45674,11 +45706,21 @@ function cfInstallVisualDisclosures12OQ(){
 }
 
 cfInstallVisualDisclosures12OQ();cfInstallTrendDiagnostics12OQ();
-document.title='12OQ | Clear Fork - Focused Ryan evidence, live trends and compact visual controls';
-Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OP',priority3:'Bounded exact-owner evidence selection; centralized trend registry; collapsible visual panels'});
+document.title='12OS | Clear Fork - Ryan reliability and retrieval optimization';
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OR',ryanReliability:'12OS',priority3:'Bounded exact-owner evidence selection; centralized trend registry; collapsible visual panels'});
 window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE}));
 if(window.CFAcceptance12OP){window.CFAcceptance12OP.raycastTarget=cfAcceptanceRayTarget12OP;window.CFAcceptance12OP.finishMain(cfRuntimeAcceptanceProbe12OP);}
 
+function ryanCheckConnection12OS(){
+ var out=document.getElementById('ryanConnectionResult12OS'),button=document.getElementById('ryanConnectionCheck12OS');if(!out)return Promise.resolve();
+ if(ryanAiSessionExpired()){out.textContent='Unlock Ryan first. This check does not change your password or stored data.';return Promise.resolve();}
+ if(button)button.disabled=true;out.textContent='Checking server configuration. No paid AI request is being sent.';
+ return ryanFetch({mode:'health'}).then(function(res){
+  if(!res.ok||res.d.error)throw new Error(String(res.d.error||'Configuration check failed.'));
+  var d=res.d.readiness;if(!d){out.textContent='Backend connected, but this deployment has no detailed readiness report. No provider or storage test was made.';return;}
+  out.textContent='Backend: '+String(res.d.buildId||'unknown')+'\nRyan session: accepted\nAI provider key configured: '+(d.providerKeyConfigured?'yes (not validated with provider)':'NO - check the existing ANTHROPIC_API_KEY Functions setting')+'\nHistory helper: '+String(d.sharedHelperRevision||'unknown')+'\n'+String(d.qualification||'Configuration only; provider and cloud storage not tested.');
+ }).catch(function(e){out.textContent=String(e.message||'Configuration check failed.');}).then(function(){if(button)button.disabled=false;});
+}
 })(); // 12JJ close the shared application scope AFTER both visual mounts
 
 
