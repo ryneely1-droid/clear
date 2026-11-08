@@ -720,6 +720,8 @@ const OEM_MANUAL_KNOWLEDGE = {
  
 
 const https = require('https');
+//12OR: per-invocation provider deadline; no process-global clock changes.
+const RYAN_REQUEST_SCOPE_12OR = new (require('node:async_hooks').AsyncLocalStorage)();
 
 const crypto = require('crypto');
 
@@ -727,13 +729,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-11-05-12OQ';
+const RYAN_BUILD_ID='RYAN-2026-11-07-12OS';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-EVIDENCE-TRENDS-12OQ-20261105';
+const RYAN_CODE_SIGNATURE='CF-RYAN-RELIABILITY-SCAN-12OS-20261107';
 
 
 
@@ -40897,78 +40899,46 @@ function verifyRyanAuthToken(token, secret) {
 }
 
 function postJson(url, headers, payloadObj, timeoutMs = REQUEST_TIMEOUT_MS) {
-
-  return new Promise((resolve, reject) => {
-
-    const payload = JSON.stringify(payloadObj);
-
-    const u = new URL(url);
-
-    const req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method: 'POST', headers: { ...headers, 'content-length': Buffer.byteLength(payload) } }, res => {
-
-      let raw = '';
-
-      res.setEncoding('utf8');
-
-      res.on('data', chunk => { raw += chunk; if (raw.length > 10_000_000) req.destroy(new Error('Anthropic response exceeded Ryan safety limit.')); });
-
-      res.on('end', () => {
-
-        try { resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: JSON.parse(raw || '{}') }); }
-
-        catch { resolve({ ok: false, status: res.statusCode, data: { error: { message: `Non-JSON response from Anthropic (HTTP ${res.statusCode}): ${raw.slice(0,300)}` } } }); }
-
-      });
-
-    });
-
-    req.setTimeout(timeoutMs, () => req.destroy(new Error(`Anthropic request timed out after ${timeoutMs} ms.`)));
-
-    req.on('error', reject);
-
-    req.write(payload);
-
-    req.end();
-
+ return new Promise((resolve,reject)=>{
+  const scope=RYAN_REQUEST_SCOPE_12OR.getStore(),remaining=scope?scope.deadline-Date.now()-2000:Infinity,duration=Math.min(Math.max(1,Number(timeoutMs)||22000),remaining);
+  if(duration<1){const e=new Error('Ryan request reached its response deadline. No additional AI attempt was sent.');e.code='RYAN_RESPONSE_DEADLINE';reject(e);return;}
+  let done=false,timer,req,bytes=0;
+  const settle=(error,value)=>{if(done)return;done=true;clearTimeout(timer);error?reject(error):resolve(value);};
+  const payload=JSON.stringify(payloadObj),u=new URL(url);
+  req=https.request({hostname:u.hostname,path:u.pathname+u.search,method:'POST',headers:{...headers,'content-length':Buffer.byteLength(payload)}},res=>{
+   let raw='';res.setEncoding('utf8');
+   res.on('data',chunk=>{if(done)return;bytes+=Buffer.byteLength(chunk,'utf8');if(bytes>10000000){const e=new Error('AI response exceeded the Ryan size limit. No automatic repeat was sent.');e.code='RYAN_PROVIDER_SIZE';settle(e);req.destroy(e);return;}raw+=chunk;});
+   res.on('error',e=>settle(e));res.on('aborted',()=>settle(new Error('AI response connection closed before completion.')));
+   res.on('end',()=>{if(done)return;const ok=res.statusCode>=200&&res.statusCode<300;let data;
+    try{data=JSON.parse(raw);}catch(e){data=null;}
+    if(ok&&(!data||typeof data!=='object'||Array.isArray(data)||(u.pathname==='/v1/messages'&&!Array.isArray(data.content)))){const e=new Error('AI provider returned an invalid response envelope. No automatic repeat was sent; a result may have been generated upstream.');e.code='RYAN_PROVIDER_PROTOCOL';settle(e);return;}
+    if(!data||typeof data!=='object'||Array.isArray(data))data={error:{message:'AI provider returned HTTP '+res.statusCode+' without a valid JSON error object.'}};
+    settle(null,{ok,status:res.statusCode,data,headers:res.headers||{}});
+   });
   });
-
+  const expire=()=>{const e=new Error('AI provider response timed out. No automatic repeat was sent; a result may still have been generated upstream.');e.code='RYAN_PROVIDER_TIMEOUT';settle(e);req.destroy(e);};
+  timer=setTimeout(expire,duration);req.setTimeout(duration,expire);req.on('error',e=>settle(e));req.write(payload);req.end();
+ });
 }
 
- 
 
-async function postJsonWithRetry(url, headers, payload, attempts = 5, timeoutMs = REQUEST_TIMEOUT_MS) {
-
-  let last;
-  const retryable = new Set([429,500,502,503,504,529]);
-
-  for (let i = 0; i < attempts; i++) {
-
-    try {
-      last = await postJson(url, headers, payload, timeoutMs);
-    } catch (e) {
-      if (i === attempts - 1) throw e;
-      const waitMs = Math.min(6500, 700 * Math.pow(2, i)) + Math.floor(Math.random() * 250);
-      await new Promise(r => setTimeout(r, waitMs));
-      continue;
-    }
-
-    if (last.ok || !retryable.has(last.status) || i === attempts - 1) return last;
-
-    // Anthropic 529/5xx overloads are normally transient. Give the service meaningful recovery
-    // time instead of retrying three times in roughly one second. Respect Retry-After when the
-    // response object exposes it; otherwise use bounded exponential backoff with jitter.
-    const retryAfterRaw = last && last.headers && (last.headers['retry-after'] || last.headers['Retry-After']);
-    const retryAfterMs = retryAfterRaw && !Number.isNaN(Number(retryAfterRaw)) ? Number(retryAfterRaw) * 1000 : 0;
-    const waitMs = Math.max(retryAfterMs, Math.min(6500, 700 * Math.pow(2, i))) + Math.floor(Math.random() * 250);
-    await new Promise(r => setTimeout(r, waitMs));
-
+async function postJsonWithRetry(url,headers,payload,attempts=5,timeoutMs=REQUEST_TIMEOUT_MS){
+  const scope=RYAN_REQUEST_SCOPE_12OR.getStore();
+  const limit=scope?Math.min(2,Math.max(1,attempts)):Math.max(1,attempts);
+  const retryable=new Set([429,500,502,503,504,529]);let last;
+  for(let i=0;i<limit;i++){
+    // An ambiguous network failure can already have consumed a paid request. Never replay it automatically.
+    last=await postJson(url,headers,payload,timeoutMs);
+    if(last.ok||!retryable.has(last.status)||i===limit-1)return last;
+    const raw=last.headers&&last.headers['retry-after'],seconds=Number(raw);
+    const delay=Number.isFinite(seconds)&&seconds>=0?seconds*1000:700*Math.pow(2,i);
+    const remaining=scope?scope.deadline-Date.now()-2000:Infinity;
+    if(delay>5000||remaining<delay+1000)return last;
+    await new Promise(r=>setTimeout(r,delay));
   }
-
   return last;
-
 }
 
- 
 
 function httpRequestBuffer(method, url, headers) {
   return new Promise((resolve, reject) => {
@@ -41757,7 +41727,7 @@ exports.handler = async function(event) {
 
 
     if (effectiveMode === 'health') {
-      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, hierarchicalReferenceBinding: true, parentChildLibraryNavigation: true, pidReferenceFolderBinding: true, pidDrawingRecordOwnership: true, pidSystemFolderNavigation: true, pidTagCrossReferenceSearch: true, operatorDescriptionPreserved: true, attachmentTagAliasSearch: true, learnedReferenceLibrarySync: true, currentReferenceSnapshot: RYAN_INDEX_ENGINE_12JT.summary, currentReferenceBuild: RYAN_INDEX_MANIFEST_12JT.build, sourceIndexBuild: RYAN_INDEX_REFERENCE_12JT.sourceIndexBuild, referenceDigest: RYAN_INDEX_MANIFEST_12JT.referenceDigest, sourceIndexSHA256: RYAN_INDEX_MANIFEST_12JT.sourceSHA256, currentBrowserReferenceBridge: true, referenceSearchPagination: true, referenceStorageMode: "learn-only", sourceMediaBundled: false, retainedNameplateTranscriptions: RYAN_INDEX_REFERENCE_12JT.summary.nameplateSourceRecords, pipeDirectionReferences: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, operationalExperienceBrain: true, reportToBrainInstallation: true, trendWindowBrainInstallation: true, sourceLabelledOperatingEpisodes: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
+      return { statusCode: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID, 'x-ryan-diagnostic': RYAN_DIAGNOSTIC_REVISION }, body: JSON.stringify({ ok: true, buildId: RYAN_BUILD_ID, diagnosticRevision: RYAN_DIAGNOSTIC_REVISION, codeSignature: RYAN_CODE_SIGNATURE, readiness:ryanReadiness12OS(), changeSet: RYAN_CHANGESET_12BF, sourceBaseline: RYAN_SOURCE_BASELINE, largeDocumentBatchLearning: false, interactiveDocumentPassLearning: true, supportsAnthropicFileId: true, supportsHttpsSourceUrl: true, fastGenericProcessPath: true, genericWebResearch: true, operatorDecisionEngine: true, whatChangedEngine: true, readinessChecks: true, lotoPidAuditEngine: true, pidBoundaryMatrix: true, pidPageTagIndex: true, manualPageIndex: true, exchangerReboilerExpert: true, diagnosticConfidence: true, emptyReplyRecovery: true, autoPdfSixPass: true, attachmentDescriptionClassification: true, semanticAttachmentAnchoring: true, operatorDescriptionAssetBinding: true, hierarchicalReferenceBinding: true, parentChildLibraryNavigation: true, pidReferenceFolderBinding: true, pidDrawingRecordOwnership: true, pidSystemFolderNavigation: true, pidTagCrossReferenceSearch: true, operatorDescriptionPreserved: true, attachmentTagAliasSearch: true, learnedReferenceLibrarySync: true, currentReferenceSnapshot: RYAN_INDEX_ENGINE_12JT.summary, currentReferenceBuild: RYAN_INDEX_MANIFEST_12JT.build, sourceIndexBuild: RYAN_INDEX_REFERENCE_12JT.sourceIndexBuild, referenceDigest: RYAN_INDEX_MANIFEST_12JT.referenceDigest, sourceIndexSHA256: RYAN_INDEX_MANIFEST_12JT.sourceSHA256, currentBrowserReferenceBridge: true, referenceSearchPagination: true, referenceStorageMode: "learn-only", sourceMediaBundled: false, retainedNameplateTranscriptions: RYAN_INDEX_REFERENCE_12JT.summary.nameplateSourceRecords, pipeDirectionReferences: true, conversationalFollowups: true, persistentThreadContext: true, historyLiveStatePrecedence: true, shiftReportAnalytics: true, twoHourReportAnalysis: true, xlsxTextReportSupport: true, historicalVsLiveSeparation: true, operationalExperienceBrain: true, reportToBrainInstallation: true, trendWindowBrainInstallation: true, sourceLabelledOperatingEpisodes: true, fastQaModel: FAST_MODEL, simpleChatAttachmentIsolation: true, localPdfDropWithoutHttps: true, boundedImageLearning: true, imageNameplateFactExtraction: true, serverRuntimeBrowserGlobalsClean: true, pdfDocumentLearning: true, pidVisualTopologyExtraction: true, perPassPartialSuccess: true, structuredExtractionCitationsDisabled: true, learnedDocumentRetrieval: true, learnedSummaryFastPath: true, learnedFactReportAll: true, learnedFactRetentionCap: 5000, learnedPromptFactCap: 60, maxHistoryTurns: MAX_HISTORY_TURNS, netlifyBufferedPayloadMB: 6, safeBrowserBinaryMB: 2.6 }) };
     }
 
     //12JT: authenticated read-only diagnostics and exact source paging do not require an AI API request.
@@ -41994,7 +41964,7 @@ exports.handler = async function(event) {
 
     } catch (networkErr) {
 
-      return { statusCode: 502, body: JSON.stringify({ error: `Could not reach Anthropic API: ${networkErr.message || 'network error'}` }) };
+      return { statusCode: 502, headers:{'content-type':'application/json','cache-control':'no-store','x-ryan-build':RYAN_BUILD_ID}, body: JSON.stringify({ error: `Ryan provider request failed: ${networkErr.message || 'network error'}`, code:/^RYAN_(?:PROVIDER_|RESPONSE_)/.test(String(networkErr.code||''))?networkErr.code:'RYAN_PROVIDER_TRANSPORT', buildId:RYAN_BUILD_ID }) };
 
     }
 
@@ -42192,9 +42162,9 @@ exports.handler = async function(event) {
 
   } catch (err) {
 
-    console.error('Ryan AI handler crashed:', err);
+    console.error('Ryan AI handler error:', ['RYAN_PROVIDER_PROTOCOL','RYAN_PROVIDER_TIMEOUT','RYAN_PROVIDER_SIZE','RYAN_RESPONSE_DEADLINE'].includes(err&&err.code)?err.code:'RYAN_HANDLER_ERROR');
 
-    return { statusCode: err.statusCode || 500, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: err.message || `Unknown server error: ${String(err)}`, buildId: RYAN_BUILD_ID }) };
+    return { statusCode: err.statusCode || (/^RYAN_PROVIDER_|^RYAN_RESPONSE_/.test(String(err.code||''))?502:500), headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-ryan-build': RYAN_BUILD_ID }, body: JSON.stringify({ error: err.message || 'Ryan encountered a server error. No automatic repeat was sent.', code:/^RYAN_(?:PROVIDER_|RESPONSE_)/.test(String(err.code||''))?err.code:'RYAN_HANDLER_ERROR', buildId: RYAN_BUILD_ID }) };
 
   }
 
@@ -44598,6 +44568,7 @@ exports.handler=async function(event){
  if(body.clientBuild&&body.clientBuild!==RYAN_BUILD_ID)return RYAN_HANDLER_BEFORE_12NG(event);
  if(!body.sharedQuestionId)body.sharedQuestionId=Date.now()+'-'+require('node:crypto').randomUUID();
  let job;try{job=await RYAN_SHARED_12NG.begin(event,body);}catch(e){return RYAN_SHARED_SERVICE_12NG.response(e.statusCode||503,{error:e.statusCode?e.message:'Shared question storage is unavailable. No new AI request was sent; retry when storage is restored.',code:e.code||'SHARED_UNAVAILABLE',buildId:RYAN_BUILD_ID});}
+ if(job.replay)return job.replay;
  if(job.duplicate){const d=job.duplicate;if(d.status==='complete')return RYAN_SHARED_SERVICE_12NG.response(200,{reply:d.record.answer,workplan:d.record.workplan,buildId:RYAN_BUILD_ID,codeSignature:RYAN_CODE_SIGNATURE,cost:{usd:0},sharedHistory:{id:job.id,saved:true,status:'complete',requestAlreadyCompleted:true}});return RYAN_SHARED_SERVICE_12NG.response(409,{error:'This question is already saved as '+d.status+'. Check Questions Asked; a duplicate AI request was not sent.',buildId:RYAN_BUILD_ID,sharedHistory:{id:job.id,saved:true,status:d.status}});}
  let result;try{result=await RYAN_HANDLER_BEFORE_12NG(event);}catch{result=RYAN_SHARED_SERVICE_12NG.response(500,{error:'Ryan request failed.',buildId:RYAN_BUILD_ID});}
  return RYAN_SHARED_12NG.finish(job,body,result);
@@ -46496,3 +46467,27 @@ if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.
 module.exports.REFERENCE_STATE_12OQ=RYAN_INDEX_REFERENCE_12JT;module.exports.equipmentTrainingData12OQ=module.exports.equipmentTrainingData12OP;
 module.exports.evidenceRouter12OQ=CF_EVIDENCE_ROUTER_12OQ;
 if(module.exports._test){module.exports._test.selectKnowledge=selectKnowledge;module.exports._test.buildSystemPrompt=buildSystemPrompt;}
+
+/*12OR: only the current handler's request lifetime is bounded. Existing auth and source policy stay intact.*/
+const CF_RYAN_HANDLER_12OR=exports.handler;
+exports.handler=function(event,context){
+ let budget=45000;
+ if(context&&typeof context.getRemainingTimeInMillis==='function'){const left=Number(context.getRemainingTimeInMillis());if(Number.isFinite(left))budget=Math.min(budget,Math.max(0,left-3000));}
+ if(budget<1000)return Promise.resolve({statusCode:503,headers:{'content-type':'application/json','cache-control':'no-store','x-ryan-build':RYAN_BUILD_ID},body:JSON.stringify({error:'Ryan has insufficient function time remaining. No new AI request was sent.',code:'RYAN_RUNTIME_BUDGET',buildId:RYAN_BUILD_ID})});
+ return RYAN_REQUEST_SCOPE_12OR.run({deadline:Date.now()+budget},()=>CF_RYAN_HANDLER_12OR(event,context));
+};
+module.exports.availability12OR=Object.freeze({revision:'12OR-answer-recovery',historyPolicy:'Try shared question save; authenticated answers continue on storage outage with explicit signed deferred history',providerDeadlineMs:45000,automaticTransportReplay:false,sharedHistoryConfirmedOnlyAfterAcknowledgment:true});
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OR',baseline:'12OQ',availability:module.exports.availability12OR});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OR',baseline:'12OQ'});
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OR',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE}));
+module.exports.REFERENCE_STATE_12OR=RYAN_INDEX_REFERENCE_12JT;module.exports.equipmentTrainingData12OR=module.exports.equipmentTrainingData12OQ;
+
+function ryanReadiness12OS(){
+ const status=CF_EVIDENCE_ROUTER_12OQ.status()||{};
+ return {revision:'12OS',authConfigured:!ryanAuthConfigError12OO(),providerKeyConfigured:!!process.env.ANTHROPIC_API_KEY,models:{primary:MODEL,fast:FAST_MODEL},sharedHelperRevision:RYAN_SHARED_12NG.diagnosticRevision||'unknown',evidence:{indexBuilt:!!status.indexBuilds,indexDocuments:status.indexDocuments||0,indexBuilds:status.indexBuilds||0},providerContacted:false,cloudStorageTested:false,qualification:'Read-only configuration check only. This is not a paid-answer test, live provider validation or successful shared-storage check.'};
+}
+
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12OS',baseline:'12OR',ryanReliability:'12OS'});
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12OS',baseline:'12OR'});
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12OS',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE}));
+module.exports.REFERENCE_STATE_12OS=RYAN_INDEX_REFERENCE_12JT;module.exports.equipmentTrainingData12OS=module.exports.equipmentTrainingData12OR;
