@@ -1,6 +1,51 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12OY';
+const CF_APPLICATION_BUILD_12OA='12PC';
+/*12OZ rendering/UI workload only. The process clock, alarm evaluation, historian,
+  geometry, sources and persistence are not throttled or rewritten by these helpers.*/
+var CF_DEVICE_PERF_12OZ={build:'12OZ',layoutPasses:0,labelReads:0,labelMoves:0,obscuredBoardReuses:0,boardBuilds:0,earlyRedrawsDeferred:0,hiddenFrames:0};
+var CF_MAIN_VISIBILITY_12OZ=null,CF_HMI_BODY_12OZ=null;
+function cfCreateRenderVisibility12OZ(D,W,viewport){
+ var inView=true,observer=null,lastReason='visible',checks=0;
+ // Observe viewport intersection once, not a forced layout read on every frame.
+ // Without IntersectionObserver, retain the former visible-scene behavior.
+ if(viewport&&typeof W.IntersectionObserver==='function'){
+  observer=new W.IntersectionObserver(function(rows){rows.forEach(function(row){if(row.target===viewport)inView=!!row.isIntersecting;});},{root:null,threshold:0});observer.observe(viewport);
+ }
+ var overlays=['eqt','askryan','cmdcenter','quizpanel','officialtest','library','attachmentLibrary','startupguide'];
+ function visible(allowFirstFrame){checks++;if(D.hidden){lastReason='document hidden';return false;}if(W._pauseRender){lastReason='existing display pause';return false;}
+  for(var i=0;i<overlays.length;i++){var e=D.getElementById(overlays[i]);if(e&&!e.hidden&&e.style&&e.style.display&&e.style.display!=='none'){lastReason='covered by '+overlays[i];return false;}}
+  var training=D.getElementById('cfCompressorInternals12MO');if(training&&!training.hidden&&training.style.display!=='none'){lastReason='equipment training';return false;}
+  if(!inView&&!allowFirstFrame){lastReason='3D viewport off screen';return false;}lastReason='visible';return true;
+ }
+ return {visible:visible,status:function(){return {reason:lastReason,intersectionVisible:inView,intersectionObserver:!!observer,checks:checks,scope:'Main-model display only. Process, historian and alarms continue.'};},dispose:function(){if(observer)observer.disconnect();}};
+}
+function cfMainDrawVisible12OZ(){
+ if(!CF_MAIN_VISIBILITY_12OZ)CF_MAIN_VISIBILITY_12OZ=cfCreateRenderVisibility12OZ(document,window,document.getElementById('v3d'));
+ return CF_MAIN_VISIBILITY_12OZ.visible(typeof CF_SPEED_12ML!=='undefined'&&CF_SPEED_12ML.firstFrameMs===null);
+}
+function cfRequestModelRedraw12OZ(){
+ // During the synchronous startup assembly there is no usable intermediate frame.
+ // The existing main loop draws after all installers and the acceptance marker.
+ if(!(window.CFMainScript12LJ&&window.CFMainScript12LJ.endReached12OP)){CF_DEVICE_PERF_12OZ.earlyRedrawsDeferred++;return false;}
+ if(!cfMainDrawVisible12OZ())return false;
+ if(typeof ren!=='undefined'&&ren&&scene&&cam){ren.render(scene,cam);return true;}return false;
+}
+function cfHmiObscured12OZ(){return typeof PLANT!=='undefined'&&['planthealth','shiftdash','notifbell','schedule','outages'].indexOf(PLANT.popup)>=0;}
+function cfAdaptiveResolutionStep12OZ(state,o){
+ var base=o.base,budget=1000/o.fps,floor=Math.min(base,.65);
+ if(!o.enabled){state.slow=0;state.fast=0;state.previousFrameStart12OZ=0;state.cadenceMs12OZ=null;return;}
+ var dt=state.previousFrameStart12OZ?o.start-state.previousFrameStart12OZ:0;state.previousFrameStart12OZ=o.start;
+ if(dt>0&&dt<250)state.cadenceMs12OZ=state.cadenceMs12OZ==null?dt:state.cadenceMs12OZ*.9+dt*.1;
+ var cadence=state.cadenceMs12OZ,slow=o.cpuMs>budget*.85||(cadence!=null&&cadence>budget*1.45);
+ var fast=o.cpuMs<budget*.48&&(cadence==null||cadence<budget*1.18);
+ if(slow){state.slow++;state.fast=0;}else if(fast){state.fast++;state.slow=0;}else{state.fast=0;state.slow=0;}
+ if(o.now-state.lastAdjustment<3000)return;
+ var current=state.ratio===null?base:Math.min(base,state.ratio);
+ if(state.slow>=24&&current>floor){state.ratio=Math.max(floor,Math.round((current-.15)*100)/100);state.lastAdjustment=o.now;state.slow=0;}
+ else if(state.fast>=180&&current<base){state.ratio=Math.min(base,Math.round((current+.1)*100)/100);state.lastAdjustment=o.now;state.fast=0;}
+}
+
 if(window.CFAcceptance12OP&&!window.CFAcceptance12OP.enterMain(CF_APPLICATION_BUILD_12OA))return;
 /*12OH: inlet receiver closure plate only; previous source and trainer behavior retained.*/
 var CF_SOURCE_12OH={"build":"12OH","baseline":"12OG","date":"2026-11-01","id":"v1000_tdw_closure_plate_12oh","title":"V-1000 inlet pig receiver / individual D2000 closure plate","sourceClass":"USER_PHOTOGRAPHS_WITH_OPERATOR_RECEIVER_ASSOCIATION","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["oh_v1000_closure"],"parentOwnerKeys":["v1000"],"existingSourceRefs":["CF3D_PID_M2000_12HI"],"plate":{"ownerKey":"oh_v1000_closure","parentOwnerKey":"v1000","referenceKey":"oh_v1000_closure","role":"Quick-actuating closure; NOT the complete receiver pressure vessel","certifiedBy":"T.D. Williamson","model":"D2000","descriptionLiteral":"D2000 QUICK-ACTUATING CLOSURE","sizeLiteral":"30\" (750 MM)","partNumber":"12342150","serial":"30UJD085","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121],"designCodesLiteral":["ASME B31.4/B31.8","CSA Z662 CAT 11"],"designFactorRows":[{"printedFactor":"0.60","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]},{"printedFactor":"0.50","mawpPsi":1480,"mawpBar":102,"temperatureF":[-50,250],"temperatureC":[-46,121]}],"printedPlantTag":null,"yearBuilt":null,"unreadableUpperRightField":null,"association":"Operator identifies the photographed closure as belonging to the inlet pig receiver. Existing M2000 record identifies that receiver as V-1000 and separately records a 30-inch quick-opening closure.","photos":[{"name":"IMG_0784.jpeg","sha256":"9837e35298edc92bd17f6fb4c31d71ef8b2c18cddab567f52ea2442bdd65880b","byteLength":453904,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false},{"name":"IMG_0785.jpeg","sha256":"de23f6e41068513241bdae9b201fb9d449f98aee2be38299efeaf40645d5acaf","byteLength":457772,"role":"Alternate view of the SAME inlet receiver closure plate","sourceMediaRetained":false}],"qualifications":["Two photographs show one plate and one individual closure. No second closure or receiver is created.","Individual closure serial, part number, maker and ratings belong only to oh_v1000_closure. They are not the receiver shell identity, a valve identity or a sister launcher identity.","The plate prints 1480 PSI / 102 BAR. Preserve the PSI label literally rather than silently changing its pressure basis to PSIG.","The separate M2000 receiver drawing reference of 1440 PSIG at 130 F and the existing PSV-1000 record remain unchanged. Closure MAWP is not a receiver rerating, operating target, trip, isolation authorization or relief setting.","Both printed design-factor rows (0.60 and 0.50) are retained; no active installed design-factor case is selected or inferred. CSA CAT 11 is a literal transcription, not a standards interpretation.","30-inch (750 MM) is retained exactly as printed, not replaced with a recalculated unit conversion.","The upper-right field cannot be confidently read. No fabrication year, material, hydrotest, barrel serial or National Board number is inferred.","Only the closed closure face and readable plaque are represented. The existing end-cap silhouette is retained; end assignment, dimensions and mounting are schematic. No inferred hinge/locking mechanism or opening sequence is implemented."]},"pending":["V-1000 receiver-shell identity/rating plate, serial/NB/MDMT where applicable; this closure plate does not replace it.","Applicable D2000 serial-specific vendor assembly/GA, measured door/end correspondence, hinge/locking details, seals/materials and installed closure accessories.","Unreadable upper-right plate marking and applicable design-factor case; not resolved by matching a generic catalog."],"policy":["One canonical closure source and one photo-ledger group with two corroborating views. Existing receiver and launcher records remain separate.","Index the existing receiver closure as a child of v1000 for independent picking and reference; no second receiver, closure body or process route.","No process, protection, pressure setting, opening control, training runtime, quiz, saved-data or authentication changes."],"newEntries":[{"id":"oh.closure","title":"Individual inlet pig receiver closure identity","ownerKeys":["oh_v1000_closure"],"tags":["V-1000 closure"],"text":"IMG_0784 and IMG_0785 corroborate one T.D. Williamson D2000 quick-actuating closure, part 12342150, serial 30UJD085, 30-inch (750 MM), with the two printed rating/design-factor cases retained under plate. Operator associates it with inlet pig receiver V-1000; receiver vessel identity and ratings remain separate.","authority":"USER_PHOTOS / OPERATOR_PARENT_ASSOCIATION","referenceKey":"oh_v1000_closure"}]};
@@ -1412,7 +1457,7 @@ function cfStabilizerSnapshot12NU(){
  var consistent=values.totalFeed!==null&&values.coldFeed!==null&&values.totalFeed>=0&&values.coldFeed>=0&&values.coldFeed<=values.totalFeed;
  put('warmFeedDerived',consistent?values.totalFeed-values.coldFeed:null,'Derived total minus cold branch, NOT an independent flowmeter. Invalid or missing split yields Not assigned; no clamp.');
  ['a','c','d','f'].forEach(function(s){vv('legacy5020'+s.toUpperCase(),'tit5020'+s,'Retained E-5020 model channel; exact physical nozzle association not validated in this lesson');});
- pv('commonPumpFlow','FIC5060A','pv','Existing common-pump flow proxy; not reboiler circulation or net product by definition');pv('legacyLIC5040A','LIC5040A','pv','Legacy controller inventory; not used to fabricate kettle pool elevation');pv('legacyLIC5040G','LIC5040G','pv','Separate legacy loop; source-to-inventory correspondence remains qualified');vv('legacyLIT5040A','lit5040a','Independent retained legacy level variable; not silently substituted for LIC5040A');
+ vv('commonPumpFlow','stabPumpGrossGpm12PA','12PA modeled gross pump liquid flow: product plus FV-5030A tower return, not a new field meter');pv('legacyLIC5040A','LIC5040A','pv','Legacy controller inventory; not used to fabricate kettle pool elevation');pv('legacyLIC5040G','LIC5040G','pv','Separate legacy loop; source-to-inventory correspondence remains qualified');vv('legacyLIT5040A','lit5040a','Independent retained legacy level variable; not silently substituted for LIC5040A');
  vv('productTo1422','stabProductTo1422Gpm','Existing empirical product split; not measured loop hydraulic solution');vv('productReturn5010','stabProductReturn5010Gpm','Existing empirical return split, separate from FV-5030A tower return');
  ['towerLowerP','towerDP','kettleInP','kettleVaporP','oilInP','oilOutP','vaporAtKettleT','productT','coldFeedT','warmFeedT'].forEach(function(k){put(k,null,'No independently shared, source-crosswalked channel established. Old screen-only offsets/jitter and neighboring measurements are not replacements.');});
  return {build:'12NU',capturedAt:new Date().toISOString(),source:P?'READ_ONLY_SIMULATOR_SNAPSHOT':'SIMULATOR_STATE_UNAVAILABLE',running:P&&P.in&&typeof P.in.stabRunning==='boolean'?P.in.stabRunning:null,values:values,channels:channels,qualifications:{feedSplitConsistent:values.totalFeed===null||values.coldFeed===null?null:consistent,independentNozzlePressures:false,installedInternals:false,fieldTelemetry:false,readOnly:true},limitations:CF_SOURCE_12NU.pending.slice()};
@@ -2343,13 +2388,24 @@ function cfEquipmentTrainingDataBefore12OB(){var s=JSON.parse(JSON.stringify(CF_
 function cfTrainingLabelCatalog12OG(data){data.build='12OG';data.runtimeRevision='12OG';data.labelControlRevision='12OG';return data;}
 /*12OL: presentation-only catalog normalization. Original engineering content stays owned
  * by its retained source. Only complete existing lessons are selectable in the workspace.*/
+var CF_SOURCE_12PB={build:'12PB',baseline:'12PA',date:'2026-11-09',id:'demeth_gsp_workspace_temperature_12pb',title:'Demeth GSP branch, larger trainer workspace and TE-1222J diagnostic',notebookKey:'demeth_gsp_temperature_review_12pb',ownerKeys:['t1521','v1421','e1221'],sourceClass:'RETAINED_ROUTE_AND_SOURCE_READBACK_WITH_SOFTWARE_DIAGNOSTICS',existingSourceRefs:['CF_PID_M2130_12HX','CF_PID_M2135_12HZ','CF_SOURCE_12NM','CF_SOURCE_12NN','CF_SOURCE_12NQ','CF_SOURCE_12NT'],newEntries:[
+{id:'pb.gsp',title:'Visible GSP takeoff upstream of the main EX/JT alternatives',authority:'RETAINED_M2130_M2135_TOPOLOGY_AND_OPERATOR_VISIBILITY_REQUEST',text:'V-1421 vapor on415 supplies the pre-expander416 takeoff. The retained FE/FT-1222 and PDCV-1222B station feeds418; the selected432 liquid contribution joins downstream of PDCV-1222B. STR-1222B precedes the separate E-1222 GSP passage. The419 outlet passes FCV-1222 to420 and T-1521. GSP is a separate reflux circuit, not a third main EX/JT bypass. The liquid432 contribution remains conditional in the recovery study. No new physical asset, process route or controller is created.'},
+{id:'pb.visibility',title:'The prior default view excluded an existing route',authority:'REPRODUCED_SOFTWARE_PRESENTATION_DEFECT',text:'The 12PA demeth trainer already contained gsp-vapor-feed, gsp-liquid-feed and gsp route objects. Its default Gas train selection excluded them, and part of the vapor takeoff coincided with the JT polyline. The updated teaching layout separates that takeoff and includes the GSP circuit in the default gas-train view. GSP branch provides direct route fitting. All earlier route and part IDs remain.'},
+{id:'pb.sensor',title:'TE-1222J is not the tower-overhead temperature',authority:'RETAINED_M2130_SENSOR_ROLE_AND_CURRENT_CODE',text:'TE-1222J belongs to the cooled RSV561 stream upstream of FCV-1438. TE-1222K is the post-valve562 stream. Actual tower-overhead450 is separately represented by TE-1222A / the demOvhd model state. The demeth screen TE-1222J uses te1222j with a secondary lag/correction; the gas/gas screen uses rsvExchOutT. Existing historical keys and samples are preserved rather than silently relabeled or merged.'},
+{id:'pb.temperature',title:'Why the existing RSV model can reach approximately minus100F',authority:'CODE_ANALYSIS_NOT_RETROSPECTIVE_FIELD_DIAGNOSIS',text:'The existing RSV target is inletT minus passEffectiveness times (inletT minus coldAnchor) times0.97, with existing bounds and34-second lag. The coldAnchor is the modeled post-valve TE-1222K surrogate, not the separate tower-overhead sensor. At effect0.8 and anchor minus146.9F, inlet62.475F gives target minus100F; this is a controlled arithmetic example, not a recovered user snapshot. The extra te1222j lag/correction can differ from that target. The supplied TE-1222J screenshot alone cannot establish actual tower-top temperature or the preceding control action.'},
+{id:'pb.diagnostic',title:'Read-only temperature calculation evidence',authority:'SOFTWARE_OBSERVATION',text:'Each process scan exposes the actual inputs and targets used by the existing tower and RSV equations. The TE-1222J trend adds a collapsed CURRENT calculation panel and a separate tower-overhead trend shortcut. It is not a reconstruction of the selected historical sample. A separately named tower-overhead history channel begins collecting the existing demOvhd state with this release; no backfill. No temperature clamp, controller tuning, phase calculation, trip or historical sample is changed.'},
+{id:'pb.workspace',title:'Large model area with reopenable common navigation',authority:'SOFTWARE_PRESENTATION',text:'All sixteen lessons start with the full available model width, while Parts/views and Study panel remain available as drawers. Common Fit view, Model focus, Zoom and Pan controls operate only the private trainer camera. Source details, labels, flow tracing, study steps, play/pause and previous models remain. No plant controls or persistent settings are written.'}
+],qualification:'Retained source readback and software repair, not a fresh original-P&ID pixel review, field survey or approved procedure. Trainer geometry is schematic. Existing cold-box equations remain empirical and are not an enthalpy-conserving multistream/EOS solution; the TE-1222K surrogate and separate same-label screen expressions remain explicitly qualified, not certified physically consistent.',pending:['Exact time-aligned values and operator actions behind the supplied ten-minute TE-1222J trend are unavailable.','Installed GSP nozzle coordinates, line clearances and component dimensions remain unverified.','Independent passage temperature/pressure data and a validated multistream heat/phase balance remain unresolved.']};
+function cfTrainerReviewNote12PB(){return {t:CF_SOURCE_12PB.title,d:CF_SOURCE_12PB.newEntries.map(function(x){return x.title+' ['+x.authority+']: '+x.text;}).concat([CF_SOURCE_12PB.qualification,'Pending: '+CF_SOURCE_12PB.pending.join(' / ')]),sourceReview12PB:{definition:'CF_SOURCE_12PB',sourceClass:CF_SOURCE_12PB.sourceClass}};}
+function cfExtendTrainerWorkspace12PB(data){data.build='12PB';data.runtimeRevision='12PB';data.workspaceRevision='12PB';var m=data.models.find(function(x){return x.id==='demeth';});if(m)m.gspPresentation12PB={source:'CF_SOURCE_12PB',takeoff:'415 to416 upstream of EX/JT',itinerary:['416 / PDCV-1222B','432 selected liquid joins','418 / STR-1222B','E-1222 only','419 / FCV-1222','420 / T-1521'],qualification:CF_SOURCE_12PB.qualification};return data;}
+
 function cfTrainingStudyCatalog12OL(data){
  data.build='12OL';data.runtimeRevision='12OL';
  data.studyInterface12OL={revision:'12OL',menu:'Working lessons only; unbuilt cards are not launch targets',sections:['Start here','Parts','Flow','T / P / state','Definitions','Guided steps','Sources'],sourcePolicy:'Reuse the retained lesson, exact-owner dossier and qualified readings. No new engineering facts or plant commands.'};
  return data;
 }
 
-function cfEquipmentTrainingData12MP(){return cfTrainingStudyCatalog12OL(cfTrainingLabelCatalog12OG(cfExtendTraining12OC(cfExtendDehyCatalog12OB(cfEquipmentTrainingDataBefore12OB(),cfSourceDefinitions12HO()),cfSourceDefinitions12HO())));}
+function cfEquipmentTrainingData12MP(){return cfExtendTrainerWorkspace12PB(cfTrainingStudyCatalog12OL(cfTrainingLabelCatalog12OG(cfExtendTraining12OC(cfExtendDehyCatalog12OB(cfEquipmentTrainingDataBefore12OB(),cfSourceDefinitions12HO()),cfSourceDefinitions12HO()))) );}
 
 function cfInstallEquipmentDetail12MP(){
  if(window.CFEquipmentDetail12MP)return window.CFEquipmentDetail12MP;
@@ -3798,8 +3854,16 @@ var nmDeckData12NM={"lower":{"pos":[-2.2981,0.06,2.2981,-2.5784,0.06,1.97847,-1.
   var internals=part('nozzles','Tower feed and draw nozzle collars','Separate source connections:450 overhead;562 RSV;420 GSP;427 EX/JT;444 recovery;436/437 side loop;439/441 bottom loop;504 product;534 equalization. Heights and flange geometry are illustrative.',null,O,'nn-retained');
   [[[-5.4,32.7,0],[-6.1,32.7,0]],[[-5.4,30.5,0],[-6.1,30.5,0]],[[-5.4,26,0],[-6.1,26,0]],[[-5.4,21.7,0],[-6.1,21.7,0]],[[5.4,16,0],[6.1,16,0]],[[5.4,18,0],[6.1,18,0]],[[3.6,5,0],[4.3,5,0]],[[3.6,3.3,0],[4.3,3.3,0]],[[2.99,2,2],[3.7,2,2]],[[0,36.6,0],[0,37,0]],[[0,-1,0],[0,-1.5,0]]].forEach(function(p){cyl(internals,p[0],p[1],.34,'metal',null,'solid',.9,.74);});
   // Pre-expander GSP takeoff and selected liquid432 are separate from EX/JT.
-  route('gsp-vapor-feed','416 / pre-expander GSP takeoff','416','V-1421 vapor header before EX','418 GSP junction',[[-25,3,0],[-25,3,4],[-25,-3,4]],'VAPOR / separate GSP branch','cold',0,'Retained416/PDCV-1222B joins the418 service. It is not a third alternative main letdown path.','CF_PID_M2130_12HX','always','v1421');
+  route('gsp-vapor-feed','416 / pre-expander GSP takeoff','416','V-1421 vapor header before EX','418 GSP junction',[[-28,3,0],[-28,5,0],[-28,5,4],[-28,-3,4],[-25,-3,4]],'VAPOR / separate GSP branch','cold',0,'Retained416/PDCV-1222B joins the418 service. It is not a third alternative main letdown path.','CF_PID_M2130_12HX','always','v1421');
   route('gsp-liquid-feed','432 / selected LCV-1421B liquid contribution','430 / 432','V-1421 liquid / LCV-1421B','418 GSP junction',[[-31,-6,0],[-31,-6,7],[-25,-6,7],[-25,-3,7],[-25,-3,4]],'LIQUID upstream / downstream flash possible','liquid',0,'Separate LCV-1421B liquid contribution to418 in the recovery study. Not the direct444 path or rejection434.','CF_PID_M2130_12HX','RECOVERY','v1421');
+  //12PB exact source-owned schematic GSP station; separate from the main EX/JT paths.
+  var pbTee=part('gsp-takeoff-tee','415 / 416 GSP takeoff','Separate reflux takeoff from the common V-1421 vapor header before EX/JT. Not a third main letdown bypass.',0,'v1421','CF_PID_M2135_12HZ');
+  sphere(pbTee,[-28,3,0],[.39,.39,.39],'mixed',0,'nm-pipe',.96);
+  var pbPdcv=part('pdcv1222b','PDCV-1222B / GSP feed station','Retained416 station upstream of the selected432 liquid join and418. Schematic symbol, not an operating valve control.',0,'cf3d_cv_pdcv1222b','CF_PID_M2130_12HX');
+  cyl(pbPdcv,[-28,.62,4],[-28,1.38,4],.46,'metal',0,'nm-valve',.96);cyl(pbPdcv,[-28,1,4],[-27.15,1,4],.14,'metal',0,'nm-valve',1);sphere(pbPdcv,[-27,1,4],[.35,.35,.35],'mixed',0,'nm-valve',.96);
+  var pbStr=part('str1222b','STR-1222B / GSP passage inlet','Retained strainer on418 before E-1222. No mesh size, DP limit or installed dimensions inferred.',0,'cf3d_m2130_str1222b','CF_PID_M2130_12HX');
+  cyl(pbStr,[-23.5,-3,4],[-22.5,-3,4],.42,'metal',0,'nm-valve',.96);
+  sc.demeth12NM.gspStation12PB={takeoff:[-28,3,0],parts:[pbTee,pbPdcv,pbStr],source:'CF_PID_M2130_12HX / CF_PID_M2135_12HZ',physicalAssetsAdded:0};
   // Correct the ground-level408 continuation to the cold-separator teaching boundary.
   route('408-return','408 / separate cooled heating-gas return','408','E-1223/E-1224 gas passage','V-1421 boundary',[[30,-4,-3],[30,-4,-7],[-35,-4,-7],[-35,-1,-7],[-35,-1,0],[-33.5,-1,0]],'GAS / any condensation depends on mixture conditions','cold',3,'Retained408 goes toward the cold separator, not into the tower circulation. This is a schematic connection, not a surveyed nozzle position.','CF_PID_M2165_12IE','always','v1421');
   // Small accessories can be shown together or revealed by selecting a source item.
@@ -4082,7 +4146,7 @@ var nmDeckData12NM={"lower":{"pos":[-2.2981,0.06,2.2981,-2.5784,0.06,1.97847,-1.
   {id:'product',label:'NGL product / tower to V-1422',routes:['product'],stops:[['T-1521 bottoms','product',0],['XV-1521','product',[9,-1.5,6]],['V-1422','product',-1]],summary:'504 -> XV-1521 -> 518 -> V-1422. Net liquid product, not reboiler circulation.'},
   {id:'overhead',label:'Overhead gas / tower to C-1121',routes:['overhead'],stops:[['T-1521 / 450','overhead',0],['E-1222','overhead',4],['E-1221','overhead',5],['C-1121 suction / 452','overhead',-1]],summary:'Overhead gas warms through E-1222, then E-1221, on its own passage. It does not mix with RSV.'},
   {id:'rsv',label:'RSV / F-1438 to upper tower',routes:['rsv'],stops:[['F-1438 / 560','rsv',0],['E-1221','rsv',1],['E-1222','rsv',2],['FCV-1438','rsv',[-15.5,-3,1]],['T-1521 / 562','rsv',-1]],summary:'RSV passes through E-1221, then E-1222, then FCV-1438 to upper feed562. Reflux-service color does not assert a vapor fraction.'},
-  {id:'gsp',label:'GSP / 416 and selected 432 to 420',routes:['gsp-vapor-feed','gsp-liquid-feed','gsp'],stops:[['416 vapor takeoff','gsp-vapor-feed',0],['418 junction','gsp',0],['E-1222','gsp',1],['FCV-1222','gsp',[-10,-3,4]],['T-1521 / 420','gsp',-1]],summary:'416 gas and, in the recovery study, separate432 liquid join418 before E-1222. The419 outlet passes FCV-1222 to420. This is not a third main letdown bypass.'},
+  {id:'gsp',label:'GSP / 416 and selected 432 to 420',routes:['gsp-vapor-feed','gsp-liquid-feed','gsp'],stops:[['415 to416 takeoff','gsp-vapor-feed',0],['PDCV-1222B','gsp-vapor-feed',[-28,1,4]],['432 joins418','gsp',0],['STR-1222B','gsp',[-23,-3,4]],['E-1222 only','gsp',1],['FCV-1222 /419 to420','gsp',[-10,-3,4]],['T-1521 /420','gsp',-1]],summary:'416 gas and, in the recovery study, separate432 liquid join418 before E-1222. The419 outlet passes FCV-1222 to420. This is not a third main letdown bypass.'},
   {id:'main',label:'Main gas / selected EX or JT to 427',routes:['ex','jt'],summary:'Only the selected EX or JT lesson path has forward arrows. Both meet at427; a stopped EX is not shown flowing.'},
   {id:'recovery',label:'Recovery liquid / V-1421 to 444',routes:['recovery'],stops:[['V-1421 liquid','recovery',0],['T-1521 / 444','recovery',-1]],summary:'Direct LCV-1421A recovery liquid path. No flow arrows appear when the lesson is in rejection. Downstream flashing remains qualified.'},
   {id:'rejection',label:'Rejection liquid / V-1421 via E-1224',routes:['rejection','side-common','side-return'],stops:[['V-1421 liquid','rejection',0],['434 + 436 junction','side-common',0],['E-1224','side-return',2],['T-1521 / 437','side-return',-1]],summary:'Rejection434 joins tower side draw436 before E-1224. The heated return437 is a different line. In recovery,434 has no forward arrows.'},
@@ -4102,9 +4166,9 @@ var nmDeckData12NM={"lower":{"pos":[-2.2981,0.06,2.2981,-2.5784,0.06,1.97847,-1.
   if(!rows&&g.routes&&g.routes.length===1){var r=noRoute12NO(g.routes[0]);if(r)rows=[[r.from,g.routes[0],0],[r.to,g.routes[0],-1]];}
   return (rows||[]).map(function(s){var r=noRoute12NO(s[1]);if(!r)return null;return {label:s[0],route:r,point:Array.isArray(s[2])?s[2].slice():r.points[s[2]<0?r.points.length+s[2]:s[2]].slice()};}).filter(Boolean);
  }
- function noRelatedOwners12NO(sc){var owners=new Set(['t1521']);sc.demeth12NM.routes.filter(noIncluded12NO).forEach(function(r){var id=noId12NO(r);owners.add(sc.parts[r.part].ownerKey);if(['product','equalize'].includes(id))owners.add('v1422');if(['rsv','gsp','overhead','gsp-vapor-feed'].includes(id))owners.add('e1221');if(['overhead','ex','jt'].includes(id))owners.add('c1121');if(['ex','jt','recovery','rejection','gsp-liquid-feed','gsp-vapor-feed','408-return'].includes(id))owners.add('v1421');if(/^(side-|bottom-)/.test(id)||id==='rejection'||id==='heating-gas')owners.add('e1223');if(/^(bottom-|trim-)/.test(id)||id==='hmo')owners.add('e1125');});return owners;}
+ function noRelatedOwners12NO(sc){var owners=new Set(['t1521']);sc.demeth12NM.routes.filter(noIncluded12NO).forEach(function(r){var id=noId12NO(r);owners.add(sc.parts[r.part].ownerKey);if(['product','equalize'].includes(id))owners.add('v1422');if(['rsv','gsp','overhead','gsp-vapor-feed'].includes(id))owners.add('e1221');if(['overhead','ex','jt'].includes(id))owners.add('c1121');if(['gsp','gsp-vapor-feed'].includes(id)){owners.add('cf3d_cv_pdcv1222b');owners.add('cf3d_m2130_str1222b');}if(['ex','jt','recovery','rejection','gsp-liquid-feed','gsp-vapor-feed','408-return'].includes(id))owners.add('v1421');if(/^(side-|bottom-)/.test(id)||id==='rejection'||id==='heating-gas')owners.add('e1223');if(/^(bottom-|trim-)/.test(id)||id==='hmo')owners.add('e1125');});return owners;}
  function noEnhanceFlows12NO(sc){
-  var byPart={};sc.demeth12NM.routes.forEach(function(r){var id=noId12NO(r),kind=noNgl12NO.includes(id)?'ngl':id==='overhead'?'gas':id==='rsv'||id==='gsp'?'reflux':id==='heating-gas'||id==='408-return'?'heat':id==='hmo'?'oil':id==='equalize'?'reference':'feed';r.flowService12NO=kind;r.color=noColors12NO[kind].slice();byPart[r.part]=r;});
+  var byPart={};sc.demeth12NM.routes.forEach(function(r){var id=noId12NO(r),kind=noNgl12NO.includes(id)?'ngl':id==='overhead'?'gas':id==='rsv'||id==='gsp'||id==='gsp-vapor-feed'?'reflux':id==='heating-gas'||id==='408-return'?'heat':id==='hmo'?'oil':id==='equalize'?'reference':'feed';r.flowService12NO=kind;r.color=noColors12NO[kind].slice();byPart[r.part]=r;});
   sc.meshes.forEach(function(m){var r=byPart[m.part];if(r)m.color=r.color.slice();else if(m.layer==='nm-fluid')m.color=noColors12NO.ngl.slice();
    var p=sc.parts[m.part];if(m.layer==='nm-pipe'&&p&&['2306','2307','2304'].includes(p.sourceTag))m.color=noColors12NO.ngl.slice();});
   var update=sc.update;sc.update=function(angle,o){update(angle,o);var focused=noFlow12NO.selected!=='all',owners=noRelatedOwners12NO(sc);
@@ -4633,7 +4697,7 @@ var nmDeckData12NM={"lower":{"pos":[-2.2981,0.06,2.2981,-2.5784,0.06,1.97847,-1.
 
  /*12NT: compact external gas-train view in the SAME demeth lesson.*/
  var ntMachineUI12NT={panels:0,lastReadout:null};
- var ntGasGroup12NT={id:'gas-train',label:'Gas train / EX, tower, exchangers, booster',routes:['ex','jt','overhead','booster','booster-bypass'],summary:'Cold feed and warmed overhead use different gas passages. The gray connection is a mechanical shaft, not process piping. Readout snapshots are independent of private route study.'};
+ var ntGasGroup12NT={id:'gas-train',label:'Gas train / EX, JT, GSP, tower and booster',routes:['ex','jt','gsp-vapor-feed','gsp-liquid-feed','gsp','overhead','booster','booster-bypass'],summary:'V-1421 vapor branches to EX/JT and the separate416 GSP reflux feed. GSP uses E-1222 then FCV-1222 to420; selected432 liquid joins upstream of the core. The gray connection is a mechanical shaft, not process piping. No third main EX/JT bypass is implied.'};
  noGroups12NO.splice(1,0,ntGasGroup12NT);
  var ntOpt12NT=el('option',ntGasGroup12NT.label);ntOpt12NT.value='gas-train';noSelect12NO.insertBefore(ntOpt12NT,noSelect12NO.options[1]||null);
  var ntOverhead12NT=noGroups12NO.find(function(g){return g.id==='overhead';});ntOverhead12NT.label='Overhead / exchangers, booster, A-1321 boundary';ntOverhead12NT.routes=['overhead','booster','booster-bypass'];ntOverhead12NT.summary='450 -> E-1222 -> E-1221 ->452/454 -> C-1121 ->455/457 toward A-1321. The JT-only comparison uses the existing warm-side456 bypass, not a third cold-feed letdown.';
@@ -5759,6 +5823,56 @@ var nmDeckData12NM={"lower":{"pos":[-2.2981,0.06,2.2981,-2.5784,0.06,1.97847,-1.
 
  var olStatsBefore=stats;stats=function(){var s=olStatsBefore();s.build='12OL';s.revision='12OL';s.runtimeRevision='12OL';s.menuRevision='12OL';s.sharedFeatureRevision='12OL';s.studyInterface={revision:'12OL',section:ny.page,workingMenuCount:D.querySelectorAll('#ci-cards [data-model]').length,cutaway:state.model?olCutaway():null,arrows:state.model?olArrows():null,sections:olSections.map(function(x){return x[0];})};var n=$('ci-runtime-revision12ni');if(n)n.textContent='TRAINER 12OL';return s;};
 
+ /*12PB: shared large-canvas navigation, all lessons; no plant state or persistence writes.*/
+ var pbPanels={left:false,right:false},pbWs=$('ci-workspace'),pbStage=$('ci-stage');
+ function pbPanelOpen(side){return W.innerWidth<=820?pbWs.classList.contains('ci-show-'+side):!pbWs.classList.contains('ci-no-'+side);}
+ function pbSyncPanels(){['left','right'].forEach(function(side){var b=$('ci-toggle-'+side);b.setAttribute('aria-expanded',String(pbPanelOpen(side)));b.setAttribute('aria-controls','pb-'+side+'-panel');});studio12MV.wide=!pbPanelOpen('left')&&!pbPanelOpen('right');syncTools12MV();}
+ function pbSetPanel(side,open,remember){if(remember!==false)pbPanels[side]=!!open;pbWs.classList.toggle('ci-no-'+side,!open);pbWs.classList.toggle('ci-show-'+side,!!open);if(W.innerWidth<=820&&open){var other=side==='left'?'right':'left';pbWs.classList.remove('ci-show-'+other);pbWs.classList.add('ci-no-'+other);}pbSyncPanels();resize();markDirty();}
+ ['left','right'].forEach(function(side){var panel=D.querySelector('.ci-'+side);panel.id='pb-'+side+'-panel';var close=el('button','Back to model',null,'pb-drawer-close');close.type='button';close.setAttribute('aria-label','Close '+(side==='left'?'parts and views':'study')+' panel');close.onclick=function(){pbSetPanel(side,false);$('ci-toggle-'+side).focus();};panel.insertBefore(close,panel.firstChild);var b=$('ci-toggle-'+side);b.textContent=side==='left'?'Parts / views':'Study panel';b.onclick=function(){pbSetPanel(side,!pbPanelOpen(side));};});
+ $('ci-wide12mv').textContent='Model focus';$('ci-wide12mv').title='Give the full available width to the model; panels remain available above';$('ci-wide12mv').onclick=function(){pbSetPanel('left',false);pbSetPanel('right',false);pbFit();};
+ function pbFit(){if(!state.scene)return;resize();if(nmActive12NM()&&noFlow12NO.selected!=='all')noFit12NO();else if(ny.inspect)nyFit();else fitBounds12MV();markDirty();}
+ // Fit to the visible projected shape rather than an oversized world-diagonal sphere.
+ function pbFramePoints(points,top,bottom){
+  if(!renderer||!points.length)return false;
+  var lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];points.forEach(function(p){p.forEach(function(v,i){lo[i]=Math.min(lo[i],v);hi[i]=Math.max(hi[i],v);});});
+  var center=V.mul(V.add(lo,hi),.5),focal=renderer.h/(2*Math.tan(20*PI/180)),pad=Math.min(30,renderer.w*.07);
+  top=Math.min(top,renderer.h*.72);bottom=Math.min(bottom,renderer.h*.20);
+  function fits(d){camera.distance=d;camera.target=V.add(center,[0,(top-bottom)*d/(2*focal),0]);var b=cameraBasis(camera,renderer.w,renderer.h);return points.every(function(p){var q=projected(p,b);return q.z>.2&&q.x>pad&&q.x<renderer.w-pad&&q.y>top&&q.y<renderer.h-bottom;});}
+  var low=3,high=Math.max(20,V.len(V.sub(hi,lo))*3);for(var n=0;n<12&&!fits(high);n++)high*=1.4;
+  if(!fits(high))return false;
+  for(var i=0;i<22;i++){var mid=(low+high)*.5;if(fits(mid))high=mid;else low=mid;}
+  fits(high*1.06);markDirty();return true;
+ }
+ function pbMargins(){var sr=pbStage.getBoundingClientRect(),top=22,bottom=76;pbStage.querySelectorAll('.nn-purpose12nn,.nq-toolbar,.rs-toolbar,.nu-toolbar,.ny-system-bar,.ob-bar').forEach(function(n){if(n.hidden||!n.getClientRects().length)return;var r=n.getBoundingClientRect();if(r.width&&r.height)top=Math.max(top,r.bottom-sr.top+16);});return {top:top,bottom:bottom};}
+ fitBounds12MV=function(only){if(!state.scene||!renderer)return false;state.scene.update(state.angle,state);var pts=[];state.scene.meshes.forEach(function(m){if(!m.visible||m.alpha<.02||m.pick===false||(only&&m.part!==only))return;var b=meshBounds12MQ(m);[b.min[0],b.max[0]].forEach(function(x){[b.min[1],b.max[1]].forEach(function(y){[b.min[2],b.max[2]].forEach(function(z){pts.push([x,y,z]);});});});});var margins=pbMargins();return pbFramePoints(pts,margins.top,margins.bottom);};
+ noFit12NO=function(){if(!nmActive12NM()||!renderer)return false;var pts=[];state.scene.demeth12NM.routes.filter(noIncluded12NO).forEach(function(r){r.points.forEach(function(p){pts.push(p);});});camera.azimuth=.13;camera.elevation=.14;return pbFramePoints(pts,nnPurpose12NN.offsetHeight+32,103);};
+
+ $('ci-fit12mv').onclick=pbFit;
+ var pbInspect=D.querySelector('.ci-inspect12mv');
+ function pbButton(label,title,fn){var b=el('button',label,pbInspect,'pb-nav-button');b.type='button';b.title=title;b.setAttribute('aria-label',title);b.onclick=fn;return b;}
+ function pbZoom(factor){if(!state.scene)return;camera.distance=clamp(camera.distance*factor,3,950);markDirty();}
+ pbButton('+','Zoom in',function(){pbZoom(.82);}).id='pb-zoom-in';pbButton('-','Zoom out',function(){pbZoom(1/.82);}).id='pb-zoom-out';
+ var pbPan=el('details',null,pbInspect,'pb-pan');el('summary','Pan',pbPan);var pbPanGrid=el('div',null,pbPan,'pb-pan-grid');
+ function pbMove(x,y){if(!renderer||!state.scene)return;var basis=cameraBasis(camera,renderer.w,renderer.h),step=camera.distance*.07;camera.target=V.add(camera.target,V.add(V.mul(basis.r,x*step),V.mul(basis.u,y*step)));markDirty();}
+ [['Up',0,1],['Left',-1,0],['Center',0,0],['Right',1,0],['Down',0,-1]].forEach(function(a){var b=el('button',a[0],pbPanGrid);b.type='button';b.setAttribute('aria-label','Pan '+a[0].toLowerCase());b.onclick=function(){if(a[0]==='Center')pbFit();else pbMove(a[1],a[2]);};});
+ var pbGuide=el('details',null,null,'pb-route-guide'),pbInfo=$('no-route-info');pbGuide.open=W.innerWidth>820;el('summary','Route steps and explanation',pbGuide);pbInfo.parentNode.insertBefore(pbGuide,pbInfo);pbGuide.appendChild(pbInfo);pbGuide.addEventListener('toggle',function(){if(nmActive12NM()){noFit12NO();markDirty();}});
+ var pbQuick=el('button','GSP branch',nnViews12NN);pbQuick.id='pb-gsp-view';pbQuick.type='button';pbQuick.title='Follow the separate cold-separator GSP feed through E-1222 to 420';pbQuick.onclick=function(){if(!nmActive12NM())return;olDomainOverview();noFollow12NO('gsp',true);markDirty();};
+ var pbDrawBefore=draw;draw=function(){var r=pbDrawBefore();var b=$('ci-runtime-revision12ni');if(b&&b.textContent!=='TRAINER 12PB')b.textContent='TRAINER 12PB';return r;};
+ var pbPanelBefore=renderPanel;renderPanel=function(){var result=pbPanelBefore();pbSyncPanels();return result;};
+ var pbChooseBefore=choose;choose=function(id){var ok=pbChooseBefore(id);if(!ok)return ok;pbSetPanel('left',pbPanels.left,false);pbSetPanel('right',pbPanels.right,false);pbFit();return ok;};
+ $('ci-model').onchange=function(){choose(this.value);};D.querySelectorAll('#ci-cards [data-model]').forEach(function(b){b.onclick=function(){choose(b.dataset.model);};});
+ var pbDetailsBefore=nyDetails;nyDetails=function(){var r=pbDetailsBefore();pbSyncPanels();return r;};
+ var pbStatsBefore=stats;stats=function(){if(disposed)return {build:'12PB',revision:'12PB',runtimeRevision:'12PB',catalogBuild:data.build,disposed:true,parts:0,meshes:0};var s=pbStatsBefore();s.build='12PB';s.revision='12PB';s.runtimeRevision='12PB';s.catalogBuild=data.build;s.navigation12PB={leftOpen:pbPanelOpen('left'),rightOpen:pbPanelOpen('right'),canvasWidth:renderer?renderer.w:null,canvasHeight:renderer?renderer.h:null,privateControls:true};if(s.demeth)s.demeth.gspVisibleInGasTrain=true;var badge=$('ci-runtime-revision12ni');if(badge)badge.textContent='TRAINER 12PB';return s;};
+ var pbHelp=el('p',null);pbHelp.innerHTML='<b>Large model workspace:</b> Parts / views and Study panel reopen the original side panels. Model focus closes them. Fit view fits the current circuit or inspection; + / - zoom, and Pan provides touch-friendly camera movement. These controls never change the live plant.';$('ci-help-modal').querySelector('article').insertBefore(pbHelp,$('ci-help-close'));
+ var pbStyle=el('style',null,D.head);pbStyle.textContent=`
+ .pb-route-guide>summary{padding:7px 0;cursor:pointer;font-size:11px;color:#b9d8e8}.pb-route-guide:has(#no-route-info[hidden]){display:none}.pb-route-guide>#no-route-info{margin-top:0}
+ #studio{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}#studio .ci-top{flex:0 0 auto;min-height:54px;padding:7px 12px;gap:8px}#studio .ci-top h1{font-size:18px}#studio .ci-top button{min-height:38px}#studio .ci-landing{flex:1;min-height:0;overflow:auto}#studio .ci-workspace:not([hidden]){flex:1;min-height:0;height:auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto}#studio .ci-body{height:100%;min-height:0}#studio .ci-center{height:100%;min-height:0;min-width:0}#studio .ci-toolbar{display:flex!important;grid-template-columns:none!important;grid-template-rows:none!important;flex-wrap:wrap!important;align-items:center;padding:6px 8px!important;gap:6px;min-height:46px;overflow:visible!important}#studio .ci-toolbar button,#studio .ci-toolbar select{min-height:36px;font-size:12px}#studio .ci-toolbar select{max-width:260px;min-width:140px}#studio .ci-toolbar .toolbar-label{display:none}#studio .ci-toolbar .ci-label-toggle12og{margin-left:auto;font-size:12px;min-height:36px}#studio .ci-playback{height:auto;min-height:0;padding:7px 12px}#studio .ci-transport{gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding-bottom:3px}#studio .ci-transport>*{flex-shrink:0}#studio .ci-transport button{min-height:38px;padding:7px 11px}#studio .ci-flow-strip{max-height:30px;overflow:auto;font-size:11px}#studio .ci-inspect12mv{left:10px;right:auto;top:auto!important;bottom:48px!important;display:flex!important;gap:5px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 20px);background:#102532e8;border:1px solid #3a5b70;border-radius:9px;padding:5px}#studio .ci-inspect12mv button{min-height:34px;font-size:12px;padding:6px 9px}#studio .ci-orbit-hint{bottom:9px;font-size:10px;max-width:calc(100% - 20px)}#studio .ci-renderer{bottom:9px;max-width:40%;font-size:9px}#studio .pb-nav-button{font-size:18px!important;min-width:36px;font-weight:700}.pb-drawer-close{display:block;width:100%;margin:0 0 10px;position:sticky;top:0;z-index:4;background:#204858;border-color:#508798;min-height:38px}.pb-pan{pointer-events:auto;position:relative;margin:0;padding:0}.pb-pan>summary{cursor:pointer;padding:7px 10px;font-size:12px;min-height:34px}.pb-pan-grid{position:absolute;bottom:40px;right:0;display:grid;grid-template-columns:repeat(3,55px);padding:8px;background:#102b3c;border:1px solid #518297;border-radius:10px;gap:4px;z-index:15}.pb-pan-grid button:first-child{grid-column:2}.pb-pan-grid button:nth-child(2){grid-column:1}.pb-pan-grid button:last-child{grid-column:2}#studio .ci-panel{font-size:14px;line-height:1.65;padding:12px 16px}#studio .ol-study{font-size:14px}#studio .ol-study button,#studio .ny-pane button{min-height:38px;font-size:12px}
+ @media(min-width:821px){#studio .ci-body{display:grid!important;grid-template-columns:270px minmax(0,1fr) 360px!important}#studio .ci-no-left .ci-body{grid-template-columns:minmax(0,1fr) 360px!important}#studio .ci-no-right .ci-body{grid-template-columns:270px minmax(0,1fr)!important}#studio .ci-no-left.ci-no-right .ci-body{grid-template-columns:minmax(0,1fr)!important}#studio .ci-workspace:not(.ci-no-left) .ci-left,#studio .ci-workspace:not(.ci-no-right) .ci-right{display:block!important;min-width:0;overflow:auto}#studio .ci-no-left .ci-left,#studio .ci-no-right .ci-right{display:none!important}}
+ @media(max-width:820px){#studio #ci-model{width:190px!important;min-width:190px!important;max-width:190px!important;flex:0 0 190px!important}#studio .ci-top{padding:6px 8px;min-height:48px}#studio .ci-brand h1{font-size:14px}#studio .ci-brand .eyebrow,#studio .ci-top>.badge{display:none}#studio .ci-top button{padding:6px 8px;min-height:36px;font-size:11px}#studio .ci-toolbar{flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap;touch-action:pan-x;min-height:46px}#studio .ci-toolbar>*{flex-shrink:0!important;grid-column:auto!important;grid-row:auto!important}#studio .ci-toolbar select{width:170px!important;min-width:170px!important;font-size:12px!important}#studio .ci-toolbar button{font-size:12px!important;padding:7px 9px!important;min-height:36px!important}#studio .ci-toolbar .spacer{display:none}#studio .ci-toolbar .ci-label-toggle12og{font-size:12px!important;padding:7px!important;margin-left:0}#studio .ci-body{display:block!important;position:relative}#studio .ci-left,#studio .ci-right{position:absolute!important;top:0!important;bottom:0!important;width:min(420px,94vw)!important;max-width:none!important;z-index:30!important;display:none!important;background:#10202e;box-shadow:0 8px 24px #0008;overflow:auto!important;padding:10px}#studio .ci-left{left:0!important}#studio .ci-right{right:0!important}#studio .ci-show-left .ci-left,#studio .ci-show-right .ci-right{display:block!important}#studio .ci-playback{padding:5px 8px}#studio .ci-inspect12mv{bottom:39px!important;flex-wrap:nowrap;overflow-x:auto;max-width:calc(100% - 12px);left:6px;gap:4px;padding:4px}#studio .ci-inspect12mv>*{flex-shrink:0}#studio .ci-inspect12mv button{font-size:11px;min-height:34px;padding:5px 7px}#studio .ci-inspect12mv .pb-pan{position:static}#studio .ci-inspect12mv:has(.pb-pan[open]){overflow:visible;flex-wrap:wrap}#studio .pb-pan-grid{right:6px;bottom:42px}#studio .ci-renderer{display:none}#studio .ci-orbit-hint{font-size:9px;bottom:5px}#studio .ci-timeline{gap:5px}#studio .ci-timeline label,#studio .ci-timeline output{font-size:10px}#studio .ci-flow-strip{max-height:25px;font-size:10px}#studio .nn-purpose12nn{padding:7px}#studio .no-flow12no{gap:5px;margin-top:5px;padding-top:5px}#studio .no-legend12no{font-size:9px;gap:5px 9px}#studio .no-info12no p{max-height:34px}}
+ @media(max-height:520px){#studio .ci-top{min-height:40px}#studio .ci-top h1{font-size:13px}#studio .ci-top button{min-height:30px}#studio .ci-toolbar{min-height:40px}#studio .ci-toolbar button,#studio .ci-toolbar select{min-height:30px!important}#studio .ci-playback{padding:3px 7px}#studio .ci-flow-strip{display:none}#studio .ci-transport button{min-height:30px;padding:4px 8px}#studio .ci-inspect12mv{bottom:5px!important}#studio .ci-orbit-hint{display:none}#studio .nn-purpose12nn,#studio .nq-toolbar,#studio .rs-toolbar,#studio .nu-toolbar,#studio .ny-system-bar,#studio .ob-bar{max-height:30%;overflow:auto}}
+ `;
+ pbSyncPanels();
+
  W.addEventListener('pagehide',dispose,{once:true});
  W.CFInternalsStudio12MO={choose:choose,selectPart:selectPart,seek:seek,play:playback,view:view,focus:focusPart,draw:draw,status:stats,dispose:dispose,parts:function(){return state.scene?Object.values(state.scene.parts):[];},test:{studyInterface12OL:ol,studyPage12OL:olGoto,studyReset12OL:olReset,studyCutaway12OL:olSetCutaway,studyArrows12OL:olSetArrows,studyShowStep12OL:olShowStep,labelVisibility12OG:ogLabels12OG,setLabelVisibility12OG:ogSetLabels12OG,dehyState12OB:ob,dehySet12OB:obSet,dehyFit12OB:obFit,dehyRefresh12OB:obRefresh,dehyActive12OB:obRouteActive,sharedState12NY:ny,sharedProfiles12NY:nyProfiles,sharedOpen12NY:nyOpen,sharedFollow12NY:nyFollow,sharedBack12NY:nyBack,sharedRoutes12NY:nyRoutes,sharedRows12NY:nySelectedRoutes,sharedReadings12NY:nyRefresh,sharedSteps12NY:nySteps,sharedGlossary12NY:nyGlossary,equipmentInspector:nx,inspectEquipment:nxOpen,fitEquipment:nxFit,inspectionSource:nxSource,inspectionRows:nuRows,inspectionBack:nxBack,inspectionMotion:nvSourceStatus,stabilizerState:nu,stabilizerFollow:nuFollow,stabilizerView:nuSetView,stabilizerFit:nuFit,stabilizerSnapshot:nuSnapshot,stabilizerTour:nuTourStep,stabilizerGeometry:nuGeometry,machineReadout:ntMachineReadout12NT,machineUI:ntMachineUI12NT,machinePairView:ntMachinePairView12NT,gasTrainView:ntGasView12NT,reboilerLesson:rs12NS,reboilerFollow:rsFollow12NS,reboilerSnapshot:rsSnapshot12NS,reboilerFit:rsFit12NS,demethTour:nsTour12NS,tourGo:nsTourGo12NS,gasgasLesson:nq,gasgasFollow:nqSelectFlow,gasgasSnapshot:nqSnapshot,gasgasFit:nqFit,flowTrace:noFlow12NO,followFlow:noFollow12NO,fitFlow:noFit12NO,flowGroups:noGroups12NO,flowStops:noStops12NO,demethProfile:nmProfile12NM,demethStreams:nmStreams12NM,demethLesson:nmLesson12NM,demethRouteActive:nmRouteActive12NM,demethSetOffsets:nmSetOffsets12NM,chillerMath:chillerMath12MX,chillerInputs:chillerInputs12MX,glossaryRows:glossaryRows12MX,studyReview:function(){return state.scene&&state.scene.review12MV;},systemFor:systemFor12MV,studyState:studio12MV,fitStudy:fitBounds12MV,isolateSelected:isolateSelected12MV,clearStudyIsolation:clearStudyIsolation12MV,expanderCase:expanderCase12MU,buildExpander:buildExpander12MU,purpose:purpose12MT,thermodynamicState:thermodynamicState12MR,processSteps:processSteps12MR,pumpGeometry:pumpGeometry12MR,screwCycle:screwCycle,rayBounds:rayBounds12MQ,meshBounds:meshBounds12MQ,displayGeometry:displayGeometry12MQ,kinematics:kinematics,chamber:chamber,buildModel:buildModel,project:projected,camera:camera,getState:function(){return state;},getRenderer:function(){return renderer;},snapshot:snapshot,tab:tab,exportParts:exportParts}};
  if(hooks.ready)hooks.ready(stats());
@@ -6091,13 +6205,8 @@ function cfFrameTiming12ML(start){
  if(window.CFAcceptance12OP)window.CFAcceptance12OP.observeFrame(ren,performance.now()-start);
  var elapsed=performance.now()-start,m=CF_SPEED_12ML;m.frames++;m.frameCpuMs=elapsed;m.frameCpuAverageMs=m.frames===1?elapsed:m.frameCpuAverageMs*.9+elapsed*.1;
  if(m.firstFrameMs===null){m.firstFrameMs=performance.now()-m.started;if(window.CFLoadProgress12ML)window.CFLoadProgress12ML.ready(m);}
- var n=CF_ADAPTIVE_12ML;if(!CF_VISUAL_PREF_12ML.adaptive||!CF_NAV_12LL||CF_NAV_12LL.moving||CF_NAV_12LL.dragging){n.slow=0;n.fast=0;return;}
- var base=CF_PERF_12JG.pixelRatio,budget=1000/CF_PERF_12JG.fps,now=performance.now();
- if(m.frameCpuAverageMs>budget*.85){n.slow++;n.fast=0;}else if(m.frameCpuAverageMs<budget*.48){n.fast++;n.slow=0;}else {n.slow=0;n.fast=0;}
- if(now-n.lastAdjustment<3000)return;
- var current=n.ratio===null?base:n.ratio;
- if(n.slow>=24&&current>Math.min(base,1)){n.ratio=Math.max(Math.min(base,1),Math.round((current-.15)*100)/100);n.lastAdjustment=now;n.slow=0;}
- else if(n.fast>=90&&current<base){n.ratio=Math.min(base,Math.round((current+.1)*100)/100);n.lastAdjustment=now;n.fast=0;}
+ var n=CF_ADAPTIVE_12ML;
+ cfAdaptiveResolutionStep12OZ(n,{enabled:CF_VISUAL_PREF_12ML.adaptive,base:CF_PERF_12JG.pixelRatio,fps:CF_PERF_12JG.fps,start:start,now:performance.now(),cpuMs:m.frameCpuAverageMs});
 }
 function cfPerformanceStatus12ML(){
  var cache=window.CFRyanIndexSync12JT&&window.CFRyanIndexSync12JT.cacheStatus12ML?window.CFRyanIndexSync12JT.cacheStatus12ML():null;
@@ -6105,7 +6214,7 @@ function cfPerformanceStatus12ML(){
   quality:CF_VISUAL_PREF_12ML.quality,adaptive:CF_VISUAL_PREF_12ML.adaptive,configuredPixelRatio:CF_PERF_12JG.pixelRatio,
   activePixelRatio:CF_NAV_12LL&&CF_NAV_12LL.appliedRatio,drawCalls:ren.info&&ren.info.render?ren.info.render.calls:null,
   triangles:ren.info&&ren.info.render?ren.info.render.triangles:null,
-  scope:'Timings from this browser. CPU frame submission is not GPU timing. No claim about server latency, field accuracy or all collisions.'});
+  uiWorkload12OZ:Object.assign({},CF_DEVICE_PERF_12OZ),mainDisplay12OZ:CF_MAIN_VISIBILITY_12OZ?CF_MAIN_VISIBILITY_12OZ.status():null,frameCadenceMs12OZ:CF_ADAPTIVE_12ML.cadenceMs12OZ||null,scope:'Timings from this browser. CPU submission and frame cadence are not GPU timing. No claim about server latency, field accuracy or all collisions.'});
 }
 function cfCaptureModel12ML(){
  if(!ren||!scene||!cam)throw new Error('The 3D scene is not ready.');
@@ -14583,10 +14692,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-07-12OY';
+var RYAN_BUILD_ID='RYAN-2026-11-09-12PC';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-WORKSPACE-PRACTICE-12OY-20261107';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-DRAINS-TRUCK-AUDIT-12PC-20261109';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -15544,6 +15653,7 @@ function ryanLiveStateSummary(){
  Object.keys(PLANT.valves||{}).forEach(function(k){var v=PLANT.valves[k];lines.push(k+': '+(typeof v==='number'?(v>=0&&v<=1?(v?'OPEN':'CLOSED'):fmtRyanNum(v)+'%'):String(v)));});
  if(typeof FILTER_RULES!=='undefined'){lines.push('--- FILTER HEALTH ---');Object.keys(FILTER_RULES).forEach(function(k){var r=FILTER_RULES[k];lines.push(r.name+': '+filterDP(k).toFixed(2)+' '+r.unit+' | '+filterStatus(k)+(r.change!=null?' | change '+r.change:'')+(r.trip!=null?' | trip '+r.trip:''));});}
  if(SCEN&&SCEN.log&&SCEN.log.length){lines.push('--- RECENT / ACTIVE ALARM LOG ---');SCEN.log.slice(0,12).forEach(function(a){lines.push((a&&a.m)||String(a));});}
+ lines.push(cfStabilizerLiveContext12PA());
  return lines.join('\n');
 }
 function fmtRyanNum(v){return (typeof v==='number'&&isFinite(v))?(Math.round(v*100)/100):((v==null)?'n/a':String(v));}
@@ -17761,7 +17871,7 @@ var CTRL={open:false,timer:null,L:{},meta:[
  ['PCV1444','PIC-1444','Refrig HP accumulator pressure',5],
  ['TIC1241C','TIC-1241C','Gas chiller (E-1241) outlet temp',1],
  ['FIC7100A','FIC-7100A','Hot oil circulation flow',20],
- ['PIC5700A','PIC-5700A','Overhead compressor (C-5700) discharge',5]
+ ['PIC5700A','PIC-5700A','Overhead source header to C-5700 suction',5]
 ]};
 function ctBuild(){var b=document.getElementById('ctbody');if(!b)return;var html='';
   CTRL.meta.forEach(function(m){var id=m[0];CTRL.L[id]=PLANT.L[id];var L=CTRL.L[id];
@@ -18744,6 +18854,255 @@ function renderWeatherPanel(){
 }
 setInterval(renderWeatherPanel,2000);
 renderWeatherPanel();
+/* 12PA: operator-described stabilizer linkage. Reduced-order training balances,
+ * not a flash EOS, commissioned PID tuning, surveyed volume or vendor pump curve.
+ * Controls retain their existing SP/MAN/OUT ownership and existing protection table.
+ */
+var CF_STABILIZER_MODEL_12PA={flashLevelPerGpmSecond:.00072,kettleLevelPerGpmSecond:.00034,
+ productCapacityGpm:95,returnCapacityGpm:90,pumpCapacityGpm:185,secondPumpMultiplier:1.18,
+ liquidActuatorSeconds:6,gasEquivalentMmscfdPerGpm:.08,flashPressureGain:.8,towerPressureGain:.8,
+ headerPressureGain:1.2,suctionPressureGain:1.5,gasValveCoefficient:3,
+ compressorFullLoadMmscfd:1.25,compressorReferenceSuctionPsig:176,
+ pressureNumericalCeiling:2000,qualification:'Candidate simulator coefficients. C-5700 capacity is normalized from the prior 0.75-MMSCFD base at step3/5, not an installed capacity or performance curve. Liquid coefficients retain prior level time scales. No new alarm, trip, automatic start, valve bypass or field operating instruction.'};
+function cfStabValve12PA(v,key){return !!v&&Number(v[key])>0;}
+function cfStabFinite12PA(n,fallback){return Number.isFinite(n)?n:fallback;}
+function cfStabSlew12PA(value,target,step){return value+clmp(target-value,-step,step);}
+function cfStabilizerLiquid12PA(hcIn,waterIn,flashVapor){
+ var P=PLANT,V=P.v,L=P.L,I=P.in,vs=P.valves||{},M=CF_STABILIZER_MODEL_12PA;
+ var lm=L.LIC5010G,la=L.LIC5040A,lf=L.FIC5020A,lb=L.FIC5020B,fr=L.FIC5060A;
+ if(!lm||!la||!lf||!fr||![lm.pv,la.pv,lf.out,fr.out,hcIn,waterIn,flashVapor].every(Number.isFinite)){
+  V.stabilizerLinkage12PA={valid:false,missing:'Stabilizer liquid readings or commands unavailable'};return;
+ }
+ var count=(I.p5060run?1:0)+(I.p5065run?1:0),running=count>0&&!P.esd;
+ if(!running)V.stabPumpAvailability12PA=0;
+ else cfLag(V,'stabPumpAvailability12PA',1,4,0,1);
+ var availability=running?cfStabFinite12PA(V.stabPumpAvailability12PA,1):0;
+ var toSurge=cfStabValve12PA(vs,'xv5040b')&&!V.v1422HHSD,toFlash=cfStabValve12PA(vs,'xv5040a');
+ var nRoutes=(toSurge?1:0)+(toFlash?1:0);
+ var hyd=clmp(1-filterDP(P.filterHealth.stab.service||'f5015')/7,0,1);
+ var feedForward=Math.max(0,hcIn)+Math.max(0,cfStabFinite12PA(V.stabProductReturn5010Gpm,0));
+ if(!lm.man){var wanted=100*(feedForward+(lm.pv-lm.sp)*.70)/Math.max(.01,58*hyd);lm.out=clmp(cfStabSlew12PA(lm.out,wanted,1),0,100);}
+ if(!lf.man)lf.out=clmp(lf.out+(lf.sp-lf.pv)*.22,0,100);
+ if(lb&&!lb.man)lb.out=clmp(lb.out+(lb.sp-lb.pv)*.22,0,100);
+ var warm=clmp(lf.out/100,0,1),cold=lb?clmp(lb.out/100,0,1):0;
+ var circulationDemand=running?M.returnCapacityGpm*clmp(fr.out/100,0,1):0;
+ // A running pump with neither a product nor tower-return path is not throughput.
+ var pumpPath=running&&(circulationDemand>0||(nRoutes>0&&la.out>0));
+ var sourceAvailable=Math.max(0,lm.pv-cfStabFinite12PA(V.stabFlashRipple12PA,0))/M.flashLevelPerGpmSecond+Math.max(0,hcIn);
+ var requestedFeed=Math.min(58*hyd*clmp(lm.out/100,0,1),135*clmp(warm+cold,0,1),sourceAvailable)*availability;
+ var feedOpen=pumpPath&&cfStabValve12PA(vs,'xv5010f')&&lm.out>0&&(warm+cold)>0;
+ if(!feedOpen)V.stabTowerFeedGpm=0;
+ else cfLag(V,'stabTowerFeedGpm',requestedFeed,M.liquidActuatorSeconds,0,135);
+ var feed=feedOpen?Math.min(V.stabTowerFeedGpm,sourceAvailable):0;
+ V.stabTowerFeedGpm=feed;V.stabInletHydrocarbonOutGpm=feed;lf.pv=feed;
+ if(lb)lb.pv=(warm+cold>0)?feed*cold/(warm+cold):0;
+ var richness=clmp((cfStabFinite12PA(V.inletC2Mol,13.18)-13.18)/4,-1.5,2.5);
+ var reboilerT=L.TIC5040A?L.TIC5040A.pv:262,pressure=L.PIC5030A?L.PIC5030A.pv:210;
+ var vaporFraction=clmp(.10+richness*.018+(reboilerT-262)*.0008+(pressure-210)*.0005,.04,.28);
+ var vapor=feed*vaporFraction,netFeed=feed-vapor;
+ var pumpCapacity=M.pumpCapacityGpm*(count>1?M.secondPumpMultiplier:1)*availability;
+ if(!running){fr.pv=0;if(!fr.man)fr.out=0;}
+ else{if(!fr.man)fr.out=clmp(fr.out+(fr.sp-fr.pv)*.18,0,100);circulationDemand=Math.min(pumpCapacity,M.returnCapacityGpm*clmp(fr.out/100,0,1));}
+ var canDraw=la.pv-cfStabFinite12PA(V.stabKettleRipple12PA,0)>0||netFeed>0;
+ var circulation=running&&canDraw?Math.min(pumpCapacity,circulationDemand):0;
+ if(running&&canDraw)cfLag(V,'stabTowerReturnGpm12PA',circulation,5,0,M.returnCapacityGpm);else V.stabTowerReturnGpm12PA=0;
+ var actualReturn=V.stabTowerReturnGpm12PA;
+ var availableProductCapacity=Math.max(0,Math.min(M.productCapacityGpm,pumpCapacity-actualReturn));
+ if(!la.man&&running){var productDemand=Math.max(0,netFeed+(la.pv-la.sp)*.70);var pct=nRoutes?100*productDemand/Math.max(.01,availableProductCapacity):0;la.out=clmp(cfStabSlew12PA(la.out,pct,1),0,100);}
+ var productOpen=running&&nRoutes>0&&la.out>0&&canDraw;
+ var kettleAvailable=Math.max(0,la.pv-cfStabFinite12PA(V.stabKettleRipple12PA,0))/M.kettleLevelPerGpmSecond+netFeed;
+ var target=productOpen?Math.min(availableProductCapacity*clmp(la.out/100,0,1),kettleAvailable):0;
+ if(!productOpen)V.stabProductGrossGpm12PA=0;
+ else cfLag(V,'stabProductGrossGpm12PA',target,M.liquidActuatorSeconds,0,M.productCapacityGpm);
+ var product=productOpen?Math.min(V.stabProductGrossGpm12PA,kettleAvailable):0;
+ // Both destinations retain the old equal-share assumption; it is not a solved Cv split.
+ var exportFlow=toSurge&&nRoutes?product/nRoutes:0,returnFlow=toFlash&&nRoutes?product/nRoutes:0;
+ V.stabProductTo1422Gpm=exportFlow;V.stabProductReturn5010Gpm=returnFlow;
+ V.stabProductGrossGpm12PA=product;V.stabPumpGrossGpm12PA=product+actualReturn;fr.pv=V.stabPumpGrossGpm12PA;
+ var flashDelta=(hcIn+returnFlow-feed)*M.flashLevelPerGpmSecond,kettleDelta=(netFeed-product)*M.kettleLevelPerGpmSecond;
+ var oldFlash=lm.pv,oldKettle=la.pv,oldRF=cfStabFinite12PA(V.stabFlashRipple12PA,0),oldRK=cfStabFinite12PA(V.stabKettleRipple12PA,0);
+ var flashBase=lm.pv-oldRF+flashDelta,kettleBase=la.pv-oldRK+kettleDelta;
+ var newRF=(flashBase>.01&&flashBase<99.99)?cfProcWave('stab_flash_level12pa',.002,73):0,newRK=(kettleBase>.01&&kettleBase<99.99)?cfProcWave('stab_kettle_level12pa',.002,89):0;
+ lm.pv=clmp(lm.pv+flashDelta+newRF-oldRF,0,100);la.pv=clmp(la.pv+kettleDelta+newRK-oldRK,0,100);
+ V.stabFlashRipple12PA=newRF;V.stabKettleRipple12PA=newRK;
+ // These legacy indications have unresolved installed crosswalks. Apply the SAME
+ // inventory change while retaining their separate starting offsets, not independent mass sources.
+ V.lit5040a=clmp(cfStabFinite12PA(V.lit5040a,63.45)+kettleDelta+newRK-oldRK,0,100);
+ if(L.LIC5040G)L.LIC5040G.pv=clmp(L.LIC5040G.pv+kettleDelta+newRK-oldRK,0,100);
+ if(L.LIC5010A){L.LIC5010A.pv=lm.pv;if(!L.LIC5010A.man)L.LIC5010A.out=clmp((lm.pv-L.LIC5010A.sp)*1.4,0,100);}
+ [[L.LIC5060,I.p5060run],[L.LIC5065,I.p5065run]].forEach(function(x){if(x[0]){x[0].pv=la.pv;if(!x[0].man)x[0].out=x[1]?clmp((la.pv-x[0].sp)*1.2+45,0,100):0;}});
+ I.stabRunning=!!running;I.stabTowerFeedActive=running&&feed>.5;
+ V.stabTowerVaporGpmEq12PA=vapor;V.stabFlashVaporGpmEq=flashVapor;
+ var flashBound=(lm.pv-oldFlash-(newRF-oldRF))/M.flashLevelPerGpmSecond-(hcIn+returnFlow-feed);
+ var kettleBound=(la.pv-oldKettle-(newRK-oldRK))/M.kettleLevelPerGpmSecond-(netFeed-product);
+ var blockers=[];if(!running)blockers.push(P.esd?'Facility ESD active':'Both stabilizer pumps stopped');if(!cfStabValve12PA(vs,'xv5010f'))blockers.push('XV-5010F closed');if(lm.out<=0)blockers.push('Flash outlet demand is zero');if(warm+cold<=0)blockers.push('Both tower feed valve demands are zero');if(la.out<=0)blockers.push('LV-5040A output is zero'+(la.man?' in MANUAL':''));if(!nRoutes)blockers.push('No product destination open');if(V.v1422HHSD)blockers.push('Existing V-1422 HH inlet isolation active');
+ V.stabilizerLinkage12PA={valid:true,simSeconds:P.simSeconds,pumpsRunning:count,feedGpm:feed,flashHydrocarbonInGpm:hcIn,waterInGpm:waterIn,towerVaporGpmEquivalent:vapor,productGpm:product,to1422Gpm:exportFlow,to5010Gpm:returnFlow,towerReturnGpm:actualReturn,pumpGrossGpm:V.stabPumpGrossGpm12PA,
+  flashNetGpm:hcIn+returnFlow-feed,kettleNetGpm:netFeed-product,flashLevelRatePct:flashDelta,kettleLevelRatePct:kettleDelta,
+  inventoryBoundResidualGpm:flashBound+kettleBound,liquidBalanceResidualGpm:(hcIn+returnFlow-feed)+(netFeed-product)-(hcIn-vapor-exportFlow),blockers:blockers,
+  qualification:'Model-equivalent liquid balance only. 1394 final field nozzle, level-channel crosswalks, effective inventory volume, pump curves and split fractions remain qualified. Net surge level still equals all inflow minus NGL export.'};
+}
+function cfStabilizerGas12PA(){
+ var P=PLANT,V=P.v,L=P.L,C=P.cmp.c57,M=CF_STABILIZER_MODEL_12PA,vs=P.valves||{},flash=L.PIC5010D,tower=L.PIC5030A,header=L.PIC5700A;
+ if(!C||!flash||!tower||!header||![flash.pv,tower.pv,header.pv].every(Number.isFinite))return;
+ var ph=header.pv,ps=cfStabFinite12PA(V.pit5700b,cfStabFinite12PA(C.suc,177.52));
+ var fgen=Math.max(0,cfStabFinite12PA(V.stabFlashVaporGpmEq,0))*M.gasEquivalentMmscfdPerGpm;
+ var tgen=Math.max(0,cfStabFinite12PA(V.stabTowerVaporGpmEq12PA,0))*M.gasEquivalentMmscfdPerGpm;
+ function cv(c){return clmp(cfStabFinite12PA(c&&c.out,0)/100,0,1);}
+ function transfer(up,down,fraction,upGain,downGain){var dp=Math.max(0,up-down);return Math.min(M.gasValveCoefficient*fraction*Math.sqrt(dp/30),dp/Math.max(.01,upGain+downGain));}
+ var qf=cfStabValve12PA(vs,'xv5010d')?transfer(flash.pv,ph,cv(flash),M.flashPressureGain,M.headerPressureGain):0;
+ var qt=cfStabValve12PA(vs,'pv5030a')?transfer(tower.pv,ph,cv(tower),M.towerPressureGain,M.headerPressureGain):0;
+ var qr=L.PIC5900A?transfer(L.PIC5900A.pv,ph,cv(L.PIC5900A),0,M.headerPressureGain):0;
+ var qv=cfStabValve12PA(vs,'xv5700a')?transfer(ph,ps,cv(header),M.headerPressureGain,M.suctionPressureGain):0;
+ var receiver=cfStabFinite12PA(V.pit1010b,cfStabFinite12PA(V.pit1000a,507));
+ var load=clmp(cfStabFinite12PA(C.step,0)/Math.max(1,cfStabFinite12PA(C.maxstep,5)),0,1);
+ var ratio=(Math.max(receiver,ps)+14.7)/Math.max(1,ps+14.7);
+ var capacity=C.run&&!P.esd?M.compressorFullLoadMmscfd*load*Math.max(0,(ps+14.7)/(M.compressorReferenceSuctionPsig+14.7))*Math.min(1,Math.sqrt(2.5/Math.max(1,ratio))):0;
+ // Discharge responds to the receiving boundary. It is never the former ~197-psi
+ // target while simultaneously claiming forward return into the higher-pressure inlet/slug-catcher header.
+ if(C.run&&!P.esd)cfLag(C,'dis',receiver+2+3*capacity*capacity,5,0,M.pressureNumericalCeiling);
+ var forward=C.run&&!P.esd&&C.dis>receiver&&cfStabValve12PA(vs,'xv5755a'); /*12PC existing overhead return isolation.*/
+ var moved=forward?Math.min(capacity,Math.max(0,(ps+14.7)/M.suctionPressureGain)+qv):0;
+ var nextF=flash.pv+(fgen-qf)*M.flashPressureGain,nextT=tower.pv+(tgen-qt)*M.towerPressureGain,nextH=ph+(qf+qt+qr-qv)*M.headerPressureGain,nextS=ps+(qv-moved)*M.suctionPressureGain;
+ flash.pv=clmp(nextF,0,M.pressureNumericalCeiling);tower.pv=clmp(nextT,0,M.pressureNumericalCeiling);header.pv=clmp(nextH,0,M.pressureNumericalCeiling);V.pit5700b=clmp(nextS,0,M.pressureNumericalCeiling);
+ if(!flash.man)flash.out=clmp(flash.out+(flash.pv-flash.sp)*.22,0,100);
+ if(!tower.man)tower.out=clmp(tower.out+(tower.pv-tower.sp)*.22,0,100);
+ if(!header.man)header.out=clmp((header.pv-header.sp)*3,0,100);
+ C.suc=V.pit5700b;C.flow=moved;V.c5700ReturnDuringStep12PA=moved;V.c5700ReturnMmscfd12PA=moved;V.fit5500=moved;V.pit5700a=header.pv;
+ var hp=C.run?clmp(900+moved*380,0,2200):0;
+ cfLag(C,'hp',hp,8,0,2200);cfLag(C,'oilT',C.run?clmp(156+moved*2,150,185):73,10,0,250);
+ cfLag(C,'discT',C.run?clmp(174+moved*3.2+Math.max(0,ratio-2.5)*18,170,400):79,5,0,500);
+ V.pit5010a=Math.max(0,flash.pv-.3);
+ V.stabilizerGas12PA={valid:true,simSeconds:P.simSeconds,flashGeneratedMmscfd:fgen,towerGeneratedMmscfd:tgen,flashToHeaderMmscfd:qf,towerToHeaderMmscfd:qt,residueMakeupMmscfd:qr,admittedMmscfd:qv,returnedMmscfd:moved,capacityMmscfd:capacity,headerPressure:header.pv,suctionPressure:C.suc,dischargePressure:C.dis,receiverPressure:receiver,returnPathOpen:cfStabValve12PA(vs,'xv5755a'),
+  pressureNumericalGuard:[nextF,nextT,nextH,nextS].some(function(x){return x<0||x>M.pressureNumericalCeiling;}),
+  vaporBoundResidualMmscfd:(nextF-flash.pv)/M.flashPressureGain+(nextT-tower.pv)/M.towerPressureGain+(nextH-header.pv)/M.headerPressureGain+(nextS-V.pit5700b)/M.suctionPressureGain,
+  vaporBalanceResidualMmscfd:(fgen-qf)+(tgen-qt)+(qf+qt+qr-qv)+(qv-moved)-(fgen+tgen+qr-moved),
+  qualification:M.qualification+' PIC-5700A is source-side suction-header pressure, not compressor discharge; a running compressor cannot guarantee every pressure rises. Existing PIC-1010 may counteract recovered gas. XV-5755A closure blocks modeled return; deadhead pressure buildup remains unmodeled, not a field-safe condition.'};
+}
+function cfStabilizerAfterProtection12PA(){
+ var P=PLANT,V=P.v,C=P.cmp.c57;
+ var intervalFlow=Math.max(0,cfStabFinite12PA(V.c5700ReturnDuringStep12PA,0));
+ if(V.stabilizerGas12PA)V.stabilizerGas12PA.returnedDuringStepMmscfd=intervalFlow;
+ if(!C.run||P.esd){C.flow=0;V.fit5500=0;V.c5700ReturnMmscfd12PA=0;if(V.stabilizerGas12PA)V.stabilizerGas12PA.returnedMmscfd=0;}
+ if(!Number.isFinite(V.fqi5500))V.fqi5500=.04;
+ V.fqi5500+=intervalFlow/86400; /*executed one-second transfer, even if protection stops the unit at the end of this step*/
+}
+function cfStabilizerLiveContext12PA(){
+ var P=PLANT,V=P.v,L=P.L,s=V.stabilizerLinkage12PA,g=V.stabilizerGas12PA;
+ return 'STABILIZER LINKAGE - live simulator, not field telemetry: '+JSON.stringify({revision:'12PA',valid:!!(s&&s.valid&&g&&g.valid),pumps:{p5060:!!P.in.p5060run,p5065:!!P.in.p5065run},valves:{xv5040b:P.valves.xv5040b,xv5040a:P.valves.xv5040a,xv5010f:P.valves.xv5010f,xv5700a:P.valves.xv5700a},liquid:s?{slugFeedGpm:V.fit5000a,flashLevel:L.LIC5010G.pv,kettleLevel:L.LIC5040A.pv,feedGpm:s.feedGpm,grossPumpGpm:s.pumpGrossGpm,towerReturnGpm:s.towerReturnGpm,to1422Gpm:s.to1422Gpm,to5010Gpm:s.to5010Gpm,flashNetGpm:s.flashNetGpm,kettleNetGpm:s.kettleNetGpm,surgeLevel:L.LIC1422.pv,surgeNetGpm:V.nglTankNetGpm,blockers:s.blockers}:null,gas:g?{sourcePressure:L.PIC5700A.pv,actualSP:L.PIC5700A.sp,admissionOutput:L.PIC5700A.out,manual:!!L.PIC5700A.man,suction:V.pit5700b,discharge:P.cmp.c57.dis,fit5500Mmscfd:V.fit5500,receivingPressure:g.receiverPressure,pit1010c:V.pit1010a+.3}:null,qualification:'Finite candidate model, not calibrated volumes/curves. Net surge rise depends on export. Retained M2570 PIT/PIC tapping crosswalk conflict remains unverified; current control ownership is software/operator-described. Never prescribe field settings from these readings.'});
+}
+
+/*12PC: software repair, not field hydraulic sizing or an actual truck dispatch.
+ * One process-clock owner. No valve auto-lineup, new trip or instant inventory reset.
+ * Source: retained M2680/M2960 routes and existing Utilities planning guidance.
+ */
+var CF_UTILITY_SERVICE_12PC={revision:'12PC',drainFullScalePctPerSecond:0.60,receiverPctPerSumpPct:0.02,truckPctPerSecond:0.20,closedDrainTargetPct:10,lubeOilTargetPct:80};
+function cfF6800DrainStep12PC(liquidLoad,dt){
+ var V=PLANT.v,vs=PLANT.valves||{},cfg=CF_UTILITY_SERVICE_12PC;
+ dt=Number(dt);if(PLANT.simLive===false||!Number.isFinite(dt)||dt<=0)return;
+ var incoming=Number.isFinite(liquidLoad)?Math.max(0,liquidLoad):0;
+ var receiver=Number(V.lit8100),validReceiver=V.lit8100!=null&&Number.isFinite(receiver)&&receiver>=0&&receiver<=100;
+ var available=validReceiver?Math.max(0,100-receiver)/cfg.receiverPctPerSumpPct:0;
+ var rows=['a','b'].map(function(s,i){
+  var key='lit6800'+s;if(!Number.isFinite(V[key]))V[key]=i?11.45:10.52;
+  var before=V[key],load=incoming*(i?0.88:1)*dt,wave=cfProcWave('lit6800'+s+'_phys',0.00005,i?91:83)*dt;
+  // Original accumulation and bounded small variation remain. Open command is binary.
+  var held=clmp(before+load+wave,0,100),open=Number(vs['xv6800'+s])>0;
+  var requested=open?Math.min(held,cfg.drainFullScalePctPerSecond*(0.25+0.75*Math.sqrt(held/100))*dt):0;
+  return {key:key,tag:'LIT-6800'+s.toUpperCase(),valve:'XV-6800'+s.toUpperCase(),open:open,before:before,held:held,requested:requested,removed:0};
+ });
+ var demand=rows.reduce(function(a,r){return a+r.requested;},0),share=demand>0?Math.min(1,available/demand):1;
+ rows.forEach(function(r){r.removed=r.requested*share;V[r.key]=clmp(r.held-r.removed,0,100);r.after=V[r.key];r.ratePctPerMin=r.removed/dt*60;r.state=!r.open?'CLOSED':!validReceiver?'RECEIVER UNAVAILABLE':available<=0?'RECEIVER FULL':r.held<=0?'EMPTY':share<1?'RECEIVER CAPACITY LIMITED':'DRAINING';});
+ var transferred=rows.reduce(function(a,r){return a+r.removed;},0),receiverRise=transferred*cfg.receiverPctPerSumpPct;
+ if(validReceiver)V.lit8100=clmp(receiver+receiverRise,0,100);
+ V.f6800Drain12PC={revision:'12PC',simulationSeconds:PLANT.simSeconds,rows:rows,receiver:'TK-8100 / V-8100 retained DH receiver',receiverRisePct:receiverRise,receiverLevel:validReceiver?V.lit8100:null,route:'M2680 / 1212 DH -> M2960 closed drain',basis:'SIMULATOR ONLY: 0.60 maximum sump percentage points/s with low-level taper; 0.02 receiver percentage points per sump point. Not measured GPM, vessel capacity or valve Cv. Local pneumatic LC/LCV and RO restrictions are lumped into this response, not new operable controls. Receiver capacity bounding is numerical inventory conservation, not a field interlock.'};
+}
+function cfTruckKind12PC(kind){return kind==='closedDrain'||kind==='lubeOil';}
+function cfTruckName12PC(kind){return kind==='closedDrain'?'CLOSED DRAIN / TK-8100':'LUBE OIL / TK-9300';}
+function cfTruckRecord12PC(kind){
+ if(!cfTruckKind12PC(kind))return null;if(!PLANT.truckCalls)PLANT.truckCalls={};var r=PLANT.truckCalls[kind];
+ if(r&&!r.status){r.status='CALLED';r.kind=kind;r.events=[{at:r.t||Date.now(),sim:Number(r.sim)||0,message:'Earlier logged request retained; arrival must be recorded explicitly.'}];r.movedPct=0;}
+ return r||null;
+}
+function cfTruckEvent12PC(r,message){
+ if(!r.events)r.events=[];r.events.push({at:Date.now(),sim:Number(PLANT.simSeconds)||0,message:message});if(r.events.length>80)r.events.splice(0,r.events.length-80);
+ alarm(cfTruckName12PC(r.kind)+' - '+message);
+}
+function cfTruckLevel12PC(kind){var k=kind==='closedDrain'?'lit8100':'lit9300b',v=PLANT.v[k];return Number.isFinite(v)&&v>=0&&v<=100?v:null;}
+function cfTruckBlocked12PC(kind){
+ if(cfTruckLevel12PC(kind)===null)return 'Tank level unavailable';
+ if(kind==='closedDrain'){
+  var vs=PLANT.valves||{};if(!(Number(vs.xv8100)>0))return 'XV-8100 is closed';if(!(Number(vs.xxy8100)>0))return 'XXY-8100 permissive/command is not enabled';
+ }
+ return '';
+}
+function cfTruckAction12PC(action,kind){
+ if(!cfTruckKind12PC(kind)){alarm('Unknown truck service - no command applied');return false;}
+ var r=cfTruckRecord12PC(kind),active=r&&!/^(COMPLETED|CANCELLED)$/.test(r.status),now=Number(PLANT.simSeconds)||0;
+ if(action==='call'){
+  if(active){alarm(cfTruckName12PC(kind)+' - request already active; arrival or service controls are available in this panel');return false;}
+  if(r){if(!PLANT.truckServiceHistory12PC)PLANT.truckServiceHistory12PC=[];PLANT.truckServiceHistory12PC.unshift(JSON.parse(JSON.stringify(r)));if(PLANT.truckServiceHistory12PC.length>100)PLANT.truckServiceHistory12PC.length=100;}
+  r={kind:kind,status:'CALLED',t:Date.now(),sim:now,events:[],movedPct:0,targetPct:kind==='closedDrain'?CF_UTILITY_SERVICE_12PC.closedDrainTargetPct:CF_UTILITY_SERVICE_12PC.lubeOilTargetPct,ratePctPerSecond:CF_UTILITY_SERVICE_12PC.truckPctPerSecond};PLANT.truckCalls[kind]=r;
+  cfTruckEvent12PC(r,'Simulated truck request recorded. No real dispatch was contacted; record arrival separately.');return true;
+ }
+ if(!active){alarm(cfTruckName12PC(kind)+' - place a request first');return false;}
+ if(action==='arrive'){
+  if(r.status!=='CALLED')return false;r.status='ON_SITE';r.arrivedAtSim=now;cfTruckEvent12PC(r,'Truck arrival recorded for the simulation. No transfer has started.');return true;
+ }
+ if(action==='start'){
+  if(!/^(ON_SITE|STOPPED)$/.test(r.status)){alarm(cfTruckName12PC(kind)+' - record arrival before starting service');return false;}
+  var why=cfTruckBlocked12PC(kind);if(why){alarm(cfTruckName12PC(kind)+' - service not started: '+why);return false;}
+  var level=cfTruckLevel12PC(kind),atTarget=kind==='closedDrain'?level<=r.targetPct:level>=r.targetPct;
+  if(atTarget){r.status='COMPLETED';r.endedAtSim=now;cfTruckEvent12PC(r,'Target already reached; no transfer was performed.');return true;}
+  r.status='TRANSFERRING';r.startedAtSim=now;r.startLevel=level;r.blocked='';cfTruckEvent12PC(r,kind==='closedDrain'?'Simulated pump-out started toward 10%. Valves remain operator-controlled.':'Simulated delivery started toward 80%. No unmodeled fill valves were commanded.');return true;
+ }
+ if(action==='stop'){
+  if(!/^(TRANSFERRING|WAITING)$/.test(r.status))return false;r.status='STOPPED';r.blocked='';r.currentRatePctPerMin=0;cfTruckEvent12PC(r,'Service stopped by operator. Level and valve positions retained.');return true;
+ }
+ if(action==='cancel'){
+  r.status='CANCELLED';r.blocked='';r.currentRatePctPerMin=0;r.endedAtSim=now;cfTruckEvent12PC(r,'Request cancelled. Any prior transferred inventory remains; valves were not changed.');return true;
+ }
+ return false;
+}
+function cfTruckServiceStep12PC(dt){
+ dt=Number(dt);if(PLANT.simLive===false||!Number.isFinite(dt)||dt<=0)return;
+ ['closedDrain','lubeOil'].forEach(function(kind){var r=cfTruckRecord12PC(kind);if(!r||!/^(TRANSFERRING|WAITING)$/.test(r.status))return;
+  var reason=cfTruckBlocked12PC(kind);if(reason){if(r.status!=='WAITING'||r.blocked!==reason){r.status='WAITING';r.blocked=reason;r.currentRatePctPerMin=0;cfTruckEvent12PC(r,'Transfer waiting: '+reason+'. No liquid is being moved.');}return;}
+  if(r.status==='WAITING'){r.status='TRANSFERRING';r.blocked='';cfTruckEvent12PC(r,'Previously started service resumed after its modeled path became available.');}
+  var key=kind==='closedDrain'?'lit8100':'lit9300b',level=PLANT.v[key],target=r.targetPct;
+  var remaining=kind==='closedDrain'?Math.max(0,level-target):Math.max(0,target-level),move=Math.min(remaining,Math.max(0,Number(r.ratePctPerSecond)||0)*dt);
+  PLANT.v[key]=clmp(level+(kind==='closedDrain'?-move:move),0,100);r.movedPct=(Number(r.movedPct)||0)+move;r.currentRatePctPerMin=move/dt*60;r.lastServiceSim=PLANT.simSeconds;
+  if(remaining<=move+1e-9){r.status='COMPLETED';r.endedAtSim=PLANT.simSeconds;r.currentRatePctPerMin=0;cfTruckEvent12PC(r,'Service complete at '+PLANT.v[key].toFixed(2)+'%. No valve was automatically closed; review the simulated lineup.');}
+ });
+}
+function cfTruckPopup12PC(kind){
+ var e=cfReadoutEscape12NK;if(!cfTruckKind12PC(kind))return '<div class="pop"><div class="poph">Unknown truck service<button data-act="popclose">Close</button></div></div>';
+ var r=cfTruckRecord12PC(kind),status=r?r.status:'NOT CALLED',lvl=cfTruckLevel12PC(kind),drain=kind==='closedDrain',busy=/^(TRANSFERRING|WAITING)$/.test(status);
+ function button(a,text,disabled){return '<button type="button" data-act="truck'+a+'" data-truck="'+kind+'"'+(disabled?' disabled':'')+'>'+text+'</button>';}
+ var h='<div class="pop cf-truck12pc"><div class="poph"><div><small>UTILITIES / SIMULATED SERVICE</small><strong>'+cfTruckName12PC(kind)+'</strong></div><button data-act="popclose">Close</button></div><div class="popb" style="display:block"><div class="cf-truck-grid12pc"><section><small>CURRENT INVENTORY</small><b>'+ (lvl===null?'Unavailable':lvl.toFixed(2)+'%')+'</b><span>'+ (drain?'LIT-8100':'LIT-9300B')+'</span></section><section><small>SERVICE STATUS</small><b>'+e(status.replace(/_/g,' '))+'</b><span>'+ (r&&r.blocked?e(r.blocked):'Master simulation clock / '+(PLANT.simLive===false?'PAUSED':'LIVE'))+'</span></section></div>';
+ h+='<p><b>Request -> record arrival -> start service.</b> Calling alone does not alter the tank. '+(drain?'Pump-out requires the existing XV-8100 and XXY-8100 commands open/enabled.':'Delivery is an explicit simulated transfer; a field fill-valve lineup is not represented.')+'</p>';
+ h+='<div class="cf-truck-actions12pc">'+button('call','1. Place simulated call',!!r&&!/^(COMPLETED|CANCELLED)$/.test(status))+button('arrive','2. Record arrival',status!=='CALLED')+button('start',drain?'3. Start pump-out':'3. Start oil delivery',! /^(ON_SITE|STOPPED)$/.test(status))+button('stop','Stop service',!busy)+button('cancel','Cancel request',!r||/^(COMPLETED|CANCELLED)$/.test(status))+'</div>';
+ if(drain){h+='<div class="cf-truck-path12pc">Existing simulated path: <b>XV-8100 '+(PLANT.valves.xv8100?'OPEN':'CLOSED')+'</b> / <b>XXY-8100 '+(PLANT.valves.xxy8100?'ENABLED':'DISABLED')+'</b>. <button type="button" data-act="popclose">Return to Utilities controls</button></div>';}
+ h+='<p>Target: <b>'+ (drain?'10%':'80%')+'</b>. '+(r?'Transferred during this call: '+Number(r.movedPct||0).toFixed(2)+' tank percentage points. ':'')+'Nominal simulated transfer: 0.20 percentage points per simulation second; pauses with the plant. Concurrent normal inflow/consumption remains active.</p>';
+ h+='<details><summary>Planning basis and limits</summary><p>Retained operator planning pattern: closed-drain collection and lube-oil delivery roughly weekly; closed drain about 50% toward 10%, lube refill about 80%. These are planning observations, not automatic dispatch schedules or protection settings.</p><p>No real truck is contacted. Arrival is manually recorded, not a promised ETA. Rates are explicit training assumptions, not field GPM or tank capacities. This is not a field transfer/isolation procedure. Requests and detailed progress are session-only; existing alarm history retains logged events. No browser data is cleared.</p></details>';
+ if(r)h+='<details open><summary>Service event log</summary>'+r.events.slice(-12).reverse().map(function(x){return '<p><small>'+e(new Date(x.at).toLocaleTimeString())+' / '+Math.floor(x.sim)+' sim s</small><br>'+e(x.message)+'</p>';}).join('')+'</details>';
+ return h+'</div></div>';
+}
+function cfF6800DrainPanel12PC(){
+ var d=PLANT.v.f6800Drain12PC;if(!d)return '';var e=cfReadoutEscape12NK;
+ return '<details class="cf-drain12pc" id="cfF6800Drain12PC"'+(window.CFUtilityService12PC&&window.CFUtilityService12PC.drainOpen?' open':'')+'><summary>F-6800 drain response / receiver</summary><div>'+d.rows.map(function(r){return '<p><b>'+r.valve+'</b>: '+r.state+' | '+r.tag+' '+r.after.toFixed(2)+'% | modeled withdrawal '+r.ratePctPerMin.toFixed(2)+' sump points/min</p>';}).join('')+'<p>'+e(d.route)+'. Receiver LIT-8100: '+(d.receiverLevel==null?'unavailable':d.receiverLevel.toFixed(2)+'%')+'. Draining liquid does not clean the filter or reset PDIT-6800A.</p><small>'+e(d.basis)+'</small></div></details>';
+}
+function cfInstallUtilityService12PC(){
+ if(window.CFUtilityService12PC)return window.CFUtilityService12PC;
+ cfTrendRegister12OQ('fit1460','FIT-1460','ACFH',function(){return Number.isFinite(PLANT.v.fit1460)?PLANT.v.fit1460:null;},'Existing fuel-gas actual-volume flow; no new measurement or backfilled history.','fuelgas');
+ cfTrendRegister12OQ('fqi1460','FQI-1460','ACF',function(){return Number.isFinite(PLANT.v.fqi1460)?PLANT.v.fqi1460:null;},'Existing fuel-gas actual-volume totalizer; no new measurement or backfilled history.','fuelgas');
+ // Restore explicit initial availability without needing to visit the residue board.
+ ['xv6800a','xv6800b','xv1418','xv5755a'].forEach(function(k){if(PLANT.valves[k]==null)PLANT.valves[k]=0;});
+ window.CFUtilityService12PC={revision:'12PC',drainOpen:false,status:function(){return {drains:PLANT.v.f6800Drain12PC||null,trucks:PLANT.truckCalls||{},scope:'Simulation only; no external dispatch'};}};
+ var host=document.getElementById('eqtscr');if(host)host.addEventListener('toggle',function(e){if(e.target&&e.target.id==='cfF6800Drain12PC'&&e.target.isConnected)window.CFUtilityService12PC.drainOpen=!!e.target.open;},true);
+ var old=SCR.rescomp;SCR.rescomp=function(){return old.apply(this,arguments)+cfF6800DrainPanel12PC();};
+ return window.CFUtilityService12PC;
+}
+
 PLANT.tick=function(stepSeconds){
  if(PLANT.simLive===false)return false;
  var _stepSeconds=stepSeconds==null?1:Number(stepSeconds);
@@ -19141,8 +19500,7 @@ PLANT.tick=function(stepSeconds){
     threshold is invented; the existing LITs simply become process-active. */
  if(V.lit6800a==null)V.lit6800a=10.52;if(V.lit6800b==null)V.lit6800b=11.45;
  var _liqLoad6800=clmp((V.f6800GrossFlow||0)/242,0,1.5)*(0.00042+0.00016*_resLoadFrac);
- V.lit6800a=clmp(V.lit6800a+_liqLoad6800-(PLANT.valves.xv6800a?0.018:0)+cfProcWave('lit6800a_phys',0.00005,83),0,100);
- V.lit6800b=clmp(V.lit6800b+_liqLoad6800*0.88-(PLANT.valves.xv6800b?0.018:0)+cfProcWave('lit6800b_phys',0.00005,91),0,100);
+ cfF6800DrainStep12PC(_liqLoad6800,_stepSeconds);
  ['c61','c62','c63'].forEach(function(k){
    var c=C[k],_share=(resFrac>0?ld(c)/100/resFrac:0),_machineFlow=(c.run?resGrossFlow*_share:0);
    var _rt=c.run?resSuc:200;if(c.warm>0)c.suc=_rt;else ez(c,'suc',_rt,0.16);
@@ -19177,37 +19535,16 @@ PLANT.tick=function(stepSeconds){
   if(V.pit6050c==null)V.pit6050c=resSuc+1.5;
   ez(V,'pit6050c',resSuc+1.5,0.3);
  }
- /* C-5700 vapor-recovery load follows the sources that actually feed it. More stabilizer
-    overhead pressure/light ends and more V-5010 vapor increase suction mass flow; the machine
-    still falls to zero flow/load when stopped. This closes the stabilizer -> C-5700 -> inlet
-    cause/effect chain without inventing a new transmitter. */
- var _c57C2=clmp(((V.inletC2Mol==null?13.18:V.inletC2Mol)-13.18),-4,8);
- var _c57StabP=(L.PIC5030A&&isFinite(L.PIC5030A.pv))?L.PIC5030A.pv:210;
- var _c57FlashP=(L.PIC5010D&&isFinite(L.PIC5010D.pv))?L.PIC5010D.pv:261;
- var _c57VapDemand=clmp(0.75+Math.max(0,_c57StabP-205)*0.018+Math.max(0,_c57FlashP-255)*0.006+Math.max(0,_c57C2)*0.10+Math.max(0,flow-210)*0.008,0.25,6.5);
- ez(C.c57,'suc',(V.pit5700b||177.52),0.2);ez(C.c57,'dis',C.c57.run?clmp(197+(_c57VapDemand-0.8)*1.4,190,225):195,0.2);ez(C.c57,'flow',C.c57.run?_c57VapDemand:0,0.2);ez(C.c57,'hp',C.c57.run?clmp(900+_c57VapDemand*380,0,2200):0,0.2);ez(C.c57,'oilT',C.c57.run?clmp(156+_c57VapDemand*2.0,150,185):73,0.1);ez(C.c57,'discT',C.c57.run?clmp(174+_c57VapDemand*3.2,170,205):79,0.2);
+ /*12PA: advance source, suction and recovered-gas inventories once per process step.*/
+ cfStabilizerGas12PA();
  /* ═══ Booster Pumps (P-5060/5065) / Overhead Compressor (C-5700) screen ═══ */
  (function(){
   /* LIC-5060/5065 PVs are synchronized to the shared stabilizer liquid inventory in
      the 12BN balance below. Do not independently drift them here; stopped pumps cannot
      manufacture level movement or controller flow. */
-  if(!PLANT.in.p5060run&&!L.LIC5060.man)L.LIC5060.out=0;
-  if(!PLANT.in.p5065run&&!L.LIC5065.man)L.LIC5065.out=0;
   var _p56Any=!!(PLANT.in.p5060run||PLANT.in.p5065run);
-  if(!_p56Any){L.FIC5060A.out=0;L.FIC5060A.pv=0;}
-  else if(L.FIC5060A.man){ez(L.FIC5060A,'pv',L.FIC5060A.out/100*90,0.2);}
-  else{L.FIC5060A.out=clmp((L.FIC5060A.sp-L.FIC5060A.pv)*1.2+60,0,100);ez(L.FIC5060A,'pv',clmp(18.7+(flow-212.6)*0.02,0,95),0.1);}
-  /* 12BL research/correlation correction — C-5700 suction controls.
-     Latest operator-backed Ryan knowledge: PIC-5700A SP 230 psig, PV about 176 psig,
-     CV 0%, and PV-5700A opens as source pressure rises ABOVE SP. An older 0.55/100%
-     snapshot embedded in the frontend was stale and had the controller action reversed.
-     PIC-5900A observed SP 210 / PV about 352 / CV 0. Exact control narrative is still
-     pending; the low-pressure-assist action below is an ENGINEERING INFERENCE chosen
-     because it preserves that verified observed state instead of forcing the valve wide open. */
-  var _stabOH=clmp(176.0+(flow-222.0)*0.020,120,320);
+  /*12PA FIC-5060A manipulates tower return; its common FE/FIT flow includes product plus return. The liquid balance below owns its reading.*/
   var _resOH=clmp(352.0+(resHdr-982.0)*0.12,180,430);
-  ez(L.PIC5700A,'pv',_stabOH,0.15);
-  if(!L.PIC5700A.man)L.PIC5700A.out=clmp((L.PIC5700A.pv-L.PIC5700A.sp)*3.0,0,100);
   ez(L.PIC5900A,'pv',_resOH,0.10);
   if(!L.PIC5900A.man)L.PIC5900A.out=clmp((L.PIC5900A.sp-L.PIC5900A.pv)*2.0,0,100);
   V.si5060=PLANT.in.p5060run?clmp(80+(flow-212.6)*0.03+cfProcWave('si5060',0.012,41),0,100):0;
@@ -19220,25 +19557,12 @@ PLANT.tick=function(stepSeconds){
   var _ac5055Target=_p56Any?clmp(V.tit5055in-_cool5055,55,190):V.tit5060c;
   if(_p56Any)V.tit5060c=clmp(V.tit5060c+(_ac5055Target-V.tit5060c)*0.06,55,195);
 
-  /* 12CU stabilizer product routing after LV-5040A. Do not directly add arbitrary
-     percent-level increments to V-1422 here. Convert this stream to a real GPM contribution and
-     let the single V-1422 material balance combine stabilizer product + demethanizer NGL - sales.
-     XV-5040B is the V-1422 route; XV-5040A is the return/alternate V-5010 route. */
-  var _lv5040=(L.LIC5040A?L.LIC5040A.out:0)/100, _to1422=(PLANT.valves.xv5040b>0)?1:0, _to5010=(PLANT.valves.xv5040a>0)?1:0;
-  var _nroute=_to1422+_to5010;
-  var _stabPumpFrac=_p56Any?clmp(((L.FIC5060A&&isFinite(L.FIC5060A.pv))?L.FIC5060A.pv:18.7)/55,0.20,1.35):0;
-  var _stabProductGrossGpm=_p56Any?clmp(95*_lv5040*_stabPumpFrac,0,150):0;
-  V.stabProductTo1422Gpm=(_to1422&&_nroute>0)?_stabProductGrossGpm/_nroute:0;
-  V.stabProductReturn5010Gpm=(_to5010&&_nroute>0)?_stabProductGrossGpm/_nroute:0;
-  if(_to5010&&L.LIC5010G)L.LIC5010G.pv=clmp(L.LIC5010G.pv+(V.stabProductReturn5010Gpm||0)*0.00005,0,100);
-  V.pit5700a=L.PIC5700A.pv;cfLag(V,'pit5700b',clmp(177.52+(flowInlet-210)*0.01,0,320),8,0,320);
-  V.pit5900a=L.PIC5900A.pv;cfLag(V,'pit5900b',clmp(197.27+(flowInlet-210)*0.015,0,400),8,0,400);
-  V.fit5500=clmp(C.c57.run?C.c57.flow*1.2:0,0,3);
-  if(V.fqi5500==null)V.fqi5500=0.04;
-  if(C.c57.run)V.fqi5500+=V.fit5500*0.0003;
+  /*12PA pressure points follow their actual modeled side of the source/admission header.*/
+  V.pit5900a=L.PIC5900A.pv;V.pit5900b=L.PIC5700A.pv;
  })();
  // 12MG: unit-owned source limits; preserve existing six-tick simulator startup grace.
  cfCheckCompressorProtection12MG(C);
+ cfStabilizerAfterProtection12PA();
 
  /* ---- EX-1121/C-1121 trip checks, real setpoints per SAP 1249258213 sheet 2 of 3 ----
     Grace period: skip these for the first 8 ticks after a restart, since lubeDP,
@@ -19290,7 +19614,10 @@ PLANT.tick=function(stepSeconds){
      rest of the plant fully settles. */
   if(PI.gasControlTargetMmscfd==null)PI.gasControlTargetMmscfd=222.0;
   var _supplyReference=clmp(PI.gasControlTargetMmscfd,0,250);
-  var _takeMismatch=clmp(_supplyReference-flowInlet,-120,120);
+  var _recoveredToSlugs12PA=Math.max(0,V.c5700ReturnDuringStep12PA||0);
+  V.inletRecoveredGas12PA=_recoveredToSlugs12PA;
+  /*12PA return enters upstream of PV-1010A; it must pass the existing inlet regulator/isolation, not bypass them.*/
+  var _takeMismatch=clmp(_supplyReference+_recoveredToSlugs12PA-flowInlet,-120,120);
   var _pullBackpressure=_takeMismatch*0.23;
   var _inletMachines=(C.c41&&C.c41.run?1:0)+(C.c42&&C.c42.run?1:0);
   var _lostInletMachines=2-_inletMachines;
@@ -19680,7 +20007,7 @@ PLANT.tick=function(stepSeconds){
   if(V.fit7105a>0)V.fqi7105a+=V.fit7105a*0.0003;
  })();
  if(L.TIC5040.man){ez(L.TIC5040,'pv',200+L.TIC5040.out/100*110,0.2);}else{L.TIC5040.out=clmp(100+(L.TIC5040.sp-L.TIC5040.pv)*2,0,100);ez(L.TIC5040,'pv',L.TIC5040.sp,0.15);}
- ez(L.PIC5030,'pv',(L.PIC5030.man?180+L.PIC5030.out/100*60:L.PIC5030.sp),0.2);
+ L.PIC5030.pv=L.PIC5030A.pv; /*12PA compatibility indication, not a second pressure inventory*/
  cfRefrigSync12GA();
  /* ═══ Refrig System (Frick R-290) — remaining loops beyond the QHD compressor model ═══ */
  (function(){
@@ -20015,6 +20342,8 @@ PLANT.tick=function(stepSeconds){
  cfLag(V,'te1222k',_te1222kTarget+cfProcWave('te1222k',0.06,67),32,-175,-95);
  var _te1222jTarget=clmp((V.rsvExchOutT==null?-90.9:V.rsvExchOutT)+(V.demOvhd+91.8)*0.025+(_refluxTraffic-35.7)*0.008,-125,-55);
  cfLag(V,'te1222j',_te1222jTarget,10,-130,-45);
+  /*12PB diagnostic capture only: values actually used above, not a new model.*/
+  V.demethTemperatureTrace12PB={simulationSeconds:PLANT.simSeconds,overheadTargetF:_demOvhdTarget,te1222jTargetF:_te1222jTarget,rsvOutletUsedF:V.rsvExchOutT,pressurePsig:L.PIC1521.pv,heatAvailable:_demHeatAvail,coldFeedF:_coldFeedT,refluxF:_refluxT,upperFeedCold:_upperFeedCold,rsvColdEffectF:_rsvColdEffect,refluxTraffic:_refluxTraffic,overheadF:V.demOvhd,te1222jF:V.te1222j,lagSeconds:42,secondaryLagSeconds:10};
  V.pt1521d=L.PIC1521.pv; /* same controlled tower PV on every faceplate */
  V.pt1521a=clmp(V.pt1521d+Math.max(0,Number(V.pdt1521)||0),0,600); /* actual modeled section DP, not an arbitrary fixed 3-psi offset */
  /* Expander IGV/speed is the plant's primary refrigeration lever: opening the IGV
@@ -20519,6 +20848,7 @@ PLANT.tick=function(stepSeconds){
   var _tk8100PctPerSec=(2.7/(3.5*3600))*_drainGenFactor;
   V.lit8100=clmp(V.lit8100+_tk8100PctPerSec*_invDt,0,100);
  })();
+ cfTruckServiceStep12PC(_stepSeconds);
  /* 12EB: Plant Inlet -> Stabilizer Inlet physics is single-owned later in tick(), after
     the three slug-catcher inventories are advanced.  Do not independently overwrite
     FIC-5010A, V-5010 levels/pressure, or E-5000 temperatures here. */
@@ -21287,7 +21617,7 @@ PLANT.tick=function(stepSeconds){
   var _tempDrop=Math.max(0,(V.te1413d||100)-(V.te1311b||100));
   var _desorbFrac=(V.dehyPhase==='HEAT')?clmp(((V.dehyBeds[V.dehyRegenBed]||{}).load||0)*1.2+0.18,0.08,1):0.05;
   var _condenseRate=0.013*(_regenFlow/20)*clmp(_tempDrop/300,0,1.3)*_desorbFrac;
-  var _dumpRate=(L.LIC1418.out/100)*0.55;
+  var _dumpRate=(Number(PLANT.valves.xv1418)>0?(L.LIC1418.out/100)*0.55:0); /*12PC existing downstream shutdown valve must permit liquid withdrawal.*/
   V.lt1418=clmp((V.lt1418==null?6.0:V.lt1418)+_condenseRate-_dumpRate,0,40);
   if(L.LIC1418.man){V.lic1418Dumping=false;}
   else{
@@ -21501,46 +21831,13 @@ PLANT.tick=function(stepSeconds){
    var p60=!!PLANT.in.p5060run,p65=!!PLANT.in.p5065run,pumpAny=p60||p65;
    var stabRun=!!PLANT.in.stabRunning;
    var circ=pumpAny?clmp(0.45+((L.FIC5060A&&isFinite(L.FIC5060A.pv))?L.FIC5060A.pv:18.7)/55,0.45,(p60&&p65)?1.25:1.0):0;
-   /* 12BN/12BO pre-deploy stabilizer hydraulic transient: starting a P-5060/5065 pump
-      establishes circulation and momentarily draws liquid from the tower/reboiler circuit
-      before the level loop recovers. Stopping the last pump removes that draw and lets
-      inventory rebound. This keeps pump state visible in LEVEL and PRESSURE, not only GPM. */
-   if(V._stabPrevPumpAny==null)V._stabPrevPumpAny=pumpAny;
-   if(pumpAny&&!V._stabPrevPumpAny)V.stabPumpKick=-1;
-   else if(!pumpAny&&V._stabPrevPumpAny)V.stabPumpKick=0.65;
-   V._stabPrevPumpAny=pumpAny;
-   if(V.stabPumpKick==null)V.stabPumpKick=0;
-   V.stabPumpKick*=0.94;
+   /*12PA no synthetic pump-start level kick or independent inventory drift.*/
    if(V.inletC2Mol==null)V.inletC2Mol=13.18; /* current GC baseline; scenario/document logic may override later */
    var c2Rich=clmp((V.inletC2Mol-13.18)/4,-1.5,2.5);
    var _stabFeedNow=(Lf&&isFinite(Lf.pv))?Lf.pv:0;
    var lightLoad=clmp((_stabFeedNow-55)*0.060+c2Rich*3.8+(amb-60)*0.045+(stabRun?0:-8),-12,18);
 
-   /* 12EC STABILIZER INLET -> STABILIZER: the tower cannot receive liquid unless
-      P-5060 or P-5065 is actually running.  V-5010/F-5015/5016 may hold liquid with
-      both pumps stopped, but FIC-5020A/FIT-5020A must decay to zero.  Starting either
-      stabilizer pump establishes the feed path gradually; stopping the last pump removes
-      tower feed and lets the upstream V-5010 inventory accumulate. */
-   var _stabAvailGpm=clmp((V.stabInletHydrocarbonOutGpm==null?0:V.stabInletHydrocarbonOutGpm),0,120);
-   if(Lf){
-    if(!Lf.man){var ef=Lf.sp-Lf.pv;Lf.out=clmp(Lf.out+ef*0.22,0,100);}
-    var _feedValve=clmp((Lf.out||0)/100,0,1);
-    var _pumpFeedCap=pumpAny?clmp((p60&&p65?1.18:1.0)*(42+78*_feedValve),0,135):0;
-    var _towerFeedTarget=pumpAny?Math.min(_stabAvailGpm,_pumpFeedCap):0;
-    cfLag(Lf,'pv',_towerFeedTarget,pumpAny?10:5,0,140);
-    V.stabTowerFeedGpm=Lf.pv;
-   }
-
-   /* Overhead pressure: vapor generation from flow/light ends/temperature raises pressure;
-      opening PV-5030A relieves it toward C-5700. Auto action therefore opens on HIGH PV. */
-   if(Lp){
-    var pvOpen=clmp((Lp.out||0)/100,0,1);
-    var _towerLvl=(La&&isFinite(La.pv))?La.pv:46.45;
-    var pTarget=stabRun?clmp(210.08+lightLoad+(1-pvOpen)*8+(0.80-circ)*1.8+(_towerLvl-46.45)*0.035+(V.stabPumpKick||0)*2.2,150,285):clmp(35+(amb-60)*0.08,15,80);
-    ez(Lp,'pv',pTarget,0.055);
-    if(!Lp.man){var ep=Lp.pv-Lp.sp;Lp.out=clmp(Lp.out+ep*0.22,0,100);}
-   }
-
+   /*12PA actual total/cold-feed readings and vapor pressures are owned by the coupled balances; thermal teaching below remains.*/
    /* Reboiler process temperature: hot-oil availability drives it upward; more cold recycle
       and higher feed rate add duty and pull it down slightly. Richer light-ends feed adds boilup
       demand, causing modest controller movement and temperature response rather than a constant 262F. */
@@ -21578,40 +21875,7 @@ PLANT.tick=function(stepSeconds){
    sv('tit5040d',hoSupply-duty,0.018,210,395);
    V.stabVaporLoad=lightLoad;V.stabC2Richness=c2Rich;V.stabCircFrac=circ;
 
-   /* Tower bottoms / E-5040 inventories: one owner, true inflow-outflow balances.
-      Feed adds inventory; richer/light-end feed flashes a little more overhead; actual
-      product withdrawal requires a running P-5060/5065 AND an open product destination.
-      Pump start gives a small real-world drawdown transient, then LIC-5040A recovers. */
-   if(La){
-    if(!La.man)La.out=clmp((La.pv-La.sp)*1.45+38,0,100);
-    var _routeOpen=!!((PLANT.valves.xv5040a>0)||(PLANT.valves.xv5040b>0));
-    var _feedGpm=(stabRun&&pumpAny&&Lf)?Math.max(0,Lf.pv):0;
-    var _feedInv=_feedGpm*0.00034;
-    var _flashFrac=clmp(0.10+c2Rich*0.018+(reb-262)*0.0008+(press-210)*0.0005,0.04,0.28);
-    var _netFeed=_feedInv*(1-_flashFrac);
-    var _pumpDraw=(pumpAny&&_routeOpen)?(La.out/100)*circ*0.020:0;
-    var _kickDraw=(V.stabPumpKick<0)?(-V.stabPumpKick)*0.020:0;
-    var _stopRebound=(V.stabPumpKick>0)?V.stabPumpKick*0.008:0;
-    La.pv=clmp(La.pv+_netFeed-_pumpDraw-_kickDraw+_stopRebound+cfProcWave('lic5040a',0.0008,71),0,100);
-   }
-   if(V.lit5040a==null)V.lit5040a=63.45;
-   var _rebIn=stabRun?clmp((La?La.pv:46.45)/46.45,0.35,1.6)*0.010:0;
-   var _rebBoil=stabRun?clmp((reb-210)/100,0,1.2)*(0.0045+c2Rich*0.0008):0;
-   var _rebCirc=pumpAny?circ*0.0045:0;
-   var _rebKick=(V.stabPumpKick<0)?(-V.stabPumpKick)*0.010:((V.stabPumpKick>0)?-V.stabPumpKick*0.002:0);
-   V.lit5040a=clmp(V.lit5040a+_rebIn-_rebBoil-_rebCirc-_rebKick+cfProcWave('lit5040a',0.0006,83),0,100);
-   if(Lg){
-    if(!Lg.man)Lg.out=clmp((Lg.pv-Lg.sp)*1.2+35,0,100);
-    Lg.pv=clmp((Lg.pv||32)+(stabRun?0.004:0)-(Lg.out/100)*(pumpAny?0.009:0.002)+cfProcWave('lic5040g',0.0008,67),0,100);
-   }
-   /* Both P-5060/P-5065 level controllers observe the same circulating stabilizer
-      inventory. A stopped pump has zero CV, but its PV remains a real level indication. */
-   [[L.LIC5060,p60],[L.LIC5065,p65]].forEach(function(_r){var _lc=_r[0],_run=_r[1];if(!_lc)return;ez(_lc,'pv',La?La.pv:46.45,0.16);if(!_lc.man)_lc.out=_run?clmp(((_lc.pv-_lc.sp)*1.2)+45,0,100):0;});
-   PLANT.in.stabRunning=!!pumpAny;
-   /* Upstream slug-catcher -> V-5010 transfer remains available independently, but
-      actual V-5010 -> T-5030 feed requires a running stabilizer pump. */
-   PLANT.in.stabFeedActive=!!(PLANT.valves&&PLANT.valves.xv5000a>0)&&!PLANT.in.slugFilterBlocked;
-   PLANT.in.stabTowerFeedActive=!!(pumpAny&&Lf&&Lf.pv>0.5);
+   /*12PA inventories/transfer/return are advanced once after flash separation below.*/
   })();
   /* 12CO LOCKED TCV-1221 / TCV-1223 CONTROL MODEL — DO NOT RETUNE OR REWRITE
      WITHOUT NEW OPERATOR/P&ID EVIDENCE. Verified present operating point: TCV-1221
@@ -21695,6 +21959,8 @@ PLANT.tick=function(stepSeconds){
    var _rsvPassEff=clmp(0.80-_moistPenalty*0.45-_switchPenalty*0.25-Math.max(0,_rsvRatio-1)*0.045,0.55,0.86);
    var _rsvOutTarget=clmp(_rsvInT-_rsvPassEff*(_rsvInT-_coldAnchor)*0.97,-125,-35);
    cfLag(V,'rsvExchOutT',_rsvOutTarget,34,-135,-30);
+   /*12PB diagnostic capture only: existing RSV target/lag unchanged.*/
+   V.rsvTemperatureTrace12PB={simulationSeconds:PLANT.simSeconds,inletF:_rsvInT,flowMmscfd:V.rsvFlow,flowRatio:_rsvRatio,coldAnchorF:_coldAnchor,coldAnchorChannel:'TE-1222K / post-valve surrogate',effectiveness:_rsvPassEff,moisturePenalty:_moistPenalty,switchPenalty:_switchPenalty,targetF:_rsvOutTarget,outletF:V.rsvExchOutT,lagSeconds:34,approachMultiplier:.97};
    var _rsvPassRestrict=1+(V.cryoMoistureRestriction||0)*0.45;
    cfLag(V,'rsvExchDp',cfCorePressureDrop12MZ(V.rsvFlow,33,2.20,V.rsvExchInP,V.rsvExchInT,950,94,1.82,_rsvPassRestrict),11,0,100);
    V.rsvExchOutP=clmp((V.rsvExchInP==null?950:V.rsvExchInP)-V.rsvExchDp,0,1100);
@@ -21795,7 +22061,7 @@ PLANT.tick=function(stepSeconds){
    var _fv=clmp((LF.out||0)/100,0,1);
    var _valveCap=90*_fv*Math.sqrt(_dpAvail/18)*_filterHyd;
    var _flowTarget=_pathOpen?Math.min(_supplyAvail,_valveCap):0;
-   cfLag(V,'fit5000a',_flowTarget,12,0,110);
+   if(!_pathOpen)V.fit5000a=0;else cfLag(V,'fit5000a',_flowTarget,12,0,110);
    if(!LF.man){
     var _fe=LF.sp-V.fit5000a;
     LF.out=clmp(LF.out+_fe*0.20,0,100);
@@ -21839,24 +22105,14 @@ PLANT.tick=function(stepSeconds){
    var _liqToV=V.fit5000a*(1-_flashFrac);
    var _hcIn=_liqToV*(1-_waterFrac), _waterIn=_liqToV*_waterFrac;
    var _flashVapEq=V.fit5000a*_flashFrac;
-   var _pvOpen=clmp((LP.out||0)/100,0,1);
-   var _pTarget=clmp(258+_flashVapEq*0.30+(1-_pvOpen)*7.5+(V.fit5000a-20)*0.035,190,310);
-   cfLag(LP,'pv',_pTarget,18,150,320);
-   if(!LP.man){var _pe=LP.pv-LP.sp;LP.out=clmp(LP.out+_pe*0.22,0,100);}
-   cfLag(V,'pit5010a',Math.max(0,LP.pv-0.30),8,0,330);
+   /*12PA flash pressure is advanced by vapor generation minus actual outlet transfer, not a pressure target.*/
+   V.pit5010a=Math.max(0,LP.pv-.30);
    V.stabFlashVaporGpmEq=_flashVapEq;
    V.stabFlashFraction=_flashFrac;
 
-   /* Main hydrocarbon and water inventories are real balances.  LIC-5010G drains the
-      hydrocarbon compartment toward F-5015/5016; LIC-5010E drains the water boot. */
-   if(!LM.man)LM.out=clmp(35+(LM.pv-LM.sp)*1.55,0,100);
-   var _mainOut=(LM.out/100)*58*clmp(1-filterDP(PLANT.filterHealth.stab.service||'f5015')/7,0,1);
-   LM.pv=clmp(LM.pv+_hcIn*0.00072-_mainOut*0.00072+cfProcWave('lic5010g',0.00045,47),0,100);
+   cfStabilizerLiquid12PA(_hcIn,_waterIn,_flashVapEq);
    if(LW){if(!LW.man)LW.out=clmp(18+(LW.pv-LW.sp)*1.65,0,100);var _wOpen=!!(PLANT.valves&&PLANT.valves.xv5010e>0);var _wOut=_wOpen?(LW.out/100)*24:0;LW.pv=clmp(LW.pv+_waterIn*0.0011-_wOut*0.0011+cfProcWave('lic5010e',0.00035,61),0,100);}
-   /* LIC-5010A is the separate plant-inlet LC-override indication. Keep it correlated
-      to the same flash-tank inventory but do not invent an unverified automatic inlet trip. */
-   if(LO){cfLag(LO,'pv',LM.pv,12,0,100);if(!LO.man)LO.out=clmp((LO.pv-LO.sp)*1.4,0,100);}
-   V.stabInletHydrocarbonOutGpm=_mainOut;
+   /*12PA hydrocarbon withdrawal equals the downstream tower-feed rate.*/
    V.stabInletWaterOutGpm=LW?((PLANT.valves.xv5010e>0)?(LW.out/100)*24:0):0;
   })();
  })();
@@ -21957,7 +22213,7 @@ PLANT.tick=function(stepSeconds){
      artificially steady or partially cancel their real cause/effect. Hot-oil topology/logic is untouched. */
   var _physicsHandled={PIC1421:1,TIC1421:1,LIC1421:1,PIC1521:1,TIC1225:1,PIC4250A:1,PIC4250B:1,PIC6810A:1,PIC6805A:1,PIC1010:1,PIC6050A:1,PIC6050B:1,PIC6050C:1,LIC1410:1,LIC1040:1,FFIC1222:1,PDIC1222B:1,FIC143S:1,TIC1224B:1,TDIC1224B:1,PIC1121E:1,PIC1521DJT:1,PIC1521DEX:1,PIC8100C:1,FIC5010A:1,FIC5020A:1,FIC5020B:1,LIC5010A:1,LIC5010E:1,LIC5010G:1,LIC5040A:1,LIC5040G:1,PIC5010D:1,PIC5030A:1,TIC5000C:1,TIC5000D:1,TIC5040A:1,TIC5040:1,PIC5030:1,LIC1412A:1,LIC1412B:1,LIC1422A:1,LIC1422B:1,LIC1422C:1,LIC1422:1,PIC1623:1,PIC1624:1,FIC1422:1,FIC1422A:1,PCV1141A:1,PCV1441B:1,PIC1441C:1,PCV1442:1,PCV1444:1,PIC1140D:1,PIC1343:1,TIC1241C:1,PIC1441:1,LCV1241:1,LCV1442:1,PIC1438:1,FIC1438:1,LIC1438A:1,LIC1438B:1,LIC1418:1,FIC1111A:1,TIC1311:1,TIC1311A:1,LIC5060:1,LIC5065:1,FIC5060A:1,PIC5700A:1,PIC5900A:1,LIC1020:1,LIC1025:1,LIC1030:1,PIC1460:1,TIC1227:1,PIC1227:1,FIC7100A:1};
   for(var lk in L){var Lp=L[lk];if(Lp&&typeof Lp.pv==='number'&&!_physicsHandled[lk]){if(!Lp.man)Lp.pv+=(Lp.sp-Lp.pv)*0.04;Lp.pv=jit(Lp.pv,Lp.u==='PSIG'?0.8:(Lp.u==='%'?0.3:0.6),lk);}}
-  ['c41','c42','c61','c62','c63','c57'].forEach(function(k){var c=C[k];if(c&&c.run){c.suc=jit(c.suc,0.6,k+'suc');c.dis=jit(c.dis,1.0,k+'dis');c.oilT=jit(c.oilT,0.3,k+'oil');c.discT=jit(c.discT,0.45,k+'dt');}});
+  ['c41','c42','c61','c62','c63','c57'].forEach(function(k){var c=C[k];if(c&&c.run){if(k!=='c57'){c.suc=jit(c.suc,0.6,k+'suc');c.dis=jit(c.dis,1.0,k+'dis');}c.oilT=jit(c.oilT,0.3,k+'oil');c.discT=jit(c.discT,0.45,k+'dt');}});
   if(V.demBot!=null)V.demBot=jit(V.demBot,0.3,'demBot');if(V.coldsepT!=null)V.coldsepT=jit(V.coldsepT,0.25,'coldsepT');if(V.nglRate!=null)V.nglRate=jit(V.nglRate,0.07,'nglRate');if(V.inletSuc!=null)V.inletSuc=jit(V.inletSuc,0.6,'inletSuc');if(V.p1410!=null)V.p1410=jit(V.p1410,0.5,'p1410');if(V.t1400!=null)V.t1400=jit(V.t1400,0.15,'t1400');if(V.fit1400!=null)V.fit1400=jit(V.fit1400,0.4,'fit1400');if(V.pdt1410!=null)V.pdt1410=jit(V.pdt1410,0.02,'pdt1410');if(V.pdt1412!=null)V.pdt1412=jit(V.pdt1412,0.02,'pdt1412');if(V.demOvhd!=null)V.demOvhd=jit(V.demOvhd,0.3,'demOvhd');if(V.chill!=null)V.chill=jit(V.chill,0.2,'chill');
   if(QHD){if(QHD.discP!=null)QHD.discP=jit(QHD.discP,0.4,'qDiscP');if(QHD.discT!=null)QHD.discT=jit(QHD.discT,0.3,'qDiscT');if(QHD.tcond!=null)QHD.tcond=jit(QHD.tcond,0.3,'qCondT');/* 12GA shared suction PV: no display-noise write-back into physics. */}
  })();
@@ -22180,7 +22436,9 @@ function cfRenderTrend12OQ(){
  html+='<div id="trendPointReadout" style="padding:10px;font:13px monospace">WINDOW LAST: '+values[values.length-1].toFixed(3)+' '+esc(ui.unit)+'</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">MIN '+min.toFixed(2)+' / MAX '+max.toFixed(2)+' <strong>CURRENT '+(cur===null?(a.length?a[a.length-1].toFixed(3)+' (last recorded)':'Not assigned'):cur.toFixed(3))+' '+esc(ui.unit)+'</strong></div>';
  }else html+='<div style="padding:30px;border:1px dashed #516273">No samples in this window. Earlier samples are retained; use NOW or another span.</div>';
  html+='<p style="font-size:11px;color:#a3bacb">Simulation timeline; 72-hour retention / one-minute history, with a live current endpoint. Small changes retain the engineering-scale minimum span. A steady signal is a valid flat trend; no motion is added.</p><p style="font-size:11px">'+esc(snapshot.descriptor?snapshot.descriptor.basis:'Existing retained trend key; no new instrument mapping inferred.')+'</p><button id="trendBrainInstall">Install this window in Ryan\'s brain</button><span id="trendBrainStatus" style="display:block;font-size:11px">Source-labelled simulator history only.</span>';
+ var pbOpen=body.querySelector('[data-pb-temperature-details]');html+=cfDemethTrendDiagnosticHtml12PB(key,!!(pbOpen&&pbOpen.open));
  var scroll=body.scrollTop;body.innerHTML=html;body.scrollTop=scroll;
+ var pbLink=body.querySelector('#pbTowerTrend');if(pbLink)pbLink.onclick=function(){openTrendChart('demeth_overhead_12pb','TE-1222A / modeled tower overhead','DEGF');};
  body.querySelector('#trendLive12OQ').onchange=function(e){ui.live=e.target.checked;cfRenderTrend12OQ();};
  body.querySelectorAll('[data-trendspan]').forEach(function(b){b.onclick=function(){TREND_VIEW.spanMs=Number(b.dataset.trendspan);cfRenderTrend12OQ();};});
  body.querySelectorAll('[data-trendnav]').forEach(function(b){b.onclick=function(){var n=b.dataset.trendnav;if(n==='now'){ui.live=true;TREND_VIEW.endMs=now;}else{ui.live=false;TREND_VIEW.endMs+=(n==='back'?-1:1)*10800000;}cfRenderTrend12OQ();};});
@@ -22443,7 +22701,7 @@ cfTrendRegister12OQ("lt1241","LT-1241","%",function(){if(!cfTrendDependencies12O
 cfTrendRegister12OQ("lt1442","LT-1442","%",function(){if(!cfTrendDependencies12OQ([["PLANT","L","LCV1442","pv"]]))return null;return ((((PLANT).L)).LCV1442).pv;},"Existing shared simulator channel.","refsys");
 cfTrendRegister12OQ("lt1444","LT-1444","%",function(){if(!cfTrendDependencies12OQ([["PLANT","v","lt1444"]]))return null;return (((PLANT).v)).lt1444;},"Existing shared simulator channel.","refsys");
 cfTrendRegister12OQ("se1121","SE-1121","RPM",function(){if(!cfTrendDependencies12OQ([["EXP","rpm"]]))return null;return EXP.rpm;},"Existing expander speed state.","expander");
-cfTrendRegister12OQ("fit5060","FIT-5060","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","in","p5060run"],["PLANT","in","p5065run"],["PLANT","L","FIC5060A","pv"]]))return null;return ((PLANT.in.p5060run||PLANT.in.p5065run)?Math.max(0,PLANT.L.FIC5060A.pv*0.9):0);},"Existing screen derived 0.9 x FIC-5060A proxy, excluding render-only random jitter. Not an independent pump meter.","pmps");
+cfTrendRegister12OQ("fit5060","FIT-5060","GPM",function(){if(!cfTrendDependencies12OQ([["PLANT","in","p5060run"],["PLANT","in","p5065run"],["PLANT","L","FIC5060A","pv"]]))return null;return ((PLANT.in.p5060run||PLANT.in.p5065run)?Math.max(0,PLANT.L.FIC5060A.pv):0);},"FE/FIT-5060 common pump flow before the product/return split; FIC-5060A controls the retained FV-5030A return demand. Shared process reading.","pmps");
 cfTrendRegister12OQ('te1241c','TE-1241C','DEGF',function(){return PLANT.L.TIC1241C&&PLANT.L.TIC1241C.pv;},'Exact existing cfTxDisplay binding: TIC1241C.pv.');
 cfTrendRegister12OQ('pdt1438','PDT-1438','PSID',function(){return filterDP('f1438');},'Exact existing cfTxDisplay binding: operating filter DP, not reference restriction.');
 cfTrendRegister12OQ('pt1521d','PT-1521D','PSIG',function(){return PLANT.L.PIC1521&&PLANT.L.PIC1521.pv;},'Exact existing cfTxDisplay binding: PIC1521.pv.');
@@ -22641,7 +22899,7 @@ SCR.pmps=function(){
  s+=mPipe('M322 230 H380');
  s+=ctl(380,203,'LIC-5065','LIC5065','%');
  s+=mPipe('M470 110 H500 V170')+mPipe('M470 230 H500 V170')+mPipe('M500 170 H730');
- s+=pt(580,60,'PSHH-5060C/5065C','HH','',null,110);
+ s+=mTag(580,60,'PSHH-5060C/5065C','HH',''); /*12PC retained reference-only alarm legend, not a fabricated numeric channel.*/
  s+=pt(565,145,'TIT-5055 IN',(V.tit5055in==null?98.3:V.tit5055in).toFixed(2),'DEGF',['H']);
  s+=pt(665,145,'TIT-5060C OUT',V.tit5060c.toFixed(2),'DEGF',['L','H','HH']);
  s+='<text x="615" y="191" fill="#283038" font-size="6.7" text-anchor="middle" font-weight="700">AC-5055 ΔT '+((V.tit5055in||98.3)-V.tit5060c).toFixed(1)+'°F · '+(PLANT.in.ac5055run?'COOLING':'BYPASS / NO FAN DUTY')+'</text>';
@@ -22653,7 +22911,7 @@ SCR.pmps=function(){
  s+=mPipe('M500 170 H790');
  /* Return-to-stabilizer branch on the LOWER line. */
  s+=mPipe('M640 170 V292 H510');
- s+=pt(485,150,'FIT-5060',(_p56Any?Math.max(0,L.FIC5060A.pv*0.9):0).toFixed(2),'GPM');
+ s+=pt(485,150,'FIT-5060',(_p56Any?Math.max(0,L.FIC5060A.pv):0).toFixed(2),'GPM');
  s+=ctl(550,210,'FIC-5060A','FIC5060A','GPM');
  s+=mTCV(500,292,'FV-5030A',L.FIC5060A?L.FIC5060A.out:0);
  s+='<text x="500" y="282" fill="#283038" font-size="6.5" text-anchor="middle">FV-5030A · RETURN TO T-5030</text>';
@@ -22706,9 +22964,9 @@ SCR.pmps=function(){
  s+=ctl(620,555,'PIC-5700A','PIC5700A','PSIG');
  s+=pt(730,555,'PIT-5700A',V.pit5700a.toFixed(2),'PSIG',['L','H'])+pt(840,615,'PIT-5700B',V.pit5700b.toFixed(2),'PSIG',['LL','HH']);
  s+='<text x="735" y="444" fill="#283038" font-size="6.5" text-anchor="middle">PV-5700A</text>';
- s+='<text x="620" y="545" fill="#283038" font-size="6.7" font-weight="700">PIC-5700A SP 230 PSIG · PV '+L.PIC5700A.pv.toFixed(2)+' · CV '+L.PIC5700A.out.toFixed(1)+'% OPEN</text>';
+ s+='<text x="620" y="545" fill="#283038" font-size="6.7" font-weight="700">PIC-5700A SP '+L.PIC5700A.sp.toFixed(2)+' PSIG · PV '+L.PIC5700A.pv.toFixed(2)+' · CV '+L.PIC5700A.out.toFixed(1)+'% OPEN</text>';
  return '<div class="mwrap"><svg viewBox="0 0 1200 720" style="width:100%;height:auto;max-height:76vh;background:#c6ccd2;border:1px solid #8a9098;display:block;">'+s+'</svg>'+
-  '<div class="mlegend">P-5060/5065 combine into one common discharge header. FIC-5060A/FV-5030A is on the lower return line back to T-5030. The LIC-5040A-driven LV-5040A branch comes off that same common header and then splits through individual XVs to V-1422 or V-5010. C-5700 suction is one common header: V-5010 overhead and T-5030 overhead join directly; residue-gas discharge passes PIC-5900A/PV-5900A before joining upstream of XV-5700A/PV-5700A; PIC-5700A controls PV-5700A. It recompresses admitted vapor back to the slug catchers \u2014 a vapor recovery loop, not a residue booster. Click the C-5700 panel for full compressor detail. All PT/TE/FT/SI tags are click-to-trend; PIC/LIC/FIC panels take a live setpoint and AUTO/MAN toggle.</div></div>'+
+  '<div class="mlegend">P-5060/5065 combine into one common discharge header. FE/FIT-5060 reads gross common-discharge flow; FIC-5060A manipulates FV-5030A on the lower return to T-5030. The LIC-5040A-driven LV-5040A branch comes off that same common header and then splits through individual XVs to V-1422 or V-5010. C-5700 suction is one common header: V-5010 overhead and T-5030 overhead join directly; residue-gas discharge passes PIC-5900A/PV-5900A before joining upstream of XV-5700A/PV-5700A; PIC-5700A controls PV-5700A. It recompresses admitted vapor back to the slug catchers \u2014 a vapor recovery loop, not a residue booster. Click the C-5700 panel for full compressor detail. All PT/TE/FT/SI tags are click-to-trend; PIC/LIC/FIC panels take a live setpoint and AUTO/MAN toggle.</div></div>'+
   '<div class="sect">Throughput tie-in</div>'+
   '<div class="erow">'+EB('Plant flow',PLANT.in.flow.toFixed(0),'MMSCFD')+EB('C-5700 status',c57.run?'RUNNING':'STOPPED','')+EB('C-5700 discharge',c57.dis.toFixed(0),'PSIG')+EB('Booster pumps',_p56Any?'CIRCULATING':'IDLE','')+'</div>';
 };
@@ -22859,7 +23117,7 @@ var NAV=[['Plant Inlet','plinlet'],['Inlet Comp.','inlcomp'],['Stabilizer Inlet'
 var TITLES={}; NAV.forEach(function(n){TITLES[n[1]]=n[0];});
 var eqtCur='plinlet', eqtTimer=null;
 function renderNav(){var nv=document.getElementById('eqtnav'),x=nv.scrollLeft;nv.innerHTML=NAV.map(function(n){return '<button type="button" class="etab'+(n[1]===eqtCur?' act':'')+'" data-s="'+n[1]+'"'+(n[1]===eqtCur?' aria-current="page"':'')+'>'+n[0]+'</button>';}).join('');nv.scrollLeft=x;var active=nv.querySelector('[aria-current="page"]');if(active&&nv.scrollWidth>nv.clientWidth){var left=active.offsetLeft-nv.offsetLeft;if(left<nv.scrollLeft)nv.scrollLeft=left;else if(left+active.offsetWidth>nv.scrollLeft+nv.clientWidth)nv.scrollLeft=left+active.offsetWidth-nv.clientWidth;}cfControlLayout12NB();}
-function renderScreen(){var _ae=document.activeElement;if(EXP_CONTROL_DRAG||(_ae&&_ae.matches&&_ae.matches('[data-exp-range]'))){expRefreshControlReadouts();return;}var el=document.getElementById('eqtscr');var _body;try{_body=(SCR[eqtCur]?SCR[eqtCur]():stub(TITLES[eqtCur],eqtCur));}catch(_e){_body='<div style="padding:20px;color:#ffb0b0;font:13px Consolas,monospace;">Screen \''+eqtCur+'\' error: '+(_e&&_e.message?_e.message:_e)+'<br><br>'+((_e&&_e.stack)?_e.stack.split("\n").slice(0,4).join("<br>"):'')+'</div>';}
+function renderScreen(){var _ae=document.activeElement;if(EXP_CONTROL_DRAG||(_ae&&_ae.matches&&_ae.matches('[data-exp-range]'))){expRefreshControlReadouts();return;}var el=document.getElementById('eqtscr');var _body;try{if(cfHmiObscured12OZ()&&CF_HMI_BODY_12OZ&&CF_HMI_BODY_12OZ.screen===eqtCur){_body=CF_HMI_BODY_12OZ.html;CF_DEVICE_PERF_12OZ.obscuredBoardReuses++;}else{_body=(SCR[eqtCur]?SCR[eqtCur]():stub(TITLES[eqtCur],eqtCur));CF_HMI_BODY_12OZ={screen:eqtCur,html:_body};CF_DEVICE_PERF_12OZ.boardBuilds++;}}catch(_e){_body='<div style="padding:20px;color:#ffb0b0;font:13px Consolas,monospace;">Screen \''+eqtCur+'\' error: '+(_e&&_e.message?_e.message:_e)+'<br><br>'+((_e&&_e.stack)?_e.stack.split("\n").slice(0,4).join("<br>"):'')+'</div>';}
  /* Scroll-position preservation (bug fix, this session): el.innerHTML gets fully
     rebuilt every ~1 second (every PLANT.tick()/render cycle), which silently resets
     scrollTop to 0 on every scrollable element inside it -- including a popup's own
@@ -22936,21 +23194,24 @@ function cfPolishControlGraphics12OV(root,screenKey){
 
 function polishControlScreen(){
  var root=document.getElementById('eqtscr');if(!root)return;
- root.querySelectorAll('[data-act="trend"]').forEach(function(n){n.setAttribute('title','Click to open trend; then click/drag chart for exact historical value and time.');});
- root.querySelectorAll('svg').forEach(function(svg){
-  var valves=Array.from(svg.querySelectorAll('g[data-act="valve"]'));
-  if(!valves.length)return;
-  var boxes=valves.map(function(v){try{return v.getBBox();}catch(e){return null;}}).filter(Boolean);
+ var covered=cfHmiObscured12OZ(),region=covered?root.querySelector('.pop'):root;if(!region)return;
+ var title='Click to open trend; then click/drag chart for exact historical value and time.';
+ region.querySelectorAll('[data-act="trend"]').forEach(function(n){if(n.getAttribute('title')!==title)n.setAttribute('title',title);});
+ region.querySelectorAll('svg').forEach(function(svg){
+  var valves=Array.from(svg.querySelectorAll('g[data-act="valve"]'));if(!valves.length)return;
+  var boxes=valves.map(function(v){try{return v.getBBox();}catch(e){return null;}}).filter(Boolean),moves=[];
+  // Read the original boxes before any y writes. Moving one label does not change
+  // the retained valve boxes; the resulting y values match the sequential pass.
   Array.from(svg.querySelectorAll('text')).forEach(function(t){
    if(t.closest('g[data-act="valve"],g[data-act="trend"],g[data-act="ilk"]'))return;
    var fs=parseFloat(t.getAttribute('font-size')||'10');if(fs>9)return;
-   var b;try{b=t.getBBox();}catch(e){return;}
+   var b;try{b=t.getBBox();CF_DEVICE_PERF_12OZ.labelReads++;}catch(e){return;}
    var hit=boxes.some(function(vb){return !(b.x+b.width<vb.x-2||b.x>vb.x+vb.width+2||b.y+b.height<vb.y-2||b.y>vb.y+vb.height+2);});
-   if(hit){var y=parseFloat(t.getAttribute('y'));if(isFinite(y))t.setAttribute('y',String(y-11));}
+   if(hit){var y=parseFloat(t.getAttribute('y'));if(isFinite(y))moves.push([t,String(y-11)]);}
   });
+  moves.forEach(function(m){m[0].setAttribute('y',m[1]);});CF_DEVICE_PERF_12OZ.labelMoves+=moves.length;CF_DEVICE_PERF_12OZ.layoutPasses++;
  });
- /*12OV: paint-only pass after the existing layout polish.*/
- cfPolishControlGraphics12OV(root,eqtCur);
+ if(!covered)cfPolishControlGraphics12OV(root,eqtCur);
 }
 function manualCvButtons(x,y,key,w){
  w=w||102;
@@ -23021,7 +23282,7 @@ function startPlantRuntime(){
  plantRuntimeTimer=setInterval(function(){plantRuntimeLastMs=Date.now();plantClock12OO.capture();cfDrainPlantRuntime12OO();},1000);
 }
 
-function openEQT(){document.getElementById('eqt').style.display='block';renderNav();renderScreen();startPlantRuntime();if(!eqtTimer)eqtTimer=setInterval(function(){var eqtVisible=document.getElementById('eqt').style.display!=='none';if(eqtVisible){var _holdLongPopup=(PLANT.popup==='shiftdash'||PLANT.popup==='schedule');if(!_holdLongPopup)renderScreen();var c=document.getElementById('eqtclk');if(c){var d=new Date();function p(n){return(n<10?'0':'')+n;}c.textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}}},1000);}
+function openEQT(){document.getElementById('eqt').style.display='block';renderNav();renderScreen();startPlantRuntime();if(!eqtTimer)eqtTimer=setInterval(function(){var eqtVisible=document.getElementById('eqt').style.display!=='none';if(eqtVisible&&!document.hidden){var _holdLongPopup=(PLANT.popup==='shiftdash'||PLANT.popup==='schedule');if(!_holdLongPopup)renderScreen();var c=document.getElementById('eqtclk');if(c){var d=new Date();function p(n){return(n<10?'0':'')+n;}c.textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}}},1000);}
 function closeEQT(){document.getElementById('eqt').style.display='none';}
 startPlantRuntime(); /* Netlify/static hosting: physics runs continuously for the lifetime of this open browser page. */ /* Deliberately does NOT clearInterval anymore -- previously closing the DCS overlay (e.g. to look at the 3D model) froze the entire plant physics, not just the display, which was inconsistent with the weather and outage-aging systems that were specifically built to keep running in the background for this exact reason. PLANT.tick() and trend recording now keep running continuously once started; only the (comparatively cheap) screen re-render is skipped while hidden, restored automatically on next openEQT(). */
 document.getElementById('eqtbtn').addEventListener('click',openEQT);
@@ -23673,9 +23934,9 @@ document.getElementById('eqtscr').addEventListener('click',function(e){var t=e.t
  else if(a==='redtag'){var rc=t.getAttribute('data-c');PLANT.redtag[rc]=!PLANT.redtag[rc];var _cmpTag=PLANT.cmp&&PLANT.cmp[rc];if(_cmpTag){alarm(_cmpTag.name+' '+(PLANT.redtag[rc]?'RED TAG APPLIED — restart inhibited after stop':'RED TAG REMOVED — start permissive restored'));}else if((rc==='p5060'||rc==='p5065')&&PLANT.redtag[rc]&&PLANT.in[rc+'run']){alarm(rc.toUpperCase()+' red-tagged while running — tag blocks restart; stop pump before maintenance');}else if(PLANT.redtag[rc]&&PLANT.pumpRun[rc]){alarm(rc.toUpperCase()+' red-tagged while running — stop it before maintenance, the tag only blocks a future start');}}
  else if(a==='flarepop'){PLANT.popup='flare';}
  else if(a==='truckpop'){PLANT.popup='truck:'+t.getAttribute('data-truck');}
- else if(a==='truckcall'){
-  var tk=t.getAttribute('data-truck');if(!PLANT.truckCalls)PLANT.truckCalls={};PLANT.truckCalls[tk]={t:Date.now(),sim:PLANT.simSeconds||0};
-  alarm((tk==='closedDrain'?'CLOSED DRAIN':'LUBE OIL')+' TRUCK CALLED — dispatch request logged; verify current tank level/trend and site access before service');
+ else if(a==='truckcall'||a==='truckarrive'||a==='truckstart'||a==='truckstop'||a==='truckcancel'){
+  var tk=t.getAttribute('data-truck');
+  if(a!=='truckstart'||window.confirm('Start this SIMULATED tank transfer? This is not a real dispatch or field-lineup authorization. Existing valve commands will not be changed.'))cfTruckAction12PC(a.slice(5),tk);
  }
  else if(a==='shiftnote'){var inp=document.getElementById('shiftNoteInput');if(inp&&inp.value.trim()){if(PLANT.shiftNotes==null)PLANT.shiftNotes=[];PLANT.shiftNotes.unshift({t:Date.now(),m:inp.value.trim()});inp.value='';}}
  else if(a==='wpadd'){
@@ -23812,19 +24073,7 @@ var HMISP={inlet:[475,1000,102],residue:[265,1080,80],oh:[230,230,80]};
 function pr(l,v,u,cls){return '<div class="por'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+cfFormatReadout12NK(v,u)+'</b> '+(u||'')+'</div>';}
 function sH(v,hi,hh){return (hh!=null&&v>hh)?'al':((hi!=null&&v>hi)?'wn':'');}
 function sL(v,ll,lo){return (ll!=null&&v<ll)?'al':((lo!=null&&v<lo)?'wn':'');}
-function truckCallPopup(kind){
- var V=PLANT.v||{};if(!PLANT.truckCalls)PLANT.truckCalls={};
- var isDrain=kind==='closedDrain';
- var title=isDrain?'CLOSED DRAIN TRUCK — TK-8100':'LUBE OIL TRUCK — TK-9300';
- var lvl=isDrain?Number(V.lit8100||0):Number(V.lit9300b||0);
- var rec=PLANT.truckCalls[kind]||null;
- var status=rec?('CALLED '+new Date(rec.t).toLocaleString()):'NOT CALLED';
- var guidance=isDrain?'Operator-observed planning pattern: TK-8100 normally needs emptied about once a week; when pumped down, the usual operating pattern is from about 50% toward 10%. Confirm current level/trend before dispatch.':'Operator-observed planning pattern: compressor lube-oil storage normally needs a delivery about once a week, typically refilling the tank to about 80%. Confirm current level/trend before dispatch.';
- return '<div class="pop"><div class="poph">'+title+'<button data-act="popclose">Exit</button></div><div class="popb" style="display:block;">'+
-  '<div class="pott">Dispatch check</div><div class="por"><span>Current tank level</span><b>'+lvl.toFixed(2)+' %</b></div><div class="por"><span>Call status</span><b>'+status+'</b></div>'+
-  '<div class="pol" style="margin-top:10px;">'+guidance+'</div><div class="pol" style="color:#8a5a18;"><b>Planning aid only:</b> observed intervals are not guarantees; use the live level and trend before calling.</div>'+
-  '<div style="margin-top:12px;"><button data-act="truckcall" data-truck="'+kind+'">PLACE TRUCK CALL</button> <button data-act="popclose">CANCEL / CLOSE</button></div></div></div>';
-}
+function truckCallPopup(kind){return cfTruckPopup12PC(kind);}
 function popHTML(){if(!PLANT.popup)return '';if(PLANT.popup==='gc'){PLANT.popup=null;return '';}if(PLANT.popup==='exp')return expPopup();if(PLANT.popup==='flare')return flarePopup();if(PLANT.popup==='planthealth')return plantHealthPopup();if(PLANT.popup==='shiftdash')return shiftDashboardPopup();if(PLANT.popup==='notifbell')return notifBellPopup();if(PLANT.popup==='schedule')return schedulePopup();if(PLANT.popup.indexOf('truck:')===0)return truckCallPopup(PLANT.popup.slice(6));if(PLANT.popup.indexOf('comp:')===0)return compPopup(PLANT.popup.slice(5));if(PLANT.popup.indexOf('lp:')===0)return localPanel(PLANT.popup.slice(3));if(PLANT.popup.indexOf('help:')===0)return startHelp(PLANT.popup.slice(5));if(PLANT.popup.indexOf('heater:')===0)return heaterPopup(PLANT.popup.slice(7));if(PLANT.popup.indexOf('rodload:')===0)return rodLoadPopup(PLANT.popup.slice(8));return '';}
 /* 12EW: multi-point empirical rod-load interpolation. Exact photographed points are honored at their observed load-step/pressure conditions. Between points, each throw is weighted independently by step and pressure proximity; outside the observed range, only a modest pressure/load extrapolation is allowed. This is training calibration, not an Ariel Performance replacement. */
 function calibratedRodLoads(c){
@@ -24445,7 +24694,7 @@ SCR.coldsep=function(){var L=PLANT.L,V=PLANT.v;var s=mTitle('COLD SEPARATOR (V-1
  s+=mArr(175,290,'FROM E-1241 GAS CHILLER',false)+mPipe('M195 290 H260');
  /* Left column: temperature indication. TIC-1421/TCV-1421 faceplate is on Gas/Gas page. */
  s+=tg(20,205,'TE-1421',L.TIC1421.pv.toFixed(1),'DEGF',['LL','H']);
- s+=tg(20,400,'LSHH-1421',L.LIC1421.pv>90?'TRIP':'OK','',null);
+ s+=mTag(20,400,'LSHH-1421',L.LIC1421.pv>90?'TRIP':'OK',''); /*12PC status remains visible without a nonnumeric trend.*/
  /* Right column: pressure, then temp rate, then pressure control, then level */
  s+=tg(430,150,'PT-1421',L.PIC1421.pv.toFixed(0),'PSIG',['H']);
  s+=tg(430,225,'TE-1421A',V.te1421a.toFixed(1),'DEGF',['LL'])+'<text x="430" y="270" fill="#5a6b7c" font-size="7">Rate: '+V.te1421Rate.toFixed(2)+' \u00b0F/MIN</text>';
@@ -26655,7 +26904,7 @@ document.getElementById('cfWeatherToggle').addEventListener('click',function(){
  this.textContent=(CLEARFORK_WEATHERING?'Weathering: ON':'Weathering: OFF');
  auditMaterials(scene);
 });
-var cfLastFrame12JG=0;function cfFrameLoop12LK(){requestAnimationFrame(cfFrameLoop12LK);var _frameNow12JG=performance.now();if(window._pauseRender||document.hidden||(document.getElementById('eqt')&&document.getElementById('eqt').style.display==='block')){cfLastFrame12JG=_frameNow12JG;return;}var _elapsed12JG=_frameNow12JG-cfLastFrame12JG;if(_elapsed12JG<1000/(CF_PERF_12JG&&CF_PERF_12JG.fps||30)-.5)return;cfLastFrame12JG=_frameNow12JG;var _walkScale12JG=Math.min(3,Math.max(.1,_elapsed12JG/1000*60)); if(walk){var sp=(keys['ShiftLeft']||keys['ShiftRight'])?1.3:0.42; sp*=_walkScale12JG;var TURN=0.028*_walkScale12JG, TILT=0.022*_walkScale12JG; if(keys['ArrowLeft']||keys['KeyQ']||lpadM.tl) yaw+=TURN; if(keys['ArrowRight']||keys['KeyE']||lpadM.tr) yaw-=TURN; if(keys['KeyR']||lpadM.u) pitch=Math.min(1.45,pitch+TILT); if(keys['KeyF']||lpadM.d) pitch=Math.max(-1.45,pitch-TILT); var f=(keys['KeyW']||keys['ArrowUp']||dpadM.f?1:0)-(keys['KeyS']||keys['ArrowDown']||dpadM.b?1:0); var s=(keys['KeyD']||dpadM.r?1:0)-(keys['KeyA']||dpadM.l?1:0); if(f||s){var fx=-Math.sin(yaw), fz=-Math.cos(yaw); var rx=Math.cos(yaw), rz=-Math.sin(yaw); cam.position.x+=(fx*f+rx*s)*sp; cam.position.z+=(fz*f+rz*s)*sp; var d2=Math.hypot(cam.position.x,cam.position.z); clampWalk();} cam.position.y=EYE; cam.rotation.order='YXZ'; cam.rotation.set(pitch,yaw,0);} else { cfAdvanceFlyTo12MJ(_walkScale12JG); ctl.update(); if(cam.position.y<-1.55)cam.position.y=-1.55; } var _now=performance.now(),_dt=Math.min(0.05,(_now-_lastT)/1000);_lastT=_now;cfVisualStep12LK('fish',function(){updateFish(_dt);});cfVisualStep12LK('fishing',function(){updateFishing(_dt);});cfVisualStep12LK('hunting',function(){updateHunting(_dt);});cfVisualStep12LK('phase flow',function(){_updateFlow(_dt);});if(window.CFColdEffects12JI)cfVisualStep12LK('cold and flare',function(){window.CFColdEffects12JI.update(_dt);});cfVisualStep12LK('heater flames',function(){cfUpdateHeaterVisuals12HX(_dt);});cfVisualStep12LK('fan rotors',function(){cfUpdateFanRotors12JE(_dt);});cfVisualStep12LK('pump shafts',function(){cfUpdatePumpRotors12JG(_dt);});if(window.CFVisual12KA)cfVisualStep12LK('machine shafts',function(){window.CFVisual12KA.update(_dt);});
+var cfLastFrame12JG=0;function cfFrameLoop12LK(){requestAnimationFrame(cfFrameLoop12LK);var _frameNow12JG=performance.now();if(!cfMainDrawVisible12OZ()){cfLastFrame12JG=_frameNow12JG;_lastT=_frameNow12JG;CF_DEVICE_PERF_12OZ.hiddenFrames++;CF_ADAPTIVE_12ML.previousFrameStart12OZ=0;CF_ADAPTIVE_12ML.cadenceMs12OZ=null;CF_ADAPTIVE_12ML.slow=0;CF_ADAPTIVE_12ML.fast=0;return;}var _elapsed12JG=_frameNow12JG-cfLastFrame12JG;if(_elapsed12JG<1000/(CF_PERF_12JG&&CF_PERF_12JG.fps||30)-.5)return;cfLastFrame12JG=_frameNow12JG;var _walkScale12JG=Math.min(3,Math.max(.1,_elapsed12JG/1000*60)); if(walk){var sp=(keys['ShiftLeft']||keys['ShiftRight'])?1.3:0.42; sp*=_walkScale12JG;var TURN=0.028*_walkScale12JG, TILT=0.022*_walkScale12JG; if(keys['ArrowLeft']||keys['KeyQ']||lpadM.tl) yaw+=TURN; if(keys['ArrowRight']||keys['KeyE']||lpadM.tr) yaw-=TURN; if(keys['KeyR']||lpadM.u) pitch=Math.min(1.45,pitch+TILT); if(keys['KeyF']||lpadM.d) pitch=Math.max(-1.45,pitch-TILT); var f=(keys['KeyW']||keys['ArrowUp']||dpadM.f?1:0)-(keys['KeyS']||keys['ArrowDown']||dpadM.b?1:0); var s=(keys['KeyD']||dpadM.r?1:0)-(keys['KeyA']||dpadM.l?1:0); if(f||s){var fx=-Math.sin(yaw), fz=-Math.cos(yaw); var rx=Math.cos(yaw), rz=-Math.sin(yaw); cam.position.x+=(fx*f+rx*s)*sp; cam.position.z+=(fz*f+rz*s)*sp; var d2=Math.hypot(cam.position.x,cam.position.z); clampWalk();} cam.position.y=EYE; cam.rotation.order='YXZ'; cam.rotation.set(pitch,yaw,0);} else { cfAdvanceFlyTo12MJ(_walkScale12JG); ctl.update(); if(cam.position.y<-1.55)cam.position.y=-1.55; } var _now=performance.now(),_dt=Math.min(0.05,(_now-_lastT)/1000);_lastT=_now;cfVisualStep12LK('fish',function(){updateFish(_dt);});cfVisualStep12LK('fishing',function(){updateFishing(_dt);});cfVisualStep12LK('hunting',function(){updateHunting(_dt);});cfVisualStep12LK('phase flow',function(){_updateFlow(_dt);});if(window.CFColdEffects12JI)cfVisualStep12LK('cold and flare',function(){window.CFColdEffects12JI.update(_dt);});cfVisualStep12LK('heater flames',function(){cfUpdateHeaterVisuals12HX(_dt);});cfVisualStep12LK('fan rotors',function(){cfUpdateFanRotors12JE(_dt);});cfVisualStep12LK('pump shafts',function(){cfUpdatePumpRotors12JG(_dt);});if(window.CFVisual12KA)cfVisualStep12LK('machine shafts',function(){window.CFVisual12KA.update(_dt);});
   if(window.CFVisual12KN)cfVisualStep12LK('blower rotors',function(){window.CFVisual12KN.update(_dt);});if(window.CFValvePositions12KI)cfVisualStep12LK('valve positions',function(){window.CFValvePositions12KI.update(_dt);});cfVisualStep12LK('detail visibility',function(){cfUpdateDetail12JG(_now);});CF_PERF_12JG.frames++;if(window._updateDeer)cfVisualStep12LK('deer',function(){_updateDeer(_dt);});if(window._updateWildlife)cfVisualStep12LK('wildlife',function(){_updateWildlife(_dt,cam.position.x,cam.position.z);});if(window._weatherTick)cfVisualStep12LK('weather',function(){_weatherTick(_dt,cam.position.x,cam.position.z);});for(var _si=0;_si<spinners.length;_si++){var _s=spinners[_si],_on=false,_sp=0.22;if(_s.unit){_on=(typeof QHD!=='undefined')&&QHD.units&&QHD.units[_s.unit];}else if(_s.kind==='ref'){_on=(typeof QHD!=='undefined')&&QHD.fans&&QHD.fans[_s.bank];_sp=0.3;}else if(_s.kind==='ac'){_on=true;_sp=0.14;}if(_on)_s.m.rotateOnAxis(_SPINY,_sp);}cfVisualStep12LK('navigation',function(){cfNavigationTick12LL(_now);});var rendered12ML=false;if(!CF_RENDER_RECOVERY_12NJ.contextLost)cfVisualStep12LK('renderer',function(){ren.render(scene,cam);rendered12ML=true;CF_RENDER_RECOVERY_12NJ.phase='drawing';});if(rendered12ML)cfFrameTiming12ML(_frameNow12JG);}
 /* ===== light HMI restyle of the schematic helpers (match the real screens) ===== */
 function mSVG(inner){return '<div class="mwrap"><svg viewBox="0 0 1480 560" style="width:100%;height:auto;max-height:60vh;background:#ffffff;border:1px solid #b8bdc1;display:block;">'+inner+'</svg><div class="mlegend">&#9656; Valves: green = open, red = closed &mdash; click a valve to operate it. Live values track the plant.</div></div>';}
@@ -27468,8 +27717,8 @@ SCR.rsv=function(){var s=mTitle('RESIDUE GAS RECYCLE');var V=PLANT.v;var L=PLANT
  s+=tga(440,68,'PDT-1438',V.pdt1438.toFixed(2),'PSID',['H','HH']);
  s+='<g data-act="filterchanged" data-f="f1438" style="cursor:pointer"><rect x="465" y="190" width="82" height="21" rx="3" fill="#dfe3e6" stroke="#49708a"/><text x="506" y="204" text-anchor="middle" font-size="8" fill="#102030">Change Filter</text></g>';
  /* Two filter drains to drain header, driven by LT/LIC-1438A. */
- s+=mPipe('M455 175 V285')+mValve(455,270,'lcv1438a')+mPipe('M455 285 V315');
- s+=mPipe('M555 175 V285')+mValve(555,270,'lcv1438b')+mPipe('M555 285 V315')+mPipe('M455 315 H690')+mArr(690,315,'TO DRAIN HEADER',false);
+ s+=mPipe('M455 175 V285')+mTCV(455,270,'LCV-1438A',L.LIC1438A.out)+mPipe('M455 285 V315');
+ s+=mPipe('M555 175 V285')+mTCV(555,270,'LCV-1438B',L.LIC1438B.out)+mPipe('M555 285 V315')+mPipe('M455 315 H690')+mArr(690,315,'TO DRAIN HEADER',false);
  s+=tg(330,255,'LT-1438A',V.lic1438a.toFixed(1),'%')+tg(330,300,'LIC-1438A',L.LIC1438A.pv.toFixed(1),'%');
  s+=mPipe('M600 150 H650')+tga(620,92,'FT-1438',V.ft1438.toFixed(2),'MMSCFD',['L','H','HH']);
  s+=mPipe('M650 150 H720')+mTCV(720,150,'FCV-1438',L.FIC1438.out)+ilkIcon(720,176,'fxy1438')+mPipe('M730 150 H1010')+mArr(1010,150,'TO E-1221/E-1222 RSV PASS',false);
@@ -27815,7 +28064,7 @@ SCR.util=function(){
  return '<div class="mwrap"><svg viewBox="0 0 1480 560" style="width:100%;height:auto;max-height:66vh;background:#c6ccd2;border:1px solid #8a9098;display:block;">'+s+'</svg>'+
   '<div class="mlegend">\u25b6 XV-8100/XXY-8100 (truck unloading drain), PIC-8100C control loop = interactive. All flows/pressures/temps/levels track live.</div></div>'+
   '<div class="sect">Fuel gas header pressure control / truck calls</div><div class="erow">'+LP('PIC8100C')+
-  '<div class="lp"><div class="lpt">Truck dispatch</div><div class="lpr"><button data-act="truckpop" data-truck="closedDrain" style="height:auto;min-height:28px;padding:4px 9px;">CALL CLOSED DRAIN TRUCK</button></div><div class="lpr"><button data-act="truckpop" data-truck="lubeOil" style="height:auto;min-height:28px;padding:4px 9px;">CALL LUBE OIL TRUCK</button></div><div class="lpr"><i style="color:#6a7682;font-size:9px;">Opens dispatch popup; current tank level is shown before the call is placed.</i></div></div></div>';};
+  '<div class="lp"><div class="lpt">Truck dispatch</div><div class="lpr"><button data-act="truckpop" data-truck="closedDrain" style="height:auto;min-height:28px;padding:4px 9px;">CALL CLOSED DRAIN TRUCK</button></div><div class="lpr"><button data-act="truckpop" data-truck="lubeOil" style="height:auto;min-height:28px;padding:4px 9px;">CALL LUBE OIL TRUCK</button></div><div class="lpr"><i style="color:#6a7682;font-size:9px;">Simulation only: open the service panel, place a call, record arrival, then start transfer. No real truck is contacted.</i></div></div></div>';};
 
 SCR.plinlet=function(){
  var L=PLANT.L,V=PLANT.v,PV=PLANT.valves;
@@ -28706,7 +28955,7 @@ function cfBuildSelector(el){
   if(el.classList.contains('rst'))return '#eqt .rst';
   if(el.classList.contains('esd'))return '#eqt .esd';
  }
- var attrs=['data-act','data-v','data-l','data-c','data-key','data-e','data-d','data-s','data-sp','data-md','data-o'];
+ var attrs=['data-act','data-v','data-l','data-c','data-key','data-e','data-d','data-s','data-sp','data-md','data-o','data-truck','data-f','data-g']; /*12PC exact truck/filter identity; never replay the first unrelated service button.*/
  var parts=[];
  attrs.forEach(function(a){var v=el.getAttribute&&el.getAttribute(a);if(v!=null)parts.push('['+a+'="'+String(v).replace(/"/g,'\\"')+'"]');});
  if(!parts.length)return null;
@@ -45401,7 +45650,7 @@ function cfInstallEquipmentFinish12OI(){
  if(initialSelection&&typeof highlight==='function')highlight(null);
  var api=cfCreateEquipmentFinish12OI({THREE:THREE,plant:plant,records:CF3D_DEVICE_RECORDS,eqp:EQP,excluded:excluded,document:document,
   beforeChange:function(){selection=typeof selKey==='undefined'?null:selKey;if(selection&&typeof highlight==='function')highlight(null);},
-  afterChange:function(){if(selection&&typeof highlight==='function')highlight(selection);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Equipment appearance redraw',e);}}}
+  afterChange:function(){if(selection&&typeof highlight==='function')highlight(selection);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{cfRequestModelRedraw12OZ();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Equipment appearance redraw',e);}}}
  });
  if(initialSelection&&typeof highlight==='function')highlight(initialSelection);
  window.CFEquipmentFinish12OI=api;
@@ -45521,7 +45770,7 @@ function cfInstallPipeFinish12OJ(){
  var api;
  try{api=cfCreatePipeFinish12OJ({THREE:THREE,plant:plant,runs:CF3D_PIPE_RUNS,segments:CF3D_ALL_SEGMENTS,infills:CF3D_FIELD_INFILL,routeRegistry:CF3D_PIPE_ROUTES_12HN,devices:CF3D_FIELD_DEVICES.concat(CF3D_CONTROL_VALVES),document:document,reflection:env&&env.enhancedMaterial.envMap,protectedGeometryKeys:coldKeys,
   beforeChange:function(){selected=typeof selKey==='undefined'?null:selKey;if(selected&&typeof highlight==='function')highlight(null);},
-  afterChange:function(){if(selected&&typeof highlight==='function')highlight(selected);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Piping appearance redraw',e);}}}
+  afterChange:function(){if(selected&&typeof highlight==='function')highlight(selected);if(typeof ren!=='undefined'&&ren&&scene&&cam){try{cfRequestModelRedraw12OZ();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Piping appearance redraw',e);}}}
  });}finally{if(initial&&typeof highlight==='function')highlight(initial);}
  window.CFPipeFinish12OJ=api;
  var doc=document,host=doc.createElement('section');host.id='cfPipeFinish12OJ';host.setAttribute('aria-label','Piping visual enhancement');host.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0;padding:10px 13px;border:1px solid #436b72;border-radius:9px;background:#10272c;color:#e1eff2;font:12px/1.45 Segoe UI,Arial,sans-serif';
@@ -45654,7 +45903,7 @@ function cfInstallDetailFinish12OK(){
  var excluded=new Set(),first=window.CFEquipmentFinish12OI,second=window.CFPipeFinish12OJ;[first,second].forEach(function(a){if(a&&a.rows)a.rows.forEach(function(r){excluded.add(r.mesh);});});
  var selection=null,initial=typeof selKey==='undefined'?null:selKey,api;if(initial&&typeof highlight==='function')highlight(null);
  function before(){selection=typeof selKey==='undefined'?null:selKey;if(selection&&typeof highlight==='function')highlight(null);}
- function after(){if(selection&&typeof highlight==='function')highlight(selection);try{if(ren&&scene&&cam)ren.render(scene,cam);}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Phase 3 redraw',e);}}
+ function after(){if(selection&&typeof highlight==='function')highlight(selection);try{cfRequestModelRedraw12OZ();}catch(e){if(window.CFStartup12LJ)window.CFStartup12LJ.note('Phase 3 redraw',e);}}
  var envRow=first&&first.rows&&first.rows.find(function(r){return r.enhancedMaterial&&r.enhancedMaterial.envMap;});
  try{api=cfCreateDetailFinish12OK({THREE:THREE,plant:plant,document:document,records:CF3D_DEVICE_RECORDS,excluded:excluded,fieldMeshes:CF3D_FIELD_MESHES,controlMeshes:CF3D_CONTROL_MESHES,psvMeshes:CF3D_PSV_MESHES,manualMeshes:mvalGroup,instrumentMeshes:instGroup,rackMeshes:typeof rackGroup==='undefined'?[]:rackGroup,siteMeshes:typeof groundBig==='undefined'?[]:[groundBig],reflection:envRow&&envRow.enhancedMaterial.envMap,beforeChange:before,afterChange:after});}finally{if(initial&&typeof highlight==='function')highlight(initial);}
  window.CFDetailFinish12OK=api;
@@ -45673,7 +45922,7 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:'12OL',baseline:'12OK',trainerR
 
 /*12OL: current UI release, independent of retained engineering/source revision.*/
 window.CFTrainerStudy12OL={build:'12OL',baseline:'12OK',scope:'Existing sixteen internal lessons; working-only menu and common source-owned study tools',sourceFactsAdded:0,plantControlsChanged:false};
-window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-07-12OY',signature:'CF-RYAN-WORKSPACE-PRACTICE-12OY-20261107',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:'12OL',backend:'RYAN-2026-11-09-12OZ',signature:'CF-RYAN-STABILIZER-LINKAGE-12PA-20261109',trainerRuntime:'12OL',trainerStudy:window.CFTrainerStudy12OL}));
 
 /*12OM: coordinate-bound and depth-correct main-model vessel inspection.*/
 if(window.CFVesselInspection12OM){
@@ -46240,10 +46489,96 @@ function cfInstallWorkspaceStudy12OY(){
  Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OX',boardOPQuiz:'12OY',workspaceViews:'12OY'});
  Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{quizQuestions:QUIZ_BANK.length,boardOPQuestions:cfBoardQuestions12OX().length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length,referenceNotes:Object.keys(INFO).length});
  window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,boardOPQuiz:'12OY',workspaceViews:'12OY'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
- document.title='12OY | Clear Fork - Settings, practice and shift workspace';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12OY';
+ document.title='12PB | Clear Fork - GSP trainer and large study workspace';var h=document.querySelector('header h1');if(h)h.textContent='Clear Fork / Cryogenic Unit #1 - 12PB';
  return window.CFWorkspaceStudy12OY;
 }
 cfInstallWorkspaceStudy12OY();
+
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OY',devicePerformance:'12OZ'});
+var CF_SOURCE_12PA={"build":"12PA","baseline":"12OZ","date":"2026-11-09","id":"stabilizer_inventory_vapor_return_12pa","title":"Stabilizer liquid inventory, flash vapor and overhead recovery linkage","notebookKey":"stabilizer_linkage_12pa","sourceClass":"OPERATOR_DESCRIPTION_WITH_RETAINED_TOPOLOGY_AND_DISCLOSED_SIMULATOR_COEFFICIENTS","sourceStorageMode":"learn-only","sourceMediaRetained":false,"ownerKeys":["v1020","v1025","v1030","v5010","stab","e5040","p5060","p5065","v1422","c5700"],"existingSourceRefs":["CF_SOURCE_12IR","CF_SOURCE_12IT","CF_SOURCE_12IU","CF_SOURCE_12IV","CF_SOURCE_12IW","CF_SOURCE_12IX","CF_SOURCE_12KR","CF_SOURCE_12NX","CF_SOURCE_12MG"],"operatorEvidence":{"date":"2026-11-09","screenshots":["image(20261109-115446).png","image(20261109-115852).png","image(20261109-120244).png"],"observations":["XV-5040B is the normal product route shown open.","PIT-1010C screenshot shows 452.30 PSIG; a momentary screen observation, not a new limit.","PIC-5700A screenshot shows SP220.00 PSIG, PV176.00, CV0.00 and AUTO. The old static caption still said SP230. The actual selected SP remains authoritative."]},"newEntries":[{"id":"pa.liquid","title":"Pump-dependent stabilizer liquid transfer","authority":"OPERATOR_PROVIDED_WITH_SOFTWARE_IMPLEMENTATION","text":"The operator describes rising V-5010 inventory when slug catchers drain to the stabilizer without P-5060/P-5065 running. With a running pump, available source inventory and the existing open liquid-control path, flow is withdrawn from V-5010, processed through T-5030/E-5040 and exported through LV-5040A/XV-5040B to V-1422. Pumping supports steadier flash/reboiler levels; it is not an unconditional fixed-level clamp. A closed MANUAL control output is not opened by this update. Effective flow capacities, inventory coefficients and controller tuning are simulator choices, not new field interlocks."},{"id":"pa.routes","title":"Recirculation and product are different flows","authority":"RETAINED_M2520_TOPOLOGY","text":"AC-5055 is before the parallel P-5060/P-5065 pumps. FE/FIT-5060 is on the common discharge before the split. FV-5030A returns liquid to T-5030 upstream of LV-5040A. After LV-5040A, XV-5040B sends product toward1184/V-1422; XV-5040A supplies the separate1394 return toward V-5010. Gross pump flow is product plus tower return; tower return cancels inside the tower/kettle inventory, and V-5010 return is counted once at each boundary. Both product routes open retain the previous equal-share model assumption, not a solved valve split."},{"id":"pa.surge","title":"Stabilizer contribution to the existing surge balance","authority":"OPERATOR_DESCRIPTION_AND_RETAINED_V1422_BALANCE","text":"With XV-5040B open, a running stabilizer pump and nonzero LV-5040A authority add actual modeled stabilizer product to the existing V-1422 inflow. V-1422 level rises when total inflow exceeds net downstream NGL export. A running NGL export train can offset that inflow; no artificial level increase bypasses this balance. Existing surge HH isolation remains active."},{"id":"pa.gas","title":"Flash vapor, admission and C-5700 recovery","authority":"OPERATOR_DESCRIPTION_AND_RETAINED_VAPOR_ROUTES","text":"Flash gas generated by draining/preheated condensate and the modeled tower vapor load build their connected pressure inventories when removal is insufficient. PIC-5700A retains the operator-described high-pressure opening action: PV above its actual SP increases PV-5700A demand in AUTO. MANUAL retains direct output authority. C-5700 draws from the admitted suction inventory, with finite pressure/load-dependent capacity, and returns recovered gas through the retained plant-inlet/slug-catcher path. More compressor withdrawal can lower suction/source pressure; running the compressor does not force every pressure upward."},{"id":"pa.return","title":"Upstream return and PIT-1010C","authority":"RETAINED_RETURN_ROUTE_WITH_REDUCED_ORDER_LINKAGE","text":"C-5700 return feeds the inlet/slug-catcher side upstream of PV-1010A, not residue sales. Its discharge must exceed the modeled receiving pressure for forward flow. Recovered flow contributes to upstream supply/acceptance pressure, then affects PIT-1010C through the existing regulator and isolation path. PIC-1010A can counteract the rise. The existing PIT-1010C readout remains PIT-1010A plus a0.3-psi display proxy; it is not a newly independent transmitter or a calibrated psi-per-MMSCFD rule."},{"id":"pa.signals","title":"Preserved indications and unresolved physical crosswalks","authority":"EXPLICIT_SOURCE_CONFLICT_AND_MODEL_LIMIT","text":"The retained M2570 device descriptions locate PIT-5700A and PIT-5700B after PV-5700A, while the operator-described PIC-5700A control behavior and existing screen state act as the upstream pressure-opening source signal. This update preserves that software control ownership and models a separate downstream suction inventory; it does NOT relocate instruments or establish the physical PIT/PIC tapping crosswalk. LIC-5010G/LIC-5010A, LIT-5040A, LIC-5040G and LIC-5060/5065 crosswalks also remain qualified. Parallel kettle indications receive the same inventory change with retained starting offsets, not invented separate vessels."},{"id":"pa.software","title":"Current shared state replaces conflicting old targets","authority":"SOFTWARE_REPAIR","text":"Removes the independent V-5010 withdrawal, artificial pump-start level kicks, fixed PIC-5700A176-psi target and disconnected C-5700~197-psi discharge target. FE/FIT-5060 now shares the modeled gross common-pump reading rather than a0.9 multiplier of another proxy. FIT-5500 follows actual modeled C-5700 forward recovery. FQI-5500 integrates MMSCFD using executed seconds divided by86400. Control screens, historian, existing V-1422 balance and captured trainer readings consume the same state. No new alarm, trip, automatic pump start, password, topology or saved-data migration."}],"qualification":"Training model only. Operator cause-and-effect statements are not an approved field procedure. No EOS/flash/composition solution, pump curve, measured vessel holdup or calibrated compressor map. Simulator inventory bounds are explicit diagnostics, not operating limits.","pending":["Installed pump curves and branch valve Cv/open-path characteristics; quantitative P-5060/P-5065 capacity remains unverified.","Effective working liquid/gas volumes and synchronized fast level/flow/pressure trends for tuning.","PIC/PIT-5700A/B and LIC/LIT-5010/5040/5060/5065 installed control-signal crosswalk; retained source discrepancy not resolved by this software.","The exact1394 receiving nozzle remains unestablished. Existing source-qualified piping is not moved.","Complete original-page/native3D, deployed cloud history and real-device acceptance are not established by scoped process tests."]};
+function cfStabilizerNote12PA(){return {t:CF_SOURCE_12PA.title,d:CF_SOURCE_12PA.newEntries.map(function(x){return x.title+' ['+x.authority+']: '+x.text;}).concat([CF_SOURCE_12PA.qualification,'Pending: '+CF_SOURCE_12PA.pending.join(' / ')]),sourceReview12PA:{definition:'CF_SOURCE_12PA',sourceClass:CF_SOURCE_12PA.sourceClass}};}
+function cfAttachStabilizerReference12PA(notes,records){
+ var link={definition:'CF_SOURCE_12PA',notebookKey:CF_SOURCE_12PA.notebookKey,authority:'Operator description / qualified simulator linkage, not a new rating or field procedure'};
+ var result={linked:[],missing:[]};CF_SOURCE_12PA.ownerKeys.forEach(function(k){if(notes[k]){notes[k].sourceReview12PA=Object.assign({},link);result.linked.push(k);}else result.missing.push(k);});
+ var rows=Array.isArray(records)?records:Object.values(records||{});result.recordLinks=[];rows.forEach(function(r){var k=r.assetId||r.key||r.id;if(CF_SOURCE_12PA.ownerKeys.indexOf(k)>=0){r.sourceReview12PA=Object.assign({},link);result.recordLinks.push(k);}});
+ notes[CF_SOURCE_12PA.notebookKey]=cfStabilizerNote12PA();return result;
+}
+function cfStabilizerPanel12PA(){
+ var V=PLANT.v,L=PLANT.L,s=V.stabilizerLinkage12PA,g=V.stabilizerGas12PA;
+ function f(v,u){return Number.isFinite(v)?v.toFixed(2)+(u?' '+u:''):'Unavailable';}
+ function row(k,v){return '<tr><th style="text-align:left;font-weight:500;padding:4px 9px">'+k+'</th><td style="padding:4px 9px;font:12px Consolas,monospace">'+v+'</td></tr>';}
+ var html='<details id="cfStabilizerBalance12PA"'+(window.CFStabilizerLinkage12PA&&window.CFStabilizerLinkage12PA.detailsOpen?' open':'')+' class="cf-stabilizer-balance12pa" style="margin:12px 0;padding:10px 14px;border:1px solid #8299aa;border-radius:8px;background:#edf3f6;color:#182d3b;font:12px/1.5 Segoe UI,Arial,sans-serif"><summary style="cursor:pointer;font-weight:700">Stabilizer / liquid and vapor balance</summary><p>One shared process state. These are simulator calculations, not additional installed instruments.</p>';
+ if(!s||!s.valid)return html+'<p>Waiting for a valid process step. Missing readings are not replaced with zero.</p></details>';
+ html+='<div style="display:flex;flex-wrap:wrap;gap:18px"><table>'+row('Pumps running',String(s.pumpsRunning))+row('Flash liquid to tower',f(s.feedGpm,'GPM'))+row('Gross pump flow / FE-5060',f(s.pumpGrossGpm,'GPM'))+row('FV-5030A tower return',f(s.towerReturnGpm,'GPM'))+row('XV-5040B to V-1422',f(s.to1422Gpm,'GPM'))+row('XV-5040A to V-5010',f(s.to5010Gpm,'GPM'))+row('Flash / kettle accumulation',f(s.flashNetGpm)+' / '+f(s.kettleNetGpm,'GPM'))+'</table><table>'+row('Flash / tower pressure',f(L.PIC5010D.pv)+' / '+f(L.PIC5030A.pv,'PSIG'))+row('PIC-5700A SP / PV',f(L.PIC5700A.sp)+' / '+f(L.PIC5700A.pv,'PSIG'))+row('PV-5700A command',f(L.PIC5700A.out,'%')+(L.PIC5700A.man?' MANUAL':' AUTO'))+row('C-5700 suction / discharge',f(PLANT.cmp.c57.suc)+' / '+f(PLANT.cmp.c57.dis,'PSIG'))+row('FIT-5500 recovered vapor',f(V.fit5500,'MMSCFD'))+row('PIT-1010C (existing proxy)',f(V.pit1010a+.3,'PSIG'))+'</table></div>';
+ if(s.blockers.length)html+='<p><b>Current flow constraints:</b> '+s.blockers.join(' / ')+'.</p>';
+ if(Math.abs(s.inventoryBoundResidualGpm)>1e-6)html+='<p><b>Model range warning:</b> liquid inventory reached a numerical bound; unrestricted accumulation outside the modeled holdup is not resolved.</p>';
+ if(g&&g.pressureNumericalGuard)html+='<p><b>Model range warning:</b> a pressure inventory reached a numerical guard. This state is not field validated.</p>';
+ return html+'<p>V-1422 level follows combined inflow minus net NGL export; pump RUN alone does not bypass LV-5040A or a closed route. PIC-1010A may counteract recovered-gas pressure. Physical pressure/level tag crosswalks and quantitative capacities remain qualified in the Reference Library.</p></details>';
+}
+function cfInstallStabilizerLinkage12PA(){
+ if(window.CFStabilizerLinkage12PA)return window.CFStabilizerLinkage12PA;
+ cfAttachStabilizerReference12PA(INFO,CF3D_DEVICE_RECORDS);
+ var cat=LIB_CATS.find(function(c){return c[1].indexOf('flow_stab')>=0||c[1].indexOf('stab')>=0;});if(cat&&cat[1].indexOf(CF_SOURCE_12PA.notebookKey)<0)cat[1].push(CF_SOURCE_12PA.notebookKey);
+ var previous=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var out=previous.apply(this,arguments);if(!out.some(function(d){return d.name==='CF_SOURCE_12PA';}))out.push({name:'CF_SOURCE_12PA',value:CF_SOURCE_12PA});return out;};
+ ['stabinlet','stab','pmps'].forEach(function(k){var old=SCR[k];if(typeof old==='function')SCR[k]=function(){return old.apply(this,arguments)+cfStabilizerPanel12PA();};});
+ var meta={build:'12PA',baseline:'12OZ',source:'CF_SOURCE_12PA',newTrips:0,geometryChanges:0};
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12OZ',stabilizerLinkage:meta});
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length,referenceNotes:Object.keys(INFO).length});
+ window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,stabilizerLinkage:meta}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+ window.CFStabilizerLinkage12PA={revision:'12PA',detailsOpen:false,status:function(){return {liquid:PLANT.v.stabilizerLinkage12PA||null,gas:PLANT.v.stabilizerGas12PA||null};}};
+ var host=document.getElementById('eqtscr');if(host)host.addEventListener('toggle',function(e){if(e.target&&e.target.id==='cfStabilizerBalance12PA'&&e.target.isConnected)window.CFStabilizerLinkage12PA.detailsOpen=!!e.target.open;},true);
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();return window.CFStabilizerLinkage12PA;
+}
+cfInstallStabilizerLinkage12PA();
+
+/*12PB read-only diagnostic of the unchanged thermal equations. No historical reconstruction.*/
+function cfDemethTemperatureDiagnostic12PB(){
+ var v=PLANT.v||{},l=PLANT.L||{};function n(x){return Number.isFinite(x)?x:null;}
+ return {revision:'12PB',basis:'CURRENT executed model scan; not the selected historical sample or field telemetry',simulationSeconds:n(PLANT.simSeconds),channels:{te1222j:n(v.te1222j),rsvExchOutT:n(v.rsvExchOutT),towerOverheadTE1222A:n(v.demOvhd),postValveTE1222K:n(v.te1222k),towerPressure:l.PIC1521?n(l.PIC1521.pv):null},rsv:v.rsvTemperatureTrace12PB||null,tower:v.demethTemperatureTrace12PB||null,qualification:'TE-1222J is RSV561 upstream of FCV-1438, not tower overhead450. This empirical model uses post-valve TE-1222K as a surrogate cold anchor. The multistream energy/phase balance is not solved. Existing separate same-label screen expressions and historical keys are not merged.'};
+}
+function cfDemethTrendDiagnosticHtml12PB(key,open){
+ if(!/^(te1222j|screen_gasgas_te1222j|te1222a|demovhd|demeth_overhead_12pb)$/.test(key))return '';
+ var s=cfDemethTemperatureDiagnostic12PB(),r=s.rsv,t=s.tower;function f(v,u){return Number.isFinite(v)?v.toFixed(3)+(u?' '+u:''):'Unavailable';}function row(a,b){return '<tr><th style="text-align:left;font-weight:500;padding:4px 8px">'+a+'</th><td style="padding:4px 8px;font:12px Consolas,monospace">'+b+'</td></tr>';}
+ var h='<section style="margin:14px 0;padding:12px;border:1px solid #446174;border-radius:9px;background:#11212d;color:#dceaf5;font:12px/1.55 Segoe UI,Arial,sans-serif"><strong>Channel location: TE-1222J = RSV outlet before FCV-1438</strong><p style="margin:6px 0">This is not tower-top temperature. Separate tower overhead450 / TE-1222A: <b>'+f(s.channels.towerOverheadTE1222A,'DEGF')+'</b>.</p><button type="button" id="pbTowerTrend" style="min-height:36px;padding:6px 10px">Open tower-overhead trend</button><details data-pb-temperature-details'+(open?' open':'')+'><summary style="cursor:pointer;padding:10px 0;font-weight:650">Current calculation inputs / why the temperature moved</summary><p>Current model observation, not a replay of this history window. Executed simulation seconds: '+f(s.simulationSeconds,'s')+'.</p>';
+ if(!r||!t)h+='<p>Waiting for the first complete diagnostic process scan. Missing inputs are not replaced with stored operating guesses.</p>';
+ else {h+='<div style="overflow:auto"><table style="border-collapse:collapse;width:100%">'+row('RSV inlet used',f(r.inletF,'DEGF'))+row('RSV flow used',f(r.flowMmscfd,'MMSCFD'))+row('Surrogate anchor used / TE-1222K',f(r.coldAnchorF,'DEGF'))+row('Effective pass factor',f(r.effectiveness,''))+row('RSV exchanger target',f(r.targetF,'DEGF'))+row('RSV outlet / gas-gas screen TE-1222J',f(s.channels.rsvExchOutT,'DEGF'))+row('Demeth-screen TE-1222J',f(s.channels.te1222j,'DEGF'))+row('Secondary TE-1222J target',f(t.te1222jTargetF,'DEGF'))+row('Tower overhead target / separate channel',f(t.overheadTargetF,'DEGF'))+'</table></div><p>Existing RSV target: inlet - effectiveness x (inlet - anchor) x 0.97. Existing 34-second outlet lag and secondary TE-1222J lag are retained. Cooler inlet or a colder surrogate anchor can lower this target.</p>';}
+ return h+'<p style="color:#f1d49b">The post-valve anchor is an empirical surrogate, not proof of a physically solved exchanger heat balance. No temperature is forced into a normal band. A single TE-1222J trace cannot identify the exact earlier control action or establish tower-top temperature.</p></details></section>';
+}
+function cfInstallTrainerReview12PB(){
+ if(window.CFTrainerReview12PB)return window.CFTrainerReview12PB;
+ INFO[CF_SOURCE_12PB.notebookKey]=cfTrainerReviewNote12PB();
+ var cat=LIB_CATS.find(function(c){return c[1].indexOf('compressor_internals_training_12mo')>=0;});if(cat&&cat[1].indexOf(CF_SOURCE_12PB.notebookKey)<0)cat[1].push(CF_SOURCE_12PB.notebookKey);
+ var previous=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var out=previous.apply(this,arguments);if(!out.some(function(d){return d.name==='CF_SOURCE_12PB';}))out.push({name:'CF_SOURCE_12PB',value:CF_SOURCE_12PB});return out;};
+ cfTrendRegister12OQ('demeth_overhead_12pb','TE-1222A / modeled tower overhead','DEGF',function(){return Number.isFinite(PLANT.v.demOvhd)?PLANT.v.demOvhd:null;},'Existing demOvhd model state; retained M2130 overhead450 / TE-1222A association. Separate from TE-1222J. New history starts with 12PB; no backfill.','demeth');
+ window.CFTrainerReview12PB={revision:'12PB',temperature:cfDemethTemperatureDiagnostic12PB};
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PA',trainerWorkspace:'12PB'});
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length,referenceNotes:Object.keys(INFO).length});
+ window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,trainerRuntime:'12PB',trainerCatalog:'12PB'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();return window.CFTrainerReview12PB;
+}
+
+cfInstallTrainerReview12PB();
+
+var CF_SOURCE_12PC={"build":"12PC","baseline":"12PB","date":"2026-11-09","id":"f6800_trucks_control_linkage_12pc","title":"F-6800 liquid drain response and simulated utility truck service","notebookKey":"utility_drain_truck_review_12pc","ownerKeys":["f6800","v8100","tk9300","ja_xv6800a","ja_xv6800b"],"sourceClass":"OPERATOR_RESPONSE_REQUEST_AND_RETAINED_ROUTE_WITH_DISCLOSED_SOFTWARE_ASSUMPTIONS","existingSourceRefs":["CF_SOURCE_12JA","CF_SOURCE_12JR","CF_SOURCE_12JU"],"newEntries":[{"id":"pc.drain","title":"Independent F-6800 sump drains","authority":"SOFTWARE_REPAIR_OPERATOR_REQUEST","text":"The old open-valve rate was only 0.018 sump percentage points per simulation second. Revised normalized drain response is at most 0.60 points/s, tapering at lower inventory. XV-6800A affects LIT-6800A; XV-6800B affects B. Closed commands retain the same accumulation. Empty inventory cannot become negative. No F-6800 DP, alarm, filter condition, or other valve command is reset by draining."},{"id":"pc.receiver","title":"Retained closed-drain receiving path","authority":"RETAINED_M2680_M2960_WITH_NUMERICAL_TRANSFER_GAIN","text":"Retained M2680 liquid dump paths continue through 1212 DH toward M2960 closed drain. The modeled F-6800 removal contributes to the existing TK-8100/V-8100 receiver. Receiver gain 0.02 percentage points per sump point is an explicit uncalibrated training ratio, not installed tank volume or GPM. Available receiver inventory bounds the numerical transfer without changing field valve state or adding a new trip. Actual LC/LCV and RO behavior remains lumped, not independently solved."},{"id":"pc.truck","title":"Request, arrival and service are separate","authority":"SOFTWARE_FUNCTIONAL_REPAIR_RETAINED_PLANNING_CONTEXT","text":"The prior Call Truck action only saved a timestamp and alarm; no arrival or transfer existed. Requests now support CALLED, ON_SITE, TRANSFERRING, WAITING, STOPPED, COMPLETED and CANCELLED. Arrival and start are explicit user actions. No real service is contacted and no ETA is asserted. Pump-out requires existing XV-8100 and XXY-8100 enabled/open; lube delivery is a declared boundary transfer without inventing a fill-valve lineup. Stopping or cancelling preserves levels and valve states."},{"id":"pc.targets","title":"Targets and service timing","authority":"RETAINED_OPERATOR_PLANNING_TARGETS_PLUS_TEACHING_RATE","text":"Existing Utilities guidance describes roughly weekly service, closed-drain pump-down about 50% toward10% and lube-oil fill about80%. Those targets are reused, not new interlocks. Service rate0.20 tank points per executed simulation second is a teaching choice; ongoing normal inflow/consumption remains. Pause stops transfers and acceleration uses the existing master clock. Requests/progress remain session-only; existing alarm history logs events."},{"id":"pc.replay","title":"Exact service identity in second-screen selectors","authority":"SOURCE_CONFIRMED_SOFTWARE_BUG","text":"Click replay previously omitted data-truck, data-f and data-g, allowing duplicate truck/filter controls to resolve to the first match. Those identity fields are preserved in selectors. This is not cross-device state synchronization or a claim that every multi-window journey is validated."},{"id":"pc.linkage","title":"Control-board linkage repairs","authority":"SOFTWARE_AUDIT_EXISTING_STATE_OWNERS","text":"F-1438 drain symbols now display actual LIC-1438A/B outputs instead of unrelated toggle bits. Existing XV-1418 gates regeneration-scrubber withdrawal; existing XV-5755A gates C-5700 forward return. No new setpoints or protective trips. FIT-1460 and FQI-1460 register their existing numeric process states with the historian. Two status/reference badges no longer open empty numeric trend windows. Unmodeled refrigerant makeup and C-5700 scrubber-drain inventory remain explicit audit limitations, not newly solved physics."}],"qualification":"Simulator behavior only, not an approved field draining or loading procedure. No field hydraulic measurements, travel times or new operating limits supplied. Existing process/model qualifications remain.","pending":["Time-aligned actual F-6800 A/B level fall with valve lineup and pressure to calibrate response.","Applicable sump and TK-8100 working inventory relationship and installed valve/restriction characteristics.","Actual truck transfer flow/duration and site arrival/connection procedure; no real dispatch integration.","Refrigerant makeup quantity and C-5700 scrubber liquid inventory are not modeled; their existing layout controls are not certified transfer functions.","C-5700 closed-discharge transient/deadhead pressure is not solved by the existing model; closure only prevents forward transfer.","Full original-page, native GPU, live Netlify and physical-device acceptance."]};
+function cfUtilityServiceNote12PC(){return {t:CF_SOURCE_12PC.title,d:CF_SOURCE_12PC.newEntries.map(function(x){return x.title+' ['+x.authority+']: '+x.text;}).concat([CF_SOURCE_12PC.qualification,'Pending: '+CF_SOURCE_12PC.pending.join(' / ')]),sourceReview12PC:{definition:'CF_SOURCE_12PC'}};}
+function cfAttachUtilityService12PC(notes,records){
+ var refs={f6800:'A/B drains now follow their own open command and a faster bounded response; at most0.60 sump percentage points per simulation second. This is a software assumption, not measured flow. Draining does not clean filter media.',v8100:'Simulated truck service uses separate call, arrival and start actions; calling alone never empties the tank. Explicit service targets10% with the existing XV-8100/XXY-8100 path.',tk9300:'Simulated lube delivery uses separate call, arrival and start actions; explicit service targets80%. No real truck is contacted or fill-valve lineup asserted.',ja_xv6800a:'The existing A command controls the A sump only; receiver limits are numerical, not a new field interlock.',ja_xv6800b:'The existing B command controls the B sump only; receiver limits are numerical, not a new field interlock.'};
+ var link={definition:'CF_SOURCE_12PC',notebookKey:CF_SOURCE_12PC.notebookKey,authority:'SOFTWARE_MODEL_REPAIR_NOT_FIELD_CALIBRATION'};
+ Object.keys(refs).forEach(function(k){if(notes[k]){notes[k].sourceReview12PC=Object.assign({},link);var t='SOFTWARE 12PC: '+refs[k]+' Details and limits: '+CF_SOURCE_12PC.notebookKey+'.';if(Array.isArray(notes[k].d)&&notes[k].d.indexOf(t)<0)notes[k].d.push(t);}});
+ (Array.isArray(records)?records:Object.values(records||{})).forEach(function(r){if(refs[r.assetId||r.key||r.id])r.sourceReview12PC=Object.assign({},link);});
+ notes[CF_SOURCE_12PC.notebookKey]=cfUtilityServiceNote12PC();
+}
+function cfInstallUtilityReference12PC(){
+ cfAttachUtilityService12PC(INFO,CF3D_DEVICE_RECORDS);
+ var cat=LIB_CATS.find(function(c){return c[1].indexOf('v8100')>=0;});if(cat&&cat[1].indexOf(CF_SOURCE_12PC.notebookKey)<0)cat[1].push(CF_SOURCE_12PC.notebookKey);
+ var prev=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=prev.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PC';}))a.push({name:'CF_SOURCE_12PC',value:CF_SOURCE_12PC});return a;};
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PB',utilityServiceRevision:'12PC'});
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length,referenceNotes:Object.keys(INFO).length});
+ window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,utilityServiceRevision:'12PC'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+ if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+}
+cfInstallUtilityService12PC();
+cfInstallUtilityReference12PC();
 
 if(window.CFAcceptance12OP){window.CFAcceptance12OP.raycastTarget=cfAcceptanceRayTarget12OP;window.CFAcceptance12OP.finishMain(cfRuntimeAcceptanceProbe12OP);}
 
