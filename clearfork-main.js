@@ -1,10 +1,10 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12PV';
+const CF_APPLICATION_BUILD_12OA='12PX';
 var cfPayload12PJ=window.CFContent12PJ;
-if(!cfPayload12PJ||cfPayload12PJ.build!=='12PV'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
- if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PV)');
- throw new Error('Clear Fork12PV requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
+if(!cfPayload12PJ||cfPayload12PJ.build!=='12PX'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
+ if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PX)');
+ throw new Error('Clear Fork12PX requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
 }
 var cfCompressorTrainerRuntime12MO=cfPayload12PJ.trainer;
 
@@ -189,14 +189,14 @@ function cfHmiClearLabels12PU(root,screen){
   });
   var darkRects=Array.from(svg.querySelectorAll('rect')).filter(function(e){return /^#(?:0[0-9a-f]|1[0-9a-f]|2[0-9a-f])[0-9a-f]{4}$/i.test(e.getAttribute('fill')||'')&&num(e,'width')>60&&num(e,'height')>14;}).map(box);
   var boxed=[];
-  Array.from(svg.children).filter(function(e){return e.localName==='rect'&&!e.hasAttribute('data-hmi-finish12ov');}).forEach(function(rect){
+  Array.from(svg.children).filter(function(e){return e.localName==='rect'&&!e.hasAttribute('data-hmi-finish12ov')&&!e.hasAttribute('data-cf-cosmetic12ov')&&!e.hasAttribute('clip-path')&&!e.hasAttribute('mask')&&!e.hasAttribute('data-hmi-liquid12pw');}).forEach(function(rect){
    var b=box(rect),fill=rect.getAttribute('fill')||'';if(/^#(?:0[0-9a-f]|1[0-9a-f]|2[0-9a-f])[0-9a-f]{4}$/i.test(fill))return;if(b.h>32||b.h<12||b.w<70||b.w>600||fill==='none'||/url\(/.test(fill))return;
    var ts=Array.from(svg.children).filter(function(t){if(t.localName!=='text'||!t.textContent.trim())return false;var a=box(t);return a.x>=b.x-1&&a.x+a.w<=b.x+b.w+1&&a.y>=b.y-3&&a.y+a.h<=b.y+b.h+2;});
    if(!ts.length||ts.some(function(t){return /^[\d.%-]+$/.test(t.textContent.trim());}))return;
    var g=make('g',{'data-hmi-label-box12pu':'true'});svg.insertBefore(g,rect);g.appendChild(rect);ts.forEach(function(t){g.appendChild(t);});boxed.push(g);
   });
   var free=Array.from(svg.querySelectorAll('text')).filter(function(t){
-   if(t.closest('defs,[data-hmi-label-box12pu]')||!t.textContent.trim())return false;
+   if(t.closest('defs,[data-hmi-label-box12pu],[data-hmi-equipment12pw],[data-cf-cosmetic12ov]')||!t.textContent.trim())return false;
    if(!t.closest('[data-hmi-faceplate12pu]')){var z=box(t);if(darkRects.some(function(b){return z.x>=b.x-1&&z.x+z.w<=b.x+b.w+1&&z.y>=b.y-1&&z.y+z.h<=b.y+b.h+1;}))return false;}
    if(t.hasAttribute('data-hmi-tag-label12pu'))return true;
    return !t.closest('[data-hmi-faceplate12pu],[data-act="trend"],[data-act="ilk"]');
@@ -219,6 +219,7 @@ function cfHmiClearLabels12PU(root,screen){
     if(candidates.some(function(r){return !r.hidden&&/%/.test(r.text);}))labels.forEach(function(r){if(!r.hidden&&/^\d+(?:\.\d+)?%\s*Open$/i.test(r.text)&&Math.abs(r.b.x+r.b.w/2-cx)<10&&Math.abs(r.b.y-cy)<40){r.hidden=true;removed.push(r.text);}});
    });
    var fixed=darkRects.slice(),segments=[];
+   svg.querySelectorAll("[data-hmi-equipment12pw]").forEach(function(e){fixed.push(box(e));});
    panels.forEach(function(e){Array.from(e.querySelectorAll('rect')).forEach(function(r){fixed.push(box(r));});Array.from(e.querySelectorAll('text')).filter(function(t){return !t.hasAttribute('data-hmi-tag-label12pu')&&t.getAttribute('visibility')!=='hidden'&&!t.closest('[display="none"]');}).forEach(function(t){fixed.push(box(t));});});
    function seg(x,y,xx,yy){segments.push({x:x,y:y,xx:xx,yy:yy,minx:Math.min(x,xx),maxx:Math.max(x,xx),miny:Math.min(y,yy),maxy:Math.max(y,yy)});}
    Array.from(svg.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect')).filter(function(e){return !e.closest('defs,[data-hmi-faceplate12pu],[data-hmi-label-box12pu]')&&!e.hasAttribute('data-hmi-finish12ov');}).forEach(function(e){
@@ -369,7 +370,7 @@ function cfCreateReadableTags12PN(D,W,host,hooks){
  }
  function overlaps(a,b){return !(a.x+a.w+6<b.x||b.x+b.w+6<a.x||a.y+a.h+5<b.y||b.y+b.h+5<a.y);}
  function tick(now,show,force){
-  if(!enabled||!show){hide();return;}sync();
+  if(!enabled||!show||!hooks.all()){hide();return;}sync(); /*12PW master label switch also gates the readable overlay.*/
   var k=hooks.selected()||'',a=!!hooks.all(),fingerprint=hooks.cameraKey();
   if(!force&&!layoutNeeded&&k===selected&&a===all&&fingerprint===lastCamera&&now-last<500){stats.skipped++;return;}
   // Follow moving anchors at display cadence; stationary checks are at most 2 Hz.
@@ -377,7 +378,7 @@ function cfCreateReadableTags12PN(D,W,host,hooks){
   if(width<20||height<20){hide();return;}root.hidden=false;stats.layouts++;var candidates=[],activeKey=D.activeElement&&root.contains(D.activeElement)?D.activeElement.dataset.key:null,heldKeys=new Set(visibleRows.map(function(r){return r.row.key;}));
   rows.forEach(function(r){
    if(!r.originalVisible)return;var chosen=r.key===k,explicit=r.sp.visible===true;
-   if(!chosen&&!explicit&&!r.primary)return;
+   if(!explicit)return; /*12PW respect the existing per-owner/layer visibility, including selected labels.*/
    if(!fieldAllowed(r.record)||!parentVisible(r.sp))return;
    if(!chosen&&!explicit&&!ownerVisible(r))return;
    if(r.sp.layers&&hooks.layerVisible&&!hooks.layerVisible(r.sp))return;
@@ -400,7 +401,7 @@ function cfCreateReadableTags12PN(D,W,host,hooks){
  }
  function setEnabled(value){enabled=!!value;if(enabled){sourceLength=-1;sync();layoutNeeded=true;}else{restore();hide();}return enabled;}
  function paint(context,ratio){if(root.hidden)return;context.save();context.scale(ratio,ratio);visibleRows.forEach(function(c){context.fillStyle=c.selected?'#fff6d2':'#102a3b';context.fillRect(c.x,c.y,c.w,c.h);context.strokeStyle=c.selected?'#573e00':'#bedce9';context.strokeRect(c.x+.5,c.y+.5,c.w-1,c.h-1);context.fillStyle=c.selected?'#11222d':'#fff';context.font='700 '+(c.selected?16:15)+'px Arial';context.textBaseline='middle';context.save();context.beginPath();context.rect(c.x+8,c.y,c.w-16,c.h);context.clip();context.fillText(c.text,c.x+10,c.y+20);context.restore();});context.restore();}
- return {tick:tick,hide:hide,paint:paint,setEnabled:setEnabled,invalidate:function(){layoutNeeded=true;},status:function(){return Object.assign({build:'12PN',enabled:enabled,fontPixels:15,selectedFontPixels:16,pool:pool.length,tracked:rows.length,source:'Existing exact-owner label anchors',mode:'Screen-facing annotations; not depth-occlusion or surveyed sign locations'},stats);},dispose:function(){restore();if(resizeObserver)resizeObserver.disconnect();else W.removeEventListener('resize',size);root.remove();style.remove();}};
+ return {tick:tick,hide:hide,paint:paint,setEnabled:setEnabled,invalidate:function(){layoutNeeded=true;},status:function(){return Object.assign({build:'12PN',enabled:enabled,masterVisible:!!hooks.all(),fontPixels:15,selectedFontPixels:16,pool:pool.length,tracked:rows.length,source:'Existing exact-owner label anchors',mode:'Screen-facing annotations; not depth-occlusion or surveyed sign locations'},stats);},dispose:function(){restore();if(resizeObserver)resizeObserver.disconnect();else W.removeEventListener('resize',size);root.remove();style.remove();}};
 }
 function cfDisplayStatus12PN(){
  var stages={};Object.keys(CF_VIEW_12PN.stages).forEach(function(k){var r=CF_VIEW_12PN.stages[k];stages[k]={samples:r.samples,averageMs:r.totalMs/r.samples,maximumMs:r.maxMs,lastMs:r.lastMs};});
@@ -421,12 +422,12 @@ function cfInstallDisplay12PN(){
   select:function(k){go(k);}
  });CF_VIEW_12PN.labels=labels;
  var host=document.querySelector('#cfPerformancePanel12ML .cf-performance12ml')||document.querySelector('.bar3');
- if(host){var lab=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=true;check.id='cfReadableTagToggle12PN';check.style.width='auto';lab.append(check,document.createTextNode('Readable nearby tags (decluttered)'));host.appendChild(lab);
-  check.onchange=function(){labels.setEnabled(check.checked);};
-  var note=document.createElement('p');note.textContent='12PN: readable screen-facing tags stay sharp while moving. Nearby equipment and the selected item are prioritized. All labels adds available component tags; overlapping tags are spaced by selection priority. No equipment is removed.';host.appendChild(note);
+ if(host){var lab=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=true;check.id='cfReadableTagToggle12PN';check.style.width='auto';lab.append(check,document.createTextNode('Readable screen-facing label style'));host.appendChild(lab);
+  check.onchange=function(){labels.setEnabled(check.checked);updateLabels();};
+  var note=document.createElement('p');note.textContent='Show model labels is the master switch for floating equipment and component labels. OFF hides both screen-facing and original sprite labels, including the selected item. When labels are ON, this style keeps tags readable and declutters overlaps. Fixed physical equipment plaques and equipment information remain available.';host.appendChild(note);
   var b=document.createElement('button');b.type='button';b.id='cfExportDisplay12PN';b.textContent='Export display diagnostics';b.onclick=function(){var report={build:CF_APPLICATION_BUILD_12OA,display:cfDisplayStatus12PN(),performance:cfPerformanceStatus12ML(),acceptance:window.CFAcceptance12OP?window.CFAcceptance12OP.status():null};var blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ClearFork_12PN_Display_Diagnostics.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);};host.appendChild(b);
  }
- var allLabel=document.getElementById('lblchk');if(allLabel)allLabel.title='Include existing component labels. Readable tags prioritize the selected item and declutter overlaps.';
+ var allLabel=document.getElementById('lblchk');if(allLabel)allLabel.title='Show or hide all floating model labels, including nearby and selected equipment. Physical plaques are unchanged.';
  cfRefineTextMaterials12PN();
  var api={build:'12PN',status:cfDisplayStatus12PN,setReadableTags:labels.setEnabled};window.CFDisplay12PN=api;
  return api;
@@ -9032,10 +9033,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-10-12PV';
+var RYAN_BUILD_ID='RYAN-2026-11-10-12PX';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-SLUG-INVENTORY-12PV-20261110';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-REBOILER-FLOW-RESTORE-12PX-20261110';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -10811,7 +10812,12 @@ function applyLayers(){mvalGroup.forEach(function(o){o.visible=showMV;}); instGr
 applyLayers();
 setInterval(cf3dRefreshFieldReadings,1000);
 var sel=[], selKey=null, showAll=false;
-function updateLabels(){sprites.forEach(function(s){var r=cf3dDeviceRecord(s.userData.key),allowed=!(r&&r.fieldDevice)||(r.kind==='manual'?showMV:showInst);s.visible=!!(allowed&&(showAll||(selKey&&s.userData.key===selKey)));});}
+function updateLabels(){
+ //12PW Labels OFF means no floating annotation, including selected/nearby tags.
+ // Geometry, fixed equipment plaques, selection and information cards are untouched.
+ sprites.forEach(function(s){var r=cf3dDeviceRecord(s.userData.key),allowed=!(r&&r.fieldDevice)||(r.kind==='manual'?showMV:showInst);s.visible=!!(allowed&&showAll);});
+ if(typeof CF_VIEW_12PN!=='undefined'&&CF_VIEW_12PN.labels){CF_VIEW_12PN.labels.invalidate();if(!showAll)CF_VIEW_12PN.labels.hide();}
+}
 function highlight(k){
  cfHighlightMaterials12PN(k);
  updateLabels();if(CF_VIEW_12PN.labels)CF_VIEW_12PN.labels.invalidate();
@@ -12334,7 +12340,7 @@ function filterDP(key){return cfFilterOperating12MZ(key).dp;}
 function filterInService(key){var r=FILTER_RULES[key],g=r&&PLANT.filterHealth[r.group];return !!(g&&(!g.service||g.service===key));}
 function filterStatus(key){var r=FILTER_RULES[key],dp=filterDP(key);if(!r)return 'UNKNOWN';if(r.group==='slug'&&filterRec(key)&&filterRec(key).slugFlowBlocked12PV)return 'TRIP';if(r.trip!=null&&dp>=r.trip)return 'TRIP';if(r.change!=null&&dp>=r.change)return 'CHANGE';return filterInService(key)?'IN SERVICE':'STANDBY';}
 function filterColor(key){var st=filterStatus(key);return st==='TRIP'?'#d7191c':st==='CHANGE'?'#ff9a2f':st==='IN SERVICE'?'#1ea84a':'#6d7f90';}
-function filterServiceCard(key,x,y,w){var r=FILTER_RULES[key],dp=filterDP(key),st=filterStatus(key);w=w||150;return '<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="46" rx="4" fill="#e8edf1" stroke="'+filterColor(key)+'" stroke-width="2"/><text x="'+(x+7)+'" y="'+(y+13)+'" fill="#14202a" font-size="8" font-weight="700">'+r.name.split(' ')[0]+'  '+st+'</text><text x="'+(x+7)+'" y="'+(y+29)+'" fill="#14202a" font-size="11" font-family="Consolas,monospace" font-weight="700">DP '+dp.toFixed(2)+' '+r.unit+'</text><text x="'+(x+w-7)+'" y="'+(y+29)+'" fill="'+filterColor(key)+'" font-size="8" text-anchor="end">'+(r.change!=null?'CHANGE '+r.change:'CHANGE PV')+(r.trip!=null?' / TRIP '+r.trip:'')+'</text></g>';}
+function filterServiceCard(key,x,y,w){var r=FILTER_RULES[key],dp=filterDP(key),st=filterStatus(key);w=w||150;return '<g data-hmi-equipment12pw="filter" data-filter-key12pw="'+key+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="46" rx="4" fill="#e8edf1" stroke="'+filterColor(key)+'" stroke-width="2"/><text x="'+(x+7)+'" y="'+(y+13)+'" fill="#14202a" font-size="8" font-weight="700">'+r.name.split(' ')[0]+'  '+st+'</text><text x="'+(x+7)+'" y="'+(y+29)+'" fill="#14202a" font-size="11" font-family="Consolas,monospace" font-weight="700">DP '+dp.toFixed(2)+' '+r.unit+'</text><text x="'+(x+w-7)+'" y="'+(y+29)+'" fill="'+filterColor(key)+'" font-size="8" text-anchor="end">'+(r.change!=null?'CHANGE '+r.change:'CHANGE PV')+(r.trip!=null?' / TRIP '+r.trip:'')+'</text></g>';}
 function filterAlarmOnce(key,kind,msg){if(!PLANT._filterAlarmState)PLANT._filterAlarmState={};var id=key+'_'+kind;if(!PLANT._filterAlarmState[id]){PLANT._filterAlarmState[id]=true;alarm(msg);} }
 function filterClearAlarmLatch(key,kind,cond){if(!PLANT._filterAlarmState)return;if(cond)PLANT._filterAlarmState[key+'_'+kind]=false;}
 function tickFilterHealth(dt){
@@ -17019,6 +17025,7 @@ function renderScreen(){var _ae=document.activeElement;if(EXP_CONTROL_DRAG||(_ae
     would snap back to the top mid-read, every single second. Captured here before
     the rebuild and restored after, keyed off .popb specifically since that's the
     one scrollable region popups use; harmless no-op when no popup is open. */
+ var _note12PW=el.querySelector('[data-hmi-note12pw="regen-drain"]'),_noteOpen12PW=_note12PW?_note12PW.open:null;
  var _opsView12OU=cfOpsCapture12OU(el);
  var _scenarioView12OT=cfScenarioCapture12OT(el);
  var _scheduleView12NB=cfScheduleCapture12NB(el);
@@ -17029,6 +17036,7 @@ function renderScreen(){var _ae=document.activeElement;if(EXP_CONTROL_DRAG||(_ae
  el.innerHTML=scenBar()+_body+(eqtCur==='plinlet'?cfSlugTransferNotice12PU():'')+popHTML();var bn=document.querySelector('#eqt .bnr');if(bn){var hasLog=!!SCEN.log[0];var bnCol=hasLog?(SCEN.acked?'#c98a5c':'#ff9a5c'):'#5a6b7c';bn.innerHTML='<div style="color:'+bnCol+';font:11px Consolas,monospace;padding:1px 8px;white-space:nowrap;overflow:hidden;">'+(hasLog?(new Date(SCEN.log[0].t).toLocaleTimeString()+'  '+SCEN.log[0].m+(SCEN.acked?' [ACKNOWLEDGED]':'')):'\u2014 no active alarms \u2014')+'</div>';}
  if(_popScrollTop!=null){var _popNew=el.querySelector('.pop');if(_popNew)_popNew.scrollTop=_popScrollTop;}
  if(_popbScrollTop!=null){var _popbNew=el.querySelector('.popb');if(_popbNew)_popbNew.scrollTop=_popbScrollTop;}
+ if(_noteOpen12PW!==null){var _newNote12PW=el.querySelector('[data-hmi-note12pw="regen-drain"]');if(_newNote12PW)_newNote12PW.open=_noteOpen12PW;}
  polishControlScreen();cfControlLayout12NB();cfScheduleRestore12NB(el,_scheduleView12NB);cfScenarioRestore12OT(el,_scenarioView12OT);cfOpsRestore12OU(el,_opsView12OU);
  var bellBtn=document.getElementById('notifBellBtn');
  if(bellBtn&&typeof computeNotifications==='function'){
@@ -17075,7 +17083,7 @@ function cfPolishControlGraphics12OV(root,screenKey){
    var spec=rules[index+'|'+cfHmiShapeKey12OV(el)];if(!spec||action(el)!==spec.action)return;
    var paintOk=spec.paints.some(function(p){return Object.keys(p).every(function(k){return (el.getAttribute(k)||'')===p[k];});});if(!paintOk)return;
    var copy=make(el.localName,{'data-cf-cosmetic12ov':spec.kind==='pipe'?'pipe':'body','aria-hidden':'true',focusable:'false','pointer-events':'none',style:'pointer-events:none!important;user-select:none'});
-   ['x','y','width','height','rx','ry','cx','cy','r','d','points','x1','y1','x2','y2','transform','fill-rule','stroke-linecap','stroke-linejoin','stroke-miterlimit','vector-effect','pathLength'].forEach(function(k){if(el.hasAttribute(k))copy.setAttribute(k,el.getAttribute(k));});
+   ['x','y','width','height','rx','ry','cx','cy','r','d','points','x1','y1','x2','y2','transform','fill-rule','stroke-linecap','stroke-linejoin','stroke-miterlimit','vector-effect','pathLength','clip-path','mask','opacity','visibility','display'].forEach(function(k){if(el.hasAttribute(k))copy.setAttribute(k,el.getAttribute(k));});
    if(spec.kind==='pipe'){
     var width=Number(el.getAttribute('stroke-width'));if(!Number.isFinite(width)||width<=0)return;
     copy.setAttribute('fill','none');copy.setAttribute('stroke','#ffffff');copy.setAttribute('stroke-width',String(width*.30));copy.setAttribute('stroke-opacity','.34');
@@ -18705,14 +18713,25 @@ SCR.reb=function(){
     section, passes continuously through the shared brazed-aluminum block and exits at the BOTTOM
     of the E-1224 side-reboiler section. It then passes TE-1224C before continuing to E-1241 / Cold Sep. */
  s+=mPipe('M390 203 H438 V240');
- s+=mPipe('M438 240 V445');
  s+=mPipe('M438 445 H300 V500 H260');
  s+='<rect x="70" y="478" width="145" height="34" rx="3" fill="#d8dee3" opacity="0.97"/><text x="76" y="490" fill="#283038" font-size="7" font-weight="700">E-1224 OUTLET · TE-1224C</text><text x="76" y="501" fill="#283038" font-size="6.5">'+j(V.te1224c,0.1).toFixed(2)+' DEG F → E-1241 CHILLER</text>';
  s+=mPipe('M260 500 H70')+mArr(70,500,'TO E-1241 CHILLER',true);
- s+='<rect x="420" y="240" width="90" height="220" fill="#dde5ea" stroke="#080e18" stroke-width="2"/>';
- s+='<line x1="420" y1="350" x2="510" y2="350" stroke="#080e18" stroke-width="1.5"/>';
- s+='<text x="465" y="290" fill="#10151b" font-size="8" text-anchor="middle" font-weight="700">E-1223</text><text x="465" y="302" fill="#283038" font-size="7" text-anchor="middle">Demeth Bottom</text><text x="465" y="312" fill="#283038" font-size="7" text-anchor="middle">Reboiler</text>';
- s+='<text x="465" y="395" fill="#10151b" font-size="8" text-anchor="middle" font-weight="700">E-1224</text><text x="465" y="407" fill="#283038" font-size="7" text-anchor="middle">Demeth Side</text><text x="465" y="417" fill="#283038" font-size="7" text-anchor="middle">Reboiler</text>';
+ /*12PX: fixed existing exchanger silhouette, separate visible internal passages.
+  * All routes are HMI schematics using the existing boundary coordinates.
+  * No process/control calculations or external equipment positions are changed. */
+ s+='<g data-hmi-equipment12pw="reboiler-block" data-reboiler-equipment12px="e1223-e1224">'+
+  '<rect x="420" y="240" width="90" height="220" fill="#dde5ea" stroke="#080e18" stroke-width="2"/>'+
+  '<line x1="420" y1="350" x2="510" y2="350" stroke="#080e18" stroke-width="1.5"/>'+
+  '<g data-reboiler-internals12px="combined" pointer-events="none" fill="none" stroke="#1b1f24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+
+  '<path data-reboiler-path12px="feed-gas" d="M438 240 V445 H420"><title>Separate inlet-gas heating passage through E-1223 and E-1224; joins the existing TE-1224C outlet.</title></path>'+
+  '<path data-reboiler-path12px="bottom-process" d="M510 335 H474 Q466 335 466 327 V308 Q466 300 474 300 H510"><title>Bottom process circuit: existing T-1521 draw to the existing E-1223 outlet toward the trim reboiler.</title></path>'+
+  '<path data-reboiler-path12px="side-process" d="M490 458 V413 Q490 405 498 405 H510"><title>Separate side circuit: existing lower inlet to the E-1224 return. No mixing with the inlet-gas passage.</title></path></g>'+
+  '<text x="475" y="260" fill="#10151b" font-size="8" text-anchor="middle" font-weight="700">E-1223</text>'+
+  '<text x="475" y="273" fill="#283038" font-size="7" text-anchor="middle">Demeth Bottom</text>'+
+  '<text x="475" y="285" fill="#283038" font-size="7" text-anchor="middle">Reboiler</text>'+
+  '<text x="475" y="370" fill="#10151b" font-size="8" text-anchor="middle" font-weight="700">E-1224</text>'+
+  '<text x="475" y="383" fill="#283038" font-size="7" text-anchor="middle">Demeth Side</text>'+
+  '<text x="475" y="395" fill="#283038" font-size="7" text-anchor="middle">Reboiler</text></g>';
  s+='<rect x="440" y="220" width="230" height="15" fill="'+(rejecting?'#1a2028':'#1a2028')+'" stroke="#303848" rx="2"/><text x="555" y="231" fill="'+(rejecting?'#8090a8':'#5cff8f')+'" font-size="7.5" text-anchor="middle" font-weight="700">RECOVERY</text>';
  s+='<rect x="440" y="204" width="230" height="15" fill="#1a2028" stroke="#303848" rx="2"/><text x="555" y="215" fill="'+(rejecting?'#5cff8f':'#8090a8')+'" font-size="7.5" text-anchor="middle" font-weight="700">REJECTION</text>';
  s+='<g data-act="hsmode" style="cursor:pointer"><rect x="440" y="185" width="90" height="14" fill="#8a9098" stroke="#1b1f24" rx="1"/><text x="485" y="195" fill="#10151b" font-size="7" text-anchor="middle" font-weight="700">HS-1224B</text></g>';
@@ -18729,12 +18748,22 @@ SCR.reb=function(){
  /* ===== right: E-1125 trim reboiler ===== */
  /* B -- bottom-reboiler circulation. Real board: T-1521 draw enters E-1223; E-1223 outlet passes through E-1125 SHELL before returning to tower. */
  s+=mArr(1035,335,'FROM T-1521 DEMETHANIZER',true)+mPipe('M980 335 H510');
+ s+='<path data-reboiler-continuation12px="bottom-draw" d="M980 335 H1035" fill="none" stroke="#1b1f24" stroke-width="3.5" pointer-events="none"/>';
  s+='<text x="760" y="327" fill="#283038" font-size="6.5" font-weight="700">BOTTOM-REBOILER DRAW FROM T-1521 → E-1223</text>';
  s+=mPipe('M510 300 H650 V260 H710');
  s+='<text x="610" y="292" fill="#283038" font-size="6.3" font-weight="700">E-1223 BOTTOM REBOILER → E-1125 TRIM REBOILER</text>';
  /* Operator correction 2026-08-12: removed nonexistent elbow/dead-end graphic beside the bottom-reboiler path. */
- s+='<circle cx="740" cy="260" r="30" fill="#dde5ea" stroke="#080e18" stroke-width="2"/><line x1="740" y1="230" x2="740" y2="290" stroke="#080e18"/>';
- s+='<text x="740" y="252" fill="#10151b" font-size="7.5" text-anchor="middle" font-weight="700">E-1125</text><text x="740" y="263" fill="#283038" font-size="7" text-anchor="middle">Trim Reboiler</text><text x="740" y="274" fill="#283038" font-size="6.5" text-anchor="middle">SHELL: PROCESS</text>';
+ /*12PX: process crosses the shell left-to-right; hot oil remains a separate
+  * top-to-bottom tube/coil symbol. A light crossover underlay denotes no junction. */
+ s+='<g data-hmi-equipment12pw="trim-reboiler" data-reboiler-equipment12px="e1125">'+
+  '<circle cx="740" cy="260" r="30" fill="#dde5ea" stroke="#080e18" stroke-width="2"/>'+
+  '<g data-reboiler-internals12px="trim" pointer-events="none" fill="none" stroke="#1b1f24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+
+  '<path data-reboiler-path12px="trim-process" d="M710 260 H770"><title>Separate process shell passage from E-1223 to the existing T-1521 return.</title></path>'+
+  '<path data-reboiler-crossover12px="no-junction" d="M746 257 L734 263" stroke="#dde5ea" stroke-width="6"/>'+
+  '<path data-reboiler-path12px="trim-hot-oil" d="M740 230 V236 L750 243 L730 250 L750 255 L730 265 L750 270 L730 277 L740 284 V290"><title>Separate hot-oil tube/coil passage between the existing supply and return. Crossover is not a process mixing junction; coil shape is illustrative.</title></path></g>'+
+  '<text x="780" y="233" fill="#10151b" font-size="7.5" font-weight="700">E-1125</text>'+
+  '<text x="780" y="245" fill="#283038" font-size="7">Trim Reboiler</text>'+
+  '<text x="780" y="279" fill="#283038" font-size="6.5">SHELL: PROCESS</text></g>';
  s+=mPipe('M770 260 H1000')+mArr(1000,260,'',false);
  s+='<text x="1005" y="255" fill="#283038" font-size="7">PROCESS RETURN TO T-1521</text><text x="1005" y="263" fill="#283038" font-size="7">AFTER E-1223 + E-1125</text>';
 
@@ -18767,11 +18796,12 @@ SCR.reb=function(){
  s+='<text x="620" y="500" fill="#283038" font-size="6.5" font-weight="700">COLD SEP + DEMETH SIDE DRAW + LIFT GAS → E-1224 SIDE-REBOILER INLET</text>';
  s+=mPipe('M610 510 V545')+mPipe('M610 545 H490 V458');
  s+=mPipe('M510 405 H980')+mArr(1035,405,'TO DEMETHANIZER',false);
+ s+='<path data-reboiler-continuation12px="side-return" d="M980 405 H1035" fill="none" stroke="#1b1f24" stroke-width="3.5" pointer-events="none"/>';
  s+='<text x="605" y="397" fill="#283038" font-size="6.5" font-weight="700">E-1224 SIDE-REBOILER OUTLET → DEMETHANIZER</text>';
  s+='<rect x="600" y="585" width="390" height="18" rx="3" fill="#dbe1e5" stroke="#88949d"/><text x="795" y="597" fill="#283038" font-size="6.3" text-anchor="middle">LIFT GAS EFFECT: lowers return-mixture density and helps maintain thermosiphon circulation when natural vaporization/flow is weak · model circulation '+((V.sideRebCirc||0).toFixed(0))+'%</text>';
 
  return '<div class="mwrap"><svg viewBox="0 0 1200 620" style="width:100%;height:auto;max-height:74vh;background:#c6ccd2;border:1px solid #8a9098;display:block;">'+s+'</svg>'+
-  '<div class="mlegend">\u25b6 HS-1224B toggles REJECTION/RECOVERY mode (click the switch) \u2014 changes which path V-1421 liquid takes on the Cryo screen. TIC-1225 = interactive control loop. TDI-1224B is a live calculated differential, not a raw sensor. XXY-1224 lift gas valve is operable; opening it provides modeled circulation assist to the E-1224 side-reboiler return. Exact Clear Fork lift-gas rate remains Pending Verification.</div></div>'+
+  '<div class="mlegend">\u25b6 HS-1224B toggles REJECTION/RECOVERY mode (click the switch) \u2014 changes which path V-1421 liquid takes on the Cryo screen. TIC-1225 = interactive control loop. TDI-1224B is a live calculated differential, not a raw sensor. XXY-1224 lift gas valve is operable; opening it provides modeled circulation assist to the E-1224 side-reboiler return. Exact Clear Fork lift-gas rate remains Pending Verification. Internal lines show separate passages; the trim coil crossing is not a mixing junction. Coil/bend shapes are illustrative, not installed internals.</div></div>'+
   '<div class="sect">Trim reboiler temperature control &amp; C2 rejection/recovery mode</div><div class="erow">'+LP('TIC1225')+'</div>'+
   '<div class="erow"><div class="lp"><div class="lpt">HS-1224B mode select</div><div class="lpr"><span>Mode</span><button data-act="hsmode" style="font-weight:700;">'+(rejecting?'REJECTION \u2014 click for RECOVERY':'RECOVERY \u2014 click for REJECTION')+'</button></div></div></div>';};
 
@@ -19219,7 +19249,7 @@ SCR.stabinlet=function(){
  s+=pt(636,175,'LIT-5010A',j(lvl,0.08),'%',['L','H']);
  s+=lalm(636,172,'LSHH-5010A',lvl>88);
  s+=lalm(684,172,'LSLL-5010A',lvl<5);
- s+=ctl(746,175,'LIC5010G',L.LIC5010G,'LIC-5010G','%');
+ s+=ctl(920,350,'LIC5010G',L.LIC5010G,'LIC-5010G','%');
  s+='<text x="636" y="256" fill="#283038" font-size="7" text-anchor="middle">TO LIC-5010A</text>';
  s+=mArr(634,252,'',false);
  s+='<text x="636" y="268" fill="#283038" font-size="7" text-anchor="middle">TO FIC-5020A</text>';
@@ -21269,14 +21299,14 @@ SCR.regen=function(){var L=PLANT.L,V=PLANT.v;var s=mTitle('REGEN COMPRESSOR (C-1
  s+=ctl(590,225,'LIC-1418','LIC1418','%');
  s+=mPipe('M532 320 V360 H450')+mTCV(430,360,'LCV-1418',L.LIC1418.out)+mPipe('M420 360 H350')+mValve(330,360,'xv1418')+ilkIcon(330,325,'xv1418')+mPipe('M310 360 H260')+mArr(240,360,'',true);
  s+='<rect x="8" y="342" width="220" height="16" fill="#c6ccd2" opacity="0.96"/><text x="12" y="353" fill="#283038" font-size="7" font-weight="700">TO CLOSED DRAIN HEADER ←</text>';
- s+='<rect x="8" y="371" width="600" height="15" fill="#c6ccd2" opacity="0.96"/><text x="12" y="381" fill="#283038" font-size="6.5">V-1418 bottom liquid → LCV-1418 → XV-1418 → closed drain; AUTO dump begins near LIC-1418 SP.</text>';
+ /*12PW: drain explanation is outside the process drawing, not a bar over V-1418.*/
  /* ROW B: C-1111 compressor + seal gas filter + discharge instruments */
  if(PLANT.redtag.c1111==null)PLANT.redtag.c1111=false;
  s+=mPipe('M532 210 V150 H620')+mArr(540,150,'DRY GAS FROM V-1418 TOP',false)+mComp(660,150,'C-1111')+ilkIcon(660,110,'c1111');
  var _c1111run=(PLANT.in.c1111run!==false);
  s+='<text x="660" y="190" fill="'+(_c1111run?'#148f3c':'#a02020')+'" font-size="7" font-weight="700" text-anchor="middle">'+(_c1111run?'RUNNING':'STOPPED')+'</text>';
- s+='<g data-act="c1111run" style="cursor:pointer"><rect x="610" y="194" width="96" height="14" rx="2" fill="'+(_c1111run?'#8a2020':'#1a7a3a')+'" stroke="#1b1f24"/><text x="658" y="204" fill="#fff" font-size="6.5" font-weight="700" text-anchor="middle">'+(_c1111run?'STOP C-1111':'START C-1111')+'</text></g>';
- s+='<g data-act="redtag" data-c="c1111" style="cursor:pointer"><rect x="610" y="211" width="96" height="13" fill="'+(PLANT.redtag.c1111?'#c0392b':'#dde5ea')+'" stroke="#1b1f24"/><text x="658" y="220.5" fill="'+(PLANT.redtag.c1111?'#fff':'#10151b')+'" font-size="6.2" text-anchor="middle">'+(PLANT.redtag.c1111?'REMOVE C-1111 RED TAG':'RED TAG C-1111')+'</text></g>';
+ s+='<g data-act="c1111run" data-hmi-control-moved12pw="c1111" transform="translate(105 50)" style="cursor:pointer"><rect x="610" y="194" width="96" height="14" rx="2" fill="'+(_c1111run?'#8a2020':'#1a7a3a')+'" stroke="#1b1f24"/><text x="658" y="204" fill="#fff" font-size="6.5" font-weight="700" text-anchor="middle">'+(_c1111run?'STOP C-1111':'START C-1111')+'</text></g>';
+ s+='<g data-act="redtag" data-c="c1111" data-hmi-control-moved12pw="c1111" transform="translate(105 50)" style="cursor:pointer"><rect x="610" y="211" width="96" height="13" fill="'+(PLANT.redtag.c1111?'#c0392b':'#dde5ea')+'" stroke="#1b1f24"/><text x="658" y="220.5" fill="'+(PLANT.redtag.c1111?'#fff':'#10151b')+'" font-size="6.2" text-anchor="middle">'+(PLANT.redtag.c1111?'REMOVE C-1111 RED TAG':'RED TAG C-1111')+'</text></g>';
  s+=mPipe('M660 120 H730 V90')+mExch(700,55,80,35,'F-1411 seal gas filter')+'<text x="740" y="42" fill="#283038" font-size="6.5" text-anchor="middle">1" seal-gas loop, branches off one side of C-1111 and returns to the other</text>';
  s+=mPipe('M700 150 H900');
  s+=tg(700,180,'TE-1111',V.te1111.toFixed(1),'DEGF',['L','H','HH'])+tg(820,180,'PT-1111A',V.pt1111a.toFixed(0),'PSIG');
@@ -21292,7 +21322,7 @@ SCR.regen=function(){var L=PLANT.L,V=PLANT.v;var s=mTitle('REGEN COMPRESSOR (C-1
  s+=ctl(485,405,'PIC-6805A','PIC6805A','PSIG');
  s+=mPipe('M900 320 V462 H1035')+mArr(1035,462,'',false);
  s+='<rect x="720" y="442" width="300" height="15" fill="#c6ccd2" opacity="0.96"/><text x="725" y="453" fill="#283038" font-size="6.5" font-weight="700">NORMAL RETURN TO INLET GAS PATH - UPSTREAM OF F-1412</text>';
- return mSVG(s)+'<div class="note">Full real regen-gas circulation loop, confirmed 7/23/2026 (direct dictation + DCS photos): V-1418 scrubber \u2192 C-1111 compressor (with F-1411 seal-gas loop) \u2192 discharge instruments \u2192 FCV-1111 flow control \u2192 header splits to the PIC-6805A dry-out branch (normally closed) or the normal return to the inlet system. The heater/bed-switching half of the loop (H-1711, XV-1711A/B, V-1413/14/15) lives on the Dehy System screen, and the two loops close on each other. A-1311 (cooler) uses the real DCS tag -- Ryan\u2019s original dictation said "A-1331/TCV-1331," but the DCS screen itself clearly shows A-1311/TCV-1311, so the DCS labeling was used per the standing "when in doubt, trust the direct photo" rule. TIC-1311/TIC-1311A\u2019s exact split-range or cascade relationship is Pending P&ID/logic verification, as is FT-1111A vs FT-1111B\u2019s redundancy, and the exact seal-gas tie-in points. Normal regen return is now shown tying to the inlet side of F-1412 per the operator flow description. Current operator snapshots used on this screen: LT-1418 ~3.2%, TE-1111 ~114.6°F, PT-1111A ~989 PSIG, FT-1111A ~19.9 MMSCFD, TE-1111A ~102°F, TE-1311A ~99.5°F and TE-1311B ~98.2°F.</div>';};
+ return mSVG(s)+'<details data-hmi-note12pw="regen-drain" style="margin:8px 0;padding:8px 12px;border:1px solid #8a9098;border-radius:5px;background:#edf2f5;color:#253746;font:12px/1.5 Segoe UI,Arial,sans-serif"><summary>V-1418 liquid drain explanation</summary><p>V-1418 bottom liquid &rarr; LCV-1418 &rarr; XV-1418 &rarr; closed drain; AUTO dump begins near LIC-1418 SP.</p></details><div class="note">Full real regen-gas circulation loop, confirmed 7/23/2026 (direct dictation + DCS photos): V-1418 scrubber \u2192 C-1111 compressor (with F-1411 seal-gas loop) \u2192 discharge instruments \u2192 FCV-1111 flow control \u2192 header splits to the PIC-6805A dry-out branch (normally closed) or the normal return to the inlet system. The heater/bed-switching half of the loop (H-1711, XV-1711A/B, V-1413/14/15) lives on the Dehy System screen, and the two loops close on each other. A-1311 (cooler) uses the real DCS tag -- Ryan\u2019s original dictation said "A-1331/TCV-1331," but the DCS screen itself clearly shows A-1311/TCV-1311, so the DCS labeling was used per the standing "when in doubt, trust the direct photo" rule. TIC-1311/TIC-1311A\u2019s exact split-range or cascade relationship is Pending P&ID/logic verification, as is FT-1111A vs FT-1111B\u2019s redundancy, and the exact seal-gas tie-in points. Normal regen return is now shown tying to the inlet side of F-1412 per the operator flow description. Current operator snapshots used on this screen: LT-1418 ~3.2%, TE-1111 ~114.6°F, PT-1111A ~989 PSIG, FT-1111A ~19.9 MMSCFD, TE-1111A ~102°F, TE-1311A ~99.5°F and TE-1311B ~98.2°F.</div>';};
 
 SCR.refcond=function(){var L=PLANT.L,V=PLANT.v;var fn=(QHD?QHD.fans:{a1343a:1,a1343b:1,a1343c:1});var tc=(PLANT.v&&isFinite(PLANT.v.refrigCondensingTemp))?PLANT.v.refrigCondensingTemp:(QHD?QHD.tcond:120);
  var s=mTitle('REFRIG CONDENSERS (A-1343A/B/C)');
@@ -21706,11 +21736,11 @@ SCR.hotoil=function(){
  s+=pt(130,45,'TIT-7500A',V.tit7500a.toFixed(2),'DEGF',['L','H']);
  s+='<text x="130" y="82" fill="#283038" font-size="6.5">LO 255 · HI 380 °F</text>';
  var _v7500Lvl=clmp(V.lit7505a==null?0:V.lit7505a,0,100),_v7500InnerH=51,_v7500FillH=_v7500InnerH*_v7500Lvl/100,_v7500FillY=57+_v7500InnerH-_v7500FillH;
- s+='<defs><clipPath id="hoV7500Clip"><rect x="272" y="57" width="186" height="51" rx="24"/></clipPath></defs>'+
+ s+='<g data-hmi-equipment12pw="v7500"><defs><clipPath id="hoV7500Clip" clipPathUnits="userSpaceOnUse"><rect x="272" y="57" width="186" height="51" rx="24"/></clipPath></defs>'+
     '<rect x="270" y="55" width="190" height="55" rx="26" fill="#1b2530" stroke="#9fb0c0" stroke-width="2"/>'+
-    '<rect x="272" y="'+_v7500FillY.toFixed(1)+'" width="186" height="'+_v7500FillH.toFixed(1)+'" fill="#7b3f32" opacity="0.92" clip-path="url(#hoV7500Clip)"/>'+
+    '<rect data-hmi-liquid12pw="v7500" x="272" y="'+_v7500FillY.toFixed(1)+'" width="186" height="'+_v7500FillH.toFixed(1)+'" fill="#7b3f32" opacity="0.92" clip-path="url(#hoV7500Clip)"/>'+
     '<line x1="274" y1="'+_v7500FillY.toFixed(1)+'" x2="456" y2="'+_v7500FillY.toFixed(1)+'" stroke="#b66a52" stroke-width="1" opacity="0.8" clip-path="url(#hoV7500Clip)"/>'+
-    '<text x="365" y="80" fill="#f0e0d8" font-size="9" text-anchor="middle" font-weight="700">V-7500</text><text x="365" y="92" fill="#e3b9aa" font-size="6.5" text-anchor="middle">Hot Oil Expansion Tank</text>';
+    '<text x="365" y="80" fill="#f0e0d8" font-size="9" text-anchor="middle" font-weight="700">V-7500</text><text x="365" y="92" fill="#e3b9aa" font-size="6.5" text-anchor="middle">Hot Oil Expansion Tank</text></g>';
  s+=pt(480,60,'LIT-7505A',V.lit7505a.toFixed(2),'%',['L','H']);
  s+='<text x="480" y="97" fill="#283038" font-size="6.5">LO 15 · HI 80 %</text>';
  s+='<text x="270" y="128" fill="#283038" font-size="6.5">LSLL-7505A &nbsp; LDAL-7505A</text>';
@@ -30154,7 +30184,7 @@ function retireOld(){
 function visibility(){
  var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');
  objects.forEach(function(m){m.visible=!(sc&&sc.checked&&m.userData.detail12JU)&&!(m.userData.layer12JU==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JU==='instrument'&&ic&&!ic.checked);});
- labels12JU.forEach(function(m){if(m.userData.primary12JU)m.visible=true;});
+ labels12JU.forEach(function(m){if(m.userData.primary12JU)m.visible=!!showAll;});
 }
 function focus(key){return window.CFNavigation12IN&&window.CFNavigation12IN.fly?window.CFNavigation12IN.fly(key||'tk9300'):false;}
 try{
@@ -30164,7 +30194,7 @@ try{
  retireOld();S.records.forEach(save);S.meshes.forEach(build);S.routes.forEach(route);
  EQP.tk9300.t='horiz';EQP.tk9300.source12JU='Operator horizontal elevated tank; M2930/M2940 source topology';
  ANCH.tk9300={top:V(-191.8,12.7,-154.7),bot:V(-191.8,5.7,-154.7),mid:V(-191.8,9.2,-154.7),oilOutlet:v(S.nozzles.A.end),fill:v(S.nozzles.B.end)};
- S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JU=!!q.always;m.visible=!!q.always;labels12JU.push(m);});
+ S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JU=!!q.always;m.visible=!!q.always&&!!showAll;labels12JU.push(m);});
  S.records.forEach(function(r){
   if(r.kind==='manual'||r.kind==='instrument'){
    var h=r.host12JU||{},f={installed:true,unit:'',key:r.assetId,tag:r.tag,kind:r.kind,equipment:r.equipment,service:r.service,pipeKey:h.pipeKey,center:h.center||r.point12JU,axis:h.axis||[0,1,0],sizeNps:r.nominalInches,source:r.source,status:r.status,tagConfirmed:r.tagConfirmed,referenceOnly:false};
@@ -30243,7 +30273,7 @@ function retire(id){
  // Shared key pipeTo_v8100 also owns real fuel and drain routes; never delete their registry, geometry or INFO.
  if(!R.byKey[key].length)INFO[key]={t:'SUPERSEDED generic instrument-air connection',d:['12JV source air piping replaces this older shortcut. Refer to M2921A/M2922.']};
 }
-function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(A.cutaway&&m.userData.cutaway12JV)&&!(sc&&sc.checked&&m.userData.detail12JV)&&!(m.userData.layer12JV==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JV==='instrument'&&ic&&!ic.checked);});labels12JV.forEach(function(m){if(m.userData.primary12JV)m.visible=true;});var cb=document.getElementById('airCutaway12JV');if(cb)cb.checked=A.cutaway;}
+function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(A.cutaway&&m.userData.cutaway12JV)&&!(sc&&sc.checked&&m.userData.detail12JV)&&!(m.userData.layer12JV==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JV==='instrument'&&ic&&!ic.checked);});labels12JV.forEach(function(m){if(m.userData.primary12JV)m.visible=!!showAll;});var cb=document.getElementById('airCutaway12JV');if(cb)cb.checked=A.cutaway;}
 function cutaway(on){A.cutaway=!!on;visibility();}
 function focus(k){return window.CFNavigation12IN&&window.CFNavigation12IN.fly?window.CFNavigation12IN.fly(k||'pk9200'):false;}
 try{
@@ -30253,7 +30283,7 @@ try{
  sprites.filter(function(m){return m.userData&&m.userData.key==='pk9200';}).forEach(remove);sprites=sprites.filter(function(m){return m.parent;});
  S.records.forEach(save);S.meshes.forEach(build);S.routes.forEach(pipe);
  ['c9210','c9220','d9230','jv_cws1','jv_header1317'].forEach(function(k){var r=CF3D_DEVICE_RECORDS[k],p=r.point12JV;EQP[k]={x:p[0],z:p[2],t:'source_air',s:1,tag:r.tag,source12JV:r.source};});
- S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JV=!!q.always;m.visible=!!q.always;labels12JV.push(m);});
+ S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JV=!!q.always;m.visible=!!q.always&&!!showAll;labels12JV.push(m);});
  S.records.forEach(function(r){
   if(r.kind==='manual'||r.kind==='instrument'||r.kind==='valve'){
    var h=r.host12JV||{},f={installed:true,unit:'',key:r.assetId,tag:r.tag,kind:r.kind,equipment:r.equipment,service:r.service,pipeKey:h.pipeKey,center:h.center||r.point12JV,axis:h.axis||[0,1,0],sizeNps:r.nominalInches,source:r.source,status:r.status,tagConfirmed:r.tagConfirmed,referenceOnly:true};
@@ -30326,7 +30356,7 @@ function pipe(q){
  var rr=clone(q);R.records.push(rr);R.byId[q.id]=rr;R.byKey[q.key]=(R.byKey[q.key]||[]).concat([rr]);run.segments.concat(run.elbows).forEach(function(m){m.userData.pipeRouteIds12HN=Array.from(new Set((m.userData.pipeRouteIds12HN||[]).concat([q.id])));});
  INFO[q.key]={t:q.title,d:[q.source,'FROM: '+q.upstream.label,'TO: '+q.downstream.label,'Nominal: '+q.nominal,'Reference-only topology; not measured flow, verified field slope or valve lineup.'].concat(q.notes||[])};A.addedRoutes.push(q.id);
 }
-function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(sc&&sc.checked&&m.userData.detail12JW)&&!(m.userData.layer12JW==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JW==='instrument'&&ic&&!ic.checked);});labels12JW.forEach(function(m){if(m.userData.primary12JW)m.visible=true;});}
+function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(sc&&sc.checked&&m.userData.detail12JW)&&!(m.userData.layer12JW==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JW==='instrument'&&ic&&!ic.checked);});labels12JW.forEach(function(m){if(m.userData.primary12JW)m.visible=!!showAll;});}
 function focus(k){return window.CFNavigation12IN&&window.CFNavigation12IN.fly?window.CFNavigation12IN.fly(k||'fl9110'):false;}
 function alignFlames(){
  var fx=window.CFColdEffects12JI;if(!fx||!fx.diagnostics)return false;
@@ -30341,7 +30371,7 @@ try{
  Object.keys(S.equipmentAnchors).forEach(function(k){var a=S.equipmentAnchors[k];Object.keys(a).forEach(function(n){ANCH[k][n]=v(a[n]);});});
  ['jw_bl9155a','jw_bl9155b','jw_pilot_package'].forEach(function(k){var r=CF3D_DEVICE_RECORDS[k],p=r.point12JW;EQP[k]={x:p[0],z:p[2],t:'source_flare',s:1,tag:r.tag,source12JW:r.source};});
  EQP.fl9110.sourceHeight12JW=163;EQP.fl9110.sourceTipDiameter12JW=91;
- S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JW=!!q.always;m.visible=!!q.always;labels12JW.push(m);});
+ S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JW=!!q.always;m.visible=!!q.always&&!!showAll;labels12JW.push(m);});
  S.records.forEach(function(r){if(r.kind!=='manual'&&r.kind!=='instrument')return;var h=r.host12JW||{},f={installed:true,unit:'',key:r.assetId,tag:r.tag,kind:r.kind,equipment:r.equipment,service:r.service,pipeKey:h.pipeKey,center:h.center||r.point12JW,axis:h.axis||[0,1,0],sizeNps:r.nominalInches,source:r.source,status:r.status,tagConfirmed:r.tagConfirmed,referenceOnly:true};CF3D_DEVICE_RECORDS[r.assetId].fieldDevice=true;CF3D_DEVICE_RECORDS[r.assetId].sourceRecord=f;CF3D_FIELD_DEVICES.push(f);});
  // Resolve the source continuation without deleting the earlier air-distribution identity.
  ['jv_station_flare_air_pending','jv_dist_flare_air_pending_end'].forEach(function(k){var r=CF3D_DEVICE_RECORDS[k];if(!r)return;r.status='SOURCE_CONTINUATION_MATCHED_12JW / SCHEMATIC';r.specifications=(r.specifications||[]).concat([['12JW receiving sheet','M2915 explicitly identifies1156 fromM2922 to pilot-package1-inch IA inlet. OlderM2922 line-number legibility remains qualified.']]);r.drawings=Array.from(new Set((r.drawings||[]).concat(['020185-AE-DW-M2915'])));CF3D_DEVICE_DATA[k]=Object.assign({},r);INFO[k]={t:r.tag+' - connected1156 air continuation',d:[r.source].concat(r.specifications.map(function(x){return x[0]+': '+x[1];}))};});
@@ -30414,7 +30444,7 @@ function pipe(q){
  var rr=clone(q);R.records.push(rr);R.byId[q.id]=rr;R.byKey[q.key]=(R.byKey[q.key]||[]).concat([rr]);run.segments.concat(run.elbows).forEach(function(m){m.userData.pipeRouteIds12HN=Array.from(new Set((m.userData.pipeRouteIds12HN||[]).concat([q.id])));});
  INFO[q.key]={t:q.title,d:[q.source,'FROM: '+q.upstream.label,'TO: '+q.downstream.label,'Nominal: '+q.nominal,'Schematic source topology only; not live flow or approved field lineup.'].concat(q.notes||[])};A.addedRoutes.push(q.id);
 }
-function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(sc&&sc.checked&&m.userData.detail12JX)&&!(m.userData.layer12JX==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JX==='instrument'&&ic&&!ic.checked);});newLabels.forEach(function(m){if(m.userData.primary12JX)m.visible=true;});}
+function visibility(){var sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk');objects.forEach(function(m){m.visible=!(sc&&sc.checked&&m.userData.detail12JX)&&!(m.userData.layer12JX==='manual'&&mv&&!mv.checked)&&!(m.userData.layer12JX==='instrument'&&ic&&!ic.checked);});newLabels.forEach(function(m){if(m.userData.primary12JX)m.visible=!!showAll;});}
 function focus(k){if(k==='gc'&&window.CFDetailReview12JS)window.CFDetailReview12JS.cutaway(true);if(/^jv_c9/.test(k)&&window.CFReference12JV&&window.CFReference12JV.cutaway)window.CFReference12JV.cutaway(true);return window.CFNavigation12IN&&window.CFNavigation12IN.fly?window.CFNavigation12IN.fly(k||'v9241'):false;}
 function refreshFinder(){
  CF3D_ASSOC.dirty=true;cfRefBuildComponents();Object.assign(CF3D_DEVICE_ALIASES,oldAliases);LIB_STATIC_SEARCH_CACHE=null;window.CF3DFieldDevices=CF3D_FIELD_DEVICES;
@@ -30432,7 +30462,7 @@ try{
  Object.keys(S.equipmentAnchors).forEach(function(k){ANCH[k]=ANCH[k]||{};Object.keys(S.equipmentAnchors[k]).forEach(function(n){ANCH[k][n]=v(S.equipmentAnchors[k][n]);});});
  ['jx_ngl_skid','jx_inlet_vaporizer','jx_residue_regulator','jx_ngl_vaporizer'].forEach(function(k){var r=CF3D_DEVICE_RECORDS[k],p=r.point12JX;EQP[k]={x:p[0],z:p[2],t:'source_accessory',s:1,tag:r.tag,source12JX:r.source};});
  EQP.v9241.sourceEnvelope12JX='48-inch OD x 10-foot seam-to-seam; vertical';
- S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JX=!!q.always;m.visible=!!q.always;newLabels.push(m);});
+ S.labels.forEach(function(q){var m=label(q.text,q.point[0],q.point[1],q.point[2],q.size,q.key);m.userData.primary12JX=!!q.always;m.visible=!!q.always&&!!showAll;newLabels.push(m);});
  S.records.forEach(function(r){
   if(['manual','check','instrument','flowmeter','shutdown'].indexOf(r.kind)>=0){var h=r.host12JX||{},existing=CF3D_FIELD_DEVICES.find(function(f){return f.key===r.assetId;});var f=Object.assign({},existing||{},{installed:true,key:r.assetId,tag:r.tag,kind:r.kind,equipment:r.equipment,service:r.service,pipeKey:h.pipeKey||null,center:h.center||r.point12JX,axis:h.axis||[0,1,0],sizeNps:r.nominalInches,source:r.source,status:r.status,tagConfirmed:r.tagConfirmed,referenceOnly:existing?existing.referenceOnly:true});if(!f.unit)f.unit='';if(existing)Object.assign(existing,f);else CF3D_FIELD_DEVICES.push(f);CF3D_DEVICE_RECORDS[r.assetId].fieldDevice=true;CF3D_DEVICE_RECORDS[r.assetId].sourceRecord=f;}
   if(r.kind==='psv'){var a=S.reliefs.find(function(x){return x.key===r.assetId;}),p=r.ports12JX||{};var d={id:r.assetId,key:r.assetId,tag:r.tag,kind:'psv',equipment:r.protectedEquipmentName||r.equipment,eq:r.parentAssetId,service:r.service,source:r.source,pidDrawing:r.drawings[0],pidRevision:r.revision,root:a&&S.routes.find(function(x){return x.key===a.inletRoute;})?S.routes.find(function(x){return x.key===a.inletRoute;}).points[0]:p.inlet,inlet:p.inlet,outlet:p.outlet,center:r.point12JX,setPsig:a?a.setPsig:null,setPressureText:r.setPressure,destination:r.discharge||a&&a.destination,destinationStatus:a&&a.expectedService==='PLANT_FLARE_V9100'?'SOURCE_MATCHED_SCHEMATIC':'TERMINATION_PENDING',tagConfirmed:r.tagConfirmed,isolation:r.isolation,placementStatus:'SCHEMATIC_NOT_FIELD_VERIFIED',inletRadius:r.nominalInches?r.nominalInches/24:null,outletRadius:null};var i=CF3D_PSVS.findIndex(function(x){return x.key===r.assetId;});if(i>=0)CF3D_PSVS[i]=d;else CF3D_PSVS.push(d);CF3D_DEVICE_RECORDS[r.assetId].sourceRecord=d;}
@@ -31116,7 +31146,7 @@ function cfBuildInletPsvGeometry12KY(S){
    parts.filter(function(m){return m.userData.owner12KY===u.key;}).forEach(function(m){if((byKey[u.key]||[]).indexOf(m)<0)byKey[u.key].push(m);});
   });
  }catch(e){A.errors.push(String(e.message||e));console.error('12KY geometry',e);}
- function visibility(){var d=window.CFReference12JZ&&window.CFReference12JZ.status?window.CFReference12JZ.status():{},sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk'),lc=document.getElementById('lblchk');parts.forEach(function(m){var u=m.userData;m.visible=(!u.detail12KY||d.detailEnabled&&d.selectedUnit===u.owner12KY&&!(sc&&sc.checked))&&!(u.layer12KY==='manual'&&mv&&!mv.checked)&&!(u.layer12KY==='instrument'&&ic&&!ic.checked);});labels.forEach(function(m){m.visible=m.userData.detail12KY?!!(d.detailEnabled&&d.selectedUnit===m.userData.owner12KY):!!(lc&&lc.checked);});}
+ function visibility(){var d=window.CFReference12JZ&&window.CFReference12JZ.status?window.CFReference12JZ.status():{},sc=document.getElementById('schemchk'),mv=document.getElementById('mvchk'),ic=document.getElementById('instchk'),lc=document.getElementById('lblchk');parts.forEach(function(m){var u=m.userData;m.visible=(!u.detail12KY||d.detailEnabled&&d.selectedUnit===u.owner12KY&&!(sc&&sc.checked))&&!(u.layer12KY==='manual'&&mv&&!mv.checked)&&!(u.layer12KY==='instrument'&&ic&&!ic.checked);});labels.forEach(function(m){m.visible=!!(lc&&lc.checked)&&(!m.userData.detail12KY||!!(d.detailEnabled&&d.selectedUnit===m.userData.owner12KY));});}
  ['schemchk','mvchk','instchk','lblchk','vendorDetail12JZ','vendorUnit12JZ'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',visibility);});if(window.CFReference12JZ){['setDetail','focus','applyDetailMode'].forEach(function(k){var prev=window.CFReference12JZ[k];if(typeof prev==='function')window.CFReference12JZ[k]=function(){var r=prev.apply(this,arguments);visibility();return r;};});}document.addEventListener('click',function(){setTimeout(visibility,0);});visibility();
  CF3D_PSV_MESHES=CF3D_PSV_MESHES.filter(attached);var api={status:function(){return JSON.parse(JSON.stringify(A));},applyVisibility:visibility};window.CFInletPsvGeometry12KY=api;return api;
 }
@@ -42122,6 +42152,41 @@ if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
 if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
 
 cfInstallSlugEvidence12PV();
+
+
+/*12PW targeted presentation repair; no plant command or persistence migration.*/
+var CF_SOURCE_12PW={"build":"12PW","baseline":"12PV","date":"2026-11-10","id":"presentation_display_repairs_12pw","title":"Presentation display repair / master labels, contained level and clear filter controls","notebookKey":"presentation_display_repairs_12pw","sourceClass":"SOFTWARE_DEFECT_REVIEW_OF_ACTUAL_12PV_AND_OPERATOR_SCREENSHOTS","newEntries":[{"id":"pw.labels","title":"Master label visibility","text":"The existing lblchk Show model labels switch now gates original sprite labels and the readable screen-facing overlay, including selected and nearby items. Older oil, air, flare, metering and inlet-PSV display callbacks also obey the master switch when another layer changes. The separate readable-style preference is retained. Physical plaques, model geometry, selection, information and navigation remain unchanged."},{"id":"pw.liquid","title":"V-7500 level stays inside the shell","text":"The annotation layout incorrectly adopted the clipped liquid rectangle as a movable caption box at some fill heights. Clipped/masked liquid and decorative paint are excluded from label-box inference. V-7500 shell, liquid, surface and internal text now remain one fixed-coordinate drawing group. The same LIT-7505A source and bottom-up fill arithmetic are retained."},{"id":"pw.regen","title":"V-1418 clear diagram","text":"The long explanatory bar is removed from the regeneration SVG. Its original drain explanation is retained in a closed disclosure beneath the drawing. Vessel, pipe, valve and live-reading positions are unchanged. Existing C-1111 Run/Stop and Red tag UI buttons move together into adjacent clear space so they no longer cover the LT-1418 alarm badges; their action metadata and command logic are unchanged."},{"id":"pw.stab","title":"Clear stabilizer filter and level-controller display","text":"Only the LIC-5010G HMI faceplate moves to clear space below/right of the two filters. Its entire mode/setpoint/output click targets move together, retaining original action data. F-5015/F-5016 name, service state and DP are held within their own fixed filter cards instead of being detached by the free-label solver."}],"policy":["Visual/annotation repair only. No process equations, controls, gains, trips, thresholds, liquid inventories, histories, storage schemas or authentication changes.","The12PV single-owner slug inventory/transfer repair and report qualifications are preserved exactly.","All95 walkthrough views,132 information entries,16 internal trainers, local-reading mappings and screen/model round trips remain unchanged.","No new field evidence, installed-device identities, physical piping or valve/equipment placement is inferred.","Scoped DOM/Canvas tests are distinct from complete native WebGL, production deployment and field acceptance."]};
+function cfRegisterPresentationRepair12PW(H){
+ var S=CF_SOURCE_12PW,N=H.info||H.referenceNotes||{};
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat(S.policy),sourceReview12PW:{definition:'CF_SOURCE_12PW',scope:S.sourceClass}};
+ if(N.control_screen_annotations_12pu)N.control_screen_annotations_12pu.currentPresentationRepair12PW={definition:'CF_SOURCE_12PW',notebookKey:S.notebookKey,scope:'Clipped liquid and fixed equipment captions are not movable label boxes; controls remain unchanged.'};
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(x){return x.name==='CF_SOURCE_12PW';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PW',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Display and navigation';});if(!c){c=['Software / Display and navigation',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterPresentationRepair12PW({info:INFO,categories:LIB_CATS});
+var cfSourcesBefore12PW=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12PW.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PW';}))a.push({name:'CF_SOURCE_12PW',value:CF_SOURCE_12PW});return a;};
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PV',hmiVisualRevision:'12PW',labelVisibilityRevision:'12PW'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,hmiVisualRevision:'12PW',labelVisibilityRevision:'12PW'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+
+/*12PX presentation-only reboiler paths; no process or persistence writes.*/
+var CF_SOURCE_12PX={"build":"12PX","baseline":"12PW","date":"2026-11-10","id":"reboiler_control_screen_passage_restore_12px","title":"Reboiler control-screen internal flow-path restoration","notebookKey":"reboiler_screen_flow_restore_12px","sourceClass":"USER_MARKED_SCREENSHOTS_AND_EXISTING_CONTROL_SCREEN_BOUNDARIES","ownerKeys":["e1223","e1125"],"photos":[{"name":"IMG_0799.jpeg","sha256":"da9eb371e953de4db15fb5f5529575ae98fc359ef5d6d7bd335098bec0175a82","bytes":913458,"sourceMediaRetained":false},{"name":"IMG_0800.jpeg","sha256":"05977ae69ca002d53c181f78cefa80365874e6d25bf781a55e324073050d0517","bytes":1048072,"sourceMediaRetained":false}],"newEntries":[{"id":"px.cause","title":"Internal flow-line presentation defect","text":"The existing E-1223/E-1224 gas passage was painted before the opaque exchanger body and hidden. Bottom and side process boundary pipes lacked internal connecting strokes. The trim symbol had a plain vertical separator but no continuous horizontal shell passage. This is a software drawing defect, not a change in process topology."},{"id":"px.paths","title":"Separate passages restored on the existing reboiler screen","text":"Five named HMI internal paths connect the existing boundary endpoints: combined inlet-gas passage; E-1223 bottom circulation U-return; E-1224 lower inlet to side return; trim process shell left-to-right; trim hot-oil coil top-to-bottom. A light crossover gap explicitly avoids a mixing-junction interpretation. The two small right-hand continuation gaps are also closed without moving the original arrows or pipes."},{"id":"px.scope","title":"Presentation-only source boundary","text":"IMG_0799.jpeg and IMG_0800.jpeg are user-marked control-screen photographs, not a new P&ID, dimensional drawing, operating snapshot calibration or installed coil design. E-1125 remains the existing screen alias; no tag renaming, new equipment, controller changes or inferred setpoints. Existing source ownership and qualifications are preserved."}],"policy":["One targeted HMI renderer changed; original controls, readouts, alarms, historian, process tick and 3D geometry are unchanged.","Existing equipment outlines, valve coordinates and external routes are retained; new strokes bridge only the missing schematic connectors.","The earlier label OFF, V-7500 contained-level, V-1418 note, LIC-5010G clearance, slug-balance correction and nine residue steps are preserved.","All introductory/trainer content and transmitter live-reading/navigation associations remain unchanged.","Schematic restoration and scoped browser tests are not full native WebGL or live-site acceptance."]};
+function cfRegisterReboilerPaths12PX(H){
+ var S=CF_SOURCE_12PX,N=H.info||H.referenceNotes||{};
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat(S.policy),sourceReview12PX:{definition:'CF_SOURCE_12PX',scope:S.sourceClass}};
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(x){return x.name==='CF_SOURCE_12PX';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PX',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Display and navigation';});if(!c){c=['Software / Display and navigation',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterReboilerPaths12PX({info:INFO,categories:LIB_CATS});
+var cfSourcesBefore12PX=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12PX.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PX';}))a.push({name:'CF_SOURCE_12PX',value:CF_SOURCE_12PX});return a;};
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PW',reboilerPathsRevision:'12PX'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,reboilerPathsRevision:'12PX'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
 
 if(window.CFAcceptance12OP){window.CFAcceptance12OP.raycastTarget=cfAcceptanceRayTarget12OP;window.CFAcceptance12OP.finishMain(cfRuntimeAcceptanceProbe12OP);}
 
