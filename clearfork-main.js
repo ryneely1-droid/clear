@@ -1,12 +1,188 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12PM';
+const CF_APPLICATION_BUILD_12OA='12PQ';
 var cfPayload12PJ=window.CFContent12PJ;
-if(!cfPayload12PJ||cfPayload12PJ.build!=='12PM'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
- if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PM)');
- throw new Error('Clear Fork12PM requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
+if(!cfPayload12PJ||cfPayload12PJ.build!=='12PQ'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
+ if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PQ)');
+ throw new Error('Clear Fork12PQ requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
 }
 var cfCompressorTrainerRuntime12MO=cfPayload12PJ.trainer;
+
+/* 12PN: main-view text and render scheduling only. Never advances plant time. */
+var CF_VIEW_12PN={build:'12PN',baseline:'12PM',sampleThisFrame:false,frames:0,stages:{},detailSkips:0,
+ selectionClones:0,selectionMeshes:0,plaques:0,textMaterials:0,redrawRequests:0,refreshPending:false,genericPlaques:[],labels:null};
+var CF_PACING_12PN={deadline:null,lastDraw:null,fps:null};
+var CF_PLAQUE_CACHE_12PN=new Map();
+function cfFrameGate12PN(now,fps,visible){
+ var s=CF_PACING_12PN,interval=1000/Math.max(1,Number(fps)||30);
+ if(!visible){s.deadline=null;s.lastDraw=null;s.fps=fps;return null;}
+ if(s.deadline===null||s.fps!==fps){s.deadline=now;s.fps=fps;}
+ if(now+.5<s.deadline)return null;
+ var elapsed=s.lastDraw===null?interval:Math.max(0,now-s.lastDraw);s.lastDraw=now;
+ // Carry the scheduled deadline forward. Do not round every draw to a new RAF tick,
+ // and never run a burst of catch-up renders after a hidden tab or stalled frame.
+ var steps=Math.max(1,Math.floor((now+.5-s.deadline)/interval)+1);s.deadline+=steps*interval;
+ CF_VIEW_12PN.frames++;CF_VIEW_12PN.sampleThisFrame=CF_VIEW_12PN.frames%30===1;
+ return Math.min(250,elapsed);
+}
+function cfProfileStage12PN(name,elapsed){
+ var all=CF_VIEW_12PN.stages,row=all[name]||(all[name]={samples:0,totalMs:0,maxMs:0,lastMs:0});
+ row.samples++;row.totalMs+=elapsed;row.maxMs=Math.max(row.maxMs,elapsed);row.lastMs=elapsed;
+}
+function cfCreateEquipmentPlaque12PN(top,sub,w,h){
+ var aspect=Math.max(.5,Math.min(16,Number(w)/Math.max(.01,Number(h)))),key=String(top)+'|'+String(sub)+'|'+aspect.toFixed(5);
+ if(CF_PLAQUE_CACHE_12PN.has(key))return CF_PLAQUE_CACHE_12PN.get(key);
+ var c=document.createElement('canvas'),width=1024,height=Math.max(64,Math.round(width/aspect));
+ c.width=width;c.height=height;var g=c.getContext('2d');if(!g)throw new Error('Equipment plaque canvas unavailable');
+ g.fillStyle='#0b2332';g.fillRect(0,0,width,height);g.strokeStyle='#d3eaf4';g.lineWidth=Math.max(2,height*.018);
+ var pad=Math.max(5,height*.045);g.strokeRect(pad,pad,width-2*pad,height-2*pad);g.textAlign='center';g.textBaseline='middle';
+ function text(value,y,font,color,weight){g.fillStyle=color;g.font=(weight||600)+' '+font+'px Arial';var tw=g.measureText(String(value)).width;if(tw>width*.90){font*=width*.90/tw;g.font=(weight||600)+' '+font+'px Arial';}g.fillText(String(value),width/2,y);}
+ var thin=aspect>4.2;
+ text(top,height*(thin?.36:.31),height*(thin?.49:.37),'#ffffff',800);
+ text(sub,height*(thin?.77:.63),height*(thin?.18:.14),'#d8edf7',600);
+ // A very short physical sign has room for two legible rows, not three squeezed rows.
+ // The SCHEMATIC MODEL qualification is retained on the mesh and equipment card.
+ if(!thin)text('SCHEMATIC MODEL',height*.84,height*.085,'#c5dbe6',500);
+ var texture=new THREE.CanvasTexture(c);texture.encoding=THREE.sRGBEncoding;texture.minFilter=THREE.LinearFilter;
+ texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;
+ texture.anisotropy=typeof ren!=='undefined'&&ren.capabilities?Math.min(8,ren.capabilities.getMaxAnisotropy()):1;
+ texture.userData={clearforkPlaque12PN:true,tag:String(top),service:String(sub),basis:'Existing generic schematic identification; not a new field nameplate',aspect:aspect};
+ CF_PLAQUE_CACHE_12PN.set(key,texture);return texture;
+}
+function cfRefineTextMaterials12PN(){
+ var seen=new Set(),generic=new Set(CF_VIEW_12PN.genericPlaques),changed=0,plaques=0;
+ (sprites||[]).concat(CF_VIEW_12PN.genericPlaques).forEach(function(m){
+  if(!cfIsAttached12JG(m))return;
+  if(!m.material)return;var u=m.userData||{},gp=m.geometry&&m.geometry.parameters;
+  // Only a pre-existing generic equipment plaque with its own exact text metadata.
+  // Individual evidence/nameplate plaques are never redrawn from a guessed identity.
+  var part=String(u.nglVisual12IC||u.coldVisual12HY||u.fieldPart||u.boosterVisual12ID||u.pipelineVisual12IF||u.part12IV||u.part12IU||u.part12IS||'');
+  if(generic.has(m)&&typeof u.label==='string'&&gp&&gp.width&&gp.height&&!Array.isArray(m.material)){
+   var rows=u.label.split(' | ');if(rows.length===3&&rows[2]==='SCHEMATIC MODEL'){
+    var old=m.material.map;m.material.map=cfCreateEquipmentPlaque12PN(rows[0],rows[1],gp.width,gp.height);
+    m.material.toneMapped=false;m.material.needsUpdate=true;u.textRevision12PN='12PN';plaques++;
+    // The source texture may be shared by another object. Do not dispose it here.
+   }
+  }
+  (Array.isArray(m.material)?m.material:[m.material]).forEach(function(mat){
+   if(!mat||seen.has(mat))return;seen.add(mat);var tex=mat.map,img=tex&&tex.image;
+   if(!tex||!img||typeof img.getContext!=='function')return;
+   // Identity/sign text is unlit. Do not alter weather, ground, instruments, or
+   // photographic evidence merely because those also happen to use a canvas.
+   if(!(m.isSprite&&u.label12ml)&&!generic.has(m)&&!/plaque|nameplate/.test(String(u.fieldPart||u.part12OI||u.part12OF||u.part12OD||'')))return;
+   if(mat.toneMapped!==false){mat.toneMapped=false;mat.needsUpdate=true;changed++;}
+  });
+ });CF_VIEW_12PN.textMaterials=changed;CF_VIEW_12PN.plaques=plaques;
+}
+function cfHighlightMaterials12PN(key){
+ var disposed=new Set();(CF_SELECTION_MATERIALS_12JG||[]).forEach(function(s){s.mesh.material=s.original;s.temporary.forEach(function(m){if(!disposed.has(m)){disposed.add(m);if(m.dispose)m.dispose();}});});
+ CF_SELECTION_MATERIALS_12JG=[];sel=[];selKey=key||null;var clones=new Map(),seen=new Set();
+ if(key)(byKey[key]||[]).forEach(function(o){
+  function mark(m){if(!m.isMesh||!m.material||seen.has(m))return;seen.add(m);var original=m.material;
+   var temps=(Array.isArray(original)?original:[original]).map(function(mat){
+    if(clones.has(mat))return clones.get(mat);var t=mat.clone();
+    if(t.emissive){t.emissive.setHex(0x8d83f2);t.emissiveIntensity=.55;}else if(t.color)t.color.setHex(0xb9b0ff);
+    clones.set(mat,t);return t;
+   });m.material=Array.isArray(original)?temps:temps[0];CF_SELECTION_MATERIALS_12JG.push({mesh:m,original:original,temporary:temps});sel.push(m);
+  }if(o.traverse)o.traverse(mark);else mark(o);
+ });
+ CF_VIEW_12PN.selectionClones=clones.size;CF_VIEW_12PN.selectionMeshes=seen.size;
+}
+function cfCreateReadableTags12PN(D,W,host,hooks){
+ 'use strict';
+ var enabled=true,root=D.createElement('div'),pool=[],rows=[],sourceLength=-1,selected='',all=false;
+ var width=0,height=0,last=-Infinity,lastCamera='',layoutNeeded=true,resizeObserver=null,measure=D.createElement('canvas').getContext('2d');
+ var suppressed=new Map(),visibleRows=[],stats={layouts:0,skipped:0,domWrites:0,candidates:0,shown:0,decluttered:0};
+ root.id='cfReadableTags12PN';root.setAttribute('aria-label','Readable equipment tags');root.hidden=true;
+ host.appendChild(root);var style=D.createElement('style');style.id='cfReadableTagStyle12PN';style.textContent=
+ '#v3d{position:relative}#cfReadableTags12PN{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3;contain:layout style;isolation:isolate}'+
+ '#cfReadableTags12PN[hidden]{display:none!important}#cfReadableTags12PN button{position:absolute;left:0;top:0;margin:0;height:40px;min-height:40px;min-width:36px;padding:8px 10px;border:1px solid #bedce9;border-radius:5px;background:#102a3b;color:#fff;font:700 15px/20px Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 3px #0009;pointer-events:auto;touch-action:manipulation;cursor:pointer;text-align:left}'+
+ '#cfReadableTags12PN button[data-selected="true"]{background:#fff6d2;color:#11222d;border:2px solid #573e00;padding:7px 9px;font-size:16px}'+
+ '#cfReadableTags12PN button:focus-visible{outline:3px solid #fbdf65;outline-offset:2px}';D.head.appendChild(style);
+ function size(){width=Math.max(0,host.clientWidth);height=Math.max(0,host.clientHeight);layoutNeeded=true;}
+ size();if(typeof W.ResizeObserver==='function'){resizeObserver=new W.ResizeObserver(size);resizeObserver.observe(host);}else W.addEventListener('resize',size);
+ function set(n,k,v){if(n[k]!==v){n[k]=v;stats.domWrites++;}}
+ function hide(){root.hidden=true;visibleRows=[];stats.shown=0;}
+ function restore(){suppressed.forEach(function(value,mat){mat.visible=value;});suppressed.clear();}
+ function suppress(sprite){var mat=sprite.material;if(!mat)return;if(!suppressed.has(mat))suppressed.set(mat,mat.visible);mat.visible=false;}
+ function sync(){var source=hooks.sprites();if(source.length===sourceLength)return;restore();sourceLength=source.length;rows=[];
+  source.forEach(function(sp){var u=sp.userData||{},meta=u.label12ml,key=u.key;if(!meta||!key)return;
+   var rec=hooks.record(key),isPrimary=hooks.primary(key),text=isPrimary&&isPrimary.tag?isPrimary.tag:meta.text;
+   if(!text)return;rows.push({sp:sp,key:key,text:String(text),full:String(meta.text),record:rec,primary:!!isPrimary,owners:hooks.owners(key),originalVisible:!sp.material||sp.material.visible!==false});if(enabled)suppress(sp);
+  });layoutNeeded=true;
+ }
+ function parentVisible(sp){for(var p=sp.parent;p;p=p.parent)if(p.visible===false)return false;return hooks.attached(sp);}
+ function fieldAllowed(r){return !(r&&r.fieldDevice)||(r.kind==='manual'?hooks.manual():hooks.instruments());}
+ function ownerVisible(row){var owners=row.owners||[];if(!owners.length)return false;for(var i=0;i<owners.length;i++)if(hooks.ownerVisible(owners[i]))return true;return false;}
+ function button(i){if(pool[i])return pool[i];var b=D.createElement('button');b.type='button';b.hidden=true;
+  b.addEventListener('pointerdown',function(e){e.stopPropagation();});b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(b.dataset.key)hooks.select(b.dataset.key);});root.appendChild(b);pool.push(b);return b;
+ }
+ function overlaps(a,b){return !(a.x+a.w+6<b.x||b.x+b.w+6<a.x||a.y+a.h+5<b.y||b.y+b.h+5<a.y);}
+ function tick(now,show,force){
+  if(!enabled||!show){hide();return;}sync();
+  var k=hooks.selected()||'',a=!!hooks.all(),fingerprint=hooks.cameraKey();
+  if(!force&&!layoutNeeded&&k===selected&&a===all&&fingerprint===lastCamera&&now-last<500){stats.skipped++;return;}
+  // Follow moving anchors at display cadence; stationary checks are at most 2 Hz.
+  selected=k;all=a;lastCamera=fingerprint;last=now;layoutNeeded=false;
+  if(width<20||height<20){hide();return;}root.hidden=false;stats.layouts++;var candidates=[],activeKey=D.activeElement&&root.contains(D.activeElement)?D.activeElement.dataset.key:null,heldKeys=new Set(visibleRows.map(function(r){return r.row.key;}));
+  rows.forEach(function(r){
+   if(!r.originalVisible)return;var chosen=r.key===k,explicit=r.sp.visible===true;
+   if(!chosen&&!explicit&&!r.primary)return;
+   if(!fieldAllowed(r.record)||!parentVisible(r.sp))return;
+   if(!chosen&&!explicit&&!ownerVisible(r))return;
+   if(r.sp.layers&&hooks.layerVisible&&!hooks.layerVisible(r.sp))return;
+   var pt=hooks.project(r.sp);if(!pt||!Number.isFinite(pt.x)||!Number.isFinite(pt.y)||pt.z< -1||pt.z>1||pt.x< -1||pt.x>1||pt.y< -1||pt.y>1)return;
+   if(!chosen&&!explicit&&pt.distance>160)return;
+   var text=r.text.replace(/\s+/g,' ').trim();measure.font=(chosen?'700 16px':'700 15px')+' Arial';
+   var bw=Math.min(Math.max(44,Math.ceil(measure.measureText(text).width)+22),Math.min(280,width-16));
+   var x=(pt.x+1)*width/2,y=(1-pt.y)*height/2,rank=(chosen?-1000000:0)+(r.primary?0:20000)+pt.distance-(heldKeys.has(r.key)?3:0);
+   candidates.push({row:r,text:text,x:Math.max(8,Math.min(width-bw-8,x-bw/2)),y:Math.max(8,Math.min(height-48,y-46)),w:bw,h:40,selected:chosen,rank:rank});
+  });
+  candidates.sort(function(a,b){return a.rank-b.rank||a.row.key.localeCompare(b.row.key);});var placed=[],used=new Set(),limit=width<600?12:24;
+  candidates.forEach(function(c){if(placed.length>=limit||used.has(c.row.key))return;if(placed.some(function(p){return overlaps(c,p);}))return;used.add(c.row.key);placed.push(c);});
+  placed.forEach(function(c,i){var b=button(i);set(b,'hidden',false);set(b,'textContent',c.text);set(b,'title',c.row.full+' - open existing equipment information');
+   if(b.dataset.key!==c.row.key)b.dataset.key=c.row.key;if(b.dataset.selected!==String(c.selected))b.dataset.selected=String(c.selected);
+   var transform='translate('+Math.round(c.x)+'px,'+Math.round(c.y)+'px)';if(b.style.transform!==transform){b.style.transform=transform;stats.domWrites++;}
+   var sw=c.w+'px';if(b.style.width!==sw){b.style.width=sw;stats.domWrites++;}b.setAttribute('aria-label',c.row.full+' - equipment information');
+  });
+  for(var i=placed.length;i<pool.length;i++){set(pool[i],'hidden',true);delete pool[i].dataset.key;set(pool[i],'title','');set(pool[i],'textContent','');pool[i].removeAttribute('aria-label');}if(activeKey){var focused=pool.find(function(b){return !b.hidden&&b.dataset.key===activeKey;});if(focused&&D.activeElement!==focused)focused.focus({preventScroll:true});}
+  visibleRows=placed;stats.candidates=candidates.length;stats.shown=placed.length;stats.decluttered=candidates.length-placed.length;
+ }
+ function setEnabled(value){enabled=!!value;if(enabled){sourceLength=-1;sync();layoutNeeded=true;}else{restore();hide();}return enabled;}
+ function paint(context,ratio){if(root.hidden)return;context.save();context.scale(ratio,ratio);visibleRows.forEach(function(c){context.fillStyle=c.selected?'#fff6d2':'#102a3b';context.fillRect(c.x,c.y,c.w,c.h);context.strokeStyle=c.selected?'#573e00':'#bedce9';context.strokeRect(c.x+.5,c.y+.5,c.w-1,c.h-1);context.fillStyle=c.selected?'#11222d':'#fff';context.font='700 '+(c.selected?16:15)+'px Arial';context.textBaseline='middle';context.save();context.beginPath();context.rect(c.x+8,c.y,c.w-16,c.h);context.clip();context.fillText(c.text,c.x+10,c.y+20);context.restore();});context.restore();}
+ return {tick:tick,hide:hide,paint:paint,setEnabled:setEnabled,invalidate:function(){layoutNeeded=true;},status:function(){return Object.assign({build:'12PN',enabled:enabled,fontPixels:15,selectedFontPixels:16,pool:pool.length,tracked:rows.length,source:'Existing exact-owner label anchors',mode:'Screen-facing annotations; not depth-occlusion or surveyed sign locations'},stats);},dispose:function(){restore();if(resizeObserver)resizeObserver.disconnect();else W.removeEventListener('resize',size);root.remove();style.remove();}};
+}
+function cfDisplayStatus12PN(){
+ var stages={};Object.keys(CF_VIEW_12PN.stages).forEach(function(k){var r=CF_VIEW_12PN.stages[k];stages[k]={samples:r.samples,averageMs:r.totalMs/r.samples,maximumMs:r.maxMs,lastMs:r.lastMs};});
+ return {build:'12PN',baseline:'12PM',renderedFrames:CF_VIEW_12PN.frames,minimumAutomaticPixelRatio:1,selectionMeshes:CF_VIEW_12PN.selectionMeshes,selectionMaterialClones:CF_VIEW_12PN.selectionClones,coalescedRedrawRequests:CF_VIEW_12PN.redrawRequests,
+  revisedGenericPlaques:CF_VIEW_12PN.plaques,textMaterials:CF_VIEW_12PN.textMaterials,detailPassesSkipped:CF_VIEW_12PN.detailSkips,
+  readableTags:CF_VIEW_12PN.labels?CF_VIEW_12PN.labels.status():null,sampledStages:stages,
+  scope:'Local CPU stage-submission samples every 30 rendered frames. Not GPU timings, hardware certification, measured network latency, or a guaranteed FPS. No saved process/history/authentication data read.'};
+}
+function cfInstallDisplay12PN(){
+ if(window.CFDisplay12PN)return window.CFDisplay12PN;
+ var point=new THREE.Vector3();
+ var labels=cfCreateReadableTags12PN(document,window,box,{
+  sprites:function(){return sprites;},record:cf3dDeviceRecord,primary:function(k){return EQP[k]||null;},owners:function(k){return (byKey[k]||[]).filter(function(m){return !m.isSprite;}).slice(0,12);},
+  attached:cfIsAttached12JG,manual:function(){return showMV;},instruments:function(){return showInst;},selected:function(){return selKey;},all:function(){return showAll;},
+  ownerVisible:function(o){return cfIsAttached12JG(o)&&cf3dEffectivelyVisible(o);},layerVisible:function(o){return !cam.layers||o.layers.test(cam.layers);},
+  cameraKey:function(){var p=cam.position,q=cam.quaternion;return [p.x,p.y,p.z,q.x,q.y,q.z,q.w,cam.fov,cam.aspect].map(function(v){return Number(v).toFixed(5);}).join('|');},
+  project:function(sp){point.setFromMatrixPosition(sp.matrixWorld);var distance=point.distanceTo(cam.position);point.project(cam);return {x:point.x,y:point.y,z:point.z,distance:distance};},
+  select:function(k){go(k);}
+ });CF_VIEW_12PN.labels=labels;
+ var host=document.querySelector('#cfPerformancePanel12ML .cf-performance12ml')||document.querySelector('.bar3');
+ if(host){var lab=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=true;check.id='cfReadableTagToggle12PN';check.style.width='auto';lab.append(check,document.createTextNode('Readable nearby tags (decluttered)'));host.appendChild(lab);
+  check.onchange=function(){labels.setEnabled(check.checked);};
+  var note=document.createElement('p');note.textContent='12PN: readable screen-facing tags stay sharp while moving. Nearby equipment and the selected item are prioritized. All labels adds available component tags; overlapping tags are spaced by selection priority. No equipment is removed.';host.appendChild(note);
+  var b=document.createElement('button');b.type='button';b.id='cfExportDisplay12PN';b.textContent='Export display diagnostics';b.onclick=function(){var report={build:CF_APPLICATION_BUILD_12OA,display:cfDisplayStatus12PN(),performance:cfPerformanceStatus12ML(),acceptance:window.CFAcceptance12OP?window.CFAcceptance12OP.status():null};var blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ClearFork_12PN_Display_Diagnostics.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);};host.appendChild(b);
+ }
+ var allLabel=document.getElementById('lblchk');if(allLabel)allLabel.title='Include existing component labels. Readable tags prioritize the selected item and declutter overlaps.';
+ cfRefineTextMaterials12PN();
+ var api={build:'12PN',status:cfDisplayStatus12PN,setReadableTags:labels.setEnabled};window.CFDisplay12PN=api;
+ return api;
+}
+/* END 12PN display helpers */
+
 
 /*12OZ rendering/UI workload only. The process clock, alarm evaluation, historian,
   geometry, sources and persistence are not throttled or rewritten by these helpers.*/
@@ -36,11 +212,12 @@ function cfRequestModelRedraw12OZ(){
  // The existing main loop draws after all installers and the acceptance marker.
  if(!(window.CFMainScript12LJ&&window.CFMainScript12LJ.endReached12OP)){CF_DEVICE_PERF_12OZ.earlyRedrawsDeferred++;return false;}
  if(!cfMainDrawVisible12OZ())return false;
- if(typeof ren!=='undefined'&&ren&&scene&&cam){ren.render(scene,cam);return true;}return false;
+ if(typeof ren!=='undefined'&&ren&&scene&&cam){CF_VIEW_12PN.refreshPending=true;CF_VIEW_12PN.redrawRequests++;return true;}return false;
 }
 function cfHmiObscured12OZ(){return typeof PLANT!=='undefined'&&['planthealth','shiftdash','notifbell','schedule','outages'].indexOf(PLANT.popup)>=0;}
 function cfAdaptiveResolutionStep12OZ(state,o){
- var base=o.base,budget=1000/o.fps,floor=Math.min(base,.65);
+ var base=Math.max(1,o.base),budget=1000/o.fps,floor=1;
+ if(state.ratio!==null&&state.ratio<floor)state.ratio=floor;
  if(!o.enabled){state.slow=0;state.fast=0;state.previousFrameStart12OZ=0;state.cadenceMs12OZ=null;return;}
  var dt=state.previousFrameStart12OZ?o.start-state.previousFrameStart12OZ:0;state.previousFrameStart12OZ=o.start;
  if(dt>0&&dt<250)state.cadenceMs12OZ=state.cadenceMs12OZ==null?dt:state.cadenceMs12OZ*.9+dt*.1;
@@ -1444,9 +1621,23 @@ function cfInstallCompressorTrainingWorkspace12MO(){
  // Runtime/content revisions are separate from the application release.
  // Derive the expected runtime from this exact catalog, not a stale release literal.
  var catalog=cfEquipmentTrainingData12MP();var doc=document,overlay=null,iframe=null,saved=null,lastStatus={build:applicationBuild,phase:'not-opened',loaded:false},openCount=0,errors=[],timer=null;
+ var walkthroughReturn12PO=null;
+ function returnBar12PO(){
+  if(!overlay)return;
+  var old=overlay.querySelector('[data-walkthrough-return12po]');if(old)old.remove();
+  if(!walkthroughReturn12PO){overlay.style.display='';return;}
+  overlay.style.display='flex';overlay.style.flexDirection='column';
+  var bar=doc.createElement('nav');bar.dataset.walkthroughReturn12po='true';bar.setAttribute('aria-label','Return to introductory walkthrough');
+  bar.style.cssText='display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;flex:0 0 auto;max-height:30vh;overflow:auto;padding:8px 12px;background:#102c32;border-bottom:1px solid #559b73;color:#e6fff0;font:13px/1.35 Segoe UI,Arial,sans-serif;z-index:4;';
+  var b=doc.createElement('button');b.type='button';b.dataset.returnToWalkthrough12po='true';b.textContent='\u2190 Return to introductory walkthrough';
+  b.style.cssText='background:#39ff14;color:#10270a;border:2px solid #a4ff91;border-radius:8px;padding:9px 13px;min-height:44px;max-width:100%;white-space:normal;font:700 13px/1.35 Segoe UI,Arial,sans-serif;cursor:pointer;';b.onclick=function(){close();};bar.appendChild(b);
+  var text=doc.createElement('span');text.textContent='Your place: '+walkthroughReturn12PO.label;text.style.cssText='flex:1 1 180px;overflow-wrap:anywhere;';bar.appendChild(text);
+  overlay.insertBefore(bar,iframe);iframe.style.flex='1 1 auto';iframe.style.minHeight='0';iframe.style.height='0';
+ }
+
  function family(key){if(['e1223','e1125'].includes(key)){var rb=catalog.models.find(function(m){return m.id==='reboilers';});if(rb)return rb;}var k=String(key||'');return catalog.models.find(function(m){return m.owner===k||m.cylinderKeys.indexOf(k)>=0||(m.systemOwnerKeys12NV&&m.systemOwnerKeys12NV.includes(k))||(m.systemOwnerKeys12NY&&m.systemOwnerKeys12NY.includes(k))||(m.systemOwnerKeys12OB&&m.systemOwnerKeys12OB.includes(k))||(m.kind==='screw'&&k.indexOf('kp_c1141_')===0)||(m.packageFlow12NF&&m.packageFlow12NF.ownerKeys.indexOf(k)>=0);});}
  function snapshot(key){var d=cfEquipmentIndex12MD().dossier(key);if(!d)throw Error('No exact retained record: '+key);var p=cfInspectionRecord12MC(key),alarms=typeof CF_SOURCE_12MG!=='undefined'?CF_SOURCE_12MG.rows.filter(function(r){return r.assetId===key;}):[];return JSON.parse(JSON.stringify({dossier:d,primaryRecord:p,alarms:alarms}));}
- function close(){clearTimeout(timer);launchVerified=false;if(!overlay)return;try{var a=iframe&&iframe.contentWindow&&iframe.contentWindow.CFInternalsStudio12MO;if(a){if(lastStatus.phase!=='error')lastStatus=a.status();a.dispose();}}catch(e){errors.push('Trainer disposal: '+String(e.message||e));}overlay.remove();overlay=null;iframe=null;if(saved){window._pauseRender=saved.pause;doc.body.style.overflow=saved.overflow;if(saved.focus&&saved.focus.isConnected&&saved.focus.focus)saved.focus.focus({preventScroll:true});saved=null;}lastStatus=Object.assign({},lastStatus,{phase:'closed',loaded:false,disposed:true});}
+ function close(reason){clearTimeout(timer);launchVerified=false;if(!overlay)return;try{var a=iframe&&iframe.contentWindow&&iframe.contentWindow.CFInternalsStudio12MO;if(a){if(lastStatus.phase!=='error')lastStatus=a.status();a.dispose();}}catch(e){errors.push('Trainer disposal: '+String(e.message||e));}var resume12PO=walkthroughReturn12PO;walkthroughReturn12PO=null;overlay.remove();overlay=null;iframe=null;if(saved){window._pauseRender=saved.pause;doc.body.style.overflow=saved.overflow;if(saved.focus&&saved.focus.isConnected&&saved.focus.focus)saved.focus.focus({preventScroll:true});saved=null;}lastStatus=Object.assign({},lastStatus,{phase:'closed',loaded:false,disposed:true});if(resume12PO&&reason!=='retry12PO'&&!(reason&&reason.type==='pagehide')){try{resume12PO.restore();}catch(e){errors.push('Walkthrough return failed; reopen the walkthrough.');}}}
  function fail(e){
   clearTimeout(timer);launchVerified=false;
   var message=String(e&&e.message||e);errors.push(message);
@@ -1461,14 +1652,14 @@ function cfInstallCompressorTrainingWorkspace12MO(){
   var h=doc.createElement('h2');h.textContent='Equipment training could not open';box.appendChild(h);
   var p=doc.createElement('p');p.textContent=message;box.appendChild(p);
   if(launchDetails){var pre=doc.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px';pre.textContent='Loaded version check: '+JSON.stringify(launchDetails,null,2);box.appendChild(pre);}
-  var b=doc.createElement('button');b.type='button';b.textContent='Return to the plant';b.onclick=close;box.appendChild(b);
-  var retry=doc.createElement('button');retry.type='button';retry.textContent='Retry training';retry.style.marginLeft='10px';retry.onclick=function(){var id=lastRequestedId;close();open(id);};box.appendChild(retry);
-  overlay.appendChild(box);
+  var b=doc.createElement('button');b.type='button';b.textContent=walkthroughReturn12PO?'Return to introductory walkthrough':'Return to the plant';b.onclick=close;box.appendChild(b);
+  var retry=doc.createElement('button');retry.type='button';retry.textContent='Retry training';retry.style.marginLeft='10px';retry.onclick=function(){var id=lastRequestedId,options={walkthroughReturn12PO:walkthroughReturn12PO};close('retry12PO');open(id,options);};box.appendChild(retry);
+  if(walkthroughReturn12PO){var bar=overlay.querySelector('[data-walkthrough-return12po]');if(bar)box.style.top=(bar.getBoundingClientRect().height+12)+'px';}overlay.appendChild(box);
  }
 
- function open(id){lastRequestedId=id||null;var selected=id&&catalog.models.find(function(m){return m.id===id||m.owner===id;});if(overlay){if(!launchVerified)return false;var a=iframe.contentWindow.CFInternalsStudio12MO;if(a&&selected)a.choose(selected.id);iframe.focus();return true;}
-  launchVerified=false;launchDetails={launcherBuild:applicationBuild,indexBuild:window.CFStartup12LJ&&window.CFStartup12LJ.expected||null,mainBuild:window.CFMainScript12LJ&&window.CFMainScript12LJ.build||null,catalogBuild:catalog.build||null,expectedRuntime:catalog.runtimeRevision||catalog.build||null,runtimeRevision:null,runtimeCatalogBuild:null,passed:false};
-  saved={pause:window._pauseRender,overflow:doc.body.style.overflow,focus:doc.activeElement};window._pauseRender=true;doc.body.style.overflow='hidden';overlay=doc.createElement('section');overlay.id='cfCompressorInternals12MO';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Equipment Internal Training');overlay.style.cssText='position:fixed;inset:0;width:100%;height:100%;height:100dvh;z-index:2000000000;background:#0b1721;';iframe=doc.createElement('iframe');iframe.title='Clear Fork Equipment Internal Training';iframe.setAttribute('allow','fullscreen');iframe.setAttribute('allowfullscreen','');iframe.style.cssText='display:block;width:100%;height:100%;border:0;background:#0b1721;';overlay.appendChild(iframe);doc.body.appendChild(overlay);openCount++;lastStatus={build:applicationBuild,phase:'loading',loaded:false};
+ function open(id,options){lastRequestedId=id||null;var requestedReturn12PO=options&&options.walkthroughReturn12PO;var selected=id&&catalog.models.find(function(m){return m.id===id||m.owner===id;});if(requestedReturn12PO&&(!selected||typeof requestedReturn12PO.restore!=='function'))return false;if(overlay){if(!launchVerified)return false;if(requestedReturn12PO){walkthroughReturn12PO=requestedReturn12PO;returnBar12PO();}var a=iframe.contentWindow.CFInternalsStudio12MO;if(a&&selected)a.choose(selected.id);iframe.focus();return true;}
+  walkthroughReturn12PO=requestedReturn12PO||null;launchVerified=false;launchDetails={launcherBuild:applicationBuild,indexBuild:window.CFStartup12LJ&&window.CFStartup12LJ.expected||null,mainBuild:window.CFMainScript12LJ&&window.CFMainScript12LJ.build||null,catalogBuild:catalog.build||null,expectedRuntime:catalog.runtimeRevision||catalog.build||null,runtimeRevision:null,runtimeCatalogBuild:null,passed:false};
+  saved={pause:window._pauseRender,overflow:doc.body.style.overflow,focus:doc.activeElement};window._pauseRender=true;doc.body.style.overflow='hidden';overlay=doc.createElement('section');overlay.id='cfCompressorInternals12MO';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Equipment Internal Training');overlay.style.cssText='position:fixed;inset:0;width:100%;height:100%;height:100dvh;z-index:2000000000;background:#0b1721;';iframe=doc.createElement('iframe');iframe.title='Clear Fork Equipment Internal Training';iframe.setAttribute('allow','fullscreen');iframe.setAttribute('allowfullscreen','');iframe.style.cssText='display:block;width:100%;height:100%;border:0;background:#0b1721;';overlay.appendChild(iframe);doc.body.appendChild(overlay);returnBar12PO();openCount++;lastStatus={build:applicationBuild,phase:'loading',loaded:false};
   var frame=iframe;
   frame.onload=function(){
    if(frame!==iframe||frame.__cfLaunched12NP)return;
@@ -1487,6 +1678,7 @@ function cfInstallCompressorTrainingWorkspace12MO(){
     var status=w.CFInternalsStudio12MO.status();
     launchDetails.runtimeRevision=status.runtimeRevision||null;launchDetails.runtimeCatalogBuild=status.catalogBuild||null;
     if(!launchDetails.expectedRuntime||status.runtimeRevision!==launchDetails.expectedRuntime||status.catalogBuild!==catalog.build)throw Error('Trainer revision mismatch (expected '+(launchDetails.expectedRuntime||'not assigned')+'; loaded '+(status.runtimeRevision||'not reported')+'; catalog '+(status.catalogBuild||'not reported')+'). Replace the complete matching clearfork-main.js and index.html, then reload. Do not clear saved data.');
+    if(walkthroughReturn12PO){var fullscreen12PO=w.document.getElementById('ci-fullscreen');if(fullscreen12PO)fullscreen12PO.onclick=function(){try{var request=doc.fullscreenElement?doc.exitFullscreen():overlay&&overlay.requestFullscreen?overlay.requestFullscreen():null;if(request&&request.catch)request.catch(function(){fullscreen12PO.title='Browser full screen is unavailable; the return tab remains available in this view.';});}catch(ignore){fullscreen12PO.title='Full screen is unavailable; use the visible return tab.';}};}
     if(selected)w.CFInternalsStudio12MO.choose(selected.id);
     launchVerified=true;launchDetails.passed=true;lastStatus=Object.assign({},w.CFInternalsStudio12MO.status(),{phase:'ready',loaded:true});w.focus();
    }catch(e){fail(e);}
@@ -1498,7 +1690,7 @@ function cfInstallCompressorTrainingWorkspace12MO(){
  var inspect=cf3dInspectDevice;cf3dInspectDevice=function(k,host){var result=inspect.apply(this,arguments);var r=cf3dDeviceRecord(k);addCardLink(r&&(r.assetId||r.key)||k,host||doc.getElementById('plist'));return result;};
  var lib=libRenderDetail;libRenderDetail=function(){if(libSel&&libSel.key===CF_SOURCE_12MO.notebookKey)return review(doc.getElementById('libDetail'));var result=lib.apply(this,arguments);if(libSel)addCardLink(libSel.key,doc.getElementById('libDetail'));return result;};
  var button=doc.getElementById('compressorInternalsTraining12MO');if(!button){button=doc.createElement('button');button.id='compressorInternalsTraining12MO';button.type='button';button.textContent='Equipment Internal Training';button.dataset.toolGroup='training';button.title='Full-screen moving parts, gas/liquid process, unit specifications and part inspection';(doc.querySelector('.bar3')||doc.body).appendChild(button);}button.onclick=function(){open();};if(window.CFDashboard12KL&&window.CFDashboard12KL.refresh)window.CFDashboard12KL.refresh();
- var api={build:applicationBuild,open:open,close:close,snapshot:snapshot,source:CF_SOURCE_12NG,status:function(){var current=lastStatus;try{if(launchVerified&&lastStatus.phase!=='error'&&iframe&&iframe.contentWindow.CFInternalsStudio12MO)current=Object.assign({},iframe.contentWindow.CFInternalsStudio12MO.status(),{phase:'open',loaded:true});}catch(e){}return Object.assign({},current,{applicationBuild:applicationBuild,launchVerified:launchVerified,launchCheck:launchDetails?Object.assign({},launchDetails):null,available:catalog.available.slice(),future:catalog.future.slice(),opens:openCount,errors:errors.slice(),plantControlsChanged:false});}};window.CFCompressorTrainer12MO=api;window.CFEquipmentTrainer12MP=api;window.CFEquipmentTrainer12MQ=api;window.CFEquipmentTrainer12MR=api;window.CFEquipmentTrainer12MS=api;window.CFEquipmentTrainer12MU=api;
+ var api={build:applicationBuild,open:open,close:close,hasModel12PO:function(id){return catalog.available.indexOf(id)>=0&&catalog.models.some(function(m){return m.id===id;});},trainingLinks12PO:function(){return cfIntroTrainerCatalog12PO(catalog);},snapshot:snapshot,source:CF_SOURCE_12NG,status:function(){var current=lastStatus;try{if(launchVerified&&lastStatus.phase!=='error'&&iframe&&iframe.contentWindow.CFInternalsStudio12MO)current=Object.assign({},iframe.contentWindow.CFInternalsStudio12MO.status(),{phase:'open',loaded:true});}catch(e){}return Object.assign({},current,{applicationBuild:applicationBuild,walkthroughReturn12PO:walkthroughReturn12PO?{label:walkthroughReturn12PO.label}:null,launchVerified:launchVerified,launchCheck:launchDetails?Object.assign({},launchDetails):null,available:catalog.available.slice(),future:catalog.future.slice(),opens:openCount,errors:errors.slice(),plantControlsChanged:false});}};window.CFCompressorTrainer12MO=api;window.CFEquipmentTrainer12MP=api;window.CFEquipmentTrainer12MQ=api;window.CFEquipmentTrainer12MR=api;window.CFEquipmentTrainer12MS=api;window.CFEquipmentTrainer12MU=api;
  window.addEventListener('pagehide',close,{once:true});return api;
 }
 
@@ -1760,7 +1952,7 @@ function cfFrameTiming12ML(start){
 function cfPerformanceStatus12ML(){
  var cache=window.CFRyanIndexSync12JT&&window.CFRyanIndexSync12JT.cacheStatus12ML?window.CFRyanIndexSync12JT.cacheStatus12ML():null;
  return Object.assign({},CF_SPEED_12ML,{referenceCache:cache,labelTexturesCached:CF_LABEL_CACHE_12ML.size,
-  quality:CF_VISUAL_PREF_12ML.quality,adaptive:CF_VISUAL_PREF_12ML.adaptive,configuredPixelRatio:CF_PERF_12JG.pixelRatio,
+  display12PN:cfDisplayStatus12PN(),quality:CF_VISUAL_PREF_12ML.quality,adaptive:CF_VISUAL_PREF_12ML.adaptive,configuredPixelRatio:CF_PERF_12JG.pixelRatio,
   activePixelRatio:CF_NAV_12LL&&CF_NAV_12LL.appliedRatio,drawCalls:ren.info&&ren.info.render?ren.info.render.calls:null,
   triangles:ren.info&&ren.info.render?ren.info.render.triangles:null,
   uiWorkload12OZ:Object.assign({},CF_DEVICE_PERF_12OZ),mainDisplay12OZ:CF_MAIN_VISIBILITY_12OZ?CF_MAIN_VISIBILITY_12OZ.status():null,frameCadenceMs12OZ:CF_ADAPTIVE_12ML.cadenceMs12OZ||null,scope:'Timings from this browser. CPU submission and frame cadence are not GPU timing. No claim about server latency, field accuracy or all collisions.'});
@@ -1770,7 +1962,7 @@ function cfCaptureModel12ML(){
  var old=ren.getPixelRatio(),w=box.clientWidth||1,h=box.clientHeight||1,ratio=Math.max(old,Math.min(2,Math.sqrt(8000000/(w*h))));
  try{
   ren.setPixelRatio(ratio);ren.render(scene,cam);
-  var canvas=ren.domElement;canvas.toBlob(function(blob){if(!blob){cfReportPerformanceError12ML('Model-view capture','The browser did not produce an image.');return;}
+  var canvas=document.createElement('canvas');canvas.width=ren.domElement.width;canvas.height=ren.domElement.height;var ctx12PN=canvas.getContext('2d');ctx12PN.drawImage(ren.domElement,0,0);if(CF_VIEW_12PN.labels){CF_VIEW_12PN.labels.tick(performance.now(),true,true);CF_VIEW_12PN.labels.paint(ctx12PN,ratio);}canvas.toBlob(function(blob){if(!blob){cfReportPerformanceError12ML('Model-view capture','The browser did not produce an image.');return;}
    var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ClearFork_model_view_'+new Date().toISOString().replace(/[:.]/g,'-')+'.png';a.click();setTimeout(function(){URL.revokeObjectURL(url);},30000);
   },'image/png');
  }finally{ren.setPixelRatio(old);ren.render(scene,cam);if(CF_NAV_12LL)CF_NAV_12LL.appliedRatio=old;}
@@ -1783,8 +1975,8 @@ function cfInstallPerformanceWorkspace12ML(){
  function el(tag,text,parent){var n=document.createElement(tag);if(text!=null)n.textContent=text;if(parent)parent.appendChild(n);return n;}
  var block=el('details');block.id='cfPerformancePanel12ML';block.dataset.toolGroup='display';block.className='cf-disclosure12mk';el('summary','Picture quality, speed and navigation',block);
  var inner=el('div',null,block);inner.className='cf-performance12ml';
- el('p','Balanced keeps nearby detail. Sharp view improves still-view resolution without enabling every distant fastener. Full detail remains available. No mode changes plant controls.',inner);
- var lab=el('label',null,inner),check=el('input',null,lab);check.type='checkbox';check.checked=CF_VISUAL_PREF_12ML.adaptive;check.id='cfAdaptive12ML';lab.appendChild(document.createTextNode(' Adapt picture resolution when rendering is busy (equipment and animation remain)'));
+ el('p','Balanced keeps nearby detail. Sharp view improves resolution without enabling every distant fastener. Full detail remains available. No mode changes plant controls.',inner);
+ var lab=el('label',null,inner),check=el('input',null,lab);check.type='checkbox';check.checked=CF_VISUAL_PREF_12ML.adaptive;check.id='cfAdaptive12ML';lab.appendChild(document.createTextNode(' Adapt supersampling when busy (never below native resolution)'));
  check.onchange=function(){CF_VISUAL_PREF_12ML.adaptive=check.checked;CF_ADAPTIVE_12ML.ratio=null;cfVisualPreferences12ML(false);};
  var row=el('div',null,inner);row.className='cf-performance-actions12ml';
  function button(text,action){var b=el('button',text,row);b.type='button';b.onclick=action;return b;}
@@ -2140,7 +2332,7 @@ var scene=new THREE.Scene(); scene.background=new THREE.Color(0xaed0ec); scene.f
 var plant=new THREE.Group(); scene.add(plant); var PLANTOX=0,PLANTOZ=0;
 var cam=new THREE.PerspectiveCamera(50,W/H,0.1,1800); cam.position.set(52,28,52);
 var ren;
-try{ren=new THREE.WebGLRenderer({antialias:true});}
+try{ren=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}
 catch(rendererError12NJ){CF_RENDER_RECOVERY_12NJ.phase='renderer initialization failed';cfRenderNotice12NJ('The graphics renderer could not initialize: '+String(rendererError12NJ.message||rendererError12NJ));if(window.CFStartup12LJ)window.CFStartup12LJ.note('3D renderer initialization',rendererError12NJ);throw rendererError12NJ;} ren.setPixelRatio(Math.min(devicePixelRatio,1.25)); ren.setSize(W,H);
 ren.outputEncoding=THREE.sRGBEncoding; ren.toneMapping=THREE.ACESFilmicToneMapping; ren.toneMappingExposure=1.15;
 box.appendChild(ren.domElement);cfInstallRenderRecovery12NJ();
@@ -2334,7 +2526,9 @@ function cfQuality12JG(mode){
 }
 function cfUpdateDetail12JG(now,force){
  if(!force&&now-CF_PERF_12JG.lastDetailUpdate<250)return;CF_PERF_12JG.lastDetailUpdate=now;
- var radius=CF_PERF_12JG.detailRadius,shown=0;
+ var radius=CF_PERF_12JG.detailRadius,shown=0,p=cam.position,prior=CF_PERF_12JG.detailCamera12PN;
+ if(!force&&prior&&prior.x===p.x&&prior.y===p.y&&prior.z===p.z&&prior.radius===radius&&prior.key===selKey){CF_VIEW_12PN.detailSkips++;return;}
+ CF_PERF_12JG.detailCamera12PN={x:p.x,y:p.y,z:p.z,radius:radius,key:selKey};
  CF_DETAIL_12JG.forEach(function(d){var close=radius===Infinity||d.key===selKey||cam.position.distanceToSquared(d.center)<radius*radius;
   if(close)shown++;if(d.shown===close)return;d.shown=close;d.mesh.userData.qualityCulled12JG=!close;
   if(d.mesh.layers){if(close)d.mesh.layers.mask=d.layerMask;else d.mesh.layers.mask=0;}
@@ -2490,7 +2684,7 @@ function psvB(x,y,z,outDir,s,k,axis){var b=new THREE.Mesh(cfBoxGeometry12JG(s*3.
    x = East, z = North, y = elevation (ground = 0).
    ═══════════════════════════════════════════════════════════════ */
 function label(txt,x,y,z,s,k,col){
- var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:cfLabelBlank12ML(),depthTest:false,transparent:true}));
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:cfLabelBlank12ML(),depthTest:false,transparent:true,toneMapped:false}));
  sp.scale.set((s||1)*4.2,(s||1)*0.79,1);sp.position.set(x,y,z);sp.visible=false;
  sp.userData.label12ml={text:String(txt),color:col||'#5fa8f5',key:k||'',textureKey:null};
  sp.onBeforeRender=function(renderer){try{cfEnsureLabel12ML(sp,renderer);}catch(e){cfReportPerformanceError12ML('Equipment label',e);}};
@@ -2625,7 +2819,7 @@ function cfNglParts12IC(k,x,y,z,rotation){
  function box(w,h,d,px,py,pz,mat,part,main,parent){return put(cfBoxGeometry12JG(w,h,d),mat,[px,py,pz],part,main,parent);}
  function cyl(r,h,px,py,pz,mat,axis,part,main,parent){var m=put(cfCylinderGeometry12JG(r,r,h,24),mat,[px,py,pz],part,main,parent);if(axis==='x')m.rotation.z=Math.PI/2;else if(axis==='z')m.rotation.x=Math.PI/2;return m;}
  function ring(r,t,px,py,pz,mat,axis,part,main){var m=put(cfTorusGeometry12JG(r,t,6,36),mat,[px,py,pz],part,main);if(axis==='x')m.rotation.y=Math.PI/2;else if(axis==='y')m.rotation.x=Math.PI/2;return m;}
- function plaque(top,sub,w,h,px,py,pz,ry){var c=document.createElement('canvas');c.width=768;c.height=256;var ctx=c.getContext('2d');ctx.fillStyle='#112938';ctx.fillRect(0,0,768,256);ctx.strokeStyle='#c1d1dc';ctx.lineWidth=5;ctx.strokeRect(7,7,754,242);ctx.textAlign='center';ctx.fillStyle='#eef5f8';ctx.font='bold 72px Arial';ctx.fillText(top,384,96);ctx.fillStyle='#bfd1dc';ctx.font='28px Arial';ctx.fillText(sub,384,164);ctx.font='19px Arial';ctx.fillText('SCHEMATIC MODEL',384,217);var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}),[px,py,pz],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';return m;}
+ function plaque(top,sub,w,h,px,py,pz,ry){var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:cfCreateEquipmentPlaque12PN(top,sub,w,h),toneMapped:false}),[px,py,pz],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';CF_VIEW_12PN.genericPlaques.push(m);return m;}
  var r={key:k,group:g,parts:parts,primary:primary,fans:[],authority:'SCHEMATIC_VISUAL_ONLY'};CF_NGL_VISUALS_12IC.push(r);return {g:g,parts:parts,primary:primary,m:mats,put:put,box:box,cyl:cyl,ring:ring,plaque:plaque,record:r};
 }
 function cfSurgeVessel12IC(k,x,z,len,r,mat,rotY,liftY){
@@ -2696,7 +2890,7 @@ function cfVesselParts12IG(k,g){
  function box(w,h,d,x,y,z,mat,part,main){return put(cfBoxGeometry12JG(w,h,d),mat,[x,y,z],part,main);}
  function cyl(r,h,x,y,z,mat,axis,part,main){var m=put(cfCylinderGeometry12JG(r,r,h,24),mat,[x,y,z],part,main);if(axis==='x')m.rotation.z=Math.PI/2;else if(axis==='z')m.rotation.x=Math.PI/2;return m;}
  function ring(r,t,x,y,z,mat,axis,part,main){var m=put(cfTorusGeometry12JG(r,t,6,36),mat,[x,y,z],part,main);if(axis==='x')m.rotation.y=Math.PI/2;else if(axis==='y')m.rotation.x=Math.PI/2;return m;}
- function plaque(top,sub,w,h,x,y,z,ry){var c=document.createElement('canvas');c.width=768;c.height=256;var ct=c.getContext('2d');ct.fillStyle='#132d40';ct.fillRect(0,0,768,256);ct.strokeStyle='#bfd0dd';ct.lineWidth=5;ct.strokeRect(7,7,754,242);ct.textAlign='center';ct.fillStyle='#eef7fa';ct.font='bold 72px Arial';ct.fillText(top,384,96);ct.font='27px Arial';ct.fillText(sub,384,164);ct.font='19px Arial';ct.fillText('SCHEMATIC MODEL',384,217);var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}),[x,y,z],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';return m;}
+ function plaque(top,sub,w,h,x,y,z,ry){var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:cfCreateEquipmentPlaque12PN(top,sub,w,h),toneMapped:false}),[x,y,z],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';CF_VIEW_12PN.genericPlaques.push(m);return m;}
  var record={key:k,parts:parts,primary:primary,authority:'SCHEMATIC_VISUAL_ONLY'};CF_CHILLER_VISUALS_12IG.push(record);return {put:put,box:box,cyl:cyl,ring:ring,plaque:plaque,m:M,parts:parts,primary:primary,record:record};
 }
 function cfDetailChiller12IG(k,g){
@@ -2739,7 +2933,7 @@ function cfVesselParts12IH(k,g){
  function box(w,h,d,x,y,z,mat,part,main){return put(cfBoxGeometry12JG(w,h,d),mat,[x,y,z],part,main);}
  function cyl(r,h,x,y,z,mat,axis,part,main){var m=put(cfCylinderGeometry12JG(r,r,h,24),mat,[x,y,z],part,main);if(axis==='x')m.rotation.z=Math.PI/2;else if(axis==='z')m.rotation.x=Math.PI/2;return m;}
  function ring(r,t,x,y,z,mat,axis,part,main){var m=put(cfTorusGeometry12JG(r,t,6,36),mat,[x,y,z],part,main);if(axis==='x')m.rotation.y=Math.PI/2;else if(axis==='y')m.rotation.x=Math.PI/2;return m;}
- function plaque(top,sub,w,h,x,y,z,ry){var c=document.createElement('canvas');c.width=768;c.height=256;var ct=c.getContext('2d');ct.fillStyle='#132d40';ct.fillRect(0,0,768,256);ct.strokeStyle='#bfd0dd';ct.lineWidth=5;ct.strokeRect(7,7,754,242);ct.textAlign='center';ct.fillStyle='#eef7fa';ct.font='bold 72px Arial';ct.fillText(top,384,96);ct.font='27px Arial';ct.fillText(sub,384,164);ct.font='19px Arial';ct.fillText('SCHEMATIC MODEL',384,217);var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}),[x,y,z],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';return m;}
+ function plaque(top,sub,w,h,x,y,z,ry){var m=put(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:cfCreateEquipmentPlaque12PN(top,sub,w,h),toneMapped:false}),[x,y,z],'equipment-plaque',false);m.rotation.y=ry||0;m.userData.label=top+' | '+sub+' | SCHEMATIC MODEL';CF_VIEW_12PN.genericPlaques.push(m);return m;}
  var record={key:k,parts:parts,primary:primary,authority:'SCHEMATIC_VISUAL_ONLY'};CF_REFRIG_VISUALS_12IH.push(record);return {put:put,box:box,cyl:cyl,ring:ring,plaque:plaque,m:M,parts:parts,primary:primary,record:record};
 }
 
@@ -6327,6 +6521,7 @@ function cfInstallInspection12MC(){
 }
 
 function cf3dInspectDevice(k,host){
+ if(!host||host.id==='plist')cfCloseLocalPopup12PQ();
  var r=cfInspectionRecord12MC(k);if(!r)return false;
  if(!host||host.id==='plist')cfResetInspectionHost12NJ();
  if(r.fieldDevice&&!r.inspectionEquipment12MC)return cf3dInspectField(r,host);
@@ -6340,6 +6535,7 @@ function cf3dInspectDevice(k,host){
  var li=doc.createElement('li');li.style.listStyle='none';list.appendChild(li);
  var card=doc.createElement('section');card.className='cf-inspection-card12mc';card.setAttribute('data-device-record',r.assetId);card.setAttribute('data-inspection-version','12MK');li.appendChild(card);
  var banner=doc.createElement('div');banner.style.cssText='font-weight:700;color:#8fddd4;font-size:13px;margin-bottom:10px';banner.textContent=(isEquipment?'EQUIPMENT RECORD':r.kind==='psv'?'PSV RECORD':isValve?'VALVE RECORD':'COMPONENT RECORD')+' | Read-only inspection';card.appendChild(banner);
+ cfAttachLocalReading12PQ(r,card,host);
  cf3dFunctionDescription12GY(r,card);
  if(isEquipment){var descTitle=card.querySelector('[data-device-description] strong');if(descTitle)descTitle.textContent='Equipment purpose';}
  var summary=[[isEquipment?'Equipment tag':isValve?'Valve number / tag':'Component tag',r.tag,'tag'],['Service',r.service,'service'],['Manufacturer / model',[r.manufacturer,r.model].filter(Boolean).join(' / '),'manufacturer'],['Stable model ID',r.assetId,'assetId']];
@@ -6481,10 +6677,10 @@ CF3D_FIELD_DEVICES.forEach(function(v){if(!v.directHost)return;
 });
 
 function cf3dFieldReading(v){
- if(!v||!Array.isArray(v.livePath)||typeof PLANT==='undefined'||!PLANT)return null;
- var x=PLANT;for(var i=0;i<v.livePath.length;i++){if(x==null)return null;x=x[v.livePath[i]];}
- if(x==null||typeof x!=='number'||!Number.isFinite(x))return null;
- return {value:x,unit:v.unit,text:x.toFixed(2)+' '+v.unit+' - read-only simulator indication'};
+ var key=v&&(v.assetId||v.key),r=key&&CF3D_DEVICE_RECORDS[key],rows=r&&cfLocalRows12PQ(r);
+ if(!rows||!rows.length)return null;
+ var available=rows.filter(function(x){return x.available;});if(!available.length)return null;
+ return {value:available.length===1?available[0].value:null,unit:available.length===1?available[0].unit:'',text:available.map(function(x){return x.screenTitle+': '+x.formatted+' '+x.unit;}).join(' | '),screenReadings:rows};
 }
 function cf3dInstallField(v){
  function skip(reason){CF3D_FIELD_AUDIT.skipped.push({key:v.key,tag:v.tag,reason:reason});}
@@ -6606,17 +6802,18 @@ CF3D_FIELD_AUDIT.deferred=CF3D_FIELD_AUDIT.deferred.concat([{"tag":"FT-1421A","k
 CF3D_FIELD_AUDIT.legacyRetired={transmitterDetails:4,leadRuns:5,removedConstructors:["mvalve","instr","meter"]};
 CF3D_FIELD_DEVICES.forEach(cf3dInstallField);
 function cf3dInspectField(r,host){
+ if(!host||host.id==='plist')cfCloseLocalPopup12PQ();
  r=cfInspectionRecord12MC(r.assetId||r.key,r)||r;
  var title,list;if(host){host.textContent='';title=document.createElement('h2');list=document.createElement('div');host.appendChild(title);host.appendChild(list);}else{title=document.getElementById('ptitle');list=document.getElementById('plist');}
  if(!title||!list)return false;title.textContent=r.tag+' - '+({manual:'MANUAL VALVE',check:'CHECK VALVE',flowmeter:'FLOW METER',restriction:'RESTRICTION ORIFICE',strainer:'STRAINER',psv:'PRESSURE SAFETY VALVE',regulator:'PRESSURE REGULATOR',differential:'DIFFERENTIAL INSTRUMENT',instrument:'INSTRUMENT'}[r.kind]||'COMPONENT');list.textContent='';
  var card=document.createElement('li');card.style.cssText='list-style:none;border:1px solid #344557;border-radius:8px;padding:12px;background:#101820;color:#dce6ef;';card.setAttribute('data-device-record',r.assetId);list.appendChild(card);
+ cfAttachLocalReading12PQ(r,card,host);
  var dl=document.createElement('dl');dl.className='cf-inspection-grid12mc';dl.style.fontSize='12px';card.appendChild(dl);
  function field(name,value,id){var dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=value==null||value===''?'Pending source / field verification':String(value);dd.style.cssText='margin:0;overflow-wrap:anywhere;white-space:pre-wrap';if(id)dd.setAttribute('data-device-field',id);dl.appendChild(dt);dl.appendChild(dd);}
  field('Number / instrument tag',r.tagConfirmed?r.tag:'Pending - '+r.tag,'tag');field('Equipment / service',[r.equipment,r.service].filter(Boolean).join(' / ')||'Not assigned in the exact record','equipment');field('P&ID',r.drawings.join(' | '),'drawing');field('Page / revision',[r.page,r.revision].filter(Boolean).join(' / '));field('Drawing location / grid',r.drawingLocation);field('Model location',r.location,'physicalLocation');field('Source',r.source,'source');field('Verification status',r.status,'status');field('Stable model ID',r.assetId,'assetId');
  r.specifications.forEach(function(p){field(p[0],p[1]);});
  cfRenderInspectionEvidence12MC(r,card);
  cfRenderEquipmentDossier12MD(r,card);
- if(['instrument','flowmeter','differential'].includes(r.kind)||(r.sourceRecord&&Array.isArray(r.sourceRecord.livePath))){var reading=document.createElement('div');reading.setAttribute('data-cf-field-live',r.assetId);reading.style.cssText='padding:8px;background:#192734;color:#9fdfed;margin:8px 0;font:12px Consolas,monospace;';card.appendChild(reading);}
  var warning=document.createElement('p');warning.style.cssText='font-size:11px;color:#d7c7a1';warning.textContent='Schematic geometry, not surveyed Navisworks coordinates. Read-only: no change to valve lineup, flow, equipment state, alarm limits or safety protection.';card.appendChild(warning);
  var actions=document.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;';card.appendChild(actions);
  function button(t,fn){var b=document.createElement('button');b.type='button';b.textContent=t;b.style.cssText='padding:7px 11px;font-size:11px;min-height:30px';b.onclick=fn;actions.appendChild(b);}
@@ -6626,10 +6823,7 @@ function cf3dInspectField(r,host){
  if(typeof cfRefFlyButton==='function')cfRefFlyButton(r.assetId,card);
  cf3dRefreshFieldReadings();return true;
 }
-function cf3dRefreshFieldReadings(){
- if(!document.querySelectorAll)return;
- document.querySelectorAll('[data-cf-field-live]').forEach(function(e){var r=cf3dDeviceRecord(e.getAttribute('data-cf-field-live')),a=r&&cf3dFieldReading(r.sourceRecord);e.textContent=a?a.text:'Simulator value not available yet - no value is guessed.';});
-}
+function cf3dRefreshFieldReadings(){cfRefreshLocalReadings12PQ();}
 function cf3dRevealField(k){var r=cf3dDeviceRecord(k);if(!r||!r.fieldDevice)return;
  if(r.kind==='manual'){showMV=true;document.getElementById('mvchk').checked=true;}else{showInst=true;document.getElementById('instchk').checked=true;}applyLayers();
 }
@@ -7462,6 +7656,7 @@ function resolveEquipKey(k){
  return k;
 }
 function show(k){
+ cfCloseLocalPopup12PQ();
  cfResetInspectionHost12NJ();
  if(typeof cf3dInspectDevice==='function'&&cf3dInspectDevice(k))return;
  if(k && k.indexOf('pipeTo_')===0){
@@ -8062,46 +8257,82 @@ function schedBulkApply(S,empId,startStr,endStr,newCode){
  while(dd<=d1&&n<90){entries.push(schedChangeOne(S,empId,dd.toISOString().slice(0,10),newCode));dd.setDate(dd.getDate()+1);n++;}
  return entries;
 }
+/* 12PP: bounded local-archive failures, explicit save status and no data clearing. */
+var CF_ARCHIVE_STATUS_12PP=Object.create(null),CF_ARCHIVE_PENDING_12PP=Object.create(null);
+var OFF_SESSION_12PP=null,OFF_BLOB_URL_12PP=null,OFF_VIEW_TOKEN_12PP=0,OFF_PAUSE_12PP=null;
+function cfArchiveStatus12PP(key,state,message){
+ var row=CF_ARCHIVE_STATUS_12PP[key]||(CF_ARCHIVE_STATUS_12PP[key]={state:'not-read',message:'',pending:0});
+ row.state=state;row.message=message||'';row.pending=Object.keys(CF_ARCHIVE_PENDING_12PP[key]||{}).length;
+ document.querySelectorAll('[data-cf-archive-status12pp="'+key+'"]').forEach(function(el){el.textContent=row.message;el.hidden=!row.message;});
+ return row;
+}
+function cfArchiveNotice12PP(key){var r=CF_ARCHIVE_STATUS_12PP[key],m=r&&r.message||'';return '<div data-cf-archive-status12pp="'+key+'" role="status"'+(!m?' hidden':'')+' style="margin:8px 0;padding:10px;border:1px solid #b79351;border-radius:6px;background:#fff3d3;color:#3e301b;font:13px/1.5 system-ui">'+schedEsc(m)+'</div>';}
+function cfArchiveResult12PP(key,ids,ok){
+ var p=CF_ARCHIVE_PENDING_12PP[key]||(CF_ARCHIVE_PENDING_12PP[key]=Object.create(null));
+ (ids||[]).forEach(function(id){if(ok)delete p[id];else p[id]=true;});
+ var count=Object.keys(p).length;
+ cfArchiveStatus12PP(key,count?'not-saved':'saved',count?'Local save is NOT confirmed for '+count+' item(s). Changes remain in this tab only. Existing saved records were not cleared. Keep this tab open and retain a backup before retrying.':'');
+ return !!ok;
+}
+function cfArchiveOpen12PP(key,name,store,cb){
+ libOpenDatabase(name,1,function(db){if(!db.objectStoreNames.contains(store))db.createObjectStore(store,{keyPath:'id'});},function(db){
+  if(!db)cfArchiveStatus12PP(key,'unavailable','Local '+key+' storage is blocked or unavailable. Existing saved data was not cleared. New changes are session-only until a save is confirmed.');
+  cb(db);
+ });
+}
+function cfArchiveRead12PP(key,db,store,cb){libReadStore(db,store,function(rows,ok){if(!ok)cfArchiveStatus12PP(key,'read-failed','The saved '+key+' archive could not be read. This is not an empty archive; existing records remain untouched.');else if(!Object.keys(CF_ARCHIVE_PENDING_12PP[key]||{}).length)cfArchiveStatus12PP(key,'ready','');cb(rows,ok);});}
+function cfArchiveWrite12PP(key,db,store,rows,cb){
+ var ids=rows.map(function(r){return String(r.id);});cfArchiveResult12PP(key,ids,false);
+ libWriteStore(db,store,rows,function(ok){cfArchiveResult12PP(key,ids,ok);if(cb)cb(!!ok);});
+}
+function cfScheduleLoadedShape12PP(saved){
+ // Keep dated schedules without rotations. Do not replace user edits with a seed.
+ if(!saved||typeof saved!=='object'||!Array.isArray(saved.employees)||!saved.shifts||typeof saved.shifts!=='object'||Array.isArray(saved.shifts))return null;
+ var out=JSON.parse(JSON.stringify(saved)),keys=Object.keys(out.shifts),arrays=keys.some(function(k){return Array.isArray(out.shifts[k]);});
+ if(arrays){
+  // Only the explicitly retained legacy startDate + per-employee offset arrays.
+  if(!cfSchedValidDate12NB(out.startDate)||!keys.every(function(k){return Array.isArray(out.shifts[k]);}))return null;
+  out.legacySchedule12PP={startDate:out.startDate,shifts:JSON.parse(JSON.stringify(out.shifts))};
+  keys.forEach(function(k){var dates={};out.shifts[k].forEach(function(value,i){if(value!==null&&value!==undefined)dates[cfSchedOffset12NB(out.startDate,i)]=value;});out.shifts[k]=dates;});
+ }
+ if(!keys.every(function(k){var v=out.shifts[k];return v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(cfSchedValidDate12NB);}))return null;
+ if(!out.rotations)out.rotations={};if(!out.notes)out.notes={};if(!out.dayNotes)out.dayNotes={};return out;
+}
+function cfOfficialReleaseUrl12PP(){if(OFF_BLOB_URL_12PP){try{URL.revokeObjectURL(OFF_BLOB_URL_12PP);}catch(e){}OFF_BLOB_URL_12PP=null;}}
+function cfPhysicsDiagnostic12PP(P){
+ var V=P.v||{},L=P.L||{},a=V.physicsAudit||{},finite=function(n){return typeof n==='number'&&Number.isFinite(n);};
+ var checks=[
+  {id:'refrigerant_charge_conserved',ok:finite(V.refrigChargeError)&&Math.abs(V.refrigChargeError)<.75},
+  {id:'refrigerant_levels_finite',ok:[V.lt1444,L.LCV1442&&L.LCV1442.pv,L.LCV1241&&L.LCV1241.pv].every(function(n){return finite(n)&&n>=0&&n<=100;})},
+  {id:'hot_oil_users_not_exceed_common_flow',ok:finite(a.hotOilFlowResidual)&&a.hotOilFlowResidual>-50},
+  {id:'tic5000c_owns_tv5005a',ok:null,status:'NOT_INDEPENDENTLY_MEASURED',controllerOutput:L.TIC5000C&&finite(L.TIC5000C.out)?L.TIC5000C.out:null,basis:'The retained HMI and model use TIC-5000C output. No independent TV-5005A position feedback is available here; a controller compared with itself is not an ownership test.'}
+ ];
+ return {build:'12PP',pass:checks.filter(function(c){return c.ok!==null;}).every(function(c){return c.ok;}),allChecksVerified:checks.every(function(c){return c.ok===true;}),scope:'Available numeric checks only. Not whole-plant acceptance or engineering certification.',refrigerant:{chargeIndex:V.refrigChargeIndex,chargeError:V.refrigChargeError,residual:V.refrigChargeResidual,receiver:V.lt1444,economizer:L.LCV1442&&L.LCV1442.pv,chiller:L.LCV1241&&L.LCV1241.pv,vaporPool:V.refrigVaporInventory},hotOil:{commonFlow:a.hotOilCommonFlow,userFlow:a.hotOilUserFlow,residual:a.hotOilFlowResidual,userDemand:V.hotOilUserDemand,heaterDemand:V.hotOilDemand},inlet:{pit1000:V.pit1000,picSP:L.PIC1010&&L.PIC1010.sp,picPV:L.PIC1010&&L.PIC1010.pv,pv1010:L.PIC1010&&L.PIC1010.out,feedCap:V.inletFeedCap,leakMmscfd:P.in&&P.in.inletLeakMmscfd||0},checks:checks};
+}
+var OFF_UPLOAD_TOKEN_12PP=0;
+function cfReadFile12PP(file,method,cb){
+ var reader=null,done=false,timer=setTimeout(function(){finish(null,false);if(reader)try{reader.abort();}catch(e){}},60000);
+ function finish(value,ok){if(done)return;done=true;clearTimeout(timer);cb(value,ok);}
+ try{reader=new FileReader();reader.onload=function(){finish(reader.result,typeof reader.result==='string');};reader.onerror=reader.onabort=function(){finish(null,false);};if(method==='text')reader.readAsText(file);else if(method==='dataURL')reader.readAsDataURL(file);else finish(null,false);}catch(e){finish(null,false);}
+}
+
 var SCHEDDB=null;
-function schedDbOpen(cb){
- if(SCHEDDB){cb(SCHEDDB);return;}
- var req=indexedDB.open('ClearforkSchedule',1);
- req.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('sched')){db.createObjectStore('sched',{keyPath:'id'});}};
- req.onsuccess=function(e){SCHEDDB=e.target.result;cb(SCHEDDB);};
- req.onerror=function(){alert('Could not open local schedule storage \u2014 your browser may be blocking IndexedDB (private/incognito mode does this). Schedule edits will not be saved this session.');cb(null);};
-}
-function schedDbLoad(cb){
- schedDbOpen(function(db){
-  if(!db){cb(null);return;}
-  var tx=db.transaction('sched','readonly'),req=tx.objectStore('sched').get('main');
-  req.onsuccess=function(){cb(req.result?req.result.data:null);};
-  req.onerror=function(){cb(null);};
- });
-}
+function schedDbOpen(cb){cfArchiveOpen12PP('schedule','ClearforkSchedule','sched',function(db){SCHEDDB=db;cb(db);});}
+function schedDbLoad(cb){schedDbOpen(function(db){cfArchiveRead12PP('schedule',db,'sched',function(rows,ok){var r=rows.find(function(x){return x&&x.id==='main';});cb(r?r.data:null,ok);});});}
 function schedDbSave(data,cb){
- schedDbOpen(function(db){
-  if(!db){if(cb)cb();return;}
-  var tx=db.transaction('sched','readwrite');
-  tx.objectStore('sched').put({id:'main',data:data,saved:Date.now()});
-  tx.oncomplete=function(){if(cb)cb();};
- });
+ if(PLANT._schedLoadFailed12PP){cfArchiveResult12PP('schedule',['main'],false);cfArchiveStatus12PP('schedule','read-failed','The original saved Schedule was not successfully read. Saving this temporary view is blocked to prevent overwriting it. Keep any new notes separately; reopen the page when storage is available.');if(cb)cb(false);return;}
+ schedDbOpen(function(db){cfArchiveWrite12PP('schedule',db,'sched',[{id:'main',data:data,saved:Date.now()}],cb);});
 }
 function schedEnsureLoaded(cb){
- if(PLANT.sched){cb();return;}
- schedDbLoad(function(saved){
-  /* Migration guard: the previous version of this schedule stored shifts as
-     day-offset arrays from a fixed startDate, which goes stale by definition
-     (it would keep showing June 2026 forever). The new format is keyed by
-     real calendar date and has a `rotations` key. If what's saved is the old
-     shape, re-seed instead of loading it -- carrying forward stale/incorrect
-     data would be worse than losing a session's worth of test edits, and
-     nothing of real value (no genuine schedule edits were made under the old
-     shape) would be lost by doing this. */
-  var isOldFormat=saved&&(saved.startDate!=null||saved.rotations==null);
-  PLANT.sched=(saved&&!isOldFormat)?saved:JSON.parse(JSON.stringify(SCHED_SEED));
-  if(!PLANT.sched.notes)PLANT.sched.notes={};
-  if(!PLANT.sched.dayNotes)PLANT.sched.dayNotes={};
-  cb();
+ if(PLANT.sched){if(cb)cb();return;}
+ if(PLANT._schedWaiters12PP){if(cb)PLANT._schedWaiters12PP.push(cb);return;}
+ PLANT._schedWaiters12PP=cb?[cb]:[];
+ schedDbLoad(function(saved,ok){
+  var normalized=saved?cfScheduleLoadedShape12PP(saved):null;
+  PLANT._schedLoadFailed12PP=ok===false||!!(saved&&!normalized);
+  if(PLANT._schedLoadFailed12PP)cfArchiveStatus12PP('schedule','read-failed',saved?'Saved Schedule format could not be safely interpreted. The stored original is unchanged; this temporary view will not overwrite it.':'Saved Schedule is unavailable. This temporary session view is not the saved archive and cannot overwrite it.');
+  PLANT.sched=normalized||JSON.parse(JSON.stringify(SCHED_SEED));
+  var callbacks=PLANT._schedWaiters12PP||[];PLANT._schedWaiters12PP=null;callbacks.forEach(function(fn){fn();});
  });
 }
 function schedSave(){schedDbSave(PLANT.sched);}
@@ -8114,44 +8345,29 @@ function schedDateStr(base,offset){var d=new Date(base+'T00:00:00');d.setDate(d.
    database/store so a schedule-storage failure can never take permits down
    with it (and vice versa). ═══ */
 var PERMITSDB=null;
-function permitsDbOpen(cb){
- if(PERMITSDB){cb(PERMITSDB);return;}
- var req=indexedDB.open('ClearforkWorkPermits',1);
- req.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('permits')){db.createObjectStore('permits',{keyPath:'id'});}};
- req.onsuccess=function(e){PERMITSDB=e.target.result;cb(PERMITSDB);};
- req.onerror=function(){alert('Could not open local work permit storage \u2014 your browser may be blocking IndexedDB (private/incognito mode does this). Closed work permits will not be saved this session.');cb(null);};
-}
-function permitsDbLoadAll(cb){
- permitsDbOpen(function(db){
-  if(!db){cb([]);return;}
-  var tx=db.transaction('permits','readonly'),req=tx.objectStore('permits').getAll();
-  req.onsuccess=function(){cb(req.result||[]);};
-  req.onerror=function(){cb([]);};
- });
-}
-function permitsDbAdd(permit,cb){
- permitsDbOpen(function(db){
-  if(!db){if(cb)cb();return;}
-  var tx=db.transaction('permits','readwrite');
-  tx.objectStore('permits').put(permit);
-  tx.oncomplete=function(){if(cb)cb();};
- });
-}
+function permitsDbOpen(cb){cfArchiveOpen12PP('permits','ClearforkWorkPermits','permits',function(db){PERMITSDB=db;cb(db);});}
+function permitsDbLoadAll(cb){permitsDbOpen(function(db){cfArchiveRead12PP('permits',db,'permits',cb);});}
+function permitsDbAdd(permit,cb){permitsDbOpen(function(db){cfArchiveWrite12PP('permits',db,'permits',[permit],cb);});}
 function workPermitsEnsureLoaded(cb){
- if(PLANT.workPermits){cb();return;}
- permitsDbLoadAll(function(items){
-  items.sort(function(a,b){return (b.addedAt||0)-(a.addedAt||0);}); /* newest archived first */
-  PLANT.workPermits=items;
-  cb();
- });
+ if(PLANT.workPermits){if(cb)cb();return;}
+ permitsDbLoadAll(function(items,ok){var seen=Object.create(null);PLANT.workPermits=(PLANT.workPermits||[]).concat(items||[]).filter(function(r){if(!r||!r.id||seen[r.id])return false;seen[r.id]=true;return true;}).sort(function(a,b){return (b.addedAt||0)-(a.addedAt||0);});PLANT._permitsReadFailed12PP=ok===false;if(cb)cb();});
 }
 /* 12BS End-of-Shift Report archive -- permanent local audit store. */
 var SHIFTREPORTDB=null;
-function shiftReportDbOpen(cb){if(SHIFTREPORTDB){cb(SHIFTREPORTDB);return;}var q=indexedDB.open('ClearforkEndShiftReports',1);q.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('reports'))db.createObjectStore('reports',{keyPath:'id'});};q.onsuccess=function(e){SHIFTREPORTDB=e.target.result;cb(SHIFTREPORTDB);};q.onerror=function(){cb(null);};}
-function shiftReportDbAll(cb){shiftReportDbOpen(function(db){if(!db){cb([]);return;}var tx=db.transaction('reports','readonly'),q=tx.objectStore('reports').getAll();q.onsuccess=function(){cb(q.result||[]);};q.onerror=function(){cb([]);};});}
-function shiftReportDbPut(rec,cb){shiftReportDbOpen(function(db){if(!db){if(cb)cb();return;}var tx=db.transaction('reports','readwrite');tx.objectStore('reports').put(rec);tx.oncomplete=function(){if(cb)cb();};});}
-function shiftReportsEnsureLoaded(cb){if(PLANT.shiftReports){cb&&cb();return;}shiftReportDbAll(function(a){a.sort(function(x,y){return (y.addedAt||0)-(x.addedAt||0);});PLANT.shiftReports=a;cb&&cb();});}
-function shiftReportIngestFiles(fileList,cb){var fs=Array.from(fileList||[]).filter(function(f){return /\.(xlsx|csv|txt)$/i.test(f.name)||/spreadsheet|csv|text\//i.test(f.type||'');});if(!fs.length){alert('Choose an .xlsx, .csv, or .txt end-of-shift report.');if(cb)cb();return;}var n=fs.length;fs.forEach(function(f){var rd=new FileReader();rd.onload=function(){var rec={id:'sr-'+Date.now()+'-'+Math.floor(Math.random()*100000),name:f.name,mediaType:f.type||(/\.xlsx$/i.test(f.name)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/plain'),dataUrl:rd.result,size:f.size,addedAt:Date.now(),reviewed:false,brainInstalled:false,brainRecordCount:0};if(!PLANT.shiftReports)PLANT.shiftReports=[];PLANT.shiftReports.unshift(rec);shiftReportDbPut(rec);if(--n===0&&cb)cb();};rd.readAsDataURL(f);});}
+function shiftReportDbOpen(cb){cfArchiveOpen12PP('reports','ClearforkEndShiftReports','reports',function(db){SHIFTREPORTDB=db;cb(db);});}
+function shiftReportDbAll(cb){shiftReportDbOpen(function(db){cfArchiveRead12PP('reports',db,'reports',cb);});}
+function shiftReportDbPut(rec,cb){shiftReportDbOpen(function(db){cfArchiveWrite12PP('reports',db,'reports',[rec],cb);});}
+function shiftReportsEnsureLoaded(cb){
+ if(PLANT.shiftReports){if(cb)cb();return;}
+ shiftReportDbAll(function(items,ok){var seen=Object.create(null);PLANT.shiftReports=(PLANT.shiftReports||[]).concat(items||[]).filter(function(r){if(!r||!r.id||seen[r.id])return false;seen[r.id]=true;return true;}).sort(function(a,b){return (b.addedAt||0)-(a.addedAt||0);});PLANT._reportsReadFailed12PP=ok===false;if(cb)cb();});
+}
+function shiftReportIngestFiles(fileList,cb){
+ var files=Array.from(fileList||[]).filter(function(f){return /\.(xlsx|csv|txt)$/i.test(f.name)||/spreadsheet|csv|text\//i.test(f.type||'');});
+ if(!files.length){alert('Choose an .xlsx, .csv, or .txt end-of-shift report.');if(cb)cb({loaded:0,saved:0,readFailed:0,saveFailed:0});return;}
+ var remaining=files.length,result={loaded:0,saved:0,readFailed:0,saveFailed:0};
+ function finish(){if(--remaining)return;if(result.readFailed)cfArchiveStatus12PP('reports','read-failed',result.readFailed+' selected report file(s) could not be read. They were not imported; existing records were unchanged.'+(result.saveFailed?' '+result.saveFailed+' readable report(s) are in this tab only; their saves were not confirmed.':''));if(cb)cb(result);}
+ files.forEach(function(f){cfReadFile12PP(f,'dataURL',function(data,ok){if(!ok){result.readFailed++;finish();return;}var rec={id:'sr-'+Date.now()+'-'+Math.floor(Math.random()*100000),name:f.name,mediaType:f.type||(/\.xlsx$/i.test(f.name)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/plain'),dataUrl:data,size:f.size,addedAt:Date.now(),reviewed:false,brainInstalled:false,brainRecordCount:0};if(!PLANT.shiftReports)PLANT.shiftReports=[];PLANT.shiftReports.unshift(rec);result.loaded++;shiftReportDbPut(rec,function(saved){if(saved)result.saved++;else result.saveFailed++;finish();});});});
+}
 /* ═══ Custody Transfer Daily Log (added this session, Plant Outlet page) --
    same permanent-archive philosophy as the Work Permits folder: custody
    transfer readings (NGL/residue totals at the pipeline tie-in) are exactly
@@ -8182,7 +8398,11 @@ var PDFDB=null,PDF_REC_CACHE=null,PDF_REC_LOADING=false,PDF_REC_WAITERS=[];
 function pdfDbInvalidate(){PDF_REC_CACHE=null;}
 function pdfDbOpen(cb){libOpenDatabase('ClearforkPDFLib',1,function(db){if(!db.objectStoreNames.contains('pdfs'))db.createObjectStore('pdfs',{keyPath:'id',autoIncrement:true});},function(db){PDFDB=db;cb(db);});}
 function pdfDbAll(cb,force){if(PDF_REC_CACHE&&!force){cb(PDF_REC_CACHE.slice(),true);return;}if(cb)PDF_REC_WAITERS.push(cb);if(PDF_REC_LOADING)return;PDF_REC_LOADING=true;pdfDbOpen(function(db){libReadStore(db,'pdfs',function(rows,ok){if(ok)PDF_REC_CACHE=rows;PDF_REC_LOADING=false;var result=(PDF_REC_CACHE||[]).slice(),callbacks=PDF_REC_WAITERS.splice(0);if(!ok)libStorageWarning('Attachment storage could not be read. Original attachments were not cleared.');callbacks.forEach(function(fn){try{fn(result,ok);}catch(e){console.error('[Attachment view]',e);}});});});}
-function pdfDbAdd(rec,cb){pdfDbOpen(function(db){var tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').add(cfSourceStoredRecord12HO(rec));tx.oncomplete=function(){pdfDbInvalidate();if(cb)cb();};});}
+function pdfDbAdd(rec,cb){pdfDbOpen(function(db){
+ var tx=null,done=false,timer=setTimeout(function(){finish(false);if(tx)try{tx.abort();}catch(e){}},5000);
+ function finish(ok){if(done)return;done=true;clearTimeout(timer);if(ok)pdfDbInvalidate();else libStorageWarning('Attachment save was not confirmed. Existing saved attachments were not cleared. Keep the source file and retry when storage is available.');if(cb)cb(ok);}
+ if(!db){finish(false);return;}try{tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').add(cfSourceStoredRecord12HO(rec));tx.oncomplete=function(){finish(true);};tx.onerror=tx.onabort=function(){finish(false);};}catch(e){if(tx)try{tx.abort();}catch(ignore){}finish(false);}
+ });}
 function pdfDbPut(rec,cb){pdfDbPutMany([rec],cb);}
 function pdfDbDelete(id,cb){pdfDbOpen(function(db){if(!db){if(cb)cb(false);return;}var tx,done=false;function finish(ok){if(done)return;done=true;if(ok)pdfDbInvalidate();if(cb)cb(ok);}try{tx=db.transaction('pdfs','readwrite');tx.objectStore('pdfs').delete(id);tx.oncomplete=function(){finish(true);};tx.onerror=tx.onabort=function(){finish(false);};}catch(e){finish(false);}});}
 
@@ -8270,51 +8490,28 @@ function closeAttachmentLibrary(back){document.getElementById('attachmentLibrary
    data URL (so it displays when run from a blob: URL instead of its own folder) —
    no quiz content, question, or scoring logic is touched. */
 var OFFDB=null;
-function offDbOpen(cb){
- if(OFFDB){cb(OFFDB);return;}
- var req=indexedDB.open('ClearforkOfficialTest',1);
- req.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('test')){db.createObjectStore('test',{keyPath:'id'});}};
- req.onsuccess=function(e){OFFDB=e.target.result;cb(OFFDB);};
- req.onerror=function(){alert('Could not open local storage for the official test \u2014 your browser may be blocking IndexedDB (private/incognito mode does this).');};
-}
-function offDbGet(cb){offDbOpen(function(db){var tx=db.transaction('test','readonly'),req=tx.objectStore('test').get('current');req.onsuccess=function(){cb(req.result||null);};req.onerror=function(){cb(null);};});}
-function offDbPut(rec,cb){offDbOpen(function(db){var tx=db.transaction('test','readwrite');tx.objectStore('test').put(rec);tx.oncomplete=function(){if(cb)cb();};});}
+function offDbOpen(cb){cfArchiveOpen12PP('official-test','ClearforkOfficialTest','test',function(db){OFFDB=db;cb(db);});}
+function offDbGet(cb){offDbOpen(function(db){cfArchiveRead12PP('official-test',db,'test',function(rows,ok){var rec=rows.find(function(r){return r&&r.id==='current';});cb(OFF_SESSION_12PP||rec||null,ok);});});}
+function offDbPut(rec,cb){OFF_SESSION_12PP=rec;offDbOpen(function(db){cfArchiveWrite12PP('official-test',db,'test',[rec],function(ok){if(ok&&OFF_SESSION_12PP===rec)OFF_SESSION_12PP=null;if(cb)cb(ok);});});}
 function officialTestRenderBody(){
- var body=document.getElementById('officialTestBody'); if(!body)return;
- offDbGet(function(rec){
-  if(!rec||!rec.html){
-   body.innerHTML='<div style="padding:24px;color:#333;font:14px sans-serif;">No test uploaded yet. Drag &amp; drop the quiz\'s index.html together with eqt-logo.jpeg onto the box above, or click it to browse.</div>';
-   return;
-  }
-  var blobUrl=URL.createObjectURL(new Blob([rec.html],{type:'text/html'}));
-  body.innerHTML='<iframe src="'+blobUrl+'" style="width:100%;height:100%;border:none;background:#fff;"></iframe>';
+ var body=document.getElementById('officialTestBody');if(!body)return;var token=++OFF_VIEW_TOKEN_12PP;
+ offDbGet(function(rec,ok){
+  if(token!==OFF_VIEW_TOKEN_12PP||document.getElementById('officialtest').style.display==='none')return;
+  cfOfficialReleaseUrl12PP();body.replaceChildren();
+  var status=document.createElement('div');status.innerHTML=cfArchiveNotice12PP('official-test');body.appendChild(status);
+  if(!rec||!rec.html){var msg=document.createElement('p');msg.style.cssText='padding:24px;color:#333;font:14px sans-serif';msg.textContent=ok===false?'The saved Official Test could not be read. It has not been deleted. Reopen when local storage is available, or select your test file for this session.':'No test uploaded yet. Select the quiz HTML file together with its logo image.';body.appendChild(msg);return;}
+  OFF_BLOB_URL_12PP=URL.createObjectURL(new Blob([rec.html],{type:'text/html'}));var frame=document.createElement('iframe');frame.title='Official Test';frame.src=OFF_BLOB_URL_12PP;frame.style.cssText='width:100%;height:100%;border:none;background:#fff';body.appendChild(frame);
  });
 }
 function handleOfficialTestFiles(fileList){
- var files=Array.from(fileList||[]);
- var htmlFile=files.filter(function(f){return /\.html?$/i.test(f.name);})[0];
- var imgFiles=files.filter(function(f){return /^image\//.test(f.type)||/\.(jpe?g|png|gif)$/i.test(f.name);});
- if(!htmlFile){alert('Please include the quiz\'s .html file in your selection (drag both the .html file and its logo image together).');return;}
- var readHtml=new FileReader();
- readHtml.onload=function(){
-  var htmlText=readHtml.result;
-  if(!imgFiles.length){
-   offDbPut({id:'current',html:htmlText,uploaded:Date.now()},function(){officialTestRenderBody();});
-   return;
-  }
-  var remaining=imgFiles.length;
-  imgFiles.forEach(function(imgFile){
-   var readImg=new FileReader();
-   readImg.onload=function(){
-    var re=new RegExp('src=["\']'+imgFile.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'["\']','g');
-    htmlText=htmlText.replace(re,'src="'+readImg.result+'"');
-    remaining--;
-    if(remaining===0)offDbPut({id:'current',html:htmlText,uploaded:Date.now()},function(){officialTestRenderBody();});
-   };
-   readImg.readAsDataURL(imgFile);
-  });
- };
- readHtml.readAsText(htmlFile);
+ var files=Array.from(fileList||[]),htmlFile=files.filter(function(f){return /\.html?$/i.test(f.name);})[0],images=files.filter(function(f){return /^image\//.test(f.type)||/\.(jpe?g|png|gif)$/i.test(f.name);}),token=++OFF_UPLOAD_TOKEN_12PP;
+ if(!htmlFile){alert('Please include the quiz HTML file and its logo image in your selection.');return;}
+ function fail(){if(token!==OFF_UPLOAD_TOKEN_12PP)return;cfArchiveStatus12PP('official-test','file-read-failed','A selected test or image file could not be read. The existing saved test was not replaced. Select the original files and retry.');alert('The selected test files could not all be read. The existing Official Test was not replaced.');}
+ cfReadFile12PP(htmlFile,'text',function(htmlText,ok){if(token!==OFF_UPLOAD_TOKEN_12PP)return;if(!ok){fail();return;}
+  function save(){if(token!==OFF_UPLOAD_TOKEN_12PP)return;offDbPut({id:'current',html:htmlText,uploaded:Date.now()},function(){if(token===OFF_UPLOAD_TOKEN_12PP)officialTestRenderBody();});}
+  if(!images.length){save();return;}
+  var remaining=images.length,bad=false;images.forEach(function(img){cfReadFile12PP(img,'dataURL',function(data,ok){if(token!==OFF_UPLOAD_TOKEN_12PP)return;if(!ok)bad=true;else{var re=new RegExp('src=["\']'+img.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'["\']','g');htmlText=htmlText.replace(re,'src="'+data+'"');}if(--remaining===0){if(bad)fail();else save();}});});
+ });
 }
 document.getElementById('officialTestUpload').addEventListener('change',function(e){handleOfficialTestFiles(e.target.files);});
 (function(){
@@ -8323,7 +8520,7 @@ document.getElementById('officialTestUpload').addEventListener('change',function
  ['dragleave','drop'].forEach(function(ev){zone.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();zone.style.background='#243140';zone.style.borderColor='#3a4a5c';});});
  zone.addEventListener('drop',function(e){handleOfficialTestFiles(e.dataTransfer.files);});
 })();
-function openOfficialTest(){window._pauseRender=true;document.getElementById('officialtest').style.display='block';officialTestRenderBody();}
+function openOfficialTest(){if(document.getElementById('officialtest').style.display!=='block')OFF_PAUSE_12PP=window._pauseRender;window._pauseRender=true;document.getElementById('officialtest').style.display='block';officialTestRenderBody();}
 /* ===== C2 Calculator =====
    Two clearly-separated engines, both real math, kept honest about what each can
    and can't tell you:
@@ -8584,10 +8781,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-10-12PM';
+var RYAN_BUILD_ID='RYAN-2026-11-10-12PQ';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-INTRO-GSP-12PM-20261110';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-LIVE-TRANSMITTERS-12PQ-20261110';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -10163,7 +10360,7 @@ document.getElementById('askryanbtn').addEventListener('click',openAskRyan);
 document.getElementById('askryanClose').addEventListener('click',closeAskRyan);
 document.getElementById('askryan').addEventListener('click',function(e){if(e.target===this)closeAskRyan();});
 document.querySelectorAll('.cmdtab').forEach(function(b){b.addEventListener('click',function(){CMD_TAB=b.getAttribute('data-tab');cmdRenderTab();});});
-function closeOfficialTest(){window._pauseRender=false;document.getElementById('officialtest').style.display='none';document.getElementById('officialTestBody').innerHTML='';}
+function closeOfficialTest(){++OFF_VIEW_TOKEN_12PP;cfOfficialReleaseUrl12PP();if(OFF_PAUSE_12PP!==null)window._pauseRender=OFF_PAUSE_12PP;OFF_PAUSE_12PP=null;document.getElementById('officialtest').style.display='none';document.getElementById('officialTestBody').replaceChildren();}
 document.getElementById('officialtestbtn').addEventListener('click',openOfficialTest);
 document.getElementById('officialtestClose').addEventListener('click',closeOfficialTest);
 function openLibrary(){
@@ -10364,9 +10561,9 @@ setInterval(cf3dRefreshFieldReadings,1000);
 var sel=[], selKey=null, showAll=false;
 function updateLabels(){sprites.forEach(function(s){var r=cf3dDeviceRecord(s.userData.key),allowed=!(r&&r.fieldDevice)||(r.kind==='manual'?showMV:showInst);s.visible=!!(allowed&&(showAll||(selKey&&s.userData.key===selKey)));});}
 function highlight(k){
- (CF_SELECTION_MATERIALS_12JG||[]).forEach(function(s){s.mesh.material=s.original;s.temporary.forEach(function(m){if(m.dispose)m.dispose();});});CF_SELECTION_MATERIALS_12JG=[];sel=[];selKey=k||null;
- if(k){var seen=new Set();(byKey[k]||[]).forEach(function(o){var mark=function(m){if(!m.isMesh||!m.material||seen.has(m))return;seen.add(m);var original=m.material,temps=(Array.isArray(original)?original:[original]).map(function(mat){var t=mat.clone();if(t.emissive){t.emissive.setHex(0x8d83f2);t.emissiveIntensity=.55;}else if(t.color)t.color.setHex(0xb9b0ff);return t;});m.material=Array.isArray(original)?temps:temps[0];CF_SELECTION_MATERIALS_12JG.push({mesh:m,original:original,temporary:temps});sel.push(m);};if(o.traverse)o.traverse(mark);else mark(o);});}
- updateLabels();if(typeof cam!=='undefined'&&typeof cfUpdateDetail12JG==='function')cfUpdateDetail12JG(0,true);
+ cfHighlightMaterials12PN(k);
+ updateLabels();if(CF_VIEW_12PN.labels)CF_VIEW_12PN.labels.invalidate();
+ if(typeof cam!=='undefined'&&typeof cfUpdateDetail12JG==='function')cfUpdateDetail12JG(0,true);
 }
 var goalPos=null, goalTgt=null;
 function flyVec(p,t){goalPos=p.clone(); goalTgt=t.clone();}
@@ -10459,11 +10656,15 @@ window.addEventListener('keyup',function(e){keys[e.code]=false;});
 function bindPad(el,attr,store){el.querySelectorAll('button['+attr+']').forEach(function(b){var d=b.getAttribute(attr); function on(e){e.preventDefault(); store[d]=true;} function off(){store[d]=false;} b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointerleave',off); b.addEventListener('pointercancel',off);});}
 bindPad(dpad,'data-d',dpadM); bindPad(lpad,'data-l',lpadM);
 var ray=new THREE.Raycaster(), mv=new THREE.Vector2(), dn=null, looking=false, lx=0, ly=0;
+var cfGesture12PN={pointer:null,moved:false,active:new Set()};
 ren.domElement.style.touchAction='none';
-ren.domElement.addEventListener('pointerdown',function(e){dn=[e.clientX,e.clientY]; lx=e.clientX; ly=e.clientY; looking=walk; if(!walk){goalPos=null; goalTgt=null;} /* cancel any in-progress fly-to as soon as the user grabs the view, so clicking equipment never traps navigation */ if(walk&&ren.domElement.setPointerCapture){try{ren.domElement.setPointerCapture(e.pointerId);}catch(err){}}});
+window.addEventListener('pointerup',function(e){cfGesture12PN.active.delete(e.pointerId);if(!cfGesture12PN.active.size){dn=null;looking=false;}});
+window.addEventListener('pointercancel',function(e){cfGesture12PN.active.delete(e.pointerId);cfGesture12PN.moved=true;dn=null;looking=false;});
+window.addEventListener('blur',function(){cfGesture12PN.active.clear();dn=null;looking=false;});
+ren.domElement.addEventListener('pointerdown',function(e){cfGesture12PN.active.add(e.pointerId);cfGesture12PN.moved=cfGesture12PN.active.size>1||e.button!==0;cfGesture12PN.pointer=e.pointerId;dn=[e.clientX,e.clientY]; lx=e.clientX; ly=e.clientY; looking=walk; if(!walk){goalPos=null; goalTgt=null;} /* cancel any in-progress fly-to as soon as the user grabs the view, so clicking equipment never traps navigation */ if(walk&&ren.domElement.setPointerCapture){try{ren.domElement.setPointerCapture(e.pointerId);}catch(err){}}});
 ren.domElement.addEventListener('wheel',function(){goalPos=null; goalTgt=null;},{passive:true});
-ren.domElement.addEventListener('pointermove',function(e){ if(walk && looking && dn){ var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY; yaw-=dx*0.0045; pitch-=dy*0.0045; pitch=Math.max(-1.45,Math.min(1.45,pitch)); return; } ren.domElement.style.cursor=walk?'crosshair':(e.buttons?'grabbing':'grab');});
-ren.domElement.addEventListener('pointerup',function(e){ looking=false; if(!dn||Math.abs(e.clientX-dn[0])>5||Math.abs(e.clientY-dn[1])>5)return; var r=ren.domElement.getBoundingClientRect(); mv.x=((e.clientX-r.left)/r.width)*2-1; mv.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(mv,cam); var hits=cfRaycast12JG(); if(hits.length){var _ob=hits[0].object; while(_ob&&!_ob.userData.key)_ob=_ob.parent; var _k=_ob?_ob.userData.key:null; if(_k&&_k.indexOf('qhd')===0){openQHD(_k.slice(3));} else if(_k==='exc'||_k==='ex'||_k==='c'){openACMTC();} else if(_k&&typeof cf3dInspectPickedPipe12HN==='function'&&cf3dInspectPickedPipe12HN(hits[0])){}else if(_k)go(_k);} else highlight(null);});
+ren.domElement.addEventListener('pointermove',function(e){if(dn&&(Math.abs(e.clientX-dn[0])>5||Math.abs(e.clientY-dn[1])>5))cfGesture12PN.moved=true; if(walk && looking && dn){ var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY; yaw-=dx*0.0045; pitch-=dy*0.0045; pitch=Math.max(-1.45,Math.min(1.45,pitch)); return; } ren.domElement.style.cursor=walk?'crosshair':(e.buttons?'grabbing':'grab');});
+ren.domElement.addEventListener('pointerup',function(e){looking=false;var click12PN=dn&&!cfGesture12PN.moved&&cfGesture12PN.pointer===e.pointerId&&cfGesture12PN.active.size===1&&e.button===0&&Math.abs(e.clientX-dn[0])<=5&&Math.abs(e.clientY-dn[1])<=5;cfGesture12PN.active.delete(e.pointerId);dn=null;if(!click12PN)return; var r=ren.domElement.getBoundingClientRect(); mv.x=((e.clientX-r.left)/r.width)*2-1; mv.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(mv,cam); var hits=cfRaycast12JG(); if(hits.length){var _ob=hits[0].object; while(_ob&&!_ob.userData.key)_ob=_ob.parent; var _k=_ob?_ob.userData.key:null; if(_k&&_k.indexOf('qhd')===0){openQHD(_k.slice(3));} else if(_k==='exc'||_k==='ex'||_k==='c'){openACMTC();} else if(_k&&typeof cf3dInspectPickedPipe12HN==='function'&&cf3dInspectPickedPipe12HN(hits[0])){}else if(_k)go(_k);} else highlight(null);});
 window.addEventListener('resize',function(){var w=box.clientWidth,h=box.clientHeight;if(w<=0||h<=0)return; cam.aspect=w/h; cam.updateProjectionMatrix(); ren.setSize(w,h);});
 
 
@@ -15799,20 +16000,8 @@ PLANT.tick=function(stepSeconds){
  V.physicsAudit.hotOilFlowResidual=V.physicsAudit.hotOilCommonFlow-V.physicsAudit.hotOilUserFlow;
  V.physicsAudit.inletFeedCapacity=(V.inletFeedCap||0);
  V.physicsAudit.pass=!!(V.physicsAudit.refrigLevelsFinite&&Math.abs(V.physicsAudit.refrigChargeError)<0.75&&V.physicsAudit.hotOilFlowResidual>-50);
- window.CF_PHYSICS_AUDIT_12EH=function(){
-  return {
-   build:'12EH', pass:!!V.physicsAudit.pass,
-   refrigerant:{chargeIndex:V.refrigChargeIndex,chargeError:V.refrigChargeError,residual:V.refrigChargeResidual,receiver:V.lt1444,economizer:L.LCV1442.pv,chiller:L.LCV1241.pv,vaporPool:V.refrigVaporInventory},
-   hotOil:{commonFlow:V.physicsAudit.hotOilCommonFlow,userFlow:V.physicsAudit.hotOilUserFlow,residual:V.physicsAudit.hotOilFlowResidual,userDemand:V.hotOilUserDemand,heaterDemand:V.hotOilDemand},
-   inlet:{pit1000:V.pit1000,picSP:L.PIC1010.sp,picPV:L.PIC1010.pv,pv1010:L.PIC1010.out,feedCap:V.inletFeedCap,leakMmscfd:PLANT.in.inletLeakMmscfd||0},
-   checks:[
-    {id:'refrigerant_charge_conserved',ok:Math.abs(V.refrigChargeError||0)<0.75},
-    {id:'refrigerant_levels_finite',ok:!!V.physicsAudit.refrigLevelsFinite},
-    {id:'hot_oil_users_not_exceed_common_flow',ok:V.physicsAudit.hotOilFlowResidual>-50},
-    {id:'tic5000c_owns_tv5005a',ok:Math.abs((L.TIC5000C?L.TIC5000C.out:0)-(typeof tv5pct==='number'?tv5pct:(L.TIC5000C?L.TIC5000C.out:0)))<0.01}
-   ]
-  };
- };
+ window.CF_PHYSICS_AUDIT_12EH=function(){return cfPhysicsDiagnostic12PP(PLANT);};
+
  // 12OT: only drill-owned gas signals advance here. Existing F&G checks remain below.
  cfScenarioAfterPhysics12OT();
  fgCheckThresholds(); /* real gas-detection thresholds (5%/10% LEL), independent of which scenario (if any) is active -- also fires from the Command Center's manual "Simulate gas" drill buttons */
@@ -16611,7 +16800,8 @@ function renderScreen(){var _ae=document.activeElement;if(EXP_CONTROL_DRAG||(_ae
   var _color=_top?(_top.sev==='CRITICAL'?'#c0392b':(_top.sev==='HIGH'?'#c8920f':'#3a6ea8')):'#5a6b7c';
   bellBtn.innerHTML='\ud83d\udd14'+(_top?' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+_color+';margin-left:3px;"></span>':'');
  }
- if(!SCR[eqtCur]&&window.CLEARFORK_HEALTH)window.CLEARFORK_HEALTH.missingScreens=Array.from(new Set((window.CLEARFORK_HEALTH.missingScreens||[]).concat([eqtCur])));}
+ if(!SCR[eqtCur]&&window.CLEARFORK_HEALTH)window.CLEARFORK_HEALTH.missingScreens=Array.from(new Set((window.CLEARFORK_HEALTH.missingScreens||[]).concat([eqtCur])));
+ cfRefreshLocalReadings12PQ();}
 /*12OV CONTROL-BOARD FINISH ONLY. Exact existing diagram shapes are identified by
   screen, coordinates, paint and action ancestry. No control/source/state mutation,
   route change, valve styling, new hardware, geometry or interactive target is made.
@@ -16744,6 +16934,7 @@ function startPlantRuntime(){
    // Preserve the deliberately independent active-real-time training tools/rates.
    if(typeof outageTick==='function'&&PLANT.outageState)outageTick(wall);
    if(typeof leadAutoTick==='function'&&window.CMD_LEAD_STATE)leadAutoTick(wall);
+   cfQueueLocalReadings12PQ();
   },fail:function(message){PLANT.simLive=false;console.error('[Clear Fork simulation clock]',message);if(typeof updateLiveBtn==='function')updateLiveBtn();}});
  window.CFSimulationClock12OO={status:cfSimulationClockStatus12OO};
  plantRuntimeLastMs=Date.now();
@@ -17417,9 +17608,7 @@ document.getElementById('eqtscr').addEventListener('click',function(e){var t=e.t
    var permit={id:'wp-'+Date.now()+'-'+Math.floor(Math.random()*10000),permitNumber:wpNum.trim(),description:wpDesc.trim(),closedBy:wpBy.trim()||'Unspecified',closedDate:wpDate,addedAt:Date.now()};
    if(PLANT.workPermits==null)PLANT.workPermits=[];
    PLANT.workPermits.unshift(permit); /* newest first, matches load-sort order */
-   permitsDbAdd(permit); /* permanent -- no corresponding delete path exists anywhere in this file, by design */
-   PLANT.wpDraft=null; /* clear the form now that it's successfully archived */
-   alarm('Work permit #'+permit.permitNumber+' archived for audit \u2014 closed by '+permit.closedBy);
+   var savedPermitDraft12PP=JSON.stringify(PLANT.wpDraft||{});permitsDbAdd(permit,function(ok){if(ok){if(JSON.stringify(PLANT.wpDraft||{})===savedPermitDraft12PP)PLANT.wpDraft=null;alarm('Work permit #'+permit.permitNumber+' saved to the local archive.');}else alarm('Work permit #'+permit.permitNumber+' is in this tab only; local archive save was NOT confirmed. Keep the original permit.');if(PLANT.popup==='shiftdash')renderScreen();});
   }
  }
  else if(a==='custodylog'){
@@ -17895,6 +18084,7 @@ function schedulePopup(){
  function esc(x){return schedEsc(x);}function dateLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
  function shiftLabel(e,ds){var c=schedShiftFor(S,e.id,ds);return c==='D'?'Day shift':c==='N'?'Night shift':(schedHasPattern(S,e.id)||schedIsOverride(S,e.id,ds)?'Off':'No entry');}
  var s='<div class="pop cf-schedule12nb" id="cfSchedule12NB" role="dialog" aria-labelledby="cfSchedTitle12NB"><div class="poph"><div><span class="cf-sched-eyebrow12nb">CLEAR FORK / SHIFT PLANNER</span><strong id="cfSchedTitle12NB">Schedule</strong></div><button type="button" data-act="popclose" aria-label="Close schedule and return to control screen">Close</button></div><div class="popb">';
+ s+=cfArchiveNotice12PP('schedule');
  s+='<div class="cf-sched-summary12nb"><div><span>Today / '+esc(dateLabel(today))+'</span><strong>'+(ryan?esc(ryan.name)+' <b class="cf-sched-today-shift12nb">'+esc(shiftLabel(ryan,today))+'</b>':'Crew schedule')+'</strong></div><div><span>Viewing '+PLANT.schedViewDays+' days</span><strong>'+esc(dateLabel(start))+' <span aria-hidden="true">&#8594;</span> '+esc(dateLabel(end))+'</strong></div></div>';
  s+='<div class="cf-sched-toolbar12nb" aria-label="Schedule view controls"><div class="cf-sched-period12nb"><button data-act="schednbprev" aria-label="View previous 14 days">&#8592; 14 days</button><button data-act="schednbtoday" class="cf-sched-accent12nb">Today</button><button data-act="schednbnext" aria-label="View next 14 days">14 days &#8594;</button></div><button data-act="schedadddays">+7 days</button></div>';
  s+='<details id="cfSchedTools12NB" class="cf-sched-toolsdetails12nb"'+(window.innerWidth>650?' open':'')+'><summary>Edit tools / go to date</summary><div class="cf-sched-goto12nb"><label for="cfSchedGoto12NB">Go to date<input id="cfSchedGoto12NB" type="date" required value="'+esc(v.goto||today)+'"></label><button data-act="schednbgoto">Go</button></div>';
@@ -20372,8 +20562,8 @@ document.getElementById('cfWeatherToggle').addEventListener('click',function(){
  this.textContent=(CLEARFORK_WEATHERING?'Weathering: ON':'Weathering: OFF');
  auditMaterials(scene);
 });
-var cfLastFrame12JG=0;function cfFrameLoop12LK(){requestAnimationFrame(cfFrameLoop12LK);var _frameNow12JG=performance.now();if(!cfMainDrawVisible12OZ()){cfLastFrame12JG=_frameNow12JG;_lastT=_frameNow12JG;CF_DEVICE_PERF_12OZ.hiddenFrames++;CF_ADAPTIVE_12ML.previousFrameStart12OZ=0;CF_ADAPTIVE_12ML.cadenceMs12OZ=null;CF_ADAPTIVE_12ML.slow=0;CF_ADAPTIVE_12ML.fast=0;return;}var _elapsed12JG=_frameNow12JG-cfLastFrame12JG;if(_elapsed12JG<1000/(CF_PERF_12JG&&CF_PERF_12JG.fps||30)-.5)return;cfLastFrame12JG=_frameNow12JG;var _walkScale12JG=Math.min(3,Math.max(.1,_elapsed12JG/1000*60)); if(walk){var sp=(keys['ShiftLeft']||keys['ShiftRight'])?1.3:0.42; sp*=_walkScale12JG;var TURN=0.028*_walkScale12JG, TILT=0.022*_walkScale12JG; if(keys['ArrowLeft']||keys['KeyQ']||lpadM.tl) yaw+=TURN; if(keys['ArrowRight']||keys['KeyE']||lpadM.tr) yaw-=TURN; if(keys['KeyR']||lpadM.u) pitch=Math.min(1.45,pitch+TILT); if(keys['KeyF']||lpadM.d) pitch=Math.max(-1.45,pitch-TILT); var f=(keys['KeyW']||keys['ArrowUp']||dpadM.f?1:0)-(keys['KeyS']||keys['ArrowDown']||dpadM.b?1:0); var s=(keys['KeyD']||dpadM.r?1:0)-(keys['KeyA']||dpadM.l?1:0); if(f||s){var fx=-Math.sin(yaw), fz=-Math.cos(yaw); var rx=Math.cos(yaw), rz=-Math.sin(yaw); cam.position.x+=(fx*f+rx*s)*sp; cam.position.z+=(fz*f+rz*s)*sp; var d2=Math.hypot(cam.position.x,cam.position.z); clampWalk();} cam.position.y=EYE; cam.rotation.order='YXZ'; cam.rotation.set(pitch,yaw,0);} else { cfAdvanceFlyTo12MJ(_walkScale12JG); ctl.update(); if(cam.position.y<-1.55)cam.position.y=-1.55; } var _now=performance.now(),_dt=Math.min(0.05,(_now-_lastT)/1000);_lastT=_now;cfVisualStep12LK('fish',function(){updateFish(_dt);});cfVisualStep12LK('fishing',function(){updateFishing(_dt);});cfVisualStep12LK('hunting',function(){updateHunting(_dt);});cfVisualStep12LK('phase flow',function(){_updateFlow(_dt);});if(window.CFColdEffects12JI)cfVisualStep12LK('cold and flare',function(){window.CFColdEffects12JI.update(_dt);});cfVisualStep12LK('heater flames',function(){cfUpdateHeaterVisuals12HX(_dt);});cfVisualStep12LK('fan rotors',function(){cfUpdateFanRotors12JE(_dt);});cfVisualStep12LK('pump shafts',function(){cfUpdatePumpRotors12JG(_dt);});if(window.CFVisual12KA)cfVisualStep12LK('machine shafts',function(){window.CFVisual12KA.update(_dt);});
-  if(window.CFVisual12KN)cfVisualStep12LK('blower rotors',function(){window.CFVisual12KN.update(_dt);});if(window.CFValvePositions12KI)cfVisualStep12LK('valve positions',function(){window.CFValvePositions12KI.update(_dt);});cfVisualStep12LK('detail visibility',function(){cfUpdateDetail12JG(_now);});CF_PERF_12JG.frames++;if(window._updateDeer)cfVisualStep12LK('deer',function(){_updateDeer(_dt);});if(window._updateWildlife)cfVisualStep12LK('wildlife',function(){_updateWildlife(_dt,cam.position.x,cam.position.z);});if(window._weatherTick)cfVisualStep12LK('weather',function(){_weatherTick(_dt,cam.position.x,cam.position.z);});for(var _si=0;_si<spinners.length;_si++){var _s=spinners[_si],_on=false,_sp=0.22;if(_s.unit){_on=(typeof QHD!=='undefined')&&QHD.units&&QHD.units[_s.unit];}else if(_s.kind==='ref'){_on=(typeof QHD!=='undefined')&&QHD.fans&&QHD.fans[_s.bank];_sp=0.3;}else if(_s.kind==='ac'){_on=true;_sp=0.14;}if(_on)_s.m.rotateOnAxis(_SPINY,_sp);}cfVisualStep12LK('navigation',function(){cfNavigationTick12LL(_now);});var rendered12ML=false;if(!CF_RENDER_RECOVERY_12NJ.contextLost)cfVisualStep12LK('renderer',function(){ren.render(scene,cam);rendered12ML=true;CF_RENDER_RECOVERY_12NJ.phase='drawing';});if(rendered12ML)cfFrameTiming12ML(_frameNow12JG);}
+var cfLastFrame12JG=0;function cfFrameLoop12LK(){requestAnimationFrame(cfFrameLoop12LK);var _frameNow12JG=performance.now();if(!cfMainDrawVisible12OZ()){cfFrameGate12PN(_frameNow12JG,CF_PERF_12JG.fps,false);if(CF_VIEW_12PN.labels)CF_VIEW_12PN.labels.hide();cfLastFrame12JG=_frameNow12JG;_lastT=_frameNow12JG;CF_DEVICE_PERF_12OZ.hiddenFrames++;CF_ADAPTIVE_12ML.previousFrameStart12OZ=0;CF_ADAPTIVE_12ML.cadenceMs12OZ=null;CF_ADAPTIVE_12ML.slow=0;CF_ADAPTIVE_12ML.fast=0;return;}var _elapsed12JG=cfFrameGate12PN(_frameNow12JG,CF_PERF_12JG&&CF_PERF_12JG.fps||30,true);if(_elapsed12JG===null)return;cfLastFrame12JG=_frameNow12JG;var _walkScale12JG=Math.min(3,Math.max(.1,_elapsed12JG/1000*60)); if(walk){var sp=(keys['ShiftLeft']||keys['ShiftRight'])?1.3:0.42; sp*=_walkScale12JG;var TURN=0.028*_walkScale12JG, TILT=0.022*_walkScale12JG; if(keys['ArrowLeft']||keys['KeyQ']||lpadM.tl) yaw+=TURN; if(keys['ArrowRight']||keys['KeyE']||lpadM.tr) yaw-=TURN; if(keys['KeyR']||lpadM.u) pitch=Math.min(1.45,pitch+TILT); if(keys['KeyF']||lpadM.d) pitch=Math.max(-1.45,pitch-TILT); var f=(keys['KeyW']||keys['ArrowUp']||dpadM.f?1:0)-(keys['KeyS']||keys['ArrowDown']||dpadM.b?1:0); var s=(keys['KeyD']||dpadM.r?1:0)-(keys['KeyA']||dpadM.l?1:0); if(f||s){var fx=-Math.sin(yaw), fz=-Math.cos(yaw); var rx=Math.cos(yaw), rz=-Math.sin(yaw); cam.position.x+=(fx*f+rx*s)*sp; cam.position.z+=(fz*f+rz*s)*sp; var d2=Math.hypot(cam.position.x,cam.position.z); clampWalk();} cam.position.y=EYE; cam.rotation.order='YXZ'; cam.rotation.set(pitch,yaw,0);} else { cfAdvanceFlyTo12MJ(_walkScale12JG); ctl.update(); if(cam.position.y<-1.55)cam.position.y=-1.55; } var _now=performance.now(),_dt=Math.min(0.05,(_now-_lastT)/1000);_lastT=_now;cfVisualStep12LK('fish',function(){updateFish(_dt);});cfVisualStep12LK('fishing',function(){updateFishing(_dt);});cfVisualStep12LK('hunting',function(){updateHunting(_dt);});cfVisualStep12LK('phase flow',function(){_updateFlow(_dt);});if(window.CFColdEffects12JI)cfVisualStep12LK('cold and flare',function(){window.CFColdEffects12JI.update(_dt);});cfVisualStep12LK('heater flames',function(){cfUpdateHeaterVisuals12HX(_dt);});cfVisualStep12LK('fan rotors',function(){cfUpdateFanRotors12JE(_dt);});cfVisualStep12LK('pump shafts',function(){cfUpdatePumpRotors12JG(_dt);});if(window.CFVisual12KA)cfVisualStep12LK('machine shafts',function(){window.CFVisual12KA.update(_dt);});
+  if(window.CFVisual12KN)cfVisualStep12LK('blower rotors',function(){window.CFVisual12KN.update(_dt);});if(window.CFValvePositions12KI)cfVisualStep12LK('valve positions',function(){window.CFValvePositions12KI.update(_dt);});cfVisualStep12LK('detail visibility',function(){cfUpdateDetail12JG(_now);});CF_PERF_12JG.frames++;if(window._updateDeer)cfVisualStep12LK('deer',function(){_updateDeer(_dt);});if(window._updateWildlife)cfVisualStep12LK('wildlife',function(){_updateWildlife(_dt,cam.position.x,cam.position.z);});if(window._weatherTick)cfVisualStep12LK('weather',function(){_weatherTick(_dt,cam.position.x,cam.position.z);});for(var _si=0;_si<spinners.length;_si++){var _s=spinners[_si],_on=false,_sp=0.22;if(_s.unit){_on=(typeof QHD!=='undefined')&&QHD.units&&QHD.units[_s.unit];}else if(_s.kind==='ref'){_on=(typeof QHD!=='undefined')&&QHD.fans&&QHD.fans[_s.bank];_sp=0.3;}else if(_s.kind==='ac'){_on=true;_sp=0.14;}if(_on)_s.m.rotateOnAxis(_SPINY,_sp);}cfVisualStep12LK('navigation',function(){cfNavigationTick12LL(_now);});var rendered12ML=false;if(!CF_RENDER_RECOVERY_12NJ.contextLost)cfVisualStep12LK('renderer',function(){ren.render(scene,cam);rendered12ML=true;CF_RENDER_RECOVERY_12NJ.phase='drawing';});if(rendered12ML){CF_VIEW_12PN.refreshPending=false;if(CF_VIEW_12PN.labels)cfVisualStep12LK('readable tags',function(){CF_VIEW_12PN.labels.tick(_frameNow12JG,true);});cfFrameTiming12ML(_frameNow12JG);}}
 /* ===== light HMI restyle of the schematic helpers (match the real screens) ===== */
 function mSVG(inner){return '<div class="mwrap"><svg viewBox="0 0 1480 560" style="width:100%;height:auto;max-height:60vh;background:#ffffff;border:1px solid #b8bdc1;display:block;">'+inner+'</svg><div class="mlegend">&#9656; Valves: green = open, red = closed &mdash; click a valve to operate it. Live values track the plant.</div></div>';}
 function mPipe(d,on){return '<path d="'+d+'" fill="none" stroke="'+(on===false?'#9aa0a4':'#1b1f24')+'" stroke-width="3.5"/>';}
@@ -22408,6 +22598,7 @@ function cfApplySnapshot(state){
  if(state.QHD)cfDeepMerge(QHD,state.QHD);
  if(state.EXP)cfDeepMerge(EXP,state.EXP);
  if(state.SCEN)cfDeepMerge(SCEN,state.SCEN);
+ if(CF_LOCAL_READING_STATE_12PQ&&CF_LOCAL_READING_STATE_12PQ.installed){CF_LOCAL_READING_STATE_12PQ.clientReceivedAt=Date.now();cfQueueLocalReadings12PQ();}
  try{
   if(document.getElementById('eqt').style.display!=='none')renderScreen();
   if(document.getElementById('qhd').style.display!=='none')qhdRender();
@@ -35424,10 +35615,11 @@ function cfFastPick12LL(){
  var hits=ray.intersectObjects(list,false);CF_NAV_12LL.candidates=list.length;CF_NAV_12LL.lastPickMs=performance.now()-start;return hits;
 }
 function cfNavigationTick12LL(now){
- if(!CF_NAV_12LL.ready)return;var n=CF_NAV_12LL,p=cam.position,last=n.lastCamera,moved=!last||p.distanceToSquared(last)>.00005||!!goalPos||n.dragging;
+ if(!CF_NAV_12LL.ready)return;var n=CF_NAV_12LL,p=cam.position,last=n.lastCamera,q=cam.quaternion,lastQ=n.lastQuaternion12PN,moved=!last||p.distanceToSquared(last)>.00005||!lastQ||Math.abs(q.dot(lastQ))<.999999||!!goalPos||n.dragging;
+ if(!lastQ)n.lastQuaternion12PN=q.clone();else lastQ.copy(q);
  if(!last)n.lastCamera=p.clone();else last.copy(p);if(moved)n.lastMotion=now;n.moving=moved||now-n.lastMotion<220;
  var base=CF_PERF_12JG.pixelRatio,adaptive=CF_VISUAL_PREF_12ML.adaptive&&CF_ADAPTIVE_12ML.ratio!==null?Math.min(base,CF_ADAPTIVE_12ML.ratio):base;
- var ratio=n.smooth&&n.moving?Math.min(adaptive,.90):adaptive,low=ratio<base-.01;
+ var ratio=Math.max(1,adaptive),low=ratio<base-.01;
  if(n.appliedRatio!==ratio){ren.setPixelRatio(ratio);n.appliedRatio=ratio;n.qualityLowered=low;}
 }
 function cfNglCamera12LL(){
@@ -35446,8 +35638,8 @@ function cfInstallNglNavigation12LL(){
  canvas.addEventListener('keydown',function(e){if(!walk&&e.key.toLowerCase()==='f'){e.preventDefault();cfFocusSelection12LL();}if(e.key==='Escape'){goalPos=null;goalTgt=null;}});
  var box=document.createElement('span');box.id='nglNavigation12LL';box.dataset.toolGroup='display';box.style.cssText='display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap';
  function button(title,fn){var b=document.createElement('button');b.textContent=title;b.addEventListener('click',fn);box.appendChild(b);return b;}
- button('Focus selected (F)',cfFocusSelection12LL);button('NGL outlet view',cfNglCamera12LL);button('Navigation help',function(){var prior=document.getElementById('navigationHelp12LL');if(prior){prior.remove();return;}var d=document.createElement('section');d.id='navigationHelp12LL';d.setAttribute('role','dialog');d.style.cssText='position:fixed;inset:14vh 8vw auto;z-index:999980;max-width:560px;padding:20px;background:#12222d;color:#edf3f8;border:1px solid #6d8a99;border-radius:10px';var h=document.createElement('h3');h.textContent='Move around the model';d.appendChild(h);['Orbit: left-drag. Pan: right-drag or two fingers. Zoom: wheel or pinch.','Select an item, then use Focus selected or press F while the model has focus.','NGL outlet view returns to the repaired corridor. Overview remains available in the main toolbar.','Dragging cancels an in-progress camera flight. Escape stops that flight. Walk mode retains its original keyboard controls.','Smooth navigation reduces pixel density only during movement and restores the selected rendering quality when movement stops. No equipment, source record or simulation behavior is disabled.'].forEach(function(t){var p=document.createElement('p');p.textContent=t;d.appendChild(p);});var c=document.createElement('button');c.textContent='Close';c.onclick=function(){d.remove();canvas.focus({preventScroll:true});};d.appendChild(c);document.body.appendChild(d);});
- var label=document.createElement('label'),ch=document.createElement('input');ch.type='checkbox';ch.checked=true;ch.id='smoothNavigation12LL';ch.onchange=function(){CF_NAV_12LL.smooth=ch.checked;cfNavigationTick12LL(performance.now());};label.append(ch,document.createTextNode('Smooth navigation'));box.appendChild(label);
+ button('Focus selected (F)',cfFocusSelection12LL);button('NGL outlet view',cfNglCamera12LL);button('Navigation help',function(){var prior=document.getElementById('navigationHelp12LL');if(prior){prior.remove();return;}var d=document.createElement('section');d.id='navigationHelp12LL';d.setAttribute('role','dialog');d.style.cssText='position:fixed;inset:14vh 8vw auto;z-index:999980;max-width:560px;padding:20px;background:#12222d;color:#edf3f8;border:1px solid #6d8a99;border-radius:10px';var h=document.createElement('h3');h.textContent='Move around the model';d.appendChild(h);['Orbit: left-drag. Pan: right-drag or two fingers. Zoom: wheel or pinch.','Select an item, then use Focus selected or press F while the model has focus.','NGL outlet view returns to the repaired corridor. Overview remains available in the main toolbar.','Dragging cancels an in-progress camera flight. Escape stops that flight. Walk mode retains its original keyboard controls.','Smooth navigation controls camera damping without blurring the picture during movement. Adaptive resolution never drops below native CSS resolution. No equipment, source record or simulation behavior is disabled.'].forEach(function(t){var p=document.createElement('p');p.textContent=t;d.appendChild(p);});var c=document.createElement('button');c.textContent='Close';c.onclick=function(){d.remove();canvas.focus({preventScroll:true});};d.appendChild(c);document.body.appendChild(d);});
+ var label=document.createElement('label'),ch=document.createElement('input');ch.type='checkbox';ch.checked=true;ch.id='smoothNavigation12LL';ch.onchange=function(){CF_NAV_12LL.smooth=ch.checked;ctl.enableDamping=ch.checked;cfNavigationTick12LL(performance.now());};label.append(ch,document.createTextNode('Smooth navigation'));box.appendChild(label);
  var bar=document.querySelector('.bar3')||document.querySelector('.bar');if(bar)bar.appendChild(box);if(window.CFDashboard12KL)window.CFDashboard12KL.refresh();cfPreparePickBounds12LL();window.CFNavigation12LL={status:function(){var n=CF_NAV_12LL;return {build:n.build,smooth:n.smooth,moving:n.moving,pixelRatio:n.appliedRatio,configuredPixelRatio:CF_PERF_12JG.pixelRatio,totalPickObjects:n.total,lastExactCandidates:n.candidates,lastPickMs:n.lastPickMs,scope:'Local hit-test time only; not measured GPU FPS.'};},focusSelected:cfFocusSelection12LL,ngl:cfNglCamera12LL,refreshPicking:cfPreparePickBounds12LL};
 }
 function cfInstallNglReference12LL(S){
@@ -36165,6 +36357,7 @@ function cfFinalizeVisual12LJ(){
 /* 12LK complete-initialization verification. No process commands or data resets. */
 var CF_VISUAL_RUNTIME_ERRORS_12LK=[];
 function cfVisualStep12LK(name,fn){
+ var sample12PN=CF_VIEW_12PN.sampleThisFrame,start12PN=sample12PN?performance.now():0;
  try{return fn();}catch(e){
   var message=String(e&&e.message||e);
   if(name==='renderer'){CF_RENDER_RECOVERY_12NJ.phase='render error';cfRenderNotice12NJ('The 3D frame could not be drawn: '+message);if(CF_RENDER_RECOVERY_12NJ.errors.indexOf(message)<0&&CF_RENDER_RECOVERY_12NJ.errors.length<10)CF_RENDER_RECOVERY_12NJ.errors.push(message);}
@@ -36174,7 +36367,7 @@ function cfVisualStep12LK(name,fn){
   if(CF_VISUAL_RUNTIME_ERRORS_12LK.length<50)CF_VISUAL_RUNTIME_ERRORS_12LK.push(row);
   if(window.CFStartup12LJ){window.CFStartup12LJ.note('Visual update: '+name,e);window.CFStartup12LJ.paint();}
   console.error('12LK visual update',name,e);
- }
+ }finally{if(sample12PN)cfProfileStage12PN(name,performance.now()-start12PN);}
 }
 function cfCheckVisualIntegrity12LK(){
  var checks=[];
@@ -39744,9 +39937,9 @@ function cfInstallOps12OU(){
  root.addEventListener('toggle',function(e){var t=e.target;if(t.dataset&&t.dataset.ouDetail)cfOps12OU().ui.open[t.dataset.ouDetail]=t.open;},true);
 }
 
-function cfOpsArchives12OU(){var s="";
- s+='<div class="poc" style="margin:8px auto;max-width:680px;border-color:#5a3a1c;"><div class="pott">CLOSED WORK PERMITS \u2014 PERMANENT AUDIT ARCHIVE</div>';
- s+='<div style="font-size:10.5px;color:#9aa6b2;margin-bottom:8px;">Every permit archived here is kept permanently for future audits \u2014 there is no delete option, by design.</div>';
+function cfOpsArchives12OU(){var s=cfArchiveNotice12PP('permits')+cfArchiveNotice12PP('reports');
+ s+='<div class="poc" style="margin:8px auto;max-width:680px;border-color:#5a3a1c;"><div class="pott">CLOSED WORK PERMITS \u2014 LOCAL AUDIT ARCHIVE</div>';
+ s+='<div style="font-size:10.5px;color:#9aa6b2;margin-bottom:8px;">Confirmed local saves are retained for future audits. There is no delete option. An unavailable archive or an unconfirmed save is not a successful permanent save; retain original permit documents.</div>';
  var wpd=PLANT.wpDraft||{};
  s+='<div class="lpr" style="flex-wrap:wrap;gap:4px;">'+
   '<input id="wpNumber" type="text" placeholder="Permit #" value="'+String(wpd.number||'').replace(/"/g,'&quot;')+'" style="width:90px;background:#0b0f14;border:1px solid #2a333c;color:#cfe0f0;padding:4px 6px;border-radius:3px;font-size:11px;">'+
@@ -40050,6 +40243,68 @@ cfInstallUtilityReference12PC();
 
 
 /* BEGIN 12PD INTRODUCTORY WALKTHROUGH */
+/*12PO links only to existing working trainers. No equipment or flow changes.*/
+var CF_SOURCE_12PO={
+ build:'12PO',baseline:'12PN',date:'2026-11-10',id:'intro_entry_and_trainer_return_12po',
+ title:'Introductory walkthrough / inlet entry and equipment-trainer return',notebookKey:'introductory_walkthrough_12pd',
+ sourceClass:'SOFTWARE_NAVIGATION_USING_RETAINED_TRAINER_ASSOCIATIONS',
+ qualification:'Training navigation only. Associated system lessons are not dedicated installed-internals drawings or proof of identical sister equipment.',
+ policy:['Main and Library walkthrough launch buttons start at Inlet to dry gas / inlet-receiver. Prior reviewed/explored checkpoints are preserved.',
+ 'Equipment ! panels link by exact existing owners and explicit grouped-owner crosswalks, not by the trainer assigned to the surrounding slide.',
+ 'Existing dedicated equipment lessons take priority over associated system lessons. No unavailable or future trainer is offered.',
+ 'The walkthrough is suspended in memory while training is open. Return restores the same slide, equipment information, detail selection, scroll, branch and backward/forward history.',
+ 'The return tab and ordinary trainer Close return to the walkthrough. Retry retains the return destination; page unload does not reopen a dialog.',
+ 'No changes to flow topology, plant controls, process clock, saved plant data, engineering sources, trainer geometry, authentication or provider calls.'],
+ groupedOwners:{
+  inletBottles:['jz_c4100_v_4102','jz_c4100_v_4104'],
+  inletDischargeBottles:['jz_c4100_v_4103','jz_c4100_v_4105'],
+  resFirstScrub:['jy_v_6101','jy_v_6102'],resSecondScrub:['jy_v_6104','jy_v_6105'],
+  ac5055:['ac5055'],refcond:['a1343'],sealpackage:['c1121'],
+  hmousers:['e1125','e5000','e5040'],propaneFeedValve:['cf3d_cv_lcv1241']
+ },
+ newEntries:[
+  {id:'po.entry',title:'Consistent inlet entry',text:'Clicking Introductory walkthrough starts at the first Inlet to dry gas view. This starts navigation, not a reset of reading accomplishments or plant data.'},
+  {id:'po.links',title:'Equipment-specific trainer links inside !',text:'Resolve the clicked equipment against the retained active trainer catalog. Dedicated and related system lessons are identified separately; grouped equipment uses explicitly named representative owners.'},
+  {id:'po.return',title:'Return to the exact walkthrough location',text:'Keep the original walkthrough DOM and navigation state suspended while the existing trainer runs. Its visible Return to introductory walkthrough tab restores the equipment popup and reading position; normal Close does the same.'}
+ ]
+};
+function cfIntroTrainerCatalog12PO(catalog){
+ var active=new Set(catalog.available||[]);
+ return (catalog.models||[]).filter(function(m){return active.has(m.id);}).map(function(m){
+  var system=[];Object.keys(m).filter(function(k){return /^systemOwnerKeys/.test(k);}).forEach(function(k){system=system.concat(m[k]||[]);});
+  if(m.trainingSource12OB&&Array.isArray(m.trainingSource12OB.profiles))system=system.concat(m.trainingSource12OB.profiles.map(function(p){return p.owner;}));
+  return {id:m.id,title:m.title,tag:m.tag,owner:m.owner,
+   parts:Array.from(new Set((m.cylinderKeys||[]).concat(m.packageFlow12NF&&m.packageFlow12NF.ownerKeys||[]))),
+   system:Array.from(new Set(system.filter(Boolean))),
+   systemLesson:['stabilizer','refrigeration-system','dehydration-beds'].indexOf(m.id)>=0};
+ });
+}
+function cfBuildIntroCourse12PO(base,catalogLinks){
+ var c=JSON.parse(JSON.stringify(base)),n=c.nodes,links={};
+ Object.keys(c.equipmentDetails12PK||{}).forEach(function(id){
+  var keys=Array.from(new Set([n[id].owner,n[id].referenceKey].concat(CF_SOURCE_12PO.groupedOwners[id]||[]).filter(Boolean)));
+  links[id]=(catalogLinks||[]).map(function(m){
+   var exact=keys.indexOf(m.owner)>=0,part=keys.some(function(k){return m.parts.indexOf(k)>=0;}),system=keys.some(function(k){return m.system.indexOf(k)>=0;});
+   if(!exact&&!part&&!system)return null;
+   var related=m.systemLesson||(!exact&&!part);
+   return {id:m.id,title:m.title,tag:m.tag,owner:m.owner,relation:related?'Associated system trainer':'Equipment internal trainer',
+    representative:true,basis:'Retained active trainer catalog / '+(exact?'representative owner':part?'declared component owner':'declared system owner'),
+    matchedOwners:keys.filter(function(k){return k===m.owner||m.parts.indexOf(k)>=0||m.system.indexOf(k)>=0;}),
+    scope:related?'Includes this equipment in its system context. Source-specific limits and representative internals remain qualified.':'Existing representative lesson: '+m.tag+'. Grouped symbols do not assign identical internals or serial numbers to sister units.',
+    rank:exact&&!m.systemLesson?0:part&&!m.systemLesson?1:2};
+  }).filter(Boolean).sort(function(a,b){return a.rank-b.rank||a.id.localeCompare(b.id);});
+ });
+ c.build='12PO';c.presentationRevision='12PO';c.sourceBaseline='12PN';
+ c.trainerLinks12PO=links;c.entry12PO={slide:'inlet-receiver',section:'Inlet to dry gas',guided:true};
+ var start=c.slideDeck12PE.slides.find(function(s){return s.id==='inlet-receiver';});
+ if(start){start.title='Inlet to dry gas: start at the inlet';start.section='Inlet to dry gas';}
+ c.slideDeck12PE.build='12PO';return c;
+}
+function cfIntroNote12PO(note){
+ var n=Object.assign({},note);n.d=['CURRENT 12PO: the walkthrough button starts at Inlet to dry gas. Open ! on equipment for its associated internal trainer; the trainer return tab brings you back to the same popup and reading position.'].concat((note.d||[]).filter(function(s){return !/^CURRENT 12PO:/.test(s);}));
+ n.sourceReview12PO={definition:'CF_SOURCE_12PO',authority:CF_SOURCE_12PO.sourceClass};return n;
+}
+
 var CF_INTRO_WALKTHROUGH_12PD=cfPayload12PJ.create("p186");
 var CF_SOURCE_12PD=cfPayload12PJ.create("p187");
 function cfIntroReference12PD(){return {t:CF_SOURCE_12PD.title,d:['Open Training > Introductory walkthrough for a step-by-step read-only view. '+CF_SOURCE_12PD.qualification].concat(CF_SOURCE_12PD.newEntries.map(function(x){return x.title+': '+x.text;})),sourceReview12PD:{definition:'CF_SOURCE_12PD',authority:CF_SOURCE_12PD.sourceClass}};}
@@ -40098,6 +40353,53 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
  var W=D.defaultView,root=null,style=null,saved=null,opened=false,store=null,record={},mapOpen=false,selectedNode=null,selectedSlot=null,infoNode=null,infoFocus=null;
  var KEY='clearforkIntroWalkthroughProgress_v1',deck=course.slideDeck12PE,byId={},nodes=course.nodes,ids=deck.slides.map(function(s){byId[s.id]=s;return s.id;});
  var guide=deck.guidedOverview12PL||[],state={slide:deck.start,trail:[],future:[],returns:[],branch:'Inlet gas',visited:[],reviewed:[],animate:false,zoom:1,guided:true,guideAnchor:deck.start},persist='Reading progress stays on this device.',search='';
+ // Suspend the real walkthrough, not a reconstructed page or saved-data reset.
+ var trainerVisit12PO=null,trainerError12PO='';
+ function trainerAvailable12PO(id){return !!hooks.openTrainer&&(!hooks.hasTrainer||hooks.hasTrainer(id));}
+ function addTrainerLinks12PO(n,body){
+  var options=(course.trainerLinks12PO&&course.trainerLinks12PO[n.id]||[]).filter(function(x){return trainerAvailable12PO(x.id);});
+  if(!options.length)return;
+  var box=el('section','iw-trainer12po',null,body);box.dataset.iwTrainerPanel='true';box.setAttribute('aria-label','Associated equipment internal training');
+  el('strong',null,'Equipment Internal Training',box);
+  el('p',null,'Explore inside the equipment, then use the return tab to come straight back here.',box);
+  options.forEach(function(x,i){
+   var host=box;if(i>0){var more=box.querySelector('[data-iw-other-trainers]');if(!more){more=details(box,'Other associated training').body;more.dataset.iwOtherTrainers='true';}host=more;}
+   var b=button('equipment-trainer',x.relation+': '+x.title,host,'iw-trainer-launch12po');b.dataset.iwTrainer=x.id;b.dataset.iwTrainerNode=n.id;
+   b.title=x.tag+' - '+x.scope;el('small','iw-info-note',x.scope,host);
+  });
+ }
+ function resumeTrainerVisit12PO(token){
+  if(!trainerVisit12PO||trainerVisit12PO.token!==token)return false;
+  var visit=trainerVisit12PO;trainerVisit12PO=null;
+  if(!root||!opened)return false;
+  root.hidden=false;root.style.display='';root.removeAttribute('aria-hidden');root.inert=false;
+  visit.scroll.forEach(function(x){if(x.element.isConnected){x.element.scrollTop=x.top;x.element.scrollLeft=x.left;}});
+  if(visit.focus&&visit.focus.isConnected)visit.focus.focus({preventScroll:true});
+  var announce=root.querySelector('[data-iw-announcer]');if(announce)announce.textContent='Returned to '+current().title+'. Your place and equipment details are unchanged.';
+  return true;
+ }
+ function launchTrainer12PO(id,nodeId){
+  if(!root||!opened||trainerVisit12PO||!trainerAvailable12PO(id))return false;
+  if(nodeId&&!(course.trainerLinks12PO&&course.trainerLinks12PO[nodeId]||[]).some(function(x){return x.id===id;}))return false;
+  trainerError12PO='';var oldError=root.querySelector('[data-iw-trainer-error]');if(oldError)oldError.remove();
+  var token={},focus=D.activeElement,scroll=Array.from(root.querySelectorAll('.iw-content,.iw-info-body,.iw-info-sheet,.iw-detail-scroll12pk,.iw-map')).map(function(e){return {element:e,top:e.scrollTop,left:e.scrollLeft};});
+  trainerVisit12PO={token:token,focus:focus,scroll:scroll,trainer:id,node:nodeId||null};
+  save();root.hidden=true;root.style.display='none';root.setAttribute('aria-hidden','true');root.inert=true;
+  var context={label:(nodeId&&nodes[nodeId]?nodes[nodeId].tag+' - ':'')+current().title,restore:function(){return resumeTrainerVisit12PO(token);}};
+  try{if(hooks.openTrainer(id,context)===false)throw Error('The associated trainer is unavailable or still opening.');return true;}
+  catch(e){resumeTrainerVisit12PO(token);trainerError12PO='The trainer could not open. Your place is unchanged; try the trainer button again.';
+   var host=root.querySelector('.iw-info-body')||root.querySelector('[data-iw-content]'),notice=el('p','iw-trainer-error12po',trainerError12PO,host);notice.dataset.iwTrainerError='true';notice.setAttribute('role','alert');return false;}
+ }
+ function startAtInlet12PO(){
+  if(trainerVisit12PO){if(hooks.closeTrainer)hooks.closeTrainer();if(trainerVisit12PO)return false;}
+  if(opened)closeInfo(false);
+  state.slide=course.entry12PO&&course.entry12PO.slide||deck.start;state.trail=[];state.future=[];state.returns=[];
+  state.branch=byId[state.slide].section;state.guided=true;state.guideAnchor=state.slide;state.animate=false;state.zoom=1;
+  selectedNode=null;selectedSlot=null;infoFocus=null;search='';
+  if(opened){closeMap(false);remember();render(true);var content=root.querySelector('[data-iw-content]');if(content)content.scrollTop=0;return true;}
+  return open(state.slide);
+ }
+
  function clone(v){return JSON.parse(JSON.stringify(v));}
  function validReturns(v){return Array.isArray(v)?v.map(function(x){return x&&Object.assign({},x,{id:normalizeId(x.id),entry:normalizeId(x.entry)});}).filter(function(x){return x&&byId[x.id]&&byId[x.entry];}).slice(-12).map(function(x){return {id:x.id,entry:x.entry,oneSlide:!!x.oneSlide,guided:!!x.guided,guideAnchor:guide.indexOf(x.guideAnchor)>=0?x.guideAnchor:x.id};}):[];}
  function frame(){return {id:state.slide,returns:clone(state.returns),branch:state.branch,guided:state.guided,guideAnchor:state.guideAnchor};}
@@ -40129,6 +40431,12 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
  var colors={gas:'#ae7617',liquid:'#2878b8',mixed:'#397b80',utility:'#8254a6',heat:'#b55c28'};
  function css(){return `
 #cfIntroWalkthrough12PD{position:fixed;inset:0;z-index:100010;isolation:isolate;display:flex;flex-direction:column;background:#0b1721;color:#e7f0f4;font:15px/1.55 'Segoe UI',system-ui,sans-serif;height:100vh;height:100dvh}
+#cfIntroWalkthrough12PD[hidden]{display:none!important}
+#cfIntroWalkthrough12PD .iw-trainer12po{padding:13px 15px;margin:12px 0 18px;background:#103e35;border:1px solid #4ea07c;border-radius:10px}
+#cfIntroWalkthrough12PD .iw-trainer12po p{margin:5px 0 10px;font-size:13px}
+#cfIntroWalkthrough12PD .iw-trainer-launch12po{display:block;background:#39ff14;color:#10270a;border-color:#9bff85;font-weight:700;white-space:normal;text-align:left;margin:8px 0;width:100%}
+#cfIntroWalkthrough12PD .iw-trainer-launch12po:hover{background:#92ff78;color:#10270a}
+#cfIntroWalkthrough12PD .iw-trainer-error12po{color:#ffe2bc;border-left:3px solid #dbaa65;padding:10px}
 #cfIntroWalkthrough12PD *{box-sizing:border-box}#cfIntroWalkthrough12PD [hidden]{display:none!important}
 #cfIntroWalkthrough12PD button,#cfIntroWalkthrough12PD input{font:inherit;line-height:1.3;min-width:0;max-width:100%}
 #cfIntroWalkthrough12PD button{padding:9px 14px;min-height:42px;border:1px solid #456074;border-radius:9px;background:#193244;color:#e5f5ff;cursor:pointer;touch-action:manipulation}
@@ -40625,7 +40933,7 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
   var n=nodes[id],s=current(),layer=el('div','iw-info-layer',null,root);layer.dataset.iwInfoLayer='true';layer.addEventListener('click',function(e){if(e.target===layer)closeInfo(true);});
   var panel=el('section','iw-info-sheet',null,layer);panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','iwInfoTitle12PF');panel.setAttribute('aria-describedby','iwInfoPurpose12PF');
   var head=el('div','iw-info-head',null,panel),label=el('div',null,null,head);el('span','iw-eyebrow','EQUIPMENT / CONNECTION EXPLANATION',label);var h=el('h3',null,n.tag,label);h.id='iwInfoTitle12PF';var closeBtn=button('info-close','Back to diagram',head);
-  var body=el('div','iw-info-body',null,panel);el('strong','iw-info-name',n.label,body);var p=el('p',null,n.role,body);p.id='iwInfoPurpose12PF';addEquipmentDetail12PK(n,body,s);
+  var body=el('div','iw-info-body',null,panel);el('strong','iw-info-name',n.label,body);var p=el('p',null,n.role,body);p.id='iwInfoPurpose12PF';addTrainerLinks12PO(n,body);addEquipmentDetail12PK(n,body,s);
   var dl=el('dl','iw-info-facts',null,body);[['Material / state',phaseLabel(n)],['Pressure',n.pressure],['Temperature / change',n.temperature]].forEach(function(row){el('dt',null,row[0],dl);el('dd',null,row[1],dl);});
   var index=typeof slot==='string'&&/^node-\d+$/.test(slot)?Number(slot.slice(5)):-1;
   if(index>=0&&s.nodes[index]===id&&!s.diagramMode&&!s.choices.length){var ctx=[];if(index>0)ctx.push('From '+nodes[s.nodes[index-1]].tag);if(index<s.nodes.length-1)ctx.push('Next '+nodes[s.nodes[index+1]].tag);if(ctx.length)el('p','iw-info-context',ctx.join(' \u2192 ')+'. Simplified connections in this view, not a field lineup.',body);}
@@ -40678,17 +40986,17 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
  }
  function appendSource(a,parent){el('blockquote',null,a.excerpt,parent);el('code',null,a.source+' / '+a.path,parent);if(a.context)el('p',null,a.context,parent);}
  function remember(){if(!state.visited.includes(state.slide))state.visited.push(state.slide);save();}
- function navigate(to,kind,edge){to=normalizeId(to);if(!to)return false;closeInfo(false);state.future=[];state.trail.push(frame());if(state.trail.length>120)state.trail.shift();
+ function navigate(to,kind,edge){if(trainerVisit12PO)return false;to=normalizeId(to);if(!to)return false;closeInfo(false);state.future=[];state.trail.push(frame());if(state.trail.length>120)state.trail.shift();
   var explicitGuide=!!(edge&&(edge.guideNext12PL||edge.guideStart12PL));
   if(explicitGuide){state.guided=true;state.guideAnchor=to;state.returns=[];}
   else {if(kind==='visit'||(state.guided&&kind==='flow')){state.returns.push({id:state.slide,entry:to,oneSlide:!!(edge&&edge.returnAfter),guided:state.guided,guideAnchor:state.guideAnchor});if(state.returns.length>12)state.returns.shift();}if(kind==='jump'||kind==='start')state.returns=[];state.guided=false;}
   state.slide=to;state.branch=(edge&&edge.label)||byId[to].section;state.zoom=1;closeMap(false);remember();render(true);return true;
  }
 
- function goBack(){var f=state.trail.pop();if(!f){var prev=previous12PL();if(!prev||!byId[prev])return false;f={id:prev,returns:[],branch:byId[prev].section,guided:state.guided,guideAnchor:state.guided?prev:state.guideAnchor};}state.future.push(frame());if(state.future.length>120)state.future.shift();closeInfo(false);state.slide=f.id;state.returns=validReturns(f.returns);state.branch=f.branch;restoreFrame12PL(f);state.zoom=1;closeMap(false);remember();render(true);return true;}
+ function goBack(){if(trainerVisit12PO)return false;var f=state.trail.pop();if(!f){var prev=previous12PL();if(!prev||!byId[prev])return false;f={id:prev,returns:[],branch:byId[prev].section,guided:state.guided,guideAnchor:state.guided?prev:state.guideAnchor};}state.future.push(frame());if(state.future.length>120)state.future.shift();closeInfo(false);state.slide=f.id;state.returns=validReturns(f.returns);state.branch=f.branch;restoreFrame12PL(f);state.zoom=1;closeMap(false);remember();render(true);return true;}
 
- function goForward(){var f=state.future.pop();if(!f)return false;state.trail.push(frame());if(state.trail.length>120)state.trail.shift();closeInfo(false);state.slide=f.id;state.returns=validReturns(f.returns);state.branch=f.branch;restoreFrame12PL(f);state.zoom=1;closeMap(false);remember();render(true);return true;}
- function returnToPath(){var r=state.returns[state.returns.length-1];if(!r)return false;state.future=[];closeInfo(false);state.trail.push(frame());if(state.trail.length>120)state.trail.shift();state.returns.pop();state.slide=r.id;restoreFrame12PL(r);state.branch=current().section;state.zoom=1;remember();render(true);return true;}
+ function goForward(){if(trainerVisit12PO)return false;var f=state.future.pop();if(!f)return false;state.trail.push(frame());if(state.trail.length>120)state.trail.shift();closeInfo(false);state.slide=f.id;state.returns=validReturns(f.returns);state.branch=f.branch;restoreFrame12PL(f);state.zoom=1;closeMap(false);remember();render(true);return true;}
+ function returnToPath(){if(trainerVisit12PO)return false;var r=state.returns[state.returns.length-1];if(!r)return false;state.future=[];closeInfo(false);state.trail.push(frame());if(state.trail.length>120)state.trail.shift();state.returns.pop();state.slide=r.id;restoreFrame12PL(r);state.branch=current().section;state.zoom=1;remember();render(true);return true;}
  function next(){var s=current();if(state.guided){var gn=guideNext12PL();if(gn)return navigate(gn,'learn',{guideNext12PL:true});close();return true;}if(pendingReturn())return returnToPath();if(s.choices.length){var e=root.querySelector('svg [data-iw-edge][role=button]');if(e){e.focus();e.scrollIntoView({block:'nearest'});}return false;}if(s.next)return navigate(s.next,s.nextKind||'flow');if(s.id==='finish')return navigate(deck.start,'start');close();return true;}
  function edgeAction(set,index){var list=current()[set];if(!Array.isArray(list)||!Number.isInteger(index)||!list[index])return false;var e=list[index];return navigate(e.to,e.kind,e);}
  function mapList(){if(!root)return;var list=root.querySelector('[data-iw-maplist]');if(!list)return;list.textContent='';var q=search.trim().toLowerCase();
@@ -40716,7 +41024,7 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
   if(a==='review'){state.reviewed=state.reviewed.includes(state.slide)?state.reviewed.filter(function(x){return x!==state.slide;}):state.reviewed.concat(state.slide);save();t.textContent=state.reviewed.includes(state.slide)?'Marked reviewed':'Mark this slide reviewed';t.setAttribute('aria-pressed',String(state.reviewed.includes(state.slide)));return;}
   if(a==='reset'){if(!W.confirm('Reset only introductory-walkthrough reading progress? Plant data, quizzes, Schedule and Ryan history are not changed.'))return;record=Object.assign({},record,{reviewed:[]});state={slide:deck.start,trail:[],future:[],returns:[],branch:'Inlet gas',visited:[],reviewed:[],animate:false,zoom:1,guided:true,guideAnchor:deck.start};closeMap(false);remember();render(true);return;}
   if(a==='equipment'&&hooks.openReference){var owner=t.dataset.iwOwner;if(owner){close();hooks.openReference(owner);}return;}
-  if(a==='trainer'&&hooks.openTrainer){var id=t.dataset.iwTrainer;close();hooks.openTrainer(id);return;}
+  if((a==='trainer'||a==='equipment-trainer')&&hooks.openTrainer){launchTrainer12PO(t.dataset.iwTrainer,a==='equipment-trainer'?t.dataset.iwTrainerNode:null);return;}
  }
  function keyboard(e){e.stopPropagation();if(!root)return;if(e.key==='Escape'){e.preventDefault();if(infoNode)closeInfo(true);else if(mapOpen)closeMap(true);else close();return;}
   if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.target.closest('input,textarea,select,summary')){e.preventDefault();if(infoNode&&detailState12PK){detailState12PK.step+=e.key==='ArrowLeft'?-1:1;updateEquipmentDetail12PK();}else if(!mapOpen){if(e.key==='ArrowLeft')goBack();else if(state.future.length)goForward();else next();}return;}
@@ -40724,18 +41032,18 @@ function cfCreateIntroWalkthrough12PD(D, course, hooks) {
   if(e.key==='Tab'){var area=infoNode?root.querySelector('[data-iw-info-layer]'):(mapOpen?root.querySelector('[data-iw-drawer]'):root);var fs=Array.from(area.querySelectorAll('button:not(:disabled),input,select,summary,[tabindex="0"]')).filter(function(n){return !!n.getClientRects().length;});if(!fs.length)return;var first=fs[0],last=fs[fs.length-1];if(e.shiftKey&&(D.activeElement===first||!area.contains(D.activeElement))){e.preventDefault();last.focus();}else if(!e.shiftKey&&(D.activeElement===last||!area.contains(D.activeElement))){e.preventDefault();first.focus();}}
  }
  function stopKeys(e){e.stopPropagation();}
- function resize(){if(root){draw();if(infoNode&&detailState12PK)updateEquipmentDetail12PK();}}function visibility(){if(root)draw();}
- function open(id){if(opened){if(id!=null)selectStep(id);return true;}opened=true;state.animate=false;state.zoom=1;mapOpen=false;
+ function resize(){if(root&&!trainerVisit12PO){draw();if(infoNode&&detailState12PK)updateEquipmentDetail12PK();}}function visibility(){if(root&&!trainerVisit12PO)draw();}
+ function open(id){if(trainerVisit12PO)return false;if(opened){if(id!=null)selectStep(id);return true;}opened=true;state.animate=false;state.zoom=1;mapOpen=false;
   saved={focus:D.activeElement,overflow:D.body.style.overflow,pause:W._pauseRender};W._pauseRender=true;D.body.style.overflow='hidden';
-  style=el('style',null,null,D.head);style.id='introWalkthroughStyle12PD';style.textContent=css();root=el('section',null,null,D.body);root.id='cfIntroWalkthrough12PD';root.dataset.build='12PM';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Introductory walkthrough');
-  var top=el('header','iw-top',null,root),brand=el('div','iw-brand',null,top);el('div','iw-eyebrow','CLEAR FORK / START HERE / 12PM',brand);el('h1',null,'Introductory walkthrough',brand);el('p','iw-header-note','33-step overview. Optional flows and equipment details stay one click away.',brand);button('back','\u2190 Back',top);var m=button('map','Processes',top);m.setAttribute('aria-expanded','false');button('close','Close',top,'iw-close');
+  style=el('style',null,null,D.head);style.id='introWalkthroughStyle12PD';style.textContent=css();root=el('section',null,null,D.body);root.id='cfIntroWalkthrough12PD';root.dataset.build='12PO';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Introductory walkthrough');
+  var top=el('header','iw-top',null,root),brand=el('div','iw-brand',null,top);el('div','iw-eyebrow','CLEAR FORK / START HERE / 12PO',brand);el('h1',null,'Introductory walkthrough',brand);el('p','iw-header-note','Start at Inlet to dry gas. Open ! for equipment details and associated internal training.',brand);button('back','\u2190 Back',top);var m=button('map','Processes',top);m.setAttribute('aria-expanded','false');button('close','Close',top,'iw-close');
   var content=el('main','iw-content',null,root);content.dataset.iwContent='true';content.setAttribute('aria-labelledby','iwLessonTitle12PD');var foot=el('footer','iw-footer',null,root);button('back','\u2190 Back',foot);button('forward','Forward \u2192',foot);var progress=el('div','iw-footnote',null,foot);progress.dataset.iwProgress='true';button('next','Continue \u2192',foot,'iw-next');
   var ann=el('div','iw-sr','',root);ann.dataset.iwAnnouncer='true';ann.setAttribute('aria-live','polite');root.addEventListener('click',act);root.addEventListener('keydown',keyboard);root.addEventListener('keyup',stopKeys);W.addEventListener('resize',resize);D.addEventListener('visibilitychange',visibility);
   if(id!=null){var target=normalizeId(id);if(target){state.slide=target;state.trail=[];state.future=[];state.returns=[];state.guided=guide.indexOf(target)>=0;state.guideAnchor=state.guided?target:state.guideAnchor;}}remember();render(true);return true;
  }
- function close(){if(!opened)return;closeInfo(false);save();opened=false;W.removeEventListener('resize',resize);D.removeEventListener('visibilitychange',visibility);if(root){root.removeEventListener('click',act);root.removeEventListener('keydown',keyboard);root.removeEventListener('keyup',stopKeys);root.remove();root=null;}if(style){style.remove();style=null;}if(saved){W._pauseRender=saved.pause;D.body.style.overflow=saved.overflow;if(saved.focus&&saved.focus.isConnected&&saved.focus.focus)saved.focus.focus({preventScroll:true});saved=null;}mapOpen=false;state.animate=false;}
- function selectStep(id){var to=normalizeId(id);if(!to)return false;if(!opened){state.slide=to;state.trail=[];state.future=[];state.returns=[];state.guided=false;return true;}return navigate(to,'start');}
- return {open:open,close:close,selectStep:selectStep,back:goBack,forward:goForward,status:function(){var s=current();return {build:'12PM',curriculumBuild:'12PM',detailCount:Object.keys(course.equipmentDetails12PK||{}).length,detailState:detailState12PK?Object.assign({},detailState12PK):null,future:state.future.map(function(f){return f.id;}),guided:state.guided,guideIndex:guide.indexOf(state.slide),guideAnchor:state.guideAnchor,guideCount:guide.length,previousFallback:previous12PL()||null,open:opened,informationOpen:infoNode,selectedSlot:selectedSlot,stepId:s.lesson,slideId:s.id,step:state.trail.length+1,steps:deck.slides.length,routeId:s.id,selectedNode:selectedNode||s.focus,reviewed:Array.isArray(record.reviewed)?record.reviewed.slice():[],reviewedSlides:state.reviewed.slice(),visitedSlides:state.visited.slice(),returnStack:clone(state.returns),history:state.trail.map(function(f){return f.id;}),animated:state.animate,zoom:state.zoom,persistence:persist};},getCourse:function(){return clone(course);}};
+ function close(){if(!opened)return;if(trainerVisit12PO){var token=trainerVisit12PO.token;if(hooks.closeTrainer)hooks.closeTrainer();resumeTrainerVisit12PO(token);}closeInfo(false);save();opened=false;W.removeEventListener('resize',resize);D.removeEventListener('visibilitychange',visibility);if(root){root.removeEventListener('click',act);root.removeEventListener('keydown',keyboard);root.removeEventListener('keyup',stopKeys);root.remove();root=null;}if(style){style.remove();style=null;}if(saved){W._pauseRender=saved.pause;D.body.style.overflow=saved.overflow;if(saved.focus&&saved.focus.isConnected&&saved.focus.focus)saved.focus.focus({preventScroll:true});saved=null;}mapOpen=false;state.animate=false;}
+ function selectStep(id){if(trainerVisit12PO)return false;var to=normalizeId(id);if(!to)return false;if(!opened){state.slide=to;state.trail=[];state.future=[];state.returns=[];state.guided=false;return true;}return navigate(to,'start');}
+ return {open:open,startAtInlet12PO:startAtInlet12PO,close:close,selectStep:selectStep,back:goBack,forward:goForward,status:function(){var s=current();return {build:'12PO',curriculumBuild:'12PM',suspendedForTrainer12PO:!!trainerVisit12PO,trainerVisit12PO:trainerVisit12PO?{trainer:trainerVisit12PO.trainer,node:trainerVisit12PO.node}:null,trainerError12PO:trainerError12PO,detailCount:Object.keys(course.equipmentDetails12PK||{}).length,detailState:detailState12PK?Object.assign({},detailState12PK):null,future:state.future.map(function(f){return f.id;}),guided:state.guided,guideIndex:guide.indexOf(state.slide),guideAnchor:state.guideAnchor,guideCount:guide.length,previousFallback:previous12PL()||null,open:opened,informationOpen:infoNode,selectedSlot:selectedSlot,stepId:s.lesson,slideId:s.id,step:state.trail.length+1,steps:deck.slides.length,routeId:s.id,selectedNode:selectedNode||s.focus,reviewed:Array.isArray(record.reviewed)?record.reviewed.slice():[],reviewedSlides:state.reviewed.slice(),visitedSlides:state.visited.slice(),returnStack:clone(state.returns),history:state.trail.map(function(f){return f.id;}),animated:state.animate,zoom:state.zoom,persistence:persist};},getCourse:function(){return clone(course);}};
 }
 
 
@@ -40959,20 +41267,23 @@ function cfBuildIntroCourse12PM(original){
 
 function cfInstallIntroWalkthrough12PD(){
  if(window.CFIntroWalkthrough12PD)return window.CFIntroWalkthrough12PD;
- var note=CF_SOURCE_12PD.notebookKey;INFO[note]=cfEnhanceIntroReference12PF(cfEnhanceIntroReference12PE(cfIntroReference12PD()));INFO[note].d=INFO[note].d.concat(cfComponentReferenceLines12PJ());INFO[note].componentTeachingRevision='12PJ';INFO[note]=cfIntroNote12PM(cfIntroNote12PL(cfIntroNote12PK(INFO[note])));
+ var note=CF_SOURCE_12PD.notebookKey;INFO[note]=cfEnhanceIntroReference12PF(cfEnhanceIntroReference12PE(cfIntroReference12PD()));INFO[note].d=INFO[note].d.concat(cfComponentReferenceLines12PJ());INFO[note].componentTeachingRevision='12PJ';INFO[note]=cfIntroNote12PO(cfIntroNote12PM(cfIntroNote12PL(cfIntroNote12PK(INFO[note]))));
  var category=LIB_CATS.find(function(c){return c[0]==='Training / Introductory walkthrough';});if(!category){category=['Training / Introductory walkthrough',[]];LIB_CATS.push(category);}if(category[1].indexOf(note)<0)category[1].push(note);
- var previousSources=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var rows=previousSources.apply(this,arguments);if(!rows.some(function(x){return x.name==='CF_SOURCE_12PD';}))rows.push({name:'CF_SOURCE_12PD',value:CF_SOURCE_12PD});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PE';}))rows.push({name:'CF_SOURCE_12PE',value:CF_SOURCE_12PE});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PF';}))rows.push({name:'CF_SOURCE_12PF',value:CF_SOURCE_12PF});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PJ';}))rows.push({name:'CF_SOURCE_12PJ',value:CF_SOURCE_12PJ});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PK';}))rows.push({name:'CF_SOURCE_12PK',value:CF_SOURCE_12PK});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PL';}))rows.push({name:'CF_SOURCE_12PL',value:CF_SOURCE_12PL});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PM';}))rows.push({name:'CF_SOURCE_12PM',value:CF_SOURCE_12PM});return rows;};
- var api=cfCreateIntroWalkthrough12PD(document,cfBuildIntroCourse12PM(cfBuildIntroCourse12PL(cfBuildIntroCourse12PK(cfAddComponentTeaching12PJ(cfBuildIntroCourse12PF(CF_INTRO_WALKTHROUGH_12PD))))),{
+ var previousSources=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var rows=previousSources.apply(this,arguments);if(!rows.some(function(x){return x.name==='CF_SOURCE_12PD';}))rows.push({name:'CF_SOURCE_12PD',value:CF_SOURCE_12PD});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PE';}))rows.push({name:'CF_SOURCE_12PE',value:CF_SOURCE_12PE});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PF';}))rows.push({name:'CF_SOURCE_12PF',value:CF_SOURCE_12PF});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PJ';}))rows.push({name:'CF_SOURCE_12PJ',value:CF_SOURCE_12PJ});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PK';}))rows.push({name:'CF_SOURCE_12PK',value:CF_SOURCE_12PK});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PL';}))rows.push({name:'CF_SOURCE_12PL',value:CF_SOURCE_12PL});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PM';}))rows.push({name:'CF_SOURCE_12PM',value:CF_SOURCE_12PM});if(!rows.some(function(x){return x.name==='CF_SOURCE_12PO';}))rows.push({name:'CF_SOURCE_12PO',value:CF_SOURCE_12PO});return rows;};
+ var trainer12PO=window.CFCompressorTrainer12MO;var catalogLinks12PO=trainer12PO&&trainer12PO.trainingLinks12PO?trainer12PO.trainingLinks12PO():[];
+ var api=cfCreateIntroWalkthrough12PD(document,cfBuildIntroCourse12PO(cfBuildIntroCourse12PM(cfBuildIntroCourse12PL(cfBuildIntroCourse12PK(cfAddComponentTeaching12PJ(cfBuildIntroCourse12PF(CF_INTRO_WALKTHROUGH_12PD))))),catalogLinks12PO),{
   hasReference:cfIntroHasReference12PG,
   openReference:cfIntroOpenReference12PG,
-  openTrainer:function(id){if(window.CFCompressorTrainer12MO)window.CFCompressorTrainer12MO.open(id);}
+  hasTrainer:function(id){var t=window.CFCompressorTrainer12MO;return !!(t&&t.hasModel12PO&&t.hasModel12PO(id));},
+  closeTrainer:function(){var t=window.CFCompressorTrainer12MO;if(t)t.close();},
+  openTrainer:function(id,context){var t=window.CFCompressorTrainer12MO;return !!(t&&t.open(id,{walkthroughReturn12PO:context}));}
  });window.CFIntroWalkthrough12PD=api;
- var button=document.getElementById('introWalkthrough12PD');if(!button){button=document.createElement('button');button.id='introWalkthrough12PD';button.type='button';button.dataset.toolGroup='training';button.textContent='Introductory walkthrough';button.title='Start at the inlet receiver; follow simple slides and clickable branches through gas, liquids and support systems. Read-only; no equipment commands.';(document.querySelector('.bar3')||document.body).appendChild(button);}button.onclick=function(){api.open();};
+ var button=document.getElementById('introWalkthrough12PD');if(!button){button=document.createElement('button');button.id='introWalkthrough12PD';button.type='button';button.dataset.toolGroup='training';button.textContent='Introductory walkthrough';button.title='Start at the inlet receiver; follow simple slides and clickable branches through gas, liquids and support systems. Read-only; no equipment commands.';(document.querySelector('.bar3')||document.body).appendChild(button);}button.onclick=function(){api.startAtInlet12PO();};
  var deck=document.getElementById('toolDeck12KL');if(deck&&deck._api)deck._api.registerControl(button,'training');
- var previousDetail=libRenderDetail;libRenderDetail=function(){var r=previousDetail.apply(this,arguments);var host=document.getElementById('libDetail');if(libSel&&libSel.key===note&&host&&!host.querySelector('[data-intro-launch12pd]')){var b=document.createElement('button');b.type='button';b.dataset.introLaunch12pd='true';b.textContent='Open Introductory walkthrough';b.onclick=function(){if(typeof closeLibrary==='function')closeLibrary();api.open();};host.insertBefore(b,host.firstChild);}return r;};
- Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PE',introductoryWalkthrough:'12PM'});
+ var previousDetail=libRenderDetail;libRenderDetail=function(){var r=previousDetail.apply(this,arguments);var host=document.getElementById('libDetail');if(libSel&&libSel.key===note&&host&&!host.querySelector('[data-intro-launch12pd]')){var b=document.createElement('button');b.type='button';b.dataset.introLaunch12pd='true';b.textContent='Open Introductory walkthrough';b.onclick=function(){if(typeof closeLibrary==='function')closeLibrary();api.startAtInlet12PO();};host.insertBefore(b,host.firstChild);}return r;};
+ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PE',introductoryWalkthrough:'12PO'});
  Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length,referenceNotes:Object.keys(INFO).length});
- window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,introductoryWalkthrough:'12PM'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+ window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,introductoryWalkthrough:'12PO'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
  if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
  if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
  return api;
@@ -41072,8 +41383,352 @@ function cfInstallFindPicker12PG(){
 /* END 12PG FIND REPAIR */
 
 cfInstallFindPicker12PG();
-Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PJ',introductoryWalkthrough:'12PK'});
 
+/* 12PN current software release. Historical engineering definitions remain unchanged. */
+var CF_DISPLAY_RELEASE_12PN={"build":"12PN","baseline":"12PM","date":"2026-11-10","title":"Main model readability and display workload repair","sourceClass":"SOFTWARE_REPAIR_NOT_PLANT_ENGINEERING","notebookKey":"display_readability_12pn","changes":["Readable screen-facing exact-owner labels with nearby/selected priority, bounded DOM pool and overlap decluttering.","Generic physical equipment plaques retain their geometry and exact tag/service text with aspect-correct typography; individual field evidence is not redrawn.","Automatic pixel ratio stays at least 1; movement no longer forces .90 resolution or repeatedly resizes the framebuffer.","Render pacing carries scheduled deadlines; the fixed-step process clock, alarms, historian and controller equations are unchanged.","Selection reuses one temporary material per original material and disposes each once; idle fine-detail scans reuse their last result. Repeated UI redraw requests coalesce into the existing render loop.","Sampled display-stage timings and read-only local diagnostics are available; whole-device speed remains to be measured."],"preserved":["95-view introductory walkthrough including the12PM GSP journey and all132 detail entries","16 equipment internal training models and existing quiz","Equipment identities, plates, pipes, dimensions, operating controls, protections, Schedule and saved histories","Existing engine r128, data files, authentication, provider and shared-history logic"],"limits":["Prepared, not deployed.","Full original plant/native Three.js acceptance requires the existing15data scripts and a permitted browser runtime.","Scoped CPU/DOM/canvas tests are not full-scene GPU timing or proof of device-wide performance.","Screen-facing annotations are not depth-occluded field signs. Existing physical plaques and exact anchors remain."]};
+INFO[CF_DISPLAY_RELEASE_12PN.notebookKey]={t:CF_DISPLAY_RELEASE_12PN.title,d:CF_DISPLAY_RELEASE_12PN.changes.concat(CF_DISPLAY_RELEASE_12PN.limits),softwareRelease12PN:CF_DISPLAY_RELEASE_12PN};
+var cfDisplayCategory12PN=LIB_CATS.find(function(c){return c[0]==='Software / Display and performance';});if(!cfDisplayCategory12PN){cfDisplayCategory12PN=['Software / Display and performance',[]];LIB_CATS.push(cfDisplayCategory12PN);}if(!cfDisplayCategory12PN[1].includes(CF_DISPLAY_RELEASE_12PN.notebookKey))cfDisplayCategory12PN[1].push(CF_DISPLAY_RELEASE_12PN.notebookKey);
+cfInstallDisplay12PN();
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PN',introductoryWalkthrough:'12PO',displayRevision:'12PN'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT||{},{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,introductoryWalkthrough:'12PO',displayRevision:'12PN'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+
+
+/* 12PP reliability audit; source records and private data remain untouched. */
+var CF_SOURCE_12PP={"build":"12PP","baseline":"12PO","date":"2026-11-10","id":"presentation_audit_reliability_12pp","title":"Presentation audit / local archive failure handling and accurate diagnostics","notebookKey":"software_audit_12pp","sourceClass":"SOFTWARE_AUDIT_NOT_FIELD_VERIFICATION","newEntries":[{"id":"pp.storage","title":"Local archive reliability","text":"Schedule, work permits, shift reports and Official Test now use bounded existing database helpers. Unavailable reads and failed saves stay explicit; Schedule cannot overwrite an unread archive. Current dated schedules without rotation fields are preserved rather than reseeded. Known legacy offset arrays are normalized in memory with their original fields retained; no automatic database write or data clearing."},{"id":"pp.official","title":"Official Test lifetime","text":"Unreadable report/test uploads settle with explicit errors and do not replace the saved test. Concurrent test selections keep the latest chosen upload. Close/reopen invalidates stale load callbacks and releases the previous blob URL. Explicitly uploaded test HTML remains session-only when its save fails; no successful save is claimed."},{"id":"pp.audit","title":"Accurate audit surfaces","text":"Required content companion is included in the startup asset report. Missing or nonfinite conservation readings are not silently zero. Controller output availability is separated from independent valve-position verification."}],"policy":["Current physical geometry, process equations, control limits, protective behavior, original data scripts and trainer content are unchanged.","Tests in isolated DOM/Canvas/storage doubles are not native full-plant acceptance or live Netlify/cloud validation.","No secrets, real user records or production service were modified."],"pending":["Full original-page native Three.js/WebGL acceptance on an approved browser remains required; authoring browser navigation is blocked by administrator policy.","Live gate, provider availability, shared history, user-device frame rate and physical-phone behavior remain unverified."]};
+INFO[CF_SOURCE_12PP.notebookKey]={t:CF_SOURCE_12PP.title,d:CF_SOURCE_12PP.newEntries.map(function(x){return x.title+': '+x.text;}).concat(CF_SOURCE_12PP.policy,CF_SOURCE_12PP.pending),sourceReview12PP:{definition:'CF_SOURCE_12PP',authority:'SOFTWARE_AUDIT_NOT_FIELD_VERIFICATION'}};
+var cfPreviousSources12PP=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfPreviousSources12PP.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PP';}))a.push({name:'CF_SOURCE_12PP',value:CF_SOURCE_12PP});return a;};
+var cfAuditCat12PP=LIB_CATS.find(function(c){return c[0]==='Software / Display and performance';});if(!cfAuditCat12PP){cfAuditCat12PP=['Software / Display and performance',[]];LIB_CATS.push(cfAuditCat12PP);}if(!cfAuditCat12PP[1].includes(CF_SOURCE_12PP.notebookKey))cfAuditCat12PP[1].push(CF_SOURCE_12PP.notebookKey);
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PO',softwareAudit:'12PP'});Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,softwareAudit:'12PP'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title='12PQ | Clear Fork - Live transmitter readings';
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+/* BEGIN12PQ LOCAL TRANSMITTER READINGS */
+var CF_LOCAL_BINDINGS_12PQ={"cf3d_inst_pit8210a":{"tag":"PIT-8210A","equipment":"Residue sales","screens":[["outlet","pit8210a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_tit8210a":{"tag":"TIT-8210A","equipment":"Residue sales","screens":[["outlet","tit8210a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_fit8210a":{"tag":"FIT-8210A","equipment":"Residue sales","screens":[["outlet","fit8210a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pit8000a":{"tag":"PIT-8000A","equipment":"NGL metering skid","screens":[["outlet","pit8000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_fit8000a":{"tag":"FIT-8000A","equipment":"NGL metering skid","screens":[["outlet","fit8000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_tit8000a":{"tag":"TT-8000A","equipment":"NGL metering skid","screens":[["outlet","tit8000a"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TIT-8000A"],"physical":true},"cf3d_inst_te1421a":{"tag":"TE-1421A","equipment":"V-1421","screens":[["coldsep","te1421a"],["expander","te1421a"],["demeth","te1421a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_te1121d":{"tag":"TE-1121D","equipment":"EX-1121","screens":[["expander","te1121d"],["demeth","te1121d"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_ft1421":{"tag":"FT-1421","equipment":"V-1421","screens":[["coldsep","ft1421"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_fit1630a":{"tag":"FIT-1630A","equipment":"P-1630 / P-1635","screens":[["prodpump","fit1630a"]],"basis":"Exact retained primary tag","aliases":["FIT-1630A","FIT1630A"],"physical":true},"cf3d_inst_ft1438":{"tag":"FT-1438","equipment":"F-1438 / RSV recycle","screens":[["rsv","ft1438"]],"basis":"Exact retained primary tag","aliases":["FE-1438"],"physical":true},"cf3d_inst_pt1421":{"tag":"PT-1421","equipment":"V-1421","screens":[["coldsep","pt1421"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pt1121b":{"tag":"PT-1121B","equipment":"EX-1121","screens":[["expander","pt1121b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pt1121d":{"tag":"PT-1121D","equipment":"EX-1121","screens":[["expander","pt1121d"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pit1630a":{"tag":"PIT-1630A","equipment":"P-1630","screens":[["prodpump","pit1630a"]],"basis":"Exact retained primary tag","aliases":["PIT-1630A","PIT1630A"],"physical":true},"cf3d_inst_pit1635a":{"tag":"PIT-1635A","equipment":"P-1635","screens":[["prodpump","pit1635a"]],"basis":"Exact retained primary tag","aliases":["PIT-1635A","PIT1635A"],"physical":true},"cf3d_inst_pt1630b":{"tag":"PT-1630B","equipment":"P-1630 / P-1635","screens":[["prodpump","pt1630b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_te1224c":{"tag":"TE-1224C","equipment":"E-1224","screens":[["reb","te1224c"]],"basis":"Exact retained primary tag","aliases":["TE-1224C","TE1224C","TW-1224C"],"physical":true},"cf3d_inst_te1223c":{"tag":"TE-1223C","equipment":"E-1223","screens":[["reb","te1223c"]],"basis":"Exact retained primary tag","aliases":["TE-1223C","TE1223C","TW-1223C"],"physical":true},"cf3d_inst_te1223b":{"tag":"TE-1223B","equipment":"E-1223","screens":[["reb","te1223b"]],"basis":"Exact retained primary tag","aliases":["TE-1223B","TE1223B","TW-1223B"],"physical":true},"cf3d_inst_te1224b":{"tag":"TE-1224B","equipment":"E-1224","screens":[["reb","te1224b"]],"basis":"Exact retained primary tag","aliases":["TE-1224B","TE1224B","TW-1224B"],"physical":true},"cf3d_inst_te1224a":{"tag":"TE-1224A","equipment":"E-1224","screens":[["reb","te1224a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pt1438":{"tag":"PT-1438","equipment":"F-1438 / RSV recycle","screens":[["rsv","pt1438"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hi_pit1000":{"tag":"PIT-1000","equipment":"V-1000 inlet area","screens":[["plinlet","pit1000"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hi_pit1000a":{"tag":"PIT-1000A","equipment":"V-1000 inlet area","screens":[["plinlet","pit1000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hi_pit1010a":{"tag":"PIT-1010A","equipment":"V-1000 inlet area","screens":[["plinlet","pit1010a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hi_pit1010b":{"tag":"PIT-1010B","equipment":"V-1000 inlet area","screens":[["plinlet","pit1010b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hj_lit1020":{"tag":"LIT-1020","equipment":"V-1020","screens":[["plinlet","lit1020"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hk_lit1025":{"tag":"LIT-1025","equipment":"V-1025","screens":[["plinlet","lit1025"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hl_lit1030":{"tag":"LIT-1030","equipment":"V-1030","screens":[["plinlet","lit1030"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hm_pit1040b":{"tag":"PIT-1040B","equipment":"V-1040","screens":[["plinlet","pit1040b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hm_pit1040a":{"tag":"PIT-1040A","equipment":"V-1040","screens":[["inlsep","pit1040a"],["plinlet","pit1040a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hm_ti1040":{"tag":"TI-1040","equipment":"V-1040","screens":[["inlsep","ti1040"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pit1045a":{"tag":"PIT-1045A","equipment":"V-1040 / inlet compression","screens":[["inlcomp","pit1045a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_tit1045a":{"tag":"TIT-1045A","equipment":"V-1040 / inlet compression","screens":[["inlcomp","tit1045a"]],"basis":"Exact retained primary tag","aliases":["TE-1045A","TW-1045A"],"physical":true},"cf3d_inst_fit1045a":{"tag":"FIT-1045A","equipment":"V-1040 / inlet compression","screens":[["inlcomp","fit1045a"]],"basis":"Exact retained primary tag","aliases":["FE-1045A"],"physical":true},"cf3d_hn_pit4250b":{"tag":"PIT-4250B","equipment":"Inlet metering / inlet compression","screens":[["inlcomp","pit4250b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hn_pit4250c":{"tag":"PIT-4250C","equipment":"Inlet metering / inlet compression","screens":[["inlcomp","pit4250c"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hn_pit6810a":{"tag":"PIT-6810A","equipment":"Inlet metering / inlet compression","screens":[["inlcomp","pit6810a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hn_pit6805a":{"tag":"PIT-6805A","equipment":"Inlet metering / inlet compression","screens":[["regen","pit6805a"],["inlcomp","pit6805a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_hn_pit4250a":{"tag":"PIT-4250A","equipment":"Inlet metering / inlet compression","screens":[["inlcomp","pit4250a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2100_pt1410a":{"tag":"PT-1410A","equipment":"V-1410","screens":[["inlsys","pt1410a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2100_pt1410b":{"tag":"PT-1410B","equipment":"V-1410","screens":[["inlsys","pt1410b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2100_lt1410":{"tag":"LT-1410","equipment":"V-1410","screens":[["inlsys","lt1410"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_pdt1412":{"tag":"PDT-1412","equipment":"F-1412","screens":[["inlsys","pdt1412"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_pdt1416a":{"tag":"PDT-1416A","equipment":"F-1416 / F-1417","screens":[["dehy","pdt1416a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_pt1416":{"tag":"PT-1416","equipment":"F-1416 / F-1417","screens":[["dehy","pt1416"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_te1416":{"tag":"TE-1416","equipment":"F-1416 / F-1417","screens":[["dehy","te1416"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_me1416":{"tag":"ME-1416","equipment":"F-1416 / F-1417","screens":[["dehy","me1416"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2105_ft1416":{"tag":"FT-1416","equipment":"F-1416 / F-1417","screens":[["dehy","ft1416"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_te1223a":{"tag":"TE-1223A","equipment":"E-1223","screens":[["reb","te1223a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pt1441c":{"tag":"PT-1441C","equipment":"V-1441","screens":[["refsys","pt1441c"]],"basis":"Exact retained primary tag","aliases":["PT-1441C","PT1441C"],"physical":true},"cf3d_m2120_te1711":{"tag":"TE-1711","equipment":"H-1711","screens":[["dehy","te1711"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2120_pt1711a":{"tag":"PT-1711A","equipment":"H-1711","screens":[["dehy","pt1711a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2120_ft1711":{"tag":"FT-1711","equipment":"H-1711","screens":[["dehy","ft1711"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1221a":{"tag":"TE-1221A","equipment":"E-1221 / E-1222","screens":[["gasgas","te1221a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1221b":{"tag":"TE-1221B","equipment":"E-1221 / E-1222","screens":[["gasgas","te1221b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1221f":{"tag":"TE-1221F","equipment":"E-1221 / E-1222","screens":[["gasgas","te1221f"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1222d":{"tag":"TE-1222D","equipment":"E-1221 / E-1222","screens":[["demeth","te1222d"],["gasgas","te1222d"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1222j":{"tag":"TE-1222J","equipment":"E-1221 / E-1222","screens":[["demeth","te1222j"],["gasgas","te1222j"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_te1222k":{"tag":"TE-1222K","equipment":"E-1221 / E-1222","screens":[["demeth","te1222k"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_pdt1221":{"tag":"PDT-1221","equipment":"E-1221 / E-1222","screens":[["gasgas","pdt1221"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_pdt1221b":{"tag":"PDT-1221B","equipment":"E-1221 / E-1222","screens":[["gasgas","pdt1221b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_pdt1222a":{"tag":"PDT-1222A","equipment":"E-1221 / E-1222","screens":[["gasgas","pdt1222a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_pdt1222b":{"tag":"PDT-1222B","equipment":"E-1221 / E-1222","screens":[["gasgas","pdt1222b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2130_pdt1222c":{"tag":"PDT-1222C","equipment":"E-1221 / E-1222","screens":[["gasgas","pdt1222c"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2135_te1421":{"tag":"TE-1421","equipment":"V-1421","screens":[["coldsep","te1421"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2135_lt1421":{"tag":"LT-1421","equipment":"V-1421","screens":[["coldsep","lt1421"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2135_lic1421":{"tag":"LIC-1421","equipment":"V-1421","screens":[["coldsep","lic1421"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2135_ft1421a":{"tag":"FT-1421A","equipment":"V-1421","screens":[["coldsep","ft1421a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2145_pt1121a":{"tag":"PT-1121A","equipment":"C-1121","screens":[["expander","pt1121a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2145_pt1121e":{"tag":"PT-1121E","equipment":"E-1221 / T-1521","screens":[["expander","pt1121e"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2145_te1121a":{"tag":"TE-1121A","equipment":"PCV-1121A","screens":[["expander","te1121a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2145_se1121":{"tag":"SE-1121","equipment":"EX/C-1121","screens":[["expander","se1121"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2150_te1521f":{"tag":"TE-1521F","equipment":"T-1521","screens":[["demeth","te1521f"]],"basis":"Exact retained primary tag","aliases":["TE-1521F","TE1521F","TW-1521F"],"physical":true},"cf3d_m2150_te1521e":{"tag":"TE-1521E","equipment":"T-1521","screens":[["demeth","te1521e"]],"basis":"Exact retained primary tag","aliases":["TE-1521E","TE1521E","TW-1521E"],"physical":true},"cf3d_m2150_pdi1521":{"tag":"PDI-1521","equipment":"T-1521","screens":[["demeth","pdt1521"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["PDI-1521","PDI1521","PDT-1521","PDT1521"],"physical":true},"cf3d_m2155_te1322b":{"tag":"TE-1322B","equipment":"A-1322","screens":[["prodpump","te1322b"]],"basis":"Exact retained primary tag","aliases":["TE-1322B","TE1322B","TW-1322B"],"physical":true},"cf3d_m2155_te1322c":{"tag":"TE-1322C","equipment":"A-1322","screens":[["prodpump","te1322c"]],"basis":"Exact retained primary tag","aliases":["TE-1322C","TE1322C","TW-1322C"],"physical":true},"cf3d_m2155_te1422":{"tag":"TE-1422","equipment":"V-1422","screens":[["demeth","te1422"],["prodpump","te1422"]],"basis":"Exact retained primary tag","aliases":["TE-1422","TE1422"],"physical":true},"cf3d_m2155_lt1422":{"tag":"LT-1422","equipment":"V-1422","screens":[["prodpump","lt1422"]],"basis":"Exact retained primary tag","aliases":["LT-1422","LT1422"],"physical":true},"cf3d_m2155_ft1422":{"tag":"FT-1422","equipment":"NGL outlet liquids","screens":[["prodpump","ft1422"]],"basis":"Exact retained primary tag","aliases":["FT-1422","FT1422"],"physical":true},"cf3d_m2155_pic1623":{"tag":"PIC-1623","equipment":"NGL outlet liquids","screens":[["prodpump","pic1623"]],"basis":"Exact retained primary tag","aliases":["PIC-1623","PIC1623"],"physical":true},"cf3d_m2200_te1241a":{"tag":"TE-1241A","equipment":"E-1241","screens":[["refsys","te1241a"]],"basis":"Exact retained primary tag","aliases":["TE-1241A","TE1241A","TW-1241A"],"physical":true},"cf3d_m2200_te1241c":{"tag":"TE-1241C","equipment":"E-1241","screens":[["refsys","te1241c"]],"basis":"Exact retained primary tag","aliases":["TE-1241C","TE1241C","TW-1241C"],"physical":true},"cf3d_m2200_ti1241d":{"tag":"TI-1241D","equipment":"E-1241","screens":[["refsys","te1241d"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TI-1241D","TI1241D","TE-1241D"],"physical":true},"cf3d_m2200_lt1241":{"tag":"LT-1241","equipment":"E-1241","screens":[["refsys","lt1241"]],"basis":"Exact retained primary tag","aliases":["LT-1241","LT1241"],"physical":true},"cf3d_m2205_pt1444":{"tag":"PT-1444","equipment":"V-1444","screens":[["refcond","pt1444"],["refsys","pt1444"]],"basis":"Exact retained primary tag","aliases":["PT-1444","PT1444"],"physical":true},"cf3d_m2205_lt1444":{"tag":"LT-1444","equipment":"V-1444","screens":[["refsys","lt1444"]],"basis":"Exact retained primary tag","aliases":["LT-1444","LT1444"],"physical":true},"cf3d_m2205_pt1442":{"tag":"PT-1442","equipment":"V-1442","screens":[["refsys","pt1442"]],"basis":"Exact retained primary tag","aliases":["PT-1442","PT1442"],"physical":true},"cf3d_m2205_lt1442":{"tag":"LT-1442","equipment":"V-1442","screens":[["refsys","lt1442"]],"basis":"Exact retained primary tag","aliases":["LT-1442","LT1442"],"physical":true},"cf3d_m2205_pt1441":{"tag":"PT-1441","equipment":"V-1441","screens":[["refsys","pt1441"]],"basis":"Exact retained primary tag","aliases":["PT-1441","PT1441"],"physical":true},"cf3d_m2210_pt1140d":{"tag":"PT-1140D","equipment":"A-1343A/B/C","screens":[["refcond","pt1140d"]],"basis":"Exact retained primary tag","aliases":["PT-1140D","PT1140D"],"physical":true},"cf3d_m2210_pic1140d":{"tag":"PIC-1140D","equipment":"A-1343A/B/C","screens":[["refcond","pic1140d"]],"basis":"Exact retained primary tag","aliases":["PIC-1140D","PIC1140D"],"physical":true},"cf3d_m2240_pt1460a":{"tag":"PT-1460A","equipment":"V-1460","screens":[["fuelgas","pt1460a"]],"basis":"Exact retained primary tag","aliases":[],"physical":false},"cf3d_m2240_pt1460b":{"tag":"PT-1460B","equipment":"V-1460","screens":[["fuelgas","pt1460b"]],"basis":"Exact retained primary tag","aliases":[],"physical":false},"cf3d_m2240_lg1460":{"tag":"LG-1460","equipment":"V-1460","screens":[["fuelgas","lg1460"]],"basis":"Exact retained primary tag","aliases":[],"physical":false},"cf3d_m2260_fe1650":{"tag":"FE-1650","equipment":"V-1650","screens":[["util","fit1650"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["FE1650","FIT-1650","FIT1650","FI-1650","FI1650"],"physical":true},"cf3d_m2260_pit1650a":{"tag":"PIT-1650A","equipment":"V-1650","screens":[["util","pit1650a"]],"basis":"Exact retained primary tag","aliases":["PIT1650A"],"physical":true},"cf3d_m2150_pt1521d":{"tag":"PT-1521D","equipment":"T-1521","screens":[["demeth","pt1521d"]],"basis":"Exact retained primary tag","aliases":["PT-1521D","PT1521D"],"physical":true},"cf3d_m2150_pt1521a":{"tag":"PT-1521A","equipment":"T-1521","screens":[["demeth","pt1521a"]],"basis":"Exact retained primary tag","aliases":["PT-1521A","PT1521A"],"physical":true},"cf3d_m2500_tit5000a":{"tag":"TIT-5000A","equipment":"E-5000","screens":[["stabinlet","tit5000a"]],"basis":"Exact retained primary tag","aliases":["TI-5000A"],"physical":true},"cf3d_m2500_fit5000a":{"tag":"FIT-5000A","equipment":"E-5000","screens":[["stabinlet","fit5000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2500_fqi5000a":{"tag":"FQI-5000A","equipment":"E-5000","screens":[["stabinlet","fqi5000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2500_tit5000b":{"tag":"TIT-5000B","equipment":"E-5000","screens":[["stabinlet","tit5000b"]],"basis":"Exact retained primary tag","aliases":["TI-5000B"],"physical":true},"cf3d_m2500_tit5000d":{"tag":"TIT-5000D","equipment":"E-5000","screens":[["stabinlet","tit5000d"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2500_tit5000c":{"tag":"TIT-5000C","equipment":"E-5000","screens":[["stabinlet","tit5000c"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2500_tit5005b":{"tag":"TIT-5005B","equipment":"E-5000","screens":[["stabinlet","tit5005b"]],"basis":"Exact retained primary tag","aliases":["TI-5005B"],"physical":true},"cf3d_m2500_pit5000a":{"tag":"PIT-5000A","equipment":"E-5000","screens":[["stabinlet","pit5000a"]],"basis":"Exact retained primary tag","aliases":["PI-5000A"],"physical":true},"cf3d_m2505_lit5010a":{"tag":"LIT-5010A","equipment":"V-5010","screens":[["stabinlet","lit5010a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2505_lit5010b":{"tag":"LIT-5010B","equipment":"V-5010","screens":[["stabinlet","lit5010b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2505_pit5010a":{"tag":"PIT-5010A","equipment":"V-5010","screens":[["stabinlet","pit5010a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"it_fe5020a":{"tag":"FE-5020A","equipment":"E-5020","screens":[["stab","fit5020a"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["FIT-5020A"],"physical":true},"it_fe5020b":{"tag":"FE-5020B","equipment":"E-5020","screens":[["stab","fit5020b"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["FIT-5020B"],"physical":true},"it_te5020a":{"tag":"TE-5020A","equipment":"E-5020","screens":[["stab","tit5020a"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5020A","TIT-5020A"],"physical":true},"it_te5020c":{"tag":"TE-5020C","equipment":"E-5020","screens":[["stab","tit5020c"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5020C","TIT-5020C"],"physical":true},"it_te5020f":{"tag":"TE-5020F","equipment":"E-5020","screens":[["stab","tit5020f"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5020F","TIT-5020F"],"physical":true},"iu_te5040a":{"tag":"TE-5040A","equipment":"E-5040","screens":[["stab","tit5040a"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5040A","TIT-5040A"],"physical":true},"iu_lit5040a":{"tag":"LIT-5040A","equipment":"E-5040","screens":[["stab","lit5040a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"iu_pdit5040a":{"tag":"PDIT-5040A","equipment":"E-5040","screens":[["stab","pdit5040a"]],"basis":"Exact retained primary tag","aliases":["PDI-5040A"],"physical":true},"it_te5020d":{"tag":"TE-5020D","equipment":"E-5020","screens":[["stab","tit5020d"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5020D","TIT-5020D"],"physical":true},"iu_te5030b":{"tag":"TE-5030B","equipment":"T-5030","screens":[["stab","tit5030b"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5030B","TIT-5030B"],"physical":true},"iu_te5030c":{"tag":"TE-5030C","equipment":"T-5030","screens":[["stab","tit5030c"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5030C","TIT-5030C"],"physical":true},"iu_te5030e":{"tag":"TE-5030E","equipment":"E-5040","screens":[["stab","tit5030e"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5030E","TIT-5030E"],"physical":true},"iu_pit5030b":{"tag":"PIT-5030B","equipment":"T-5030","screens":[["stab","pit5030b"]],"basis":"Exact retained primary tag","aliases":["PI-5030B"],"physical":true},"iu_te5040c":{"tag":"TE-5040C","equipment":"E-5040","screens":[["stab","tit5040c"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5040C","TIT-5040C"],"physical":true},"iu_te5040e":{"tag":"TE-5040E","equipment":"E-5040","screens":[["stab","tit5040e"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5040E","TIT-5040E"],"physical":true},"iu_te5040d":{"tag":"TE-5040D","equipment":"E-5040","screens":[["stab","tit5040d"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["TW-5040D","TIT-5040D"],"physical":true},"iv_fe5060":{"tag":"FE-5060","equipment":"P-5060 / P-5065","screens":[["pmps","fit5060"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["FIT-5060","FI-5060"],"physical":true},"iw_fqi5500":{"tag":"FQI-5500","equipment":"C-5700 overhead gas headers","screens":[["pmps","fqi5500"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pit5030a":{"tag":"PIT-5030A","equipment":"T-5030","screens":[["stab","pit5030a"]],"basis":"Exact retained primary tag","aliases":["PI-5030A"],"physical":true},"cf3d_inst_tit5030d":{"tag":"TIT-5030D","equipment":"T-5030","screens":[["stab","tit5030d"]],"basis":"Exact retained primary tag","aliases":["TE-5030D","TW-5030D"],"physical":true},"iw_pit5900a":{"tag":"PIT-5900A","equipment":"C-5700 overhead gas headers","screens":[["pmps","pit5900a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"iw_pit5900b":{"tag":"PIT-5900B","equipment":"C-5700 overhead gas headers","screens":[["pmps","pit5900b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ix_pit5700b":{"tag":"PIT-5700B","equipment":"C-5700","screens":[["pmps","pit5700b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ix_pit5700a":{"tag":"PIT-5700A","equipment":"C-5700","screens":[["pmps","pit5700a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_pt1321":{"tag":"PT-1321","equipment":"A-1321","screens":[["expander","pt1321"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_inst_te1321":{"tag":"TE-1321","equipment":"A-1321","screens":[["expander","te1321"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"iy_pit6050b":{"tag":"PIT-6050B","equipment":"Residue suction / discharge headers","screens":[["rescomp","pit6050b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"iy_pit6050c":{"tag":"PIT-6050C","equipment":"Residue suction / discharge headers","screens":[["rescomp","pit6050c"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"iy_pit6050a":{"tag":"PIT-6050A","equipment":"Residue suction / discharge headers","screens":[["rescomp","pit6050a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ja_lit6800a":{"tag":"LIT-6800A","equipment":"F-6800 - Residue gas coalescing filter","screens":[["rescomp","lit6800a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ja_lit6800b":{"tag":"LIT-6800B","equipment":"F-6800 - Residue gas coalescing filter","screens":[["rescomp","lit6800b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ja_pdt6800a":{"tag":"PDT-6800A","equipment":"F-6800 - Residue gas coalescing filter","screens":[["rescomp","pdit6800a"]],"basis":"Explicit retained alias; no automatic prefix substitution","aliases":["PDIT-6800A"],"physical":true},"cf3d_m2690_pdt1438":{"tag":"PDT-1438","equipment":"F-1438 / RSV recycle","screens":[["rsv","pdt1438"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2690_lt1438a":{"tag":"LT-1438A","equipment":"F-1438 / RSV recycle","screens":[["rsv","lt1438a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2690_pt1438a":{"tag":"PT-1438A","equipment":"F-1438 / RSV recycle","screens":[["rsv","pt1438a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2710_fit7100a":{"tag":"FIT-7100A","equipment":"H-7100","screens":[["hotoil","fit7100a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2710_fit7100b":{"tag":"FIT-7100B","equipment":"H-7100","screens":[["hotoil","fit7100b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"cf3d_m2710_te202":{"tag":"TE-202","equipment":"H-7100","screens":[["hotoil","te202"]],"basis":"Exact retained primary tag","aliases":["TW-202","H-7100 TE-202","H-7100/TE-202","H-7100 Existing HMO process-temperature owner"],"physical":true},"jl_fit8110":{"tag":"FIT-8110","equipment":"V-8110","screens":[["util","fit8110"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jl_lit8110":{"tag":"LIT-8110","equipment":"V-8110","screens":[["util","lit8110"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jl_lit9100a":{"tag":"LIT-9100A","equipment":"V-9100","screens":[["util","lit9100a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jn_pit7500a":{"tag":"PIT-7500A","equipment":"V-7500","screens":[["hotoil","pit7500a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jo_pit8200":{"tag":"PIT-8200","equipment":"V-8200","screens":[["outlet","pit8200"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jq_fit9000a":{"tag":"FIT-9000A","equipment":"M2901 Plant Flare Header","screens":[["util","fit9000a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jr_lit8100":{"tag":"LIT-8100","equipment":"V-8100","screens":[["util","lit8100"]],"basis":"Exact retained primary tag","aliases":["LT-8100","LT8100"],"physical":true},"jr_fit8100":{"tag":"FIT-8100","equipment":"V-8100","screens":[["util","fit8100"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jr_pit8100a":{"tag":"PIT-8100A","equipment":"V-8100","screens":[["util","pit8100a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jr_pit8100c":{"tag":"PIT-8100C","equipment":"V-8100","screens":[["util","pit8100c"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ju_lit9300b":{"tag":"LIT-9300B","equipment":"TK-9300","screens":[["util","lit9300b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"ju_tit9300a":{"tag":"TIT-9300A","equipment":"TK-9300","screens":[["util","tit9300a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jw_fit9110a":{"tag":"FIT-9110A","equipment":"FL-9110","screens":[["util","fit9110a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jw_pit9110a":{"tag":"PIT-9110A","equipment":"FL-9110","screens":[["util","pit9110a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jw_tit9110a":{"tag":"TIT-9110A","equipment":"FL-9110","screens":[["util","tit9110a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jw_fit9111a":{"tag":"FIT-9111A","equipment":"FL-9110","screens":[["util","fit9111a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jx_pit9241a":{"tag":"PIT-9241A","equipment":"V-9241 instrument-air receiver","screens":[["util","pit9241a"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jx_pit8000b":{"tag":"PIT-8000B","equipment":"NGL metering skid","screens":[["outlet","pit8000b"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"jx_pit8000f":{"tag":"PIT-8000F","equipment":"NGL metering skid","screens":[["outlet","pit8000f"]],"basis":"Exact retained primary tag","aliases":[],"physical":true},"le_pit8220d":{"tag":"PIT-8220D","equipment":"Supplemental fuel gas / M2820","screens":[["outlet","pit8220d"],["util","pit8220d"]],"basis":"Exact retained primary tag","aliases":[],"physical":true}};
+var CF_SOURCE_12PQ={"build":"12PQ","baseline":"12PP","date":"2026-11-10","id":"local_transmitter_control_screen_readings_12pq","title":"3D transmitter local readings / exact control-screen mirrors","notebookKey":"local_transmitter_readings_12pq","sourceClass":"SOFTWARE_BINDINGS_FROM_EXISTING_SCREEN_CODE_AND_EXACT_DEVICE_REGISTRY","mappedInstrumentRecords":170,"screenSpecificBindings":180,"newEntries":[{"id":"pq.shared","title":"Shared source and formatting","text":"Selected 3D instrument cards and the named control screens use one read-only display resolver. Existing screen expressions, units and intentional decimal precision are preserved. No extra jitter, lag, new process integration, rated/default reading or nearest-equipment value is created."},{"id":"pq.owners","title":"Exact identity only","text":"Mappings require the existing stable asset ID, tag or existing explicit alias, and equipment owner. Repeated vendor-local tags and unresolved identities are not matched to unrelated plant tags. Instruments without an exact supported match show no numerical reading."},{"id":"pq.screens","title":"Existing screen disagreements remain explicit","text":"PIT-1040A on Plant Inlet versus Inlet Separation and TE-1222J on Gas/Gas versus Demethanizer have pre-existing channel differences. Their source-labelled readings are shown separately, not averaged or silently equated. Per-screen precision differences are preserved."},{"id":"pq.live","title":"Read-only live display","text":"Readings refresh with the existing simulator clock and field-display refresh, using mounted selected cards only. Tagged HMI readouts refresh from the same resolver. Pause, missing/nonfinite channels and delayed second-window samples are explicit. No per-instrument timers or off-screen screen renders are added."}],"policy":["Readings are LIVE SIMULATOR indications, not field telemetry or new installed transmitters.","No control command is sent when selecting a transmitter or opening its source screen.","Missing values remain unavailable, never zero, guessed values, ratings or sister-unit readings. Legitimate zero and negative values remain valid.","Existing process equations, historian schemas/samples, source facts, geometries, protections, trainers, walkthrough, authentication and saved data remain unchanged.","Native picking, complete original-page WebGL and live Netlify acceptance are distinct from isolated DOM/process tests."],"basis":{"baseline":"Actual12PP application","screenCode":"Existing SCR screen renderers and cfTxDisplay / cfFormatReadout12NK","identity":"Final retained component registry, exact ID/tag/explicit aliases and equipment owner","notBasis":["nearest-equipment inference","tag-number-only guess","vendor-tag prefix substitution","nameplate rating","historical snapshot","new sensor calculation"]}};
+var CF_LOCAL_SIGNALS_12PQ={
+"coldsep:ft1421":Object.assign({"screen":"coldsep","tag":"FT-1421","unit":"GPM","helper":"tg","line":18366,"original":"V.ft1421.toFixed(2)","id":"coldsep:ft1421","key":"ft1421","screenTitle":"Cold Sep.","dependencies":[["PLANT","v","ft1421"]],"filters":[],"channelKey":"ft1421"},{get:function(){return (PLANT.v).ft1421.toFixed(2);}}),
+"coldsep:ft1421a":Object.assign({"screen":"coldsep","tag":"FT-1421A","unit":"GPM","helper":"tg","line":18368,"original":"V.ft1421a.toFixed(2)","id":"coldsep:ft1421a","key":"ft1421a","screenTitle":"Cold Sep.","dependencies":[["PLANT","v","ft1421a"]],"filters":[],"channelKey":"ft1421a"},{get:function(){return (PLANT.v).ft1421a.toFixed(2);}}),
+"coldsep:lic1421":Object.assign({"screen":"coldsep","tag":"LIC-1421","unit":"%","helper":"tg","line":18360,"original":"L.LIC1421.pv.toFixed(1)","id":"coldsep:lic1421","key":"lic1421","screenTitle":"Cold Sep.","dependencies":[["PLANT","L","LIC1421","pv"]],"filters":[],"channelKey":"lic1421"},{get:function(){return (PLANT.L).LIC1421.pv.toFixed(1);}}),
+"coldsep:lt1421":Object.assign({"screen":"coldsep","tag":"LT-1421","unit":"%","helper":"tg","line":18358,"original":"L.LIC1421.pv.toFixed(1)","id":"coldsep:lt1421","key":"lt1421","screenTitle":"Cold Sep.","dependencies":[["PLANT","L","LIC1421","pv"]],"filters":[],"channelKey":"lt1421"},{get:function(){return (PLANT.L).LIC1421.pv.toFixed(1);}}),
+"coldsep:pt1421":Object.assign({"screen":"coldsep","tag":"PT-1421","unit":"PSIG","helper":"tg","line":18354,"original":"L.PIC1421.pv.toFixed(0)","id":"coldsep:pt1421","key":"pt1421","screenTitle":"Cold Sep.","dependencies":[["PLANT","L","PIC1421","pv"]],"filters":[],"channelKey":"pt1421"},{get:function(){return (PLANT.L).PIC1421.pv.toFixed(0);}}),
+"coldsep:te1421":Object.assign({"screen":"coldsep","tag":"TE-1421","unit":"DEGF","helper":"tg","line":18351,"original":"L.TIC1421.pv.toFixed(1)","id":"coldsep:te1421","key":"te1421","screenTitle":"Cold Sep.","dependencies":[["PLANT","L","TIC1421","pv"]],"filters":[],"channelKey":"te1421"},{get:function(){return (PLANT.L).TIC1421.pv.toFixed(1);}}),
+"coldsep:te1421a":Object.assign({"screen":"coldsep","tag":"TE-1421A","unit":"DEGF","helper":"tg","line":18355,"original":"V.te1421a.toFixed(1)","id":"coldsep:te1421a","key":"te1421a","screenTitle":"Cold Sep.","dependencies":[["PLANT","v","te1421a"]],"filters":[],"channelKey":"te1421a"},{get:function(){return (PLANT.v).te1421a.toFixed(1);}}),
+"dehy:ft1416":Object.assign({"screen":"dehy","tag":"FT-1416","unit":"MMSCFD","helper":"pt","line":18863,"original":"j(V.ft1416,.01).toFixed(2)","id":"dehy:ft1416","key":"ft1416","screenTitle":"Dehy System","dependencies":[["PLANT","v","ft1416"]],"filters":[],"channelKey":"ft1416"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).ft1416,.01).toFixed(2);}}),
+"dehy:ft1711":Object.assign({"screen":"dehy","tag":"FT-1711","unit":"MMSCFD","helper":"pt","line":18860,"original":"V.ft1711.toFixed(2)","id":"dehy:ft1711","key":"ft1711","screenTitle":"Dehy System","dependencies":[["PLANT","v","ft1711"]],"filters":[],"channelKey":"ft1711"},{get:function(){return (PLANT.v).ft1711.toFixed(2);}}),
+"dehy:me1416":Object.assign({"screen":"dehy","tag":"ME-1416","unit":"DEGF","helper":"pt","line":18862,"original":"j(V.me1416,.2).toFixed(2)","id":"dehy:me1416","key":"me1416","screenTitle":"Dehy System","dependencies":[["PLANT","v","me1416"]],"filters":[],"channelKey":"me1416"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).me1416,.2).toFixed(2);}}),
+"dehy:pdt1416a":Object.assign({"screen":"dehy","tag":"PDT-1416A","unit":"PSID","helper":"pt","line":18861,"original":"j(V.pdt1416a,.01).toFixed(2)","id":"dehy:pdt1416a","key":"pdt1416a","screenTitle":"Dehy System","dependencies":[["PLANT","v","pdt1416a"]],"filters":[],"channelKey":"pdt1416a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pdt1416a,.01).toFixed(2);}}),
+"dehy:pt1416":Object.assign({"screen":"dehy","tag":"PT-1416","unit":"PSIG","helper":"pt","line":18862,"original":"j(V.pt1416,.5).toFixed(2)","id":"dehy:pt1416","key":"pt1416","screenTitle":"Dehy System","dependencies":[["PLANT","v","pt1416"]],"filters":[],"channelKey":"pt1416"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pt1416,.5).toFixed(2);}}),
+"dehy:pt1711a":Object.assign({"screen":"dehy","tag":"PT-1711A","unit":"PSIG","helper":"pt","line":18860,"original":"j(V.pt1711a,.6).toFixed(2)","id":"dehy:pt1711a","key":"pt1711a","screenTitle":"Dehy System","dependencies":[["PLANT","v","pt1711a"]],"filters":[],"channelKey":"pt1711a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pt1711a,.6).toFixed(2);}}),
+"dehy:te1416":Object.assign({"screen":"dehy","tag":"TE-1416","unit":"DEGF","helper":"pt","line":18861,"original":"j(V.te1416,.2).toFixed(2)","id":"dehy:te1416","key":"te1416","screenTitle":"Dehy System","dependencies":[["PLANT","v","te1416"]],"filters":[],"channelKey":"te1416"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1416,.2).toFixed(2);}}),
+"dehy:te1711":Object.assign({"screen":"dehy","tag":"TE-1711","unit":"DEGF","helper":"pt","line":18860,"original":"j(V.te1711,.2).toFixed(2)","id":"dehy:te1711","key":"te1711","screenTitle":"Dehy System","dependencies":[["PLANT","v","te1711"]],"filters":[],"channelKey":"te1711"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1711,.2).toFixed(2);}}),
+"demeth:pdt1521":Object.assign({"screen":"demeth","tag":"PDT-1521","unit":"PSID","helper":"et","line":21149,"original":"j(V.pdt1521==null?2.44:V.pdt1521,0)","id":"demeth:pdt1521","key":"pdt1521","screenTitle":"Demeth.","dependencies":[["PLANT","v","pdt1521"]],"filters":[],"channelKey":"pdt1521"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pdt1521==null?2.44:(PLANT.v).pdt1521,0);}}),
+"demeth:pt1521a":Object.assign({"screen":"demeth","tag":"PT-1521A","unit":"PSIG","helper":"et","line":21169,"original":"j(V.pt1521a==null?pres+3:V.pt1521a,0)","id":"demeth:pt1521a","key":"pt1521a","screenTitle":"Demeth.","dependencies":[["PLANT","v","pt1521a"]],"filters":[],"channelKey":"pt1521a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pt1521a==null?((PLANT.L).PIC1521.pv)+3:(PLANT.v).pt1521a,0);}}),
+"demeth:pt1521d":Object.assign({"screen":"demeth","tag":"PT-1521D","unit":"PSIG","helper":"et","line":21120,"original":"j(V.pt1521d==null?pres:V.pt1521d,0)","id":"demeth:pt1521d","key":"pt1521d","screenTitle":"Demeth.","dependencies":[["PLANT","L","PIC1521","pv"]],"filters":[],"channelKey":"pt1521d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pt1521d==null?((PLANT.L).PIC1521.pv):(PLANT.v).pt1521d,0);}}),
+"demeth:te1121d":Object.assign({"screen":"demeth","tag":"TE-1121D","unit":"DEGF","helper":"et","line":21133,"original":"j(V.te1121d==null?-85.7:V.te1121d,0)","id":"demeth:te1121d","key":"te1121d","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1121d"]],"filters":[],"channelKey":"te1121d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1121d==null?-85.7:(PLANT.v).te1121d,0);}}),
+"demeth:te1222d":Object.assign({"screen":"demeth","tag":"TE-1222D","unit":"DEGF","helper":"et","line":21128,"original":"j(V.te1222d==null?-146.20:V.te1222d,0)","id":"demeth:te1222d","key":"te1222d","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1222d"]],"filters":[],"channelKey":"te1222d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1222d==null?-146.20:(PLANT.v).te1222d,0);}}),
+"demeth:te1222j":Object.assign({"screen":"demeth","tag":"TE-1222J","unit":"DEGF","helper":"et","line":21122,"original":"j(V.te1222j==null?-90.9:V.te1222j,0)","id":"demeth:te1222j","key":"te1222j","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1222j"]],"filters":[],"channelKey":"te1222j"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1222j==null?-90.9:(PLANT.v).te1222j,0);}}),
+"demeth:te1222k":Object.assign({"screen":"demeth","tag":"TE-1222K","unit":"DEGF","helper":"et","line":21125,"original":"j(V.te1222k==null?-146.90:V.te1222k,0)","id":"demeth:te1222k","key":"te1222k","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1222k"]],"filters":[],"channelKey":"te1222k"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1222k==null?-146.90:(PLANT.v).te1222k,0);}}),
+"demeth:te1421a":Object.assign({"screen":"demeth","tag":"TE-1421A","unit":"DEGF","helper":"et","line":21136,"original":"j(V.te1421a==null?-7.0:V.te1421a,0)","id":"demeth:te1421a","key":"te1421a","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1421a"]],"filters":[],"channelKey":"te1421a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1421a==null?-7.0:(PLANT.v).te1421a,0);}}),
+"demeth:te1422":Object.assign({"screen":"demeth","tag":"TE-1422","unit":"DEGF","helper":"et","line":21175,"original":"j(V.te1422==null?162.2:V.te1422,0)","id":"demeth:te1422","key":"te1422","screenTitle":"Demeth.","dependencies":[["PLANT","v","te1422"]],"filters":[],"channelKey":"te1422"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1422==null?162.2:(PLANT.v).te1422,0);}}),
+"demeth:te1521e":Object.assign({"screen":"demeth","tag":"TE-1521E","unit":"DEGF","helper":"et","line":21162,"original":"j(dBot,0.04)","id":"demeth:te1521e","key":"te1521e","screenTitle":"Demeth.","dependencies":[["PLANT","v","demBot"]],"filters":[],"channelKey":"te1521e"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).demBot),0.04);}}),
+"demeth:te1521f":Object.assign({"screen":"demeth","tag":"TE-1521F","unit":"DEGF","helper":"et","line":21161,"original":"j(dBot+0.40,0.04)","id":"demeth:te1521f","key":"te1521f","screenTitle":"Demeth.","dependencies":[["PLANT","v","demBot"]],"filters":[],"channelKey":"te1521f"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).demBot)+0.40,0.04);}}),
+"expander:pt1121a":Object.assign({"screen":"expander","tag":"PT-1121A","unit":"PSIG","helper":"pt","line":18405,"original":"V.pt1121a.toFixed(2)","id":"expander:pt1121a","key":"pt1121a","screenTitle":"Expander","dependencies":[["PLANT","v","pt1121a"]],"filters":[],"channelKey":"pt1121a"},{get:function(){return (PLANT.v).pt1121a.toFixed(2);}}),
+"expander:pt1121b":Object.assign({"screen":"expander","tag":"PT-1121B","unit":"PSIG","helper":"pt","line":18392,"original":"V.pt1121b.toFixed(2)","id":"expander:pt1121b","key":"pt1121b","screenTitle":"Expander","dependencies":[["PLANT","v","pt1121b"]],"filters":[],"channelKey":"pt1121b"},{get:function(){return (PLANT.v).pt1121b.toFixed(2);}}),
+"expander:pt1121d":Object.assign({"screen":"expander","tag":"PT-1121D","unit":"PSIG","helper":"pt","line":18399,"original":"V.pt1121d.toFixed(2)","id":"expander:pt1121d","key":"pt1121d","screenTitle":"Expander","dependencies":[["PLANT","v","pt1121d"]],"filters":[],"channelKey":"pt1121d"},{get:function(){return (PLANT.v).pt1121d.toFixed(2);}}),
+"expander:pt1121e":Object.assign({"screen":"expander","tag":"PT-1121E","unit":"PSIG","helper":"pt","line":18381,"original":"L.PIC1121E.pv.toFixed(2)","id":"expander:pt1121e","key":"pt1121e","screenTitle":"Expander","dependencies":[["PLANT","L","PIC1121E","pv"]],"filters":[],"channelKey":"pt1121e"},{get:function(){return (PLANT.L).PIC1121E.pv.toFixed(2);}}),
+"expander:pt1321":Object.assign({"screen":"expander","tag":"PT-1321","unit":"PSIG","helper":"pt","line":18408,"original":"V.pt1321.toFixed(2)","id":"expander:pt1321","key":"pt1321","screenTitle":"Expander","dependencies":[["PLANT","v","pt1321"]],"filters":[],"channelKey":"pt1321"},{get:function(){return (PLANT.v).pt1321.toFixed(2);}}),
+"expander:se1121":Object.assign({"screen":"expander","tag":"SE-1121","unit":"RPM","helper":"pt","line":18399,"original":"e.rpm.toFixed(0)","id":"expander:se1121","key":"se1121","screenTitle":"Expander","dependencies":[],"filters":[],"channelKey":"se1121"},{get:function(){return (EXP?EXP:{igv:100,igvSP:100,auto:false,rpm:24300,run:true}).rpm.toFixed(0);}}),
+"expander:te1121a":Object.assign({"screen":"expander","tag":"TE-1121A","unit":"DEG F","helper":"pt","line":18388,"original":"(V.te1121a==null?-61.6:V.te1121a).toFixed(2)","id":"expander:te1121a","key":"te1121a","screenTitle":"Expander","dependencies":[["PLANT","v","te1121a"]],"filters":[],"channelKey":"te1121a"},{get:function(){return ((PLANT.v).te1121a==null?-61.6:(PLANT.v).te1121a).toFixed(2);}}),
+"expander:te1121d":Object.assign({"screen":"expander","tag":"TE-1121D","unit":"DEG F","helper":"pt","line":18399,"original":"V.te1121d.toFixed(2)","id":"expander:te1121d","key":"te1121d","screenTitle":"Expander","dependencies":[["PLANT","v","te1121d"]],"filters":[],"channelKey":"te1121d"},{get:function(){return (PLANT.v).te1121d.toFixed(2);}}),
+"expander:te1321":Object.assign({"screen":"expander","tag":"TE-1321","unit":"DEG F","helper":"pt","line":18408,"original":"V.te1321.toFixed(2)","id":"expander:te1321","key":"te1321","screenTitle":"Expander","dependencies":[["PLANT","v","te1321"]],"filters":[],"channelKey":"te1321"},{get:function(){return (PLANT.v).te1321.toFixed(2);}}),
+"expander:te1421a":Object.assign({"screen":"expander","tag":"TE-1421A","unit":"DEG F","helper":"pt","line":18388,"original":"(V.te1421a==null?-7:V.te1421a).toFixed(2)","id":"expander:te1421a","key":"te1421a","screenTitle":"Expander","dependencies":[["PLANT","v","te1421a"]],"filters":[],"channelKey":"te1421a"},{get:function(){return ((PLANT.v).te1421a==null?-7:(PLANT.v).te1421a).toFixed(2);}}),
+"fuelgas:lg1460":Object.assign({"screen":"fuelgas","tag":"LG-1460","unit":"%","helper":"tg","line":16748,"original":"V.v1460Level!=null?V.v1460Level.toFixed(1):'--'","id":"fuelgas:lg1460","key":"lg1460","screenTitle":"Fuel Gas","dependencies":[["PLANT","v","v1460Level"]],"filters":[],"channelKey":"lg1460"},{get:function(){return (PLANT.v).v1460Level!=null?(PLANT.v).v1460Level.toFixed(1):'--';}}),
+"fuelgas:pt1460a":Object.assign({"screen":"fuelgas","tag":"PT-1460A","unit":"PSIG","helper":"tg","line":16742,"original":"L.PIC1460.pv.toFixed(2)","id":"fuelgas:pt1460a","key":"pt1460a","screenTitle":"Fuel Gas","dependencies":[["PLANT","L","PIC1460","pv"]],"filters":[],"channelKey":"pt1460a"},{get:function(){return (PLANT.L).PIC1460.pv.toFixed(2);}}),
+"fuelgas:pt1460b":Object.assign({"screen":"fuelgas","tag":"PT-1460B","unit":"PSIG","helper":"tga","line":16743,"original":"V.pt1460b!=null?V.pt1460b.toFixed(2):'--'","id":"fuelgas:pt1460b","key":"pt1460b","screenTitle":"Fuel Gas","dependencies":[["PLANT","v","pt1460b"]],"filters":[],"channelKey":"pt1460b"},{get:function(){return (PLANT.v).pt1460b!=null?(PLANT.v).pt1460b.toFixed(2):'--';}}),
+"gasgas:pdt1221":Object.assign({"screen":"gasgas","tag":"PDT-1221","unit":"PSID","helper":"pt","line":21302,"original":"j(V.pdt1221,0.05)","id":"gasgas:pdt1221","key":"pdt1221","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","pdt1221"]],"filters":[],"channelKey":"pdt1221"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pdt1221,0.05);}}),
+"gasgas:pdt1221b":Object.assign({"screen":"gasgas","tag":"PDT-1221B","unit":"PSID","helper":"pt","line":21320,"original":"j(clmp(0.83*Math.pow(Math.max(0.20,(V.tcv1221Flow||0)/(222*0.60)),1.55)*(1+(V.cryoMoistureRestriction||0)*0.35),0.15,4),0.01)","id":"gasgas:pdt1221b","key":"pdt1221b","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","tcv1221Flow"],["PLANT","v","cryoMoistureRestriction"]],"filters":[],"channelKey":"pdt1221b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(0.83*Math.pow(Math.max(0.20,((PLANT.v).tcv1221Flow||0)/(222*0.60)),1.55)*(1+((PLANT.v).cryoMoistureRestriction||0)*0.35),0.15,4),0.01);}}),
+"gasgas:pdt1222a":Object.assign({"screen":"gasgas","tag":"PDT-1222A","unit":"PSID","helper":"pt","line":21347,"original":"j(clmp(0.76*Math.pow(Math.max(0.20,(V.tcv1223Flow||0)/(222*0.40)),1.45),0.10,5),0.01)","id":"gasgas:pdt1222a","key":"pdt1222a","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","tcv1223Flow"]],"filters":[],"channelKey":"pdt1222a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(0.76*Math.pow(Math.max(0.20,((PLANT.v).tcv1223Flow||0)/(222*0.40)),1.45),0.10,5),0.01);}}),
+"gasgas:pdt1222b":Object.assign({"screen":"gasgas","tag":"PDT-1222B","unit":"PSID","helper":"pt","line":21333,"original":"j(L.PDIC1222B?L.PDIC1222B.pv:0.62,0.01)","id":"gasgas:pdt1222b","key":"pdt1222b","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","L","PDIC1222B"],["PLANT","L","PDIC1222B","pv"]],"filters":[],"channelKey":"pdt1222b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).PDIC1222B?(PLANT.L).PDIC1222B.pv:0.62,0.01);}}),
+"gasgas:pdt1222c":Object.assign({"screen":"gasgas","tag":"PDT-1222C","unit":"PSID","helper":"pt","line":21346,"original":"j(clmp(17.51*Math.pow(Math.max(0.20,(V.tcv1223Flow||0)/(222*0.40)),1.55),0.25,30),0.05)","id":"gasgas:pdt1222c","key":"pdt1222c","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","tcv1223Flow"]],"filters":[],"channelKey":"pdt1222c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(17.51*Math.pow(Math.max(0.20,((PLANT.v).tcv1223Flow||0)/(222*0.40)),1.55),0.25,30),0.05);}}),
+"gasgas:te1221a":Object.assign({"screen":"gasgas","tag":"TE-1221A","unit":"DEG F","helper":"pt","line":21288,"original":"j(te1221a,0.1)","id":"gasgas:te1221a","key":"te1221a","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","te1221a"],["PLANT","v","dehyToCryoT"]],"filters":[],"channelKey":"te1221a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).te1221a==null?((PLANT.v).dehyToCryoT==null?91.9:(PLANT.v).dehyToCryoT):(PLANT.v).te1221a),0.1);}}),
+"gasgas:te1221b":Object.assign({"screen":"gasgas","tag":"TE-1221B","unit":"DEG F","helper":"pt","line":21301,"original":"j(te1221b,0.03)","id":"gasgas:te1221b","key":"te1221b","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","te1221b"]],"filters":[],"channelKey":"te1221b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).te1221b==null?6.1:(PLANT.v).te1221b),0.03);}}),
+"gasgas:te1221f":Object.assign({"screen":"gasgas","tag":"TE-1221F","unit":"DEG F","helper":"pt","line":21319,"original":"j(te1221f,0.04)","id":"gasgas:te1221f","key":"te1221f","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","te1221f"]],"filters":[],"channelKey":"te1221f"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).te1221f==null?87.5:(PLANT.v).te1221f),0.04);}}),
+"gasgas:te1222d":Object.assign({"screen":"gasgas","tag":"TE-1222D","unit":"DEG F","helper":"pt","line":21341,"original":"j(te1222d,0.05)","id":"gasgas:te1222d","key":"te1222d","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","te1222d"]],"filters":[],"channelKey":"te1222d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).te1222d==null?-146.20:(PLANT.v).te1222d),0.05);}}),
+"gasgas:te1222j":Object.assign({"screen":"gasgas","tag":"TE-1222J","unit":"DEG F","helper":"pt","line":21310,"original":"j(rsvTe,0.05)","id":"gasgas:te1222j","key":"te1222j","screenTitle":"E-221/2 Exch.","dependencies":[["PLANT","v","rsvExchOutT"],["PLANT","v","te1222j"]],"filters":[],"channelKey":"screen_gasgas_te1222j"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).rsvExchOutT==null?((PLANT.v).te1222j==null?-89.80:(PLANT.v).te1222j):(PLANT.v).rsvExchOutT),0.05);}}),
+"hotoil:fit7100a":Object.assign({"screen":"hotoil","tag":"FIT-7100A","unit":"GPM","helper":"pt","line":21498,"original":"V.fit7100a.toFixed(2)","id":"hotoil:fit7100a","key":"fit7100a","screenTitle":"Hot Oil","dependencies":[["PLANT","v","fit7100a"]],"filters":[],"channelKey":"fit7100a"},{get:function(){return (PLANT.v).fit7100a.toFixed(2);}}),
+"hotoil:fit7100b":Object.assign({"screen":"hotoil","tag":"FIT-7100B","unit":"GPM","helper":"pt","line":21500,"original":"V.fit7100b.toFixed(2)","id":"hotoil:fit7100b","key":"fit7100b","screenTitle":"Hot Oil","dependencies":[["PLANT","v","fit7100b"]],"filters":[],"channelKey":"fit7100b"},{get:function(){return (PLANT.v).fit7100b.toFixed(2);}}),
+"hotoil:pit7500a":Object.assign({"screen":"hotoil","tag":"PIT-7500A","unit":"PSIG","helper":"pt","line":21476,"original":"V.pit7500a.toFixed(2)","id":"hotoil:pit7500a","key":"pit7500a","screenTitle":"Hot Oil","dependencies":[["PLANT","v","pit7500a"]],"filters":[],"channelKey":"pit7500a"},{get:function(){return (PLANT.v).pit7500a.toFixed(2);}}),
+"hotoil:te202":Object.assign({"screen":"hotoil","tag":"TE-202","unit":"DEGF","helper":"pt","line":21545,"original":"(V.hotOilT==null?PLANT.in.heaterSP-4.2:V.hotOilT).toFixed(2)","id":"hotoil:te202","key":"te202","screenTitle":"Hot Oil","dependencies":[["PLANT","v","hotOilT"],["PLANT","in","heaterSP"]],"filters":[],"channelKey":"te202"},{get:function(){return ((PLANT.v).hotOilT==null?PLANT.in.heaterSP-4.2:(PLANT.v).hotOilT).toFixed(2);}}),
+"inlcomp:fit1045a":Object.assign({"screen":"inlcomp","tag":"FIT-1045A","unit":"MMSCFD","helper":"pt","line":22274,"original":"j(fit1045,1)","id":"inlcomp:fit1045a","key":"fit1045a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","in","flow"]],"filters":[],"channelKey":"fit1045a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.in.flow),1);}}),
+"inlcomp:pit1045a":Object.assign({"screen":"inlcomp","tag":"PIT-1045A","unit":"PSIG","helper":"pt","line":22274,"original":"j(pit1045,0)","id":"inlcomp:pit1045a","key":"pit1045a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","v","inletSuc"]],"filters":[],"channelKey":"pit1045a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).inletSuc!=null?(PLANT.v).inletSuc:441),0);}}),
+"inlcomp:pit4250a":Object.assign({"screen":"inlcomp","tag":"PIT-4250A","unit":"PSIG","helper":"pt","line":22293,"original":"j(pit4250a,2)","id":"inlcomp:pit4250a","key":"pit4250a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","v","pit4250a"]],"filters":[],"channelKey":"pit4250a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.L).PIC4250A?(PLANT.L).PIC4250A.pv:929),2);}}),
+"inlcomp:pit4250b":Object.assign({"screen":"inlcomp","tag":"PIT-4250B","unit":"PSIG","helper":"pt","line":22302,"original":"j(pit4250b,0)","id":"inlcomp:pit4250b","key":"pit4250b","screenTitle":"Inlet Comp.","dependencies":[["PLANT","v","pit4250b"]],"filters":[],"channelKey":"pit4250b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).pit4250b!=null?(PLANT.v).pit4250b:440.1),0);}}),
+"inlcomp:pit4250c":Object.assign({"screen":"inlcomp","tag":"PIT-4250C","unit":"PSIG","helper":"pt","line":22302,"original":"j(pit4250c,0)","id":"inlcomp:pit4250c","key":"pit4250c","screenTitle":"Inlet Comp.","dependencies":[["PLANT","v","pit4250c"]],"filters":[],"channelKey":"pit4250c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).pit4250c!=null?(PLANT.v).pit4250c:440.1),0);}}),
+"inlcomp:pit6805a":Object.assign({"screen":"inlcomp","tag":"PIT-6805A","unit":"PSIG","helper":"pt","line":22283,"original":"j(L.PIC6805A?L.PIC6805A.pv:387.65,0)","id":"inlcomp:pit6805a","key":"pit6805a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","L","PIC6805A"],["PLANT","L","PIC6805A","pv"]],"filters":[],"channelKey":"pit6805a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).PIC6805A?(PLANT.L).PIC6805A.pv:387.65,0);}}),
+"inlcomp:pit6810a":Object.assign({"screen":"inlcomp","tag":"PIT-6810A","unit":"PSIG","helper":"pt","line":22284,"original":"j(L.PIC6810A?L.PIC6810A.pv:443.5,0)","id":"inlcomp:pit6810a","key":"pit6810a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","L","PIC6810A"],["PLANT","L","PIC6810A","pv"]],"filters":[],"channelKey":"pit6810a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).PIC6810A?(PLANT.L).PIC6810A.pv:443.5,0);}}),
+"inlcomp:tit1045a":Object.assign({"screen":"inlcomp","tag":"TIT-1045A","unit":"DEG F","helper":"pt","line":22274,"original":"j(tit1045,0)","id":"inlcomp:tit1045a","key":"tit1045a","screenTitle":"Inlet Comp.","dependencies":[["PLANT","v","tit1045a"]],"filters":[],"channelKey":"tit1045a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).tit1045a!=null?(PLANT.v).tit1045a:79.5),0);}}),
+"inlsep:pit1040a":Object.assign({"screen":"inlsep","tag":"PIT-1040A","unit":"PSIG","helper":"tg","line":21447,"original":"psuc.toFixed(2)","id":"inlsep:pit1040a","key":"pit1040a","screenTitle":"Inlet Sep.","dependencies":[["PLANT","v","inletSuc"]],"filters":[],"channelKey":"pit1040a"},{get:function(){return ((PLANT.v).inletSuc!=null?(PLANT.v).inletSuc:441).toFixed(2);}}),
+"inlsep:ti1040":Object.assign({"screen":"inlsep","tag":"TI-1040","unit":"DEG F","helper":"tg","line":21447,"original":"(V.ti1040==null?73.0:V.ti1040).toFixed(1)","id":"inlsep:ti1040","key":"ti1040","screenTitle":"Inlet Sep.","dependencies":[["PLANT","v","ti1040"]],"filters":[],"channelKey":"ti1040"},{get:function(){return ((PLANT.v).ti1040==null?73.0:(PLANT.v).ti1040).toFixed(1);}}),
+"inlsys:lt1410":Object.assign({"screen":"inlsys","tag":"LT-1410","unit":"%","helper":"pt","line":18721,"original":"V.lvl1410.toFixed(2)","id":"inlsys:lt1410","key":"lt1410","screenTitle":"Inlet System","dependencies":[["PLANT","v","lvl1410"]],"filters":[],"channelKey":"lt1410"},{get:function(){return (PLANT.v).lvl1410.toFixed(2);}}),
+"inlsys:pdt1412":Object.assign({"screen":"inlsys","tag":"PDT-1412","unit":"PSID","helper":"pt","line":18782,"original":"j(V.pdt1412,0.03)","id":"inlsys:pdt1412","key":"pdt1412","screenTitle":"Inlet System","dependencies":[["PLANT","v","pdt1412"]],"filters":[],"channelKey":"pdt1412"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pdt1412,0.03);}}),
+"inlsys:pt1410a":Object.assign({"screen":"inlsys","tag":"PT-1410A","unit":"PSIG","helper":"pt","line":18695,"original":"j(V.p1410,0.4)","id":"inlsys:pt1410a","key":"pt1410a","screenTitle":"Inlet System","dependencies":[["PLANT","v","p1410"]],"filters":[],"channelKey":"pt1410a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).p1410,0.4);}}),
+"inlsys:pt1410b":Object.assign({"screen":"inlsys","tag":"PT-1410B","unit":"PSIG","helper":"pt","line":18704,"original":"j(V.p1410-1.9,0.3)","id":"inlsys:pt1410b","key":"pt1410b","screenTitle":"Inlet System","dependencies":[["PLANT","v","p1410"]],"filters":[],"channelKey":"pt1410b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).p1410-1.9,0.3);}}),
+"outlet:fit8000a":Object.assign({"screen":"outlet","tag":"FIT-8000A","unit":"GPM","helper":"tg","line":21402,"original":"V.fit8000a.toFixed(0)","id":"outlet:fit8000a","key":"fit8000a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","fit8000a"]],"filters":[],"channelKey":"fit8000a"},{get:function(){return (PLANT.v).fit8000a.toFixed(0);}}),
+"outlet:fit8210a":Object.assign({"screen":"outlet","tag":"FIT-8210A","unit":"MMSCFD","helper":"tg","line":21403,"original":"V.resRate.toFixed(2)","id":"outlet:fit8210a","key":"fit8210a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","resRate"]],"filters":[],"channelKey":"fit8210a"},{get:function(){return (PLANT.v).resRate.toFixed(2);}}),
+"outlet:pit8000a":Object.assign({"screen":"outlet","tag":"PIT-8000A","unit":"PSIG","helper":"tga","line":21402,"original":"V.pit8000a.toFixed(0)","id":"outlet:pit8000a","key":"pit8000a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8000a"]],"filters":[],"channelKey":"pit8000a"},{get:function(){return (PLANT.v).pit8000a.toFixed(0);}}),
+"outlet:pit8000b":Object.assign({"screen":"outlet","tag":"PIT-8000B","unit":"PSIG","helper":"tg","line":21402,"original":"V.pit8000.toFixed(0)","id":"outlet:pit8000b","key":"pit8000b","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8000"]],"filters":[],"channelKey":"pit8000b"},{get:function(){return (PLANT.v).pit8000.toFixed(0);}}),
+"outlet:pit8000f":Object.assign({"screen":"outlet","tag":"PIT-8000F","unit":"PSIG","helper":"tga","line":21402,"original":"V.pit8000f.toFixed(0)","id":"outlet:pit8000f","key":"pit8000f","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8000f"]],"filters":[],"channelKey":"pit8000f"},{get:function(){return (PLANT.v).pit8000f.toFixed(0);}}),
+"outlet:pit8200":Object.assign({"screen":"outlet","tag":"PIT-8200","unit":"PSIG","helper":"tga","line":21403,"original":"V.pit8200.toFixed(1)","id":"outlet:pit8200","key":"pit8200","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8200"]],"filters":[],"channelKey":"pit8200"},{get:function(){return (PLANT.v).pit8200.toFixed(1);}}),
+"outlet:pit8210a":Object.assign({"screen":"outlet","tag":"PIT-8210A","unit":"PSIG","helper":"tga","line":21403,"original":"V.pit8210a.toFixed(2)","id":"outlet:pit8210a","key":"pit8210a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8210a"]],"filters":[],"channelKey":"pit8210a"},{get:function(){return (PLANT.v).pit8210a.toFixed(2);}}),
+"outlet:pit8220d":Object.assign({"screen":"outlet","tag":"PIT-8220D","unit":"PSIG","helper":"tga","line":21404,"original":"V.pit8220d.toFixed(2)","id":"outlet:pit8220d","key":"pit8220d","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","pit8220d"]],"filters":[],"channelKey":"pit8220d"},{get:function(){return (PLANT.v).pit8220d.toFixed(2);}}),
+"outlet:tit8000a":Object.assign({"screen":"outlet","tag":"TIT-8000A","unit":"DEGF","helper":"tg","line":21402,"original":"V.tit8000a.toFixed(0)","id":"outlet:tit8000a","key":"tit8000a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","tit8000a"]],"filters":[],"channelKey":"tit8000a"},{get:function(){return (PLANT.v).tit8000a.toFixed(0);}}),
+"outlet:tit8210a":Object.assign({"screen":"outlet","tag":"TIT-8210A","unit":"DEGF","helper":"tg","line":21403,"original":"V.tit8210a.toFixed(2)","id":"outlet:tit8210a","key":"tit8210a","screenTitle":"Plant Outlet","dependencies":[["PLANT","v","tit8210a"]],"filters":[],"channelKey":"tit8210a"},{get:function(){return (PLANT.v).tit8210a.toFixed(2);}}),
+"plinlet:lit1020":Object.assign({"screen":"plinlet","tag":"LIT-1020","unit":"%","line":21863,"original":"Existing slug drum loop LIT display: PLANT.L.LIC1020.pv.toFixed(2)","sourceHelper":"SCR.plinlet / scData.forEach / pt(c.lit, lvl.toFixed(2), %)","id":"plinlet:lit1020","key":"lit1020","screenTitle":"Plant Inlet","dependencies":[["PLANT","L","LIC1020","pv"]],"filters":[],"channelKey":"lit1020"},{get:function(){return PLANT.L.LIC1020.pv.toFixed(2);}}),
+"plinlet:lit1025":Object.assign({"screen":"plinlet","tag":"LIT-1025","unit":"%","line":21863,"original":"Existing slug drum loop LIT display: PLANT.L.LIC1025.pv.toFixed(2)","sourceHelper":"SCR.plinlet / scData.forEach / pt(c.lit, lvl.toFixed(2), %)","id":"plinlet:lit1025","key":"lit1025","screenTitle":"Plant Inlet","dependencies":[["PLANT","L","LIC1025","pv"]],"filters":[],"channelKey":"lit1025"},{get:function(){return PLANT.L.LIC1025.pv.toFixed(2);}}),
+"plinlet:lit1030":Object.assign({"screen":"plinlet","tag":"LIT-1030","unit":"%","line":21863,"original":"Existing slug drum loop LIT display: PLANT.L.LIC1030.pv.toFixed(2)","sourceHelper":"SCR.plinlet / scData.forEach / pt(c.lit, lvl.toFixed(2), %)","id":"plinlet:lit1030","key":"lit1030","screenTitle":"Plant Inlet","dependencies":[["PLANT","L","LIC1030","pv"]],"filters":[],"channelKey":"lit1030"},{get:function(){return PLANT.L.LIC1030.pv.toFixed(2);}}),
+"plinlet:pit1000":Object.assign({"screen":"plinlet","tag":"PIT-1000","unit":"PSIG","helper":"pt","line":21784,"original":"j(pipP,0.4)","id":"plinlet:pit1000","key":"pit1000","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1000"]],"filters":[],"channelKey":"pit1000"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).pit1000==null?481.44:(PLANT.v).pit1000),0.4);}}),
+"plinlet:pit1000a":Object.assign({"screen":"plinlet","tag":"PIT-1000A","unit":"PSIG","helper":"pt","line":21800,"original":"j(V.pit1000a==null?481.10:V.pit1000a,0.28)","id":"plinlet:pit1000a","key":"pit1000a","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1000a"]],"filters":[],"channelKey":"pit1000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit1000a==null?481.10:(PLANT.v).pit1000a,0.28);}}),
+"plinlet:pit1010a":Object.assign({"screen":"plinlet","tag":"PIT-1010A","unit":"PSIG","helper":"pt","line":21810,"original":"j(inP,0.15)","id":"plinlet:pit1010a","key":"pit1010a","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1010a"],["PLANT","L","PIC1010","pv"]],"filters":[],"channelKey":"pit1010a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).pit1010a==null?(PLANT.L).PIC1010.pv:(PLANT.v).pit1010a),0.15);}}),
+"plinlet:pit1010b":Object.assign({"screen":"plinlet","tag":"PIT-1010B","unit":"PSIG","helper":"pt","line":21801,"original":"j(V.pit1010b==null?490:V.pit1010b,0.28)","id":"plinlet:pit1010b","key":"pit1010b","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1010b"]],"filters":[],"channelKey":"pit1010b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit1010b==null?490:(PLANT.v).pit1010b,0.28);}}),
+"plinlet:pit1040a":Object.assign({"screen":"plinlet","tag":"PIT-1040A","unit":"PSIG","helper":"pt","line":21900,"original":"j(inP,0.15)","id":"plinlet:pit1040a","key":"pit1040a","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1010a"],["PLANT","L","PIC1010","pv"]],"filters":[],"channelKey":"screen_plinlet_pit1040a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.v).pit1010a==null?(PLANT.L).PIC1010.pv:(PLANT.v).pit1010a),0.15);}}),
+"plinlet:pit1040b":Object.assign({"screen":"plinlet","tag":"PIT-1040B","unit":"PSIG","helper":"pt","line":21901,"original":"j(V.pit1040b==null?446:V.pit1040b,0.15)","id":"plinlet:pit1040b","key":"pit1040b","screenTitle":"Plant Inlet","dependencies":[["PLANT","v","pit1040b"]],"filters":[],"channelKey":"pit1040b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit1040b==null?446:(PLANT.v).pit1040b,0.15);}}),
+"pmps:fit5060":Object.assign({"screen":"pmps","tag":"FIT-5060","unit":"GPM","helper":"pt","line":16570,"original":"(_p56Any?Math.max(0,L.FIC5060A.pv):0).toFixed(2)","id":"pmps:fit5060","key":"fit5060","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","in","p5060run"],["PLANT","in","p5065run"],["PLANT","L","FIC5060A","pv"]],"filters":[],"channelKey":"fit5060"},{get:function(){return ((!!(PLANT.in.p5060run||PLANT.in.p5065run))?Math.max(0,(PLANT.L).FIC5060A.pv):0).toFixed(2);}}),
+"pmps:fqi5500":Object.assign({"screen":"pmps","tag":"FQI-5500","unit":"MMSCF","helper":"pt","line":16595,"original":"V.fqi5500.toFixed(2)","id":"pmps:fqi5500","key":"fqi5500","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","v","fqi5500"]],"filters":[],"channelKey":"fqi5500"},{get:function(){return (PLANT.v).fqi5500.toFixed(2);}}),
+"pmps:pit5700a":Object.assign({"screen":"pmps","tag":"PIT-5700A","unit":"PSIG","helper":"pt","line":16621,"original":"V.pit5700a.toFixed(2)","id":"pmps:pit5700a","key":"pit5700a","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","v","pit5700a"]],"filters":[],"channelKey":"pit5700a"},{get:function(){return (PLANT.v).pit5700a.toFixed(2);}}),
+"pmps:pit5700b":Object.assign({"screen":"pmps","tag":"PIT-5700B","unit":"PSIG","helper":"pt","line":16621,"original":"V.pit5700b.toFixed(2)","id":"pmps:pit5700b","key":"pit5700b","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","v","pit5700b"]],"filters":[],"channelKey":"pit5700b"},{get:function(){return (PLANT.v).pit5700b.toFixed(2);}}),
+"pmps:pit5900a":Object.assign({"screen":"pmps","tag":"PIT-5900A","unit":"PSIG","helper":"pt","line":16615,"original":"V.pit5900a.toFixed(2)","id":"pmps:pit5900a","key":"pit5900a","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","v","pit5900a"]],"filters":[],"channelKey":"pit5900a"},{get:function(){return (PLANT.v).pit5900a.toFixed(2);}}),
+"pmps:pit5900b":Object.assign({"screen":"pmps","tag":"PIT-5900B","unit":"PSIG","helper":"pt","line":16615,"original":"V.pit5900b.toFixed(2)","id":"pmps:pit5900b","key":"pit5900b","screenTitle":"Pmps/OH Cmp.","dependencies":[["PLANT","v","pit5900b"]],"filters":[],"channelKey":"pit5900b"},{get:function(){return (PLANT.v).pit5900b.toFixed(2);}}),
+"prodpump:fit1630a":Object.assign({"screen":"prodpump","tag":"FIT-1630A","unit":"GPM","helper":"tga","line":22334,"original":"V.fit1630a.toFixed(2)","id":"prodpump:fit1630a","key":"fit1630a","screenTitle":"Product Pump","dependencies":[["PLANT","v","fit1630a"]],"filters":[],"channelKey":"fit1630a"},{get:function(){return (PLANT.v).fit1630a.toFixed(2);}}),
+"prodpump:ft1422":Object.assign({"screen":"prodpump","tag":"FT-1422","unit":"GPM","helper":"tga","line":22340,"original":"V.ft1422.toFixed(2)","id":"prodpump:ft1422","key":"ft1422","screenTitle":"Product Pump","dependencies":[["PLANT","v","ft1422"]],"filters":[],"channelKey":"ft1422"},{get:function(){return (PLANT.v).ft1422.toFixed(2);}}),
+"prodpump:lt1422":Object.assign({"screen":"prodpump","tag":"LT-1422","unit":"%","helper":"tg","line":22347,"original":"L.LIC1422.pv.toFixed(1)","id":"prodpump:lt1422","key":"lt1422","screenTitle":"Product Pump","dependencies":[["PLANT","L","LIC1422","pv"]],"filters":[],"channelKey":"lt1422"},{get:function(){return (PLANT.L).LIC1422.pv.toFixed(1);}}),
+"prodpump:pic1623":Object.assign({"screen":"prodpump","tag":"PIC-1623","unit":"PSIG","helper":"tg","line":22347,"original":"L.PIC1623.pv.toFixed(0)","id":"prodpump:pic1623","key":"pic1623","screenTitle":"Product Pump","dependencies":[["PLANT","L","PIC1623","pv"]],"filters":[],"channelKey":"pic1623"},{get:function(){return (PLANT.L).PIC1623.pv.toFixed(0);}}),
+"prodpump:pit1630a":Object.assign({"screen":"prodpump","tag":"PIT-1630A","unit":"PSIG","helper":"tga","line":22330,"original":"V.pit1630a.toFixed(2)","id":"prodpump:pit1630a","key":"pit1630a","screenTitle":"Product Pump","dependencies":[["PLANT","v","pit1630a"]],"filters":[],"channelKey":"pit1630a"},{get:function(){return (PLANT.v).pit1630a.toFixed(2);}}),
+"prodpump:pit1635a":Object.assign({"screen":"prodpump","tag":"PIT-1635A","unit":"PSIG","helper":"tga","line":22330,"original":"V.pit1635a.toFixed(2)","id":"prodpump:pit1635a","key":"pit1635a","screenTitle":"Product Pump","dependencies":[["PLANT","v","pit1635a"]],"filters":[],"channelKey":"pit1635a"},{get:function(){return (PLANT.v).pit1635a.toFixed(2);}}),
+"prodpump:pt1630b":Object.assign({"screen":"prodpump","tag":"PT-1630B","unit":"PSIG","helper":"tga","line":22334,"original":"V.pt1630b.toFixed(2)","id":"prodpump:pt1630b","key":"pt1630b","screenTitle":"Product Pump","dependencies":[["PLANT","v","pt1630b"]],"filters":[],"channelKey":"pt1630b"},{get:function(){return (PLANT.v).pt1630b.toFixed(2);}}),
+"prodpump:te1322b":Object.assign({"screen":"prodpump","tag":"TE-1322B","unit":"DEGF","helper":"tga","line":22338,"original":"V.te1322b.toFixed(2)","id":"prodpump:te1322b","key":"te1322b","screenTitle":"Product Pump","dependencies":[["PLANT","v","te1322b"]],"filters":[],"channelKey":"te1322b"},{get:function(){return (PLANT.v).te1322b.toFixed(2);}}),
+"prodpump:te1322c":Object.assign({"screen":"prodpump","tag":"TE-1322C","unit":"DEGF","helper":"tga","line":22338,"original":"V.te1322c.toFixed(2)","id":"prodpump:te1322c","key":"te1322c","screenTitle":"Product Pump","dependencies":[["PLANT","v","te1322c"]],"filters":[],"channelKey":"te1322c"},{get:function(){return (PLANT.v).te1322c.toFixed(2);}}),
+"prodpump:te1422":Object.assign({"screen":"prodpump","tag":"TE-1422","unit":"DEGF","helper":"tg","line":22338,"original":"V.te1422.toFixed(2)","id":"prodpump:te1422","key":"te1422","screenTitle":"Product Pump","dependencies":[["PLANT","v","te1422"]],"filters":[],"channelKey":"te1422"},{get:function(){return (PLANT.v).te1422.toFixed(2);}}),
+"reb:te1223a":Object.assign({"screen":"reb","tag":"TE-1223A","unit":"DEG F","helper":"pt","line":18462,"original":"j(V.te1223a,0.2).toFixed(2)","id":"reb:te1223a","key":"te1223a","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1223a"]],"filters":[],"channelKey":"te1223a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1223a,0.2).toFixed(2);}}),
+"reb:te1223b":Object.assign({"screen":"reb","tag":"TE-1223B","unit":"DEG F","helper":"pt","line":18493,"original":"j(V.te1223b,0.15).toFixed(2)","id":"reb:te1223b","key":"te1223b","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1223b"]],"filters":[],"channelKey":"te1223b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1223b,0.15).toFixed(2);}}),
+"reb:te1223c":Object.assign({"screen":"reb","tag":"TE-1223C","unit":"DEG F","helper":"pt","line":18492,"original":"j(V.te1223c,0.15).toFixed(2)","id":"reb:te1223c","key":"te1223c","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1223c"]],"filters":[],"channelKey":"te1223c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1223c,0.15).toFixed(2);}}),
+"reb:te1224a":Object.assign({"screen":"reb","tag":"TE-1224A","unit":"DEG F","helper":"pt","line":18467,"original":"j(V.te1224a,0.2).toFixed(2)","id":"reb:te1224a","key":"te1224a","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1224a"]],"filters":[],"channelKey":"te1224a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1224a,0.2).toFixed(2);}}),
+"reb:te1224b":Object.assign({"screen":"reb","tag":"TE-1224B","unit":"DEG F","helper":"pt","line":18494,"original":"j(V.te1224b,0.15).toFixed(2)","id":"reb:te1224b","key":"te1224b","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1224b"]],"filters":[],"channelKey":"te1224b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1224b,0.15).toFixed(2);}}),
+"reb:te1224c":Object.assign({"screen":"reb","tag":"TE-1224C","unit":"DEG F","helper":"pt","line":18466,"original":"j(V.te1224c,0.1).toFixed(2)","id":"reb:te1224c","key":"te1224c","screenTitle":"Reboilers","dependencies":[["PLANT","v","te1224c"]],"filters":[],"channelKey":"te1224c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).te1224c,0.1).toFixed(2);}}),
+"refcond:pic1140d":Object.assign({"screen":"refcond","tag":"PIC-1140D","unit":"PSIG","helper":"tg","line":21089,"original":"(L.PIC1140D?L.PIC1140D.pv:199.92).toFixed(1)","id":"refcond:pic1140d","key":"pic1140d","screenTitle":"Refrig Cond.","dependencies":[["PLANT","L","PIC1140D"],["PLANT","L","PIC1140D","pv"]],"filters":[],"channelKey":"pic1140d"},{get:function(){return ((PLANT.L).PIC1140D?(PLANT.L).PIC1140D.pv:199.92).toFixed(1);}}),
+"refcond:pt1140d":Object.assign({"screen":"refcond","tag":"PT-1140D","unit":"PSIG","helper":"tg","line":21089,"original":"(L.PIC1140D?L.PIC1140D.pv:196.4).toFixed(1)","id":"refcond:pt1140d","key":"pt1140d","screenTitle":"Refrig Cond.","dependencies":[["PLANT","L","PIC1140D"],["PLANT","L","PIC1140D","pv"]],"filters":[],"channelKey":"pt1140d"},{get:function(){return ((PLANT.L).PIC1140D?(PLANT.L).PIC1140D.pv:196.4).toFixed(1);}}),
+"refcond:pt1444":Object.assign({"screen":"refcond","tag":"PT-1444","unit":"PSIG","helper":"tg","line":21089,"original":"(L.PCV1444?L.PCV1444.pv:203.9).toFixed(1)","id":"refcond:pt1444","key":"pt1444","screenTitle":"Refrig Cond.","dependencies":[["PLANT","L","PCV1444"],["PLANT","L","PCV1444","pv"]],"filters":[],"channelKey":"pt1444"},{get:function(){return ((PLANT.L).PCV1444?(PLANT.L).PCV1444.pv:203.9).toFixed(1);}}),
+"refsys:lt1241":Object.assign({"screen":"refsys","tag":"LT-1241","unit":"%","helper":"pt","line":22432,"original":"L.LCV1241.pv.toFixed(2)","id":"refsys:lt1241","key":"lt1241","screenTitle":"Refrig System","dependencies":[["PLANT","L","LCV1241","pv"]],"filters":[],"channelKey":"lt1241"},{get:function(){return (PLANT.L).LCV1241.pv.toFixed(2);}}),
+"refsys:lt1442":Object.assign({"screen":"refsys","tag":"LT-1442","unit":"%","helper":"pt","line":22441,"original":"L.LCV1442.pv.toFixed(2)","id":"refsys:lt1442","key":"lt1442","screenTitle":"Refrig System","dependencies":[["PLANT","L","LCV1442","pv"]],"filters":[],"channelKey":"lt1442"},{get:function(){return (PLANT.L).LCV1442.pv.toFixed(2);}}),
+"refsys:lt1444":Object.assign({"screen":"refsys","tag":"LT-1444","unit":"%","helper":"pt","line":22449,"original":"V.lt1444.toFixed(2)","id":"refsys:lt1444","key":"lt1444","screenTitle":"Refrig System","dependencies":[["PLANT","v","lt1444"]],"filters":[],"channelKey":"lt1444"},{get:function(){return (PLANT.v).lt1444.toFixed(2);}}),
+"refsys:pt1441":Object.assign({"screen":"refsys","tag":"PT-1441","unit":"PSIG","helper":"pt","line":22397,"original":"L.PCV1441B.pv.toFixed(2)","id":"refsys:pt1441","key":"pt1441","screenTitle":"Refrig System","dependencies":[["PLANT","L","PCV1441B","pv"]],"filters":[],"channelKey":"pt1441"},{get:function(){return (PLANT.L).PCV1441B.pv.toFixed(2);}}),
+"refsys:pt1441c":Object.assign({"screen":"refsys","tag":"PT-1441C","unit":"PSIG","helper":"pt","line":22393,"original":"L.PIC1441C.pv.toFixed(2)","id":"refsys:pt1441c","key":"pt1441c","screenTitle":"Refrig System","dependencies":[["PLANT","L","PIC1441C","pv"]],"filters":[],"channelKey":"pt1441c"},{get:function(){return (PLANT.L).PIC1441C.pv.toFixed(2);}}),
+"refsys:pt1442":Object.assign({"screen":"refsys","tag":"PT-1442","unit":"PSIG","helper":"pt","line":22412,"original":"L.PCV1442.pv.toFixed(2)","id":"refsys:pt1442","key":"pt1442","screenTitle":"Refrig System","dependencies":[["PLANT","L","PCV1442","pv"]],"filters":[],"channelKey":"pt1442"},{get:function(){return (PLANT.L).PCV1442.pv.toFixed(2);}}),
+"refsys:pt1444":Object.assign({"screen":"refsys","tag":"PT-1444","unit":"PSIG","helper":"pt","line":22450,"original":"L.PCV1444.pv.toFixed(2)","id":"refsys:pt1444","key":"pt1444","screenTitle":"Refrig System","dependencies":[["PLANT","L","PCV1444","pv"]],"filters":[],"channelKey":"pt1444"},{get:function(){return (PLANT.L).PCV1444.pv.toFixed(2);}}),
+"refsys:te1241a":Object.assign({"screen":"refsys","tag":"TE-1241A","unit":"DEGF","helper":"pt","line":22426,"original":"V.te1241a.toFixed(2)","id":"refsys:te1241a","key":"te1241a","screenTitle":"Refrig System","dependencies":[["PLANT","v","te1241a"]],"filters":[],"channelKey":"te1241a"},{get:function(){return (PLANT.v).te1241a.toFixed(2);}}),
+"refsys:te1241c":Object.assign({"screen":"refsys","tag":"TE-1241C","unit":"DEGF","helper":"pt","line":22431,"original":"V.te1241c.toFixed(2)","id":"refsys:te1241c","key":"te1241c","screenTitle":"Refrig System","dependencies":[["PLANT","L","TIC1241C","pv"]],"filters":[],"channelKey":"te1241c"},{get:function(){return (PLANT.v).te1241c.toFixed(2);}}),
+"refsys:te1241d":Object.assign({"screen":"refsys","tag":"TE-1241D","unit":"DEGF","helper":"pt","line":22395,"original":"V.te1241d.toFixed(2)","id":"refsys:te1241d","key":"te1241d","screenTitle":"Refrig System","dependencies":[["PLANT","v","te1241d"]],"filters":[],"channelKey":"te1241d"},{get:function(){return (PLANT.v).te1241d.toFixed(2);}}),
+"regen:pit6805a":Object.assign({"screen":"regen","tag":"PIT-6805A","unit":"PSIG","helper":"tg","line":21063,"original":"L.PIC6805A.pv.toFixed(0)","id":"regen:pit6805a","key":"pit6805a","screenTitle":"Regen Comp.","dependencies":[["PLANT","L","PIC6805A","pv"]],"filters":[],"channelKey":"pit6805a"},{get:function(){return (PLANT.L).PIC6805A.pv.toFixed(0);}}),
+"rescomp:lit6800a":Object.assign({"screen":"rescomp","tag":"LIT-6800A","unit":"%","helper":"pt","line":22179,"original":"V.lit6800a.toFixed(2)","id":"rescomp:lit6800a","key":"lit6800a","screenTitle":"Residue Comp.","dependencies":[["PLANT","v","lit6800a"]],"filters":[],"channelKey":"lit6800a"},{get:function(){return (PLANT.v).lit6800a.toFixed(2);}}),
+"rescomp:lit6800b":Object.assign({"screen":"rescomp","tag":"LIT-6800B","unit":"%","helper":"pt","line":22180,"original":"V.lit6800b.toFixed(2)","id":"rescomp:lit6800b","key":"lit6800b","screenTitle":"Residue Comp.","dependencies":[["PLANT","v","lit6800b"]],"filters":[],"channelKey":"lit6800b"},{get:function(){return (PLANT.v).lit6800b.toFixed(2);}}),
+"rescomp:pdit6800a":Object.assign({"screen":"rescomp","tag":"PDIT-6800A","unit":"PSID","helper":"pt","line":22172,"original":"_f6800dp.toFixed(2)","id":"rescomp:pdit6800a","key":"pdit6800a","screenTitle":"Residue Comp.","dependencies":[],"filters":[],"channelKey":"pdit6800a"},{get:function(){return ((function filterDP(key){return cfFilterOperating12MZ(key).dp;})('f6800')).toFixed(2);}}),
+"rescomp:pit6050a":Object.assign({"screen":"rescomp","tag":"PIT-6050A","unit":"PSIG","helper":"pt","line":22152,"original":"j(L.PIC6050A?L.PIC6050A.pv:973)","id":"rescomp:pit6050a","key":"pit6050a","screenTitle":"Residue Comp.","dependencies":[["PLANT","L","PIC6050A"],["PLANT","L","PIC6050A","pv"]],"filters":[],"channelKey":"pit6050a"},{get:function(){return (function(v){return Number(v);})((PLANT.L).PIC6050A?(PLANT.L).PIC6050A.pv:973);}}),
+"rescomp:pit6050b":Object.assign({"screen":"rescomp","tag":"PIT-6050B","unit":"PSIG","helper":"pt","line":22133,"original":"j(V.pit6050b)","id":"rescomp:pit6050b","key":"pit6050b","screenTitle":"Residue Comp.","dependencies":[["PLANT","v","pit6050b"]],"filters":[],"channelKey":"pit6050b"},{get:function(){return (function(v){return Number(v);})((PLANT.v).pit6050b);}}),
+"rescomp:pit6050c":Object.assign({"screen":"rescomp","tag":"PIT-6050C","unit":"PSIG","helper":"pt","line":22136,"original":"j(V.pit6050c)","id":"rescomp:pit6050c","key":"pit6050c","screenTitle":"Residue Comp.","dependencies":[["PLANT","v","pit6050c"]],"filters":[],"channelKey":"pit6050c"},{get:function(){return (function(v){return Number(v);})((PLANT.v).pit6050c);}}),
+"rsv:ft1438":Object.assign({"screen":"rsv","tag":"FT-1438","unit":"MMSCFD","helper":"tga","line":21378,"original":"V.ft1438.toFixed(2)","id":"rsv:ft1438","key":"ft1438","screenTitle":"RSV Recycle","dependencies":[["PLANT","v","ft1438"]],"filters":[],"channelKey":"ft1438"},{get:function(){return (PLANT.v).ft1438.toFixed(2);}}),
+"rsv:lt1438a":Object.assign({"screen":"rsv","tag":"LT-1438A","unit":"%","helper":"tg","line":21377,"original":"V.lic1438a.toFixed(1)","id":"rsv:lt1438a","key":"lt1438a","screenTitle":"RSV Recycle","dependencies":[["PLANT","v","lic1438a"]],"filters":[],"channelKey":"lt1438a"},{get:function(){return (PLANT.v).lic1438a.toFixed(1);}}),
+"rsv:pdt1438":Object.assign({"screen":"rsv","tag":"PDT-1438","unit":"PSID","helper":"tga","line":21372,"original":"V.pdt1438.toFixed(2)","id":"rsv:pdt1438","key":"pdt1438","screenTitle":"RSV Recycle","dependencies":[["PLANT","v","pdt1438"]],"filters":["f1438"],"channelKey":"pdt1438"},{get:function(){return (PLANT.v).pdt1438.toFixed(2);}}),
+"rsv:pt1438":Object.assign({"screen":"rsv","tag":"PT-1438","unit":"PSIG","helper":"tga","line":21370,"original":"V.pt1438.toFixed(0)","id":"rsv:pt1438","key":"pt1438","screenTitle":"RSV Recycle","dependencies":[["PLANT","v","pt1438"]],"filters":[],"channelKey":"pt1438"},{get:function(){return (PLANT.v).pt1438.toFixed(0);}}),
+"rsv:pt1438a":Object.assign({"screen":"rsv","tag":"PT-1438A","unit":"PSIG","helper":"tga","line":21370,"original":"V.pt1438a.toFixed(2)","id":"rsv:pt1438a","key":"pt1438a","screenTitle":"RSV Recycle","dependencies":[["PLANT","v","pt1438a"]],"filters":[],"channelKey":"pt1438a"},{get:function(){return (PLANT.v).pt1438a.toFixed(2);}}),
+"stab:fit5020a":Object.assign({"screen":"stab","tag":"FIT-5020A","unit":"GPM","helper":"pt","line":19197,"original":"j(L.FIC5020A?L.FIC5020A.pv:6.24,0.05)","id":"stab:fit5020a","key":"fit5020a","screenTitle":"Stabilizer","dependencies":[["PLANT","L","FIC5020A"],["PLANT","L","FIC5020A","pv"]],"filters":[],"channelKey":"fit5020a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).FIC5020A?(PLANT.L).FIC5020A.pv:6.24,0.05);}}),
+"stab:fit5020b":Object.assign({"screen":"stab","tag":"FIT-5020B","unit":"GPM","helper":"pt","line":19137,"original":"j(L.FIC5020B?L.FIC5020B.pv:9.6,0.05)","id":"stab:fit5020b","key":"fit5020b","screenTitle":"Stabilizer","dependencies":[["PLANT","L","FIC5020B"],["PLANT","L","FIC5020B","pv"]],"filters":[],"channelKey":"fit5020b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).FIC5020B?(PLANT.L).FIC5020B.pv:9.6,0.05);}}),
+"stab:lit5040a":Object.assign({"screen":"stab","tag":"LIT-5040A","unit":"%","helper":"pt","line":19217,"original":"rebLvl.toFixed(2)","id":"stab:lit5040a","key":"lit5040a","screenTitle":"Stabilizer","dependencies":[["PLANT","v","lit5040a"]],"filters":[],"channelKey":"lit5040a"},{get:function(){return ((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(Number((PLANT.v).lit5040a),0,100)).toFixed(2);}}),
+"stab:pdit5040a":Object.assign({"screen":"stab","tag":"PDIT-5040A","unit":"PSIG","helper":"pt","line":19175,"original":"j(clmp(0.18+Math.pow(Math.max(0.25,(L.FIC5020A?L.FIC5020A.pv:55)/55),1.7)*0.42+Math.max(0,(L.TIC5040A?L.TIC5040A.pv:262)-250)*0.004,0.05,4),0.01)","id":"stab:pdit5040a","key":"pdit5040a","screenTitle":"Stabilizer","dependencies":[["PLANT","L","FIC5020A"],["PLANT","L","FIC5020A","pv"],["PLANT","L","TIC5040A"],["PLANT","L","TIC5040A","pv"]],"filters":[],"channelKey":"pdit5040a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(0.18+Math.pow(Math.max(0.25,((PLANT.L).FIC5020A?(PLANT.L).FIC5020A.pv:55)/55),1.7)*0.42+Math.max(0,((PLANT.L).TIC5040A?(PLANT.L).TIC5040A.pv:262)-250)*0.004,0.05,4),0.01);}}),
+"stab:pit5030a":Object.assign({"screen":"stab","tag":"PIT-5030A","unit":"PSIG","helper":"pt","line":19148,"original":"j(tP,0.15)","id":"stab:pit5030a","key":"pit5030a","screenTitle":"Stabilizer","dependencies":[["PLANT","L","PIC5030A"],["PLANT","L","PIC5030A","pv"]],"filters":[],"channelKey":"pit5030a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.L).PIC5030A?(PLANT.L).PIC5030A.pv:210),0.15);}}),
+"stab:pit5030b":Object.assign({"screen":"stab","tag":"PIT-5030B","unit":"PSIG","helper":"pt","line":19147,"original":"j(tP+0.9,0.2)","id":"stab:pit5030b","key":"pit5030b","screenTitle":"Stabilizer","dependencies":[["PLANT","L","PIC5030A"],["PLANT","L","PIC5030A","pv"]],"filters":[],"channelKey":"pit5030b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.L).PIC5030A?(PLANT.L).PIC5030A.pv:210)+0.9,0.2);}}),
+"stab:tit5020a":Object.assign({"screen":"stab","tag":"TIT-5020A","unit":"DEG F","helper":"pt","line":19201,"original":"j(V.tit5020a==null?81.20:V.tit5020a,0.2)","id":"stab:tit5020a","key":"tit5020a","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5020a"]],"filters":[],"channelKey":"tit5020a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5020a==null?81.20:(PLANT.v).tit5020a,0.2);}}),
+"stab:tit5020c":Object.assign({"screen":"stab","tag":"TIT-5020C","unit":"DEG F","helper":"pt","line":19202,"original":"j(V.tit5020c==null?84.47:V.tit5020c,0.2)","id":"stab:tit5020c","key":"tit5020c","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5020c"]],"filters":[],"channelKey":"tit5020c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5020c==null?84.47:(PLANT.v).tit5020c,0.2);}}),
+"stab:tit5020d":Object.assign({"screen":"stab","tag":"TIT-5020D","unit":"DEG F","helper":"pt","line":19203,"original":"j(V.tit5020d==null?182.56:V.tit5020d,0.3)","id":"stab:tit5020d","key":"tit5020d","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5020d"]],"filters":[],"channelKey":"tit5020d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5020d==null?182.56:(PLANT.v).tit5020d,0.3);}}),
+"stab:tit5020f":Object.assign({"screen":"stab","tag":"TIT-5020F","unit":"DEG F","helper":"pt","line":19204,"original":"j(V.tit5020f==null?98.26:V.tit5020f,0.2)","id":"stab:tit5020f","key":"tit5020f","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5020f"]],"filters":[],"channelKey":"tit5020f"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5020f==null?98.26:(PLANT.v).tit5020f,0.2);}}),
+"stab:tit5030b":Object.assign({"screen":"stab","tag":"TIT-5030B","unit":"DEG F","helper":"pt","line":19172,"original":"j(V.tit5030b==null?124.67:V.tit5030b,0.3)","id":"stab:tit5030b","key":"tit5030b","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5030b"]],"filters":[],"channelKey":"tit5030b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5030b==null?124.67:(PLANT.v).tit5030b,0.3);}}),
+"stab:tit5030c":Object.assign({"screen":"stab","tag":"TIT-5030C","unit":"DEG F","helper":"pt","line":19173,"original":"j(V.tit5030c==null?70.80:V.tit5030c,0.25)","id":"stab:tit5030c","key":"tit5030c","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5030c"]],"filters":[],"channelKey":"tit5030c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5030c==null?70.80:(PLANT.v).tit5030c,0.25);}}),
+"stab:tit5030d":Object.assign({"screen":"stab","tag":"TIT-5030D","unit":"DEG F","helper":"pt","line":19146,"original":"j(V.tit5030d==null?77.15:V.tit5030d,0.2)","id":"stab:tit5030d","key":"tit5030d","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5030d"]],"filters":[],"channelKey":"tit5030d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5030d==null?77.15:(PLANT.v).tit5030d,0.2);}}),
+"stab:tit5030e":Object.assign({"screen":"stab","tag":"TIT-5030E","unit":"DEG F","helper":"pt","line":19246,"original":"j(V.tit5030e==null?130.63:V.tit5030e,0.2)","id":"stab:tit5030e","key":"tit5030e","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5030e"]],"filters":[],"channelKey":"tit5030e"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5030e==null?130.63:(PLANT.v).tit5030e,0.2);}}),
+"stab:tit5040a":Object.assign({"screen":"stab","tag":"TIT-5040A","unit":"DEG F","helper":"pt","line":19230,"original":"j(L.TIC5040A?L.TIC5040A.pv:279.34,0.3)","id":"stab:tit5040a","key":"tit5040a","screenTitle":"Stabilizer","dependencies":[["PLANT","L","TIC5040A"],["PLANT","L","TIC5040A","pv"]],"filters":[],"channelKey":"tit5040a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).TIC5040A?(PLANT.L).TIC5040A.pv:279.34,0.3);}}),
+"stab:tit5040c":Object.assign({"screen":"stab","tag":"TIT-5040C","unit":"DEG F","helper":"pt","line":19229,"original":"j(V.tit5040c==null?264.33:V.tit5040c,0.3)","id":"stab:tit5040c","key":"tit5040c","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5040c"]],"filters":[],"channelKey":"tit5040c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5040c==null?264.33:(PLANT.v).tit5040c,0.3);}}),
+"stab:tit5040d":Object.assign({"screen":"stab","tag":"TIT-5040D","unit":"DEG F","helper":"pt","line":19235,"original":"j(V.tit5040d==null?317.03:V.tit5040d,0.35)","id":"stab:tit5040d","key":"tit5040d","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5040d"]],"filters":[],"channelKey":"tit5040d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5040d==null?317.03:(PLANT.v).tit5040d,0.35);}}),
+"stab:tit5040e":Object.assign({"screen":"stab","tag":"TIT-5040E","unit":"DEG F","helper":"pt","line":19234,"original":"j(V.tit5040e==null?345.71:V.tit5040e,0.4)","id":"stab:tit5040e","key":"tit5040e","screenTitle":"Stabilizer","dependencies":[["PLANT","v","tit5040e"]],"filters":[],"channelKey":"tit5040e"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5040e==null?345.71:(PLANT.v).tit5040e,0.4);}}),
+"stabinlet:fit5000a":Object.assign({"screen":"stabinlet","tag":"FIT-5000A","unit":"GPM","helper":"pt","line":19044,"original":"j(V.fit5000a==null?0:V.fit5000a,0.3)","id":"stabinlet:fit5000a","key":"fit5000a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","fit5000a"]],"filters":[],"channelKey":"fit5000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit5000a==null?0:(PLANT.v).fit5000a,0.3);}}),
+"stabinlet:fqi5000a":Object.assign({"screen":"stabinlet","tag":"FQI-5000A","unit":"GAL","helper":"pt","line":19043,"original":"j(V.fqi5000a==null?33418:V.fqi5000a,0)","id":"stabinlet:fqi5000a","key":"fqi5000a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","fqi5000a"]],"filters":[],"channelKey":"fqi5000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fqi5000a==null?33418:(PLANT.v).fqi5000a,0);}}),
+"stabinlet:lit5010a":Object.assign({"screen":"stabinlet","tag":"LIT-5010A","unit":"%","helper":"pt","line":18991,"original":"j(lvl,0.08)","id":"stabinlet:lit5010a","key":"lit5010a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","L","LIC5010G"],["PLANT","L","LIC5010G","pv"]],"filters":[],"channelKey":"lit5010a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.L).LIC5010G?(PLANT.L).LIC5010G.pv:32),0.08);}}),
+"stabinlet:lit5010b":Object.assign({"screen":"stabinlet","tag":"LIT-5010B","unit":"%","helper":"pt","line":18970,"original":"j(clmp(7.18+(lvl-32)*0.04+(V.stabVaporLoad||0)*0.008,0,25),0.03)","id":"stabinlet:lit5010b","key":"lit5010b","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","L","LIC5010G"],["PLANT","L","LIC5010G","pv"],["PLANT","v","stabVaporLoad"]],"filters":[],"channelKey":"lit5010b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((function clmp(x,a,b){return Math.max(a,Math.min(b,x));})(7.18+(((PLANT.L).LIC5010G?(PLANT.L).LIC5010G.pv:32)-32)*0.04+((PLANT.v).stabVaporLoad||0)*0.008,0,25),0.03);}}),
+"stabinlet:pit5000a":Object.assign({"screen":"stabinlet","tag":"PIT-5000A","unit":"PSIG","helper":"pt","line":19047,"original":"j(V.pit5000a==null?259.34:V.pit5000a,0.3)","id":"stabinlet:pit5000a","key":"pit5000a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","pit5000a"]],"filters":[],"channelKey":"pit5000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit5000a==null?259.34:(PLANT.v).pit5000a,0.3);}}),
+"stabinlet:pit5010a":Object.assign({"screen":"stabinlet","tag":"PIT-5010A","unit":"PSIG","helper":"pt","line":18976,"original":"j(stP-0.3,0.18)","id":"stabinlet:pit5010a","key":"pit5010a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","L","PIC5010D"],["PLANT","L","PIC5010D","pv"]],"filters":[],"channelKey":"pit5010a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})(((PLANT.L).PIC5010D?(PLANT.L).PIC5010D.pv:263)-0.3,0.18);}}),
+"stabinlet:tit5000a":Object.assign({"screen":"stabinlet","tag":"TIT-5000A","unit":"\u00b0F","helper":"pt","line":19046,"original":"j(V.tit5000a==null?65.22:V.tit5000a,0.2)","id":"stabinlet:tit5000a","key":"tit5000a","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","tit5000a"]],"filters":[],"channelKey":"tit5000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5000a==null?65.22:(PLANT.v).tit5000a,0.2);}}),
+"stabinlet:tit5000b":Object.assign({"screen":"stabinlet","tag":"TIT-5000B","unit":"\u00b0F","helper":"pt","line":19056,"original":"j(V.tit5000b==null?65.80:V.tit5000b,0.2)","id":"stabinlet:tit5000b","key":"tit5000b","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","tit5000b"]],"filters":[],"channelKey":"tit5000b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5000b==null?65.80:(PLANT.v).tit5000b,0.2);}}),
+"stabinlet:tit5000c":Object.assign({"screen":"stabinlet","tag":"TIT-5000C","unit":"\u00b0F","helper":"pt","line":19054,"original":"j(L.TIC5000C?L.TIC5000C.pv:62,0.2)","id":"stabinlet:tit5000c","key":"tit5000c","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","L","TIC5000C"],["PLANT","L","TIC5000C","pv"]],"filters":[],"channelKey":"tit5000c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).TIC5000C?(PLANT.L).TIC5000C.pv:62,0.2);}}),
+"stabinlet:tit5000d":Object.assign({"screen":"stabinlet","tag":"TIT-5000D","unit":"\u00b0F","helper":"pt","line":19041,"original":"j(L.TIC5000D?L.TIC5000D.pv:69,0.2)","id":"stabinlet:tit5000d","key":"tit5000d","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","L","TIC5000D"],["PLANT","L","TIC5000D","pv"]],"filters":[],"channelKey":"tit5000d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).TIC5000D?(PLANT.L).TIC5000D.pv:69,0.2);}}),
+"stabinlet:tit5005b":Object.assign({"screen":"stabinlet","tag":"TIT-5005B","unit":"\u00b0F","helper":"pt","line":19055,"original":"j(V.tit5005b==null?61.73:V.tit5005b,0.2)","id":"stabinlet:tit5005b","key":"tit5005b","screenTitle":"Stabilizer Inlet","dependencies":[["PLANT","v","tit5005b"]],"filters":[],"channelKey":"tit5005b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit5005b==null?61.73:(PLANT.v).tit5005b,0.2);}}),
+"util:fit1650":Object.assign({"screen":"util","tag":"FIT-1650","unit":"MMSCFD","helper":"pt","line":21620,"original":"j(V.fit1650,0.02).toFixed(2)","id":"util:fit1650","key":"fit1650","screenTitle":"Utilities","dependencies":[["PLANT","v","fit1650"]],"filters":[],"channelKey":"fit1650"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit1650,0.02).toFixed(2);}}),
+"util:fit8100":Object.assign({"screen":"util","tag":"FIT-8100","unit":"SCFH","helper":"pt","line":21624,"original":"j(V.fit8100,2).toFixed(2)","id":"util:fit8100","key":"fit8100","screenTitle":"Utilities","dependencies":[["PLANT","v","fit8100"]],"filters":[],"channelKey":"fit8100"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit8100,2).toFixed(2);}}),
+"util:fit8110":Object.assign({"screen":"util","tag":"FIT-8110","unit":"SCFH","helper":"pt","line":21687,"original":"j(V.fit8110,2).toFixed(2)","id":"util:fit8110","key":"fit8110","screenTitle":"Utilities","dependencies":[["PLANT","v","fit8110"]],"filters":[],"channelKey":"fit8110"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit8110,2).toFixed(2);}}),
+"util:fit9000a":Object.assign({"screen":"util","tag":"FIT-9000A","unit":"SCFH","helper":"pt","line":21685,"original":"j(V.fit9000a,4).toFixed(2)","id":"util:fit9000a","key":"fit9000a","screenTitle":"Utilities","dependencies":[["PLANT","v","fit9000a"]],"filters":[],"channelKey":"fit9000a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit9000a,4).toFixed(2);}}),
+"util:fit9110a":Object.assign({"screen":"util","tag":"FIT-9110A","unit":"MMSCFD","helper":"pt","line":21700,"original":"j(V.fit9110a,0.02).toFixed(2)","id":"util:fit9110a","key":"fit9110a","screenTitle":"Utilities","dependencies":[["PLANT","v","fit9110a"]],"filters":[],"channelKey":"fit9110a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit9110a,0.02).toFixed(2);}}),
+"util:fit9111a":Object.assign({"screen":"util","tag":"FIT-9111A","unit":"SCFH","helper":"pt","line":21708,"original":"j(V.fit9111a,1).toFixed(2)","id":"util:fit9111a","key":"fit9111a","screenTitle":"Utilities","dependencies":[["PLANT","v","fit9111a"]],"filters":[],"channelKey":"fit9111a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).fit9111a,1).toFixed(2);}}),
+"util:lit8100":Object.assign({"screen":"util","tag":"LIT-8100","unit":"%","helper":"pt","line":21646,"original":"j(V.lit8100,0.1).toFixed(2)","id":"util:lit8100","key":"lit8100","screenTitle":"Utilities","dependencies":[["PLANT","v","lit8100"]],"filters":[],"channelKey":"lit8100"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).lit8100,0.1).toFixed(2);}}),
+"util:lit8110":Object.assign({"screen":"util","tag":"LIT-8110","unit":"%","helper":"pt","line":21692,"original":"j(V.lit8110,0.05).toFixed(2)","id":"util:lit8110","key":"lit8110","screenTitle":"Utilities","dependencies":[["PLANT","v","lit8110"]],"filters":[],"channelKey":"lit8110"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).lit8110,0.05).toFixed(2);}}),
+"util:lit9100a":Object.assign({"screen":"util","tag":"LIT-9100A","unit":"%","helper":"pt","line":21697,"original":"j(V.lit9100a,0.05).toFixed(2)","id":"util:lit9100a","key":"lit9100a","screenTitle":"Utilities","dependencies":[["PLANT","v","lit9100a"]],"filters":[],"channelKey":"lit9100a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).lit9100a,0.05).toFixed(2);}}),
+"util:lit9300b":Object.assign({"screen":"util","tag":"LIT-9300B","unit":"%","helper":"pt","line":21718,"original":"j(V.lit9300b,0.1).toFixed(2)","id":"util:lit9300b","key":"lit9300b","screenTitle":"Utilities","dependencies":[["PLANT","v","lit9300b"]],"filters":[],"channelKey":"lit9300b"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).lit9300b,0.1).toFixed(2);}}),
+"util:pit1650a":Object.assign({"screen":"util","tag":"PIT-1650A","unit":"PSIG","helper":"pt","line":21665,"original":"j(V.pit1650a,0.02).toFixed(2)","id":"util:pit1650a","key":"pit1650a","screenTitle":"Utilities","dependencies":[["PLANT","v","pit1650a"]],"filters":[],"channelKey":"pit1650a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit1650a,0.02).toFixed(2);}}),
+"util:pit8100a":Object.assign({"screen":"util","tag":"PIT-8100A","unit":"PSIG","helper":"pt","line":21634,"original":"j(V.pit8100a,0.05).toFixed(2)","id":"util:pit8100a","key":"pit8100a","screenTitle":"Utilities","dependencies":[["PLANT","v","pit8100a"]],"filters":[],"channelKey":"pit8100a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit8100a,0.05).toFixed(2);}}),
+"util:pit8100c":Object.assign({"screen":"util","tag":"PIT-8100C","unit":"PSIG","helper":"pt","line":21625,"original":"j(L.PIC8100C.pv,0.05).toFixed(2)","id":"util:pit8100c","key":"pit8100c","screenTitle":"Utilities","dependencies":[["PLANT","L","PIC8100C","pv"]],"filters":[],"channelKey":"pit8100c"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.L).PIC8100C.pv,0.05).toFixed(2);}}),
+"util:pit8220d":Object.assign({"screen":"util","tag":"PIT-8220D","unit":"PSIG","helper":"pt","line":21619,"original":"j(V.pit8220d,0.05).toFixed(2)","id":"util:pit8220d","key":"pit8220d","screenTitle":"Utilities","dependencies":[["PLANT","v","pit8220d"]],"filters":[],"channelKey":"pit8220d"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit8220d,0.05).toFixed(2);}}),
+"util:pit9110a":Object.assign({"screen":"util","tag":"PIT-9110A","unit":"PSIG","helper":"pt","line":21701,"original":"j(V.pit9110a,0.02).toFixed(2)","id":"util:pit9110a","key":"pit9110a","screenTitle":"Utilities","dependencies":[["PLANT","v","pit9110a"]],"filters":[],"channelKey":"pit9110a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit9110a,0.02).toFixed(2);}}),
+"util:pit9241a":Object.assign({"screen":"util","tag":"PIT-9241A","unit":"PSIG","helper":"pt","line":21656,"original":"j(V.pit9241a,0.15).toFixed(1)","id":"util:pit9241a","key":"pit9241a","screenTitle":"Utilities","dependencies":[["PLANT","v","pit9241a"]],"filters":[],"channelKey":"pit9241a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).pit9241a,0.15).toFixed(1);}}),
+"util:tit9110a":Object.assign({"screen":"util","tag":"TIT-9110A","unit":"DEG F","helper":"pt","line":21702,"original":"j(V.tit9110a,0.3).toFixed(2)","id":"util:tit9110a","key":"tit9110a","screenTitle":"Utilities","dependencies":[["PLANT","v","tit9110a"]],"filters":[],"channelKey":"tit9110a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit9110a,0.3).toFixed(2);}}),
+"util:tit9300a":Object.assign({"screen":"util","tag":"TIT-9300A","unit":"DEG F","helper":"pt","line":21712,"original":"j(V.tit9300a,0.2).toFixed(2)","id":"util:tit9300a","key":"tit9300a","screenTitle":"Utilities","dependencies":[["PLANT","v","tit9300a"]],"filters":[],"channelKey":"tit9300a"},{get:function(){return (function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);})((PLANT.v).tit9300a,0.2).toFixed(2);}})
+};
+/* 12PQ: exact-owner live control-screen mirrors. No field telemetry, new sensor,
+ * physics, default reading, storage write, or off-screen HMI execution. */
+var CF_LOCAL_READING_STATE_12PQ={installed:false,screen:null,originalTx:null,widgets:new Set(),popup:null,selected:null,queued:false,refreshes:0,reads:0,clientReceivedAt:null,lastError:null};
+function cfLocalKey12PQ(value){return String(value==null?'':value).replace(/[^a-z0-9]/gi,'').toLowerCase();}
+function cfLocalMeasurement12PQ(r){return !!r&&!r.inspectionEquipment12MC&&['instrument','flowmeter','differential','temperature','pressure','flow','indicator','indication','level_gauge'].indexOf(r.kind)>=0;}
+function cfLocalBinding12PQ(r){
+ if(!r)return null;var id=r.assetId||r.key,b=CF_LOCAL_BINDINGS_12PQ[id];
+ if(!b||!cfLocalMeasurement12PQ(r)||r.sourceTagScope||r.sourceLocalTag||r.tagConfirmed===false||cfLocalKey12PQ(r.tag)!==cfLocalKey12PQ(b.tag))return null;
+ // Exact stable ID AND retained tag/alias AND owner are required; no prefix swap.
+ if(String(r.equipment||'')!==String(b.equipment||''))return null;
+ var names=[r.tag].concat(r.aliases||[]).map(cfLocalKey12PQ);
+ if(!b.screens.every(function(a){return names.indexOf(a[1])>=0;}))return null;
+ return b;
+}
+function cfLocalNumber12PQ(raw){
+ if(typeof raw==='number')return Number.isFinite(raw)?raw:null;
+ if(typeof raw!=='string'||!raw.trim()||!/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?$/i.test(raw.trim()))return null;
+ var n=Number(raw);return Number.isFinite(n)?n:null;
+}
+function cfLocalReadSignal12PQ(id){
+ var d=CF_LOCAL_SIGNALS_12PQ[id],state=CF_LOCAL_READING_STATE_12PQ;
+ var out={id:id,tag:d&&d.tag||'',screen:d&&d.screen||'',screenTitle:d&&d.screenTitle||'',unit:d&&d.unit||'',available:false,raw:null,value:null,formatted:'--',reason:'Control-screen signal unavailable',simSeconds:typeof PLANT!=='undefined'&&Number.isFinite(PLANT.simSeconds)?PLANT.simSeconds:null};
+ if(!d||!state.installed||typeof PLANT==='undefined')return out;
+ if(typeof IS_CLIENT!=='undefined'&&IS_CLIENT&&state.clientReceivedAt===null){out.reason='Awaiting a primary-window sample; startup defaults are not shown';return out;}
+ try{
+  state.reads++;
+  if(!cfTrendDependencies12OQ(d.dependencies||[])){out.reason='Control-screen source is missing or nonfinite; no fallback reading';return out;}
+  if((d.filters||[]).some(function(k){var rec=filterRec(k);return !rec||!Number.isFinite(rec.dp)||!FILTER_RULES[k];})){out.reason='Control-screen filter source unavailable';return out;}
+  var channel=CF_TREND_CHANNELS_12OQ[d.channelKey];
+  if(!channel||typeof channel.get!=='function'||cfLocalNumber12PQ(channel.get())===null){out.reason='Existing control-screen channel unavailable';return out;}
+  var raw=state.originalTx(d.tag,d.get(),d.unit),n=cfLocalNumber12PQ(raw);
+  if(n===null){out.reason='Control-screen reading is not a finite number';return out;}
+  out.available=true;out.raw=raw;out.value=n;out.formatted=cfFormatReadout12NK(raw,d.unit);out.reason='Same control-screen signal and formatting';return out;
+ }catch(e){out.reason='Control-screen source unavailable';return out;}
+}
+function cfLocalRows12PQ(record,cache){
+ var b=cfLocalBinding12PQ(record);if(!b)return [];
+ return b.screens.map(function(a){var id=a.join(':');return cache?(cache[id]||(cache[id]=cfLocalReadSignal12PQ(id))):cfLocalReadSignal12PQ(id);});
+}
+function cfLocalMode12PQ(){
+ if(typeof IS_CLIENT!=='undefined'&&IS_CLIENT){var at=CF_LOCAL_READING_STATE_12PQ.clientReceivedAt;if(at===null)return 'Awaiting primary-window sample';if(Date.now()-at>5000)return 'Primary-window sample is stale';return PLANT.simLive===false?'PAUSED SIMULATOR / primary-window sample':'LIVE SIMULATOR / primary-window sample';}
+ if(document.hidden)return 'Browser tab hidden / last simulator sample';
+ if(typeof plantClock12OO!=='undefined'&&plantClock12OO){try{if(plantClock12OO.status().fault)return 'Simulator clock needs attention / last sample';}catch(e){}}
+ return typeof PLANT!=='undefined'&&PLANT.simLive===false?'PAUSED SIMULATOR':'LIVE SIMULATOR';
+}
+function cfLocalStyle12PQ(D){
+ if(D.getElementById('cfLocalReadingsStyle12PQ'))return;
+ var s=D.createElement('style');s.id='cfLocalReadingsStyle12PQ';s.textContent=`
+ .cf-local12pq{background:#0b202b;border:1px solid #548fa1;border-radius:10px;padding:12px;margin:8px 0 14px;color:#eef7fb;font:13px/1.45 'Segoe UI',Arial,sans-serif;box-sizing:border-box;overflow-wrap:anywhere}
+ .cf-local12pq .cf-local-head{display:flex;gap:8px;align-items:start;justify-content:space-between;margin-bottom:7px}
+ .cf-local12pq h3{margin:0;font-size:15px;color:#effcff}.cf-local12pq .cf-local-status{font-size:10px;letter-spacing:.05em;color:#9bd6bc;margin:4px 0 9px}
+ .cf-local12pq .cf-local-status[data-live="false"]{color:#edcf9b}
+ .cf-local12pq .cf-local-row{border-top:1px solid #345263;padding:9px 0 3px}.cf-local12pq .cf-local-source{font-size:11px;color:#bdd3df;display:block}
+ .cf-local12pq output{display:inline-block;font:700 27px/1.25 Consolas,monospace;color:#8cffa3;margin:4px 7px 4px 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+ .cf-local12pq .cf-local-unit{font:12px Consolas,monospace;color:#dcecf5}.cf-local12pq .cf-local-reason{font-size:11px;color:#edcf9b;margin:2px 0}
+ .cf-local12pq button{font:600 12px/1.3 'Segoe UI',Arial,sans-serif;min-height:34px;padding:6px 9px;background:#173b4c;color:#e7f5ff;border:1px solid #6c9bae;border-radius:6px;cursor:pointer}
+ .cf-local12pq button:focus-visible{outline:3px solid #e2f3ff;outline-offset:3px}.cf-local12pq .cf-local-close{min-width:34px;flex-shrink:0}
+ .cf-local12pq .cf-local-open{display:block;margin:4px 0}.cf-local12pq p{margin:5px 0;font-size:11px;color:#bbceda}
+ #cfLocalPopup12PQ{position:absolute;right:12px;top:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;margin:0;z-index:18;box-shadow:0 8px 24px #0008;overscroll-behavior:contain;pointer-events:auto}
+ #cfLocalPopup12PQ[hidden]{display:none!important}#cfLocalPopup12PQ .cf-local-row output{font-size:25px}
+ @media(max-width:600px){#cfLocalPopup12PQ{right:7px;top:7px;width:min(290px,calc(100% - 14px));max-height:65%;padding:10px}.cf-local12pq button{min-height:40px}}
+ `;D.head.appendChild(s);
+}
+function cfLocalOpenScreen12PQ(screen){
+ if(typeof SCR==='undefined'||typeof SCR[screen]!=='function')return false;
+ // Navigation only. No controller command, tag alias inference or new process tick.
+ openEQT();openScreen(screen);return true;
+}
+function cfLocalMakeWidget12PQ(r,parent,popup){
+ var D=parent.ownerDocument||document;cfLocalStyle12PQ(D);
+ var box=D.createElement('section');box.className='cf-local12pq';box.setAttribute('data-cf-local-reading',r.assetId||r.key);box.setAttribute('aria-label','Local simulator reading for '+r.tag);
+ if(popup){box.id='cfLocalPopup12PQ';box.setAttribute('role','region');['pointerdown','pointerup','click','dblclick','wheel','touchstart'].forEach(function(t){box.addEventListener(t,function(e){e.stopPropagation();},{passive:t==='wheel'||t==='touchstart'});});box.addEventListener('keydown',function(e){e.stopPropagation();if(e.key==='Escape'){e.preventDefault();cfCloseLocalPopup12PQ();}});}
+ var head=D.createElement('div');head.className='cf-local-head';box.appendChild(head);var h=D.createElement('h3');h.textContent=(popup?r.tag+' / ':'')+'Local reading';head.appendChild(h);
+ if(popup){var close=D.createElement('button');close.type='button';close.className='cf-local-close';close.textContent='Close';close.setAttribute('aria-label','Close local reading');close.onclick=function(){cfCloseLocalPopup12PQ();};head.appendChild(close);}
+ var mode=D.createElement('div');mode.className='cf-local-status';box.appendChild(mode);
+ var record=typeof CF3D_DEVICE_RECORDS!=='undefined'&&CF3D_DEVICE_RECORDS[r.assetId||r.key]||r,rows=cfLocalRows12PQ(record),items=[];
+ if(!rows.length){var unavailable=D.createElement('p');unavailable.textContent='No exact control-screen reading is linked to this instrument. No value has been generated.';box.appendChild(unavailable);var b=CF_LOCAL_BINDINGS_12PQ[r.assetId||r.key];if(b){var note=D.createElement('p');note.textContent='The current identity or owner does not match the reviewed binding.';box.appendChild(note);}}
+ rows.forEach(function(row){var div=D.createElement('div');div.className='cf-local-row';div.dataset.localSignal=row.id;box.appendChild(div);var src=D.createElement('span');src.className='cf-local-source';src.textContent=row.tag+' / '+row.screenTitle;div.appendChild(src);var value=D.createElement('output');value.textContent='--';div.appendChild(value);var unit=D.createElement('span');unit.className='cf-local-unit';unit.textContent=row.unit;div.appendChild(unit);var reason=D.createElement('div');reason.className='cf-local-reason';div.appendChild(reason);var btn=D.createElement('button');btn.type='button';btn.className='cf-local-open';btn.textContent='Open '+row.screenTitle+' screen';btn.onclick=function(){cfLocalOpenScreen12PQ(row.screen);};div.appendChild(btn);items.push({id:row.id,value:value,reason:reason});});
+ var difference=D.createElement('p');difference.dataset.localDifference='true';difference.hidden=true;box.appendChild(difference);
+ var scope=D.createElement('p');scope.textContent='Simulator indication, not field telemetry. Same units and precision as the named control screen.';box.appendChild(scope);
+ parent.appendChild(box);var widget={box:box,key:r.assetId||r.key,items:items,mode:mode,difference:difference};CF_LOCAL_READING_STATE_12PQ.widgets.add(widget);cfLocalPaintWidget12PQ(widget,{});return box;
+}
+function cfLocalPaintWidget12PQ(w,cache){
+ var r=CF3D_DEVICE_RECORDS[w.key],rows=cfLocalRows12PQ(r,cache),byId={};rows.forEach(function(a){byId[a.id]=a;});var mode=rows.length?(rows.some(function(a){return a.available;})?cfLocalMode12PQ():'READING UNAVAILABLE / '+cfLocalMode12PQ()):'NO LINKED CONTROL-SCREEN READING';if(w.mode.textContent!==mode)w.mode.textContent=mode;w.mode.dataset.live=String(mode.indexOf('LIVE SIMULATOR')===0);
+ w.items.forEach(function(it){var a=byId[it.id],text=a&&a.available?a.formatted:'--',why=a&&a.available?'':a?a.reason:'Exact instrument-to-screen link unavailable';if(it.value.textContent!==text)it.value.textContent=text;if(it.reason.textContent!==why)it.reason.textContent=why;it.value.dataset.available=String(!!a&&a.available);});
+ var finite=rows.filter(function(a){return a.available;}),different=finite.length>1&&finite.some(function(a){return a.value!==finite[0].value;});
+ w.difference.hidden=!different;
+ if(different)w.difference.textContent='The existing screens differ in value or precision. Each reading above mirrors its named screen; no value is averaged or substituted.';
+}
+function cfCloseLocalPopup12PQ(){var state=CF_LOCAL_READING_STATE_12PQ;if(!state)return;var p=state.popup;if(p){p.remove();state.widgets.forEach(function(w){if(w.box===p)state.widgets.delete(w);});}state.popup=null;state.selected=null;}
+function cfAttachLocalReading12PQ(r,card,host){
+ var state=CF_LOCAL_READING_STATE_12PQ;if(!state||!state.installed)return;
+ var main=!host||host.id==='plist';if(main)cfCloseLocalPopup12PQ();
+ if(!cfLocalMeasurement12PQ(r))return;
+ cfLocalMakeWidget12PQ(r,card,false);
+ if(main){var viewport=document.getElementById('v3d');if(viewport){var computed=(viewport.ownerDocument.defaultView||window).getComputedStyle(viewport);if(computed.position==='static')viewport.style.position='relative';state.popup=cfLocalMakeWidget12PQ(r,viewport,true);state.selected=r.assetId||r.key;}}
+}
+function cfLocalRefreshBoard12PQ(cache){
+ var eqt=document.getElementById('eqt'),host=document.getElementById('eqtscr');if(!eqt||!host||eqt.hidden||eqt.style.display==='none'||cfHmiObscured12OZ())return;
+ host.querySelectorAll('[data-act="trend"][data-label]').forEach(function(g){if(g.closest('.pop'))return;var key=cfLocalKey12PQ(g.getAttribute('data-label')),id=eqtCur+':'+key,d=CF_LOCAL_SIGNALS_12PQ[id];if(!d)return;var row=g.querySelector('[data-cf-readout-row]'),v=row&&row.querySelector('[data-cf-readout]');if(!v)return;var a=cache[id]||(cache[id]=cfLocalReadSignal12PQ(id));
+  var text=a.available?a.formatted:'--';if(v.textContent!==text){v.textContent=text;var available=Number(v.getAttribute('data-cf-available')),fs=Number(v.dataset.baseSize12pq||v.getAttribute('font-size'))||10;v.dataset.baseSize12pq=fs;var size=Math.max(7,Math.min(fs,available/Math.max(1,text.length*.66)));v.setAttribute('font-size',size.toFixed(2));if(text.length*size*.66>available){v.setAttribute('textLength',available.toFixed(2));v.setAttribute('lengthAdjust','spacingAndGlyphs');}else{v.removeAttribute('textLength');v.removeAttribute('lengthAdjust');}}
+  var title=row.querySelector('title');if(title)title.textContent=(a.available?String(a.raw):'No reading')+(d.unit?' '+d.unit:'');row.dataset.localSignal12pq=id;
+ });
+}
+function cfRefreshLocalReadings12PQ(){
+ var state=CF_LOCAL_READING_STATE_12PQ;if(!state||!state.installed)return;
+ var cache={};if(!document.hidden)cfLocalRefreshBoard12PQ(cache);
+ state.widgets.forEach(function(w){if(!w.box.isConnected){state.widgets.delete(w);return;}if(!document.hidden)cfLocalPaintWidget12PQ(w,cache);});
+ if(state.popup){var shown=typeof showInst==='undefined'||showInst;state.popup.hidden=!shown;}
+ state.refreshes++;
+}
+function cfQueueLocalReadings12PQ(){var s=CF_LOCAL_READING_STATE_12PQ;if(!s||!s.installed||s.queued)return;s.queued=true;Promise.resolve().then(function(){s.queued=false;try{cfRefreshLocalReadings12PQ();}catch(e){s.lastError='LOCAL_READING_REFRESH_FAILED';}});}
+function cfRegisterLocalReadingReferences12PQ(H){
+ var notes=H.info||H.referenceNotes||{},set=H.records||H.components||{},rows=Array.isArray(set)?set:Object.values(set);
+ rows.forEach(function(r){if(!r)return;var b=cfLocalBinding12PQ(r);if(b)r.controlScreenReading12PQ={definition:'CF_SOURCE_12PQ',owner:r.assetId||r.key,basis:b.basis,signals:b.screens.map(function(a){return a.join(':');}),readOnly:true,valuesStored:false};});
+ var S=CF_SOURCE_12PQ;notes[S.notebookKey]={t:S.title,d:S.policy.concat(S.newEntries.map(function(x){return x.title+': '+x.text;})),sourceReview12PQ:{definition:'CF_SOURCE_12PQ',scope:'Software display association, not new field evidence'}};
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(s){return s.name==='CF_SOURCE_12PQ';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PQ',value:S});
+ if(H.categories){var name='Software / Live readings',cat=H.categories.find(function(c){return c[0]===name;});if(!cat){cat=[name,[]];H.categories.push(cat);}if(cat[1].indexOf(S.notebookKey)<0)cat[1].push(S.notebookKey);}
+}
+function cfInstallLocalReadings12PQ(){
+ var s=CF_LOCAL_READING_STATE_12PQ;if(s.installed)return window.CFLocalReadings12PQ;
+ s.originalTx=cfTxDisplay;s.installed=true;
+ cfTxDisplay=function(tag,value,unit){var id=s.screen+':'+cfLocalKey12PQ(tag),d=s.screen&&CF_LOCAL_SIGNALS_12PQ[id];if(!d)return s.originalTx(tag,value,unit);var a=cfLocalReadSignal12PQ(id);return a.available?a.raw:null;};
+ Object.keys(SCR).forEach(function(key){var original=SCR[key];if(typeof original!=='function')return;var wrapped=function(){var previous=s.screen;s.screen=key;try{return original.apply(this,arguments);}finally{s.screen=previous;}};wrapped.originalControlScreen12PQ=original;SCR[key]=wrapped;});
+ cfRegisterLocalReadingReferences12PQ({info:INFO,records:CF3D_DEVICE_RECORDS,categories:LIB_CATS});
+ var prior=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var rows=prior.apply(this,arguments);if(!rows.some(function(x){return x.name==='CF_SOURCE_12PQ';}))rows.push({name:'CF_SOURCE_12PQ',value:CF_SOURCE_12PQ});return rows;};
+ document.addEventListener('visibilitychange',cfRefreshLocalReadings12PQ);
+ window.CFLocalReadings12PQ={build:'12PQ',read:function(id){return cfLocalRows12PQ(CF3D_DEVICE_RECORDS[id]);},refresh:cfRefreshLocalReadings12PQ,close:cfCloseLocalPopup12PQ,status:function(){return {build:'12PQ',bindingCount:Object.keys(CF_LOCAL_BINDINGS_12PQ).length,screenBindings:Object.keys(CF_LOCAL_SIGNALS_12PQ).length,mountedReadouts:Array.from(s.widgets).filter(function(w){return w.box.isConnected;}).length,selected:s.selected,refreshes:s.refreshes,lastError:s.lastError,mode:cfLocalMode12PQ(),scope:'Exact existing IDs/tags/aliases and named control-screen getters. No field telemetry or new readings.'};}};
+ if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+ return window.CFLocalReadings12PQ;
+}
+
+cfInstallLocalReadings12PQ();
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PP',localReadings:'12PQ'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,localReadings:'12PQ'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+/* END12PQ LOCAL TRANSMITTER READINGS */
 if(window.CFAcceptance12OP){window.CFAcceptance12OP.raycastTarget=cfAcceptanceRayTarget12OP;window.CFAcceptance12OP.finishMain(cfRuntimeAcceptanceProbe12OP);}
 
 function ryanCheckConnection12OS(){
