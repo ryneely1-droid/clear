@@ -729,13 +729,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-11-09-12PH';
+const RYAN_BUILD_ID='RYAN-2026-11-10-12PJ';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-TRAINING-VISUALS-12PH-20261109';
+const RYAN_CODE_SIGNATURE='CF-RYAN-REDELIVERY-12PJ-20261110';
 
 
 
@@ -46708,3 +46708,87 @@ if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.
 module.exports.REFERENCE_STATE_12PH=RYAN_INDEX_REFERENCE_12JT;
 module.exports.equipmentTrainingData12PH=module.exports.equipmentTrainingData12PG;
 module.exports.introductoryWalkthrough12PH=module.exports.introductoryWalkthrough12PG;
+
+/* 12PJ recovered delivery: generic chemistry is distinguished from retained routes. */
+var CF_COMPONENT_LESSON_12PJ={
+ build:'12PJ',
+ title:'C1, C2 and C3 in this part of the plant',
+ basis:'General hydrocarbon identities and qualitative teaching, applied to retained Clear Fork routes. Not a live analysis, phase-equilibrium calculation or field operating instruction.',
+ identities:[
+  {tag:'C1',name:'Methane',formula:'CH4',text:'One carbon atom per molecule. The normal separation favors methane in the tower overhead and residue gas; methane-rich is not perfectly pure methane.'},
+  {tag:'C2',name:'Ethane',formula:'C2H6',text:'Two carbon atoms per molecule. Ethane rejection sends more ethane with residue gas; ethane recovery retains more in NGL. Neither objective is a perfect separation.'},
+  {tag:'C3',name:'Propane',formula:'C3H8',text:'Three carbon atoms per molecule. Process propane is recovered with NGL where conditions allow. Refrigerant propane circulates separately and does not normally enter the process stream.'}
+ ],
+ reminder:'C1/C2/C3 name molecules, not permanent gas or liquid states. Cooling, heating, pressure and mixture composition affect phase. Separation does not turn methane into ethane or propane.',
+ topics:{
+  feed:'The inlet contains a mixture, usually rich in C1 methane with C2 ethane, C3 propane and heavier components. These molecules travel together until conditions and separation distribute them between vapor and liquid.',
+  separator:'This vessel separates gas from liquid already present. The vapor and liquid can each contain several hydrocarbons; this is not a device that sorts all C1 into gas and all C2/C3 into liquid.',
+  compression:'The compressor raises the pressure of the gas mixture; it does not chemically change C1, C2 or C3. Subsequent cooling may condense some hydrocarbons, and a scrubber removes liquid before the next gas-compression step.',
+  drying:'The coalescer removes droplets, molecular sieve removes water vapor, and dust filters remove solids. They do not deliberately split methane from ethane or propane. Dry gas can still form hydrocarbon liquid when cooled.',
+  split:'Both heat-recovery branches carry the same incoming C1/C2/C3 mixture. The nominal 60/40 division is a flow split, not a split of methane versus heavier molecules. Different cooling duties can change each branch\'s vapor/liquid condition.',
+  cooling:'Cooling can move some C2, C3 and heavier hydrocarbons into liquid as the mixture crosses its phase boundary. C1 favors the vapor relative to heavier components. Exact amounts require composition, pressure and temperature; no percentage is assigned here.',
+  expansion:'Pressure letdown changes the state of the same hydrocarbon mixture. Work-extracting expansion provides refrigeration; throttling recovers no shaft work. Cooling and partial condensation depend on conditions, and C1/C2/C3 are not converted into other molecules.',
+  reflux:'This is a hydrocarbon reflux path, not a separate pure-propane refrigerant line. Cooling can make a liquid-bearing stream that improves tower contacting. GSP, RSV and tower overhead remain distinct exchanger passages.',
+  tower:'Rising vapor and descending liquid exchange components. C1 favors the overhead; C3 and heavier components favor NGL. C2 distribution depends on rejection/recovery operation, pressure, reflux and reboil. The outlets are mixtures, not pure components.',
+  reboil:'Heat vaporizes part of the circulating hydrocarbon liquid and helps lighter components move upward. The return can contain vapor and liquid. Circulation is not net product, and adding heat does not change one molecule into another.',
+  residue:'This is methane-rich residue gas, not pure methane. It may carry substantial C2 during ethane rejection and smaller amounts of unrecovered C3. Warming and compression prepare the gas for export rather than changing its chemical identity.',
+  ngl:'NGL is a mixed liquid product, not liquid methane or pure propane. It contains recovered C3 and heavier hydrocarbons, with C2 dependent on the separation objective. Pumps add pressure; recycling liquid does not create more product.',
+  condensate:'Collected inlet condensate is a separate liquid route from cryogenic NGL. It can contain dissolved light components. Heating or pressure reduction can release vapor; the remaining liquid and released vapor are still mixtures.',
+  flash:'When conditions change, some dissolved lighter hydrocarbons can leave the liquid as flash vapor. Vapor generation is not creation of new methane or ethane. The vessel separates phases, while vapor recovery and liquid withdrawal affect their inventories.',
+  stabilizer:'The stabilizer removes light components from collected inlet liquid using heat and vapor/liquid contact. Some C1/C2 and other volatile components can leave in recovered vapor. Product and vapor compositions are not assigned from the equipment name alone.',
+  regeneration:'The carrier gas heats or cools a bed and carries released water away. Water desorption and downstream condensation are distinct from separating C1/C2/C3. The regeneration-return gas remains connected to its retained process return.',
+  refrigerant:'This separate refrigeration loop uses C3 propane as a working fluid. It evaporates to absorb heat and condenses to reject heat. It is not the mixed C1/C2/C3 process gas and does not normally cross the chiller wall into NGL.',
+  hotOil:'Hot-medium oil is a separate heat-transfer liquid, not the methane/ethane/propane process stream or the compressor lubricating oil. Heat crosses metal at the user; the two fluids do not normally mix.',
+  fuel:'Fuel gas is a combustible mixture, generally methane-rich, rather than a guaranteed pure C1 stream. Burning fuel is a chemical reaction in the combustion side; it is separate from the nonreacting process fluid being heated.',
+  air:'Instrument air is a separate air service, not a C1/C2/C3 process stream. Its compressors, filters and dryer support equipment without adding air to the intended hydrocarbon flow path.',
+  seal:'Seal gas is a separate controlled use of the retained filtered-residue source. It is a hydrocarbon gas mixture, not assumed pure methane. Its support role must not be confused with main product flow or lubricating oil.',
+  oil:'Lubricating oil supports machinery and stays separate from normal hydrocarbon product. An oil-return path is not a C1/C2/C3 product or refrigerant-vapor path.',
+  methanol:'Methanol is CH3OH, an alcohol distinct from methane CH4, ethane and propane. It is a separate chemical service, not C1 gas or normal NGL product. No dose, injection lineup or authorization is assigned here.',
+  waste:'Drains and flare may receive different hydrocarbon mixtures depending on their source. Do not assume a drain is pure propane or a flare stream pure methane. These are separate handling/protection paths, not normal product export.',
+  review:'Follow the mixture, then ask what changes its pressure, temperature and phase. The normal product goals are methane-rich residue and recovered NGL; support fluids remain in their own systems, and compositions are not inferred from drawing colors.'
+ },
+ slideGroups:{
+  feed:['inlet-receiver','receiver-bypass','receiver-connection','inlet-header'],
+  separator:['slug-catchers','inlet-separation','wet-gas','cold-separator','vapor-branches'],
+  compression:['inlet-compression','inlet-package','residue-compression','residue-first-stage','residue-interstage','residue-second-stage'],
+  drying:['drying-bed'],split:['feed-split'],
+  cooling:['gasgas-feed','reboiler-feed','feed-junction','gas-chiller'],
+  expansion:['expander-path','jt-path'],reflux:['gsp-takeoff','gsp-cooling','liquid-gsp','rsv-cooling','rsv-letdown'],
+  tower:['demeth-tower','cold-liquid','liquid-recovery','liquid-rejection'],
+  reboil:['tower-heat','bottom-loop','side-loop'],
+  residue:['overhead-warming','booster-outlet','residue-filter','residue-outlet','residue-takeoffs','residue-inlet-return','residue-suction-return','residue-wet-return'],
+  ngl:['ngl-surge','ngl-pumps','ngl-branches','ngl-outlet','ngl-recycle'],
+  condensate:['condensate-filters','condensate-preheat'],flash:['flash-tank','stabilizer-flash-return'],
+  stabilizer:['stabilizer-feed','stab-cold','stab-warm','stabilizer-tower','stabilizer-kettle','stabilizer-cooling','stabilizer-pump-split','stabilizer-product','stabilizer-circulation','overhead-recovery'],
+  regeneration:['regen-start','regen-heating','regen-cooling','regen-return'],
+  refrigerant:['propane-compression','propane-condensing','propane-economizer','economizer-vapor','propane-evaporation','propane-reclaimer','reclaimer-vapor'],
+  hotOil:['hot-oil-loop','hot-oil-users'],fuel:['fuel-gas','fuel-conditioning'],
+  air:['instrument-air','air-prefilters','air-afterfilters'],seal:['seal-gas'],oil:['lube-oil','reclaimer-oil'],
+  methanol:['methanol-support'],waste:['drain-choice','closed-drains','cold-drains','flare-system','flare-liquid'],review:['support-hub','finish']
+ },
+ references:[
+  {title:'EIA: Natural gas explained',url:'https://www.eia.gov/energyexplained/natural-gas/',scope:'General methane-rich mixture and hydrocarbon identities; not Clear Fork composition or topology.'},
+  {title:'EIA: Hydrocarbon gas liquids explained',url:'https://www.eia.gov/energyexplained/hydrocarbon-gas-liquids/',scope:'General ethane/propane identities and phase terminology; not installed limits.'},
+  {title:'Retained CF_SOURCE_12NS definitions / CF_SOURCE_12NQ routes / CF_SOURCE_12PA / existing introductory evidence',scope:'Plant service separation, ethane objectives and existing process topology; original source qualifications remain.'}
+ ]
+};
+function cfAddComponentTeaching12PJ(course){
+ var c=Object.assign({},course),map={};Object.keys(CF_COMPONENT_LESSON_12PJ.slideGroups).forEach(function(k){CF_COMPONENT_LESSON_12PJ.slideGroups[k].forEach(function(id){map[id]=k;});});
+ c.componentTeaching12PJ=CF_COMPONENT_LESSON_12PJ;c.chemistryBuild='12PJ';
+ c.slideDeck12PE=Object.assign({},course.slideDeck12PE,{slides:course.slideDeck12PE.slides.map(function(s){if(!map[s.id])throw Error('Missing component teaching for '+s.id);return Object.assign({},s,{componentTopic12PJ:map[s.id],componentText12PJ:CF_COMPONENT_LESSON_12PJ.topics[map[s.id]]});})});
+ c.glossary=Object.assign({},course.glossary);CF_COMPONENT_LESSON_12PJ.identities.forEach(function(x){c.glossary[x.tag+' / '+x.name]=x.formula+'. '+x.text;});
+ return c;
+}
+function cfComponentReferenceLines12PJ(){return [CF_COMPONENT_LESSON_12PJ.basis,CF_COMPONENT_LESSON_12PJ.reminder].concat(CF_COMPONENT_LESSON_12PJ.identities.map(function(x){return x.tag+' / '+x.name+' ('+x.formula+'): '+x.text;})).concat(Object.keys(CF_COMPONENT_LESSON_12PJ.topics).map(function(k){return k+': '+CF_COMPONENT_LESSON_12PJ.topics[k];}));}
+var CF_SOURCE_12PJ={build:'12PJ',baseline:'12PH recovered intact source',date:'2026-11-10',id:'reissued_downloads_and_component_teaching_12pj',title:'C1/C2/C3 introductory context and simplified delivery',notebookKey:'introductory_walkthrough_12pd',sourceClass:'GENERAL_CHEMISTRY_WITH_RETAINED_PLANT_ROUTES_AND_SOFTWARE_PACKAGING',qualification:CF_COMPONENT_LESSON_12PJ.basis,newEntries:CF_COMPONENT_LESSON_12PJ.identities,topicContext:CF_COMPONENT_LESSON_12PJ.topics,research:CF_COMPONENT_LESSON_12PJ.references,policy:['Previous12PI links could not be recovered; regenerate from the complete12PH application, not a handoff or old application.','One new content companion; original15 data scripts remain unchanged. No plant control, process equation or geometry changed.','No live composition, purity, phase fraction or recovery guarantee is assigned.']};
+
+if(!RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12PJ';}))RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.push({name:'CF_SOURCE_12PJ',value:CF_SOURCE_12PJ});
+RYAN_INDEX_REFERENCE_12JT.referenceNotes[CF_SOURCE_12PJ.notebookKey].d=RYAN_INDEX_REFERENCE_12JT.referenceNotes[CF_SOURCE_12PJ.notebookKey].d.concat(cfComponentReferenceLines12PJ());
+RYAN_INDEX_REFERENCE_12JT.referenceNotes[CF_SOURCE_12PJ.notebookKey].componentTeachingRevision='12PJ';
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12PJ',baseline:'12PH',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});
+Object.assign(RYAN_INDEX_REFERENCE_12JT.summary,{sourceDefinitions:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length,sourceDefinitionCount:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length});
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12PJ',baseline:'12PH',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE});Object.assign(RYAN_INDEX_MANIFEST_12JT.summary,RYAN_INDEX_REFERENCE_12JT.summary);
+module.exports.REFERENCE_STATE_12PJ=RYAN_INDEX_REFERENCE_12JT;
+module.exports.equipmentTrainingData12PJ=module.exports.equipmentTrainingData12PH;
+module.exports.introductoryWalkthrough12PJ=function(){return JSON.parse(JSON.stringify(cfAddComponentTeaching12PJ(cfBuildIntroCourse12PF(CF_INTRO_WALKTHROUGH_12PD))));};
+module.exports.COMPONENT_TEACHING_12PJ=CF_COMPONENT_LESSON_12PJ;
