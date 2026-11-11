@@ -729,13 +729,13 @@ const crypto = require('crypto');
 
 const ANTHROPIC_VERSION_V2 = process.env.ANTHROPIC_VERSION || '2023-06-01';
 
-const RYAN_BUILD_ID='RYAN-2026-11-10-12PX';
+const RYAN_BUILD_ID='RYAN-2026-11-11-12PZ';
 const RYAN_DIAGNOSTIC_REVISION="CF-COMPRESSOR-SOURCE-AUDIT-12MG";
 const RYAN_SOURCE_BASELINE="12MF cumulative baseline plus source-qualified six-compressor alarm reconciliation and SN55 reference-only delta 12MG";
 const NETLIFY_BUFFERED_PAYLOAD_BYTES = 6 * 1024 * 1024;
 const NETLIFY_SAFE_BINARY_BYTES = 4 * 1024 * 1024;
 
-const RYAN_CODE_SIGNATURE='CF-RYAN-REBOILER-FLOW-RESTORE-12PX-20261110';
+const RYAN_CODE_SIGNATURE='CF-RYAN-SCHEDULE-12PZ-20261111';
 
 
 
@@ -47284,3 +47284,66 @@ if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.
 module.exports.REFERENCE_STATE_12PX=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12PX=RYAN_INDEX_MANIFEST_12JT;
 module.exports.equipmentTrainingData12PX=module.exports.equipmentTrainingData12PW;module.exports.introductoryWalkthrough12PX=module.exports.introductoryWalkthrough12PW;module.exports.LOCAL_READING_BINDINGS_12PX=CF_LOCAL_BINDINGS_12PQ;module.exports.REBOILER_PATH_REPAIR_12PX=CF_SOURCE_12PX;
 const cfSelectBefore12PX=selectKnowledge;selectKnowledge=function(message,context,mode){const out=cfSelectBefore12PX(message,context,mode);if(/reboiler|e.?122[345]|e.?1125|missing.*flow|internal.*line/i.test(String(message||'')))out.currentReboilerPathRepair12PX=CF_SOURCE_12PX;return out;};if(module.exports._test)module.exports._test.selectKnowledge=selectKnowledge;
+
+/*12PY operator correction and current model-placement metadata; no stored live values.*/
+var CF_SOURCE_12PY={"build":"12PY","baseline":"12PX","date":"2026-11-11","id":"slug_transfer_series_gate_a1322_clearance_12py","title":"Slug-catcher series-valve gate and A-1322 spare-branch clearance","notebookKey":"slug_gate_a1322_review_12py","sourceClass":"OPERATOR_CONFIRMED_TRANSFER_REQUIREMENT_AND_EXISTING_M2155_SOURCE_MODEL_REPAIR","ownerKeys":["v1020","v1025","v1030","e5000","v5010","a1322","cf3d_m2155_215505","cf3d_m2155_215506"],"existingSourceRefs":["CF_SOURCE_12PV","CF_SOURCE_12LL","CF_SOURCE_12IR"],"geometry":{"mirrorRootX":99.2,"routeKeys":["ll_215505","ll_215506"],"componentKeys":["cf3d_m2155_215505","cf3d_m2155_215506"],"originalBranch":[[99.2,7.5,-64.4],[103,7.5,-64.4]],"branch":[[99.2,7.5,-64.4],[95.4,7.5,-64.4]],"originalBleed":[[102.5,7.5,-64.4],[102.5,8.9,-64.4]],"bleed":[[95.9,7.5,-64.4],[95.9,8.9,-64.4]],"scope":"Schematic outward relocation about the unchanged 1260 root. Not a surveyed field route or an added cooler nozzle."},"newEntries":[{"id":"py.series","title":"Both series valves must permit liquid transfer","text":"Operator confirms FV-5010A must have positive CV/opening AND XV-5010B must be open before slug-catcher liquid can reach the stabilizer. FV-5010A continues to use the existing FIC5010A.out simulator position; there is no independent measured valve feedback. The existing upstream XV-5000A, filter restriction/stop, liquid availability, pressure difference and ESD conditions still apply. The same gate is enforced at the inventory-commit boundary, not only the flow-target calculation."},{"id":"py.closed","title":"Closed route cannot remove or totalize liquid","text":"Either closed valve yields zero common transfer, zero vessel discharge through this route, and no incoming stabilizer mass or transferred gallons. Old positive demand or a lagged FIT cannot bypass the gate. Actual incoming condensate may still accumulate. No automatic valve opening, mode switch, level reset, pressure/temperature clamp or new protective threshold is added."},{"id":"py.a1322","title":"Spare branch had intersected the cooler","text":"Retained M2155 Rev11 identifies 215505 and 215506 as a spare storage connection and its bleed, not another A-1322 process connection. The old positive-X model branch put the 215505 valve at [101.6,7.5,-64.4], overlapping the A-1322 casing. Its pipe was created with the generic yellow material, and the valve main-detail flag exposed its cut pipe pieces despite the spare branch being optional. These two existing branches and their two valves now extend outward toward negative X, use NGL blue, and share the existing optional source-detail visibility. The cooler body, actual product inlet/outlet, pressure controls, relief and all unrelated piping are retained. No receiving storage vessel is invented."},{"id":"py.identity","title":"One identity, synchronized model and reference","text":"Existing 215505/215506 IDs, source facts, nominal sizes and plate gaps are preserved. Model anchors, current route records, trace endpoints, component locations, Finder/Library information and Ryan reference metadata use the corrected schematic locations. Historical CF_SOURCE_12LL remains unchanged; a copied working plan carries the presentation correction."}],"policy":["Continue actual12PX, not the old handoff.","No installed valve, line, source record, individual plate, controller or history is deleted.","One real product circuit is retained; the incorrect yellow spare intrusion is removed from the cooler.","Existing manual controls, nine residue steps, liquid calibration, reboiler drawing repairs, label OFF, live readings, training and storage formats remain.","Prepared code and scoped tests do not establish deployed/native full-scene acceptance."]};
+/*12PY: preserve the historical source; transform only two source-local branches.*/
+function cfNglPlan12PY(source){
+ var S=JSON.parse(JSON.stringify(source)),G=CF_SOURCE_12PY.geometry,matched=[];
+ if(S.presentationRevision12PY==='12PY')return S;
+ function point(p){return [Number((2*G.mirrorRootX-p[0]).toFixed(8)),p[1],p[2]];}
+ function vector(p){return [-p[0],p[1],p[2]];}
+ S.newRoutes.forEach(function(q){if(G.routeKeys.indexOf(q.key)<0)return;
+  q.points=q.points.map(point);q.serviceColor12PY='NGL';q.presentationRevision12PY='12PY';matched.push(q.key);
+  q.geometryQualification12PY=G.scope;
+ });
+ S.components.forEach(function(c){if(G.componentKeys.indexOf(c.key)<0)return;
+  c.center=point(c.center);c.direction=vector(c.direction);c.normal=vector(c.normal);c.ports12LL=c.ports12LL.map(point);
+  c.detail12LL=true;c.presentationRevision12PY='12PY';c.geometryQualification12PY=G.scope;matched.push(c.key);
+ });
+ if(matched.length!==4)throw Error('12PY expected exact two spare branches and two existing valves; no guessed replacement.');
+ S.presentationRevision12PY='12PY';return S;
+}
+function cfRegisterTransferClearance12PY(H){
+ var S=CF_SOURCE_12PY,N=H.info||H.referenceNotes||{},rs=H.records||H.components||{},rows=Array.isArray(rs)?rs:Object.values(rs),defs=H.sourceDefinitions||[],original=defs.find(function(d){return d.name==='CF_SOURCE_12LL';});
+ var plan=cfNglPlan12PY(original?original.value:CF_SOURCE_12LL),components=plan.components.filter(function(c){return S.geometry.componentKeys.indexOf(c.key)>=0;});
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(e){return e.title+': '+e.text;}).concat(S.policy),sourceReview12PY:{definition:'CF_SOURCE_12PY',scope:S.sourceClass}};
+ S.ownerKeys.forEach(function(k){var geom=k==='a1322'||S.geometry.componentKeys.indexOf(k)>=0,link={definition:'CF_SOURCE_12PY',owner:k,notebookKey:S.notebookKey,factIds:geom?['py.a1322','py.identity']:['py.series','py.closed']};
+  if(N[k])N[k].sourceReview12PY=link;rows.filter(function(r){return(r.assetId||r.key)===k;}).forEach(function(r){r.sourceReview12PY=link;});
+ });
+ components.forEach(function(c){rows.filter(function(r){return(r.assetId||r.key)===c.key;}).forEach(function(r){
+  r.point12LL=c.center.slice();r.host12LL={pipeKey:c.pipeKey,center:c.center.slice()};
+  r.modelPlacement12PY={point:c.center.slice(),pipeKey:c.pipeKey,ports:c.ports12LL.map(function(p){return p.slice();}),sourceDefinition:'CF_SOURCE_12PY',scope:S.geometry.scope};
+  r.location='On '+c.pipeKey+' outside the A-1322 casing; schematic center ['+c.center.join(', ')+']. Not a surveyed field location.';
+ });if(N[c.key])N[c.key].modelPlacement12PY={point:c.center.slice(),pipeKey:c.pipeKey,scope:S.geometry.scope};});
+ (H.pipes||[]).forEach(function(r){var q=plan.newRoutes.find(function(q){return S.geometry.routeKeys.indexOf(q.key)>=0&&q.key===r.key;});if(!q)return;
+  r.points=q.points.map(function(p){return p.slice();});r.presentationRevision12PY='12PY';r.geometryQualification12PY=S.geometry.scope;r.serviceColor12PY='NGL';
+ });
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12PY';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PY',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Display and navigation';});if(!c){c=['Software / Display and navigation',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterTransferClearance12PY(RYAN_INDEX_REFERENCE_12JT);
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12PY',baseline:'12PX',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,transferGateRevision:'12PY',a1322ClearanceRevision:'12PY'});
+Object.assign(RYAN_INDEX_REFERENCE_12JT.summary,{referenceNotes:Object.keys(RYAN_INDEX_REFERENCE_12JT.referenceNotes).length,sourceDefinitions:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length,sourceDefinitionCount:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length});
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12PY',baseline:'12PX',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,transferGateRevision:'12PY',a1322ClearanceRevision:'12PY'});Object.assign(RYAN_INDEX_MANIFEST_12JT.summary,RYAN_INDEX_REFERENCE_12JT.summary);
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12PY',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,transferGateRevision:'12PY',a1322ClearanceRevision:'12PY'}));
+module.exports.REFERENCE_STATE_12PY=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12PY=RYAN_INDEX_MANIFEST_12JT;
+module.exports.equipmentTrainingData12PY=module.exports.equipmentTrainingData12PX;module.exports.introductoryWalkthrough12PY=module.exports.introductoryWalkthrough12PX;module.exports.LOCAL_READING_BINDINGS_12PY=CF_LOCAL_BINDINGS_12PQ;module.exports.TRANSFER_CLEARANCE_12PY=CF_SOURCE_12PY;
+const cfSelectBefore12PY=selectKnowledge;selectKnowledge=function(message,context,mode){const out=cfSelectBefore12PY(message,context,mode);if(/slug|fv.?5010a|xv.?5010b|a.?1322|215505|215506/i.test(String(message||'')))out.currentTransferClearance12PY=CF_SOURCE_12PY;return out;};if(module.exports._test)module.exports._test.selectKnowledge=selectKnowledge;
+
+/*12PZ: operator-requested roster anchor, not a copy of private browser edits.*/
+var CF_SOURCE_12PZ={"build":"12PZ","baseline":"12PY","date":"2026-11-11","id":"schedule_shane_dobbs_rotation_12pz","title":"Schedule / Shane Dobbs repeating rotation","notebookKey":"schedule_shane_dobbs_12pz","sourceClass":"USER_REQUEST_AND_EXISTING_RYAN_SCHEDULE_PATTERN","newEntries":[{"id":"pz.roster","title":"One employee in an unused slot","text":"Add Shane Dobbs in an available blank Schedule slot. In the supplied roster this is Crew 3 second slot. Retain historical unnamed entries on their original archived owner, not as Shane history. Existing named employees, their shifts, notes, and rotations remain unchanged. An already-used slot is not overwritten."},{"id":"pz.rotation","title":"Corrected start and same cycle","text":"User explicitly corrected the off date to November 16, 2026. Start November 13-15 DAY, November 16 OFF, November 17-19 NIGHT. Use the existing Ryan Neely 28-day pattern: 3 DAY, 1 OFF, 3 NIGHT, 3 OFF, 4 DAY, 7 OFF, 4 NIGHT, 3 OFF; repeat from December 11, 2026. Copy the rotation pattern, not Ryan's date-specific overrides or phase. No prior Shane shifts are invented."},{"id":"pz.storage","title":"Additive update to the current saved roster","text":"Apply once when Schedule loads successfully, using the existing IndexedDB transaction path. Keep manual overrides and notes; do not overwrite an unread archive, duplicate an existing exact-name Shane record, reactivate an archived record, or replace a conflicting saved rotation. The one-time marker prevents subsequent edits or employee archiving being undone on reload. This is local to each browser, not a shared server calendar."}],"policy":["Actual12PY is the baseline; no rollback or application rebuild.","No plant calculations, controls, protections, geometry, transmitters, trainers, walkthrough or histories changed.","No secret, authentication policy, storage key or database version changed.","No live deployment or private browser record is accessed; source and isolated tests are not live-site acceptance."]};
+function cfRegisterSchedule12PZ(H){
+ var S=CF_SOURCE_12PZ,N=H.info||H.referenceNotes||{};
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat(S.policy),sourceReview12PZ:{definition:'CF_SOURCE_12PZ',scope:S.sourceClass}};
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(x){return x.name==='CF_SOURCE_12PZ';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PZ',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Schedule';});if(!c){c=['Software / Schedule',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterSchedule12PZ(RYAN_INDEX_REFERENCE_12JT);
+Object.assign(RYAN_INDEX_REFERENCE_12JT,{build:'12PZ',baseline:'12PY',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,scheduleRosterRevision:'12PZ'});
+Object.assign(RYAN_INDEX_REFERENCE_12JT.summary,{referenceNotes:Object.keys(RYAN_INDEX_REFERENCE_12JT.referenceNotes).length,sourceDefinitions:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length,sourceDefinitionCount:RYAN_INDEX_REFERENCE_12JT.sourceDefinitions.length});
+Object.assign(RYAN_INDEX_MANIFEST_12JT,{build:'12PZ',baseline:'12PY',backendBuild:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,scheduleRosterRevision:'12PZ'});Object.assign(RYAN_INDEX_MANIFEST_12JT.summary,RYAN_INDEX_REFERENCE_12JT.summary);
+if(globalThis.CF_CURRENT_RELEASE_12JT)globalThis.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},globalThis.CF_CURRENT_RELEASE_12JT,{frontend:'12PZ',backend:RYAN_BUILD_ID,signature:RYAN_CODE_SIGNATURE,scheduleRosterRevision:'12PZ'}));
+module.exports.REFERENCE_STATE_12PZ=RYAN_INDEX_REFERENCE_12JT;module.exports.RYAN_INDEX_MANIFEST_12PZ=RYAN_INDEX_MANIFEST_12JT;
+module.exports.equipmentTrainingData12PZ=module.exports.equipmentTrainingData12PY;module.exports.introductoryWalkthrough12PZ=module.exports.introductoryWalkthrough12PY;module.exports.LOCAL_READING_BINDINGS_12PZ=CF_LOCAL_BINDINGS_12PQ;module.exports.SCHEDULE_UPDATE_12PZ=CF_SOURCE_12PZ;
+const cfSelectBefore12PZ=selectKnowledge;selectKnowledge=function(message,context,mode){const out=cfSelectBefore12PZ(message,context,mode);if(/schedule|shane\s+dobbs|shift.*rotation/i.test(String(message||'')))out.currentScheduleUpdate12PZ=CF_SOURCE_12PZ;return out;};if(module.exports._test)module.exports._test.selectKnowledge=selectKnowledge;
