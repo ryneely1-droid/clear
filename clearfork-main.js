@@ -1,12 +1,42 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12PX';
+const CF_APPLICATION_BUILD_12OA='12PZ';
 var cfPayload12PJ=window.CFContent12PJ;
-if(!cfPayload12PJ||cfPayload12PJ.build!=='12PX'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
- if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PX)');
- throw new Error('Clear Fork12PX requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
+if(!cfPayload12PJ||cfPayload12PJ.build!=='12PZ'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
+ if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12PZ)');
+ throw new Error('Clear Fork12PZ requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
 }
 var cfCompressorTrainerRuntime12MO=cfPayload12PJ.trainer;
+
+var CF_SOURCE_12PY={"build":"12PY","baseline":"12PX","date":"2026-11-11","id":"slug_transfer_series_gate_a1322_clearance_12py","title":"Slug-catcher series-valve gate and A-1322 spare-branch clearance","notebookKey":"slug_gate_a1322_review_12py","sourceClass":"OPERATOR_CONFIRMED_TRANSFER_REQUIREMENT_AND_EXISTING_M2155_SOURCE_MODEL_REPAIR","ownerKeys":["v1020","v1025","v1030","e5000","v5010","a1322","cf3d_m2155_215505","cf3d_m2155_215506"],"existingSourceRefs":["CF_SOURCE_12PV","CF_SOURCE_12LL","CF_SOURCE_12IR"],"geometry":{"mirrorRootX":99.2,"routeKeys":["ll_215505","ll_215506"],"componentKeys":["cf3d_m2155_215505","cf3d_m2155_215506"],"originalBranch":[[99.2,7.5,-64.4],[103,7.5,-64.4]],"branch":[[99.2,7.5,-64.4],[95.4,7.5,-64.4]],"originalBleed":[[102.5,7.5,-64.4],[102.5,8.9,-64.4]],"bleed":[[95.9,7.5,-64.4],[95.9,8.9,-64.4]],"scope":"Schematic outward relocation about the unchanged 1260 root. Not a surveyed field route or an added cooler nozzle."},"newEntries":[{"id":"py.series","title":"Both series valves must permit liquid transfer","text":"Operator confirms FV-5010A must have positive CV/opening AND XV-5010B must be open before slug-catcher liquid can reach the stabilizer. FV-5010A continues to use the existing FIC5010A.out simulator position; there is no independent measured valve feedback. The existing upstream XV-5000A, filter restriction/stop, liquid availability, pressure difference and ESD conditions still apply. The same gate is enforced at the inventory-commit boundary, not only the flow-target calculation."},{"id":"py.closed","title":"Closed route cannot remove or totalize liquid","text":"Either closed valve yields zero common transfer, zero vessel discharge through this route, and no incoming stabilizer mass or transferred gallons. Old positive demand or a lagged FIT cannot bypass the gate. Actual incoming condensate may still accumulate. No automatic valve opening, mode switch, level reset, pressure/temperature clamp or new protective threshold is added."},{"id":"py.a1322","title":"Spare branch had intersected the cooler","text":"Retained M2155 Rev11 identifies 215505 and 215506 as a spare storage connection and its bleed, not another A-1322 process connection. The old positive-X model branch put the 215505 valve at [101.6,7.5,-64.4], overlapping the A-1322 casing. Its pipe was created with the generic yellow material, and the valve main-detail flag exposed its cut pipe pieces despite the spare branch being optional. These two existing branches and their two valves now extend outward toward negative X, use NGL blue, and share the existing optional source-detail visibility. The cooler body, actual product inlet/outlet, pressure controls, relief and all unrelated piping are retained. No receiving storage vessel is invented."},{"id":"py.identity","title":"One identity, synchronized model and reference","text":"Existing 215505/215506 IDs, source facts, nominal sizes and plate gaps are preserved. Model anchors, current route records, trace endpoints, component locations, Finder/Library information and Ryan reference metadata use the corrected schematic locations. Historical CF_SOURCE_12LL remains unchanged; a copied working plan carries the presentation correction."}],"policy":["Continue actual12PX, not the old handoff.","No installed valve, line, source record, individual plate, controller or history is deleted.","One real product circuit is retained; the incorrect yellow spare intrusion is removed from the cooler.","Existing manual controls, nine residue steps, liquid calibration, reboiler drawing repairs, label OFF, live readings, training and storage formats remain.","Prepared code and scoped tests do not establish deployed/native full-scene acceptance."]};
+/*12PY: read-only permissive; flow and inventory use the SAME gate.*/
+function cfSlugTransferGate12PY(P){
+ P=P||{};var L=P.L||{},v=P.valves||{},i=P.in||{},c=L.FIC5010A,cv=c&&c.out;
+ function open(x){return x===true||(typeof x==='number'&&Number.isFinite(x)&&x>0);}
+ var fv=typeof cv==='number'&&Number.isFinite(cv)&&cv>0,xb=open(v.xv5010b),xa=open(v.xv5000a),reasons=[];
+ if(!fv)reasons.push(Number.isFinite(cv)?'FV-5010A closed':'FV-5010A position unavailable');
+ if(!xb)reasons.push('XV-5010B not open');if(!xa)reasons.push('XV-5000A not open');
+ if(i.slugFilterBlocked)reasons.push('Duty liquid filter blocks transfer');if(P.esd)reasons.push('Facility ESD active');
+ return {build:'12PY',allowed:fv&&xb&&xa&&!i.slugFilterBlocked&&!P.esd,fv5010aOpen:fv,xv5010bOpen:xb,xv5000aOpen:xa,
+  fv5010aPct:Number.isFinite(cv)?cv:null,reasons:reasons,basis:'Existing FIC5010A.out and isolation states; no invented valve feedback.'};
+}
+/*12PY: preserve the historical source; transform only two source-local branches.*/
+function cfNglPlan12PY(source){
+ var S=JSON.parse(JSON.stringify(source)),G=CF_SOURCE_12PY.geometry,matched=[];
+ if(S.presentationRevision12PY==='12PY')return S;
+ function point(p){return [Number((2*G.mirrorRootX-p[0]).toFixed(8)),p[1],p[2]];}
+ function vector(p){return [-p[0],p[1],p[2]];}
+ S.newRoutes.forEach(function(q){if(G.routeKeys.indexOf(q.key)<0)return;
+  q.points=q.points.map(point);q.serviceColor12PY='NGL';q.presentationRevision12PY='12PY';matched.push(q.key);
+  q.geometryQualification12PY=G.scope;
+ });
+ S.components.forEach(function(c){if(G.componentKeys.indexOf(c.key)<0)return;
+  c.center=point(c.center);c.direction=vector(c.direction);c.normal=vector(c.normal);c.ports12LL=c.ports12LL.map(point);
+  c.detail12LL=true;c.presentationRevision12PY='12PY';c.geometryQualification12PY=G.scope;matched.push(c.key);
+ });
+ if(matched.length!==4)throw Error('12PY expected exact two spare branches and two existing valves; no guessed replacement.');
+ S.presentationRevision12PY='12PY';return S;
+}
 
 /*12PV: single-owner slug-catcher equivalent liquid balance.
  * Fixed one-second production tick only. No clock, automatic valve command,
@@ -42,11 +72,13 @@ function cfSlugPrepare12PV(flow,pigRise,scenarioSlug){
  return {valid:rows.length===3,rows:rows,inletOpen:inletOpen,supplyGpm:Math.min(105,rows.reduce(function(a,r){return a+r.capacityGpm;},0)),scope:M.qualification};
 }
 function cfSlugCommit12PV(prepared,requestedGpm){
- var V=PLANT.v,L=PLANT.L,M=CF_SLUG_MODEL_12PV;
+ var V=PLANT.v,L=PLANT.L,M=CF_SLUG_MODEL_12PV,gate=cfSlugTransferGate12PY(PLANT);
+ V.slugTransferGate12PY=gate;
  if(!prepared||!prepared.valid||!Number.isFinite(requestedGpm)){
-  V.slugBalance12PV={valid:false,reason:'Required liquid state unavailable; no invented inventory or transfer.'};return 0;
+  V.fit5000a=0;V.slugDrainFlow=0;V.slugCondensateToStabGpm=0;
+  V.slugBalance12PV={valid:false,reason:'Required liquid state unavailable; no invented inventory or transfer.',transferGate12PY:gate};return 0;
  }
- var sum=prepared.rows.reduce(function(a,r){return a+r.capacityGpm;},0),q=Math.min(Math.max(0,requestedGpm),prepared.supplyGpm,sum);
+ var sum=prepared.rows.reduce(function(a,r){return a+r.capacityGpm;},0),q=gate.allowed?Math.min(Math.max(0,requestedGpm),prepared.supplyGpm,sum):0;
  var residual=0,totalIn=0,totalOut=0,inventoryChange=0,overflow=0,ripples={};
  var rows=prepared.rows.map(function(r,i){
   var out=sum>0?q*r.capacityGpm/sum:0,raw=r.beforeGallons+(r.inGpm-out)/60;
@@ -63,7 +95,7 @@ function cfSlugCommit12PV(prepared,requestedGpm){
  // The same actual throughput feeds FIT, filter service, totalizer and V-5010.
  V.fit5000a=q;V.slugDrainFlow=q;V.slugCondensateToStabGpm=q;
  V.slugOverflowEquivalentGallons12PV=(Number.isFinite(V.slugOverflowEquivalentGallons12PV)?V.slugOverflowEquivalentGallons12PV:0)+overflow;
- V.slugBalance12PV={build:'12PV',valid:true,simSeconds:PLANT.simSeconds,rows:rows,inletOpen:prepared.inletOpen,
+ V.slugBalance12PV={build:'12PV',valid:true,transferGate12PY:gate,simSeconds:PLANT.simSeconds,rows:rows,inletOpen:prepared.inletOpen,
   inGpm:totalIn,outGpm:totalOut,meterGpm:q,netGpm:totalIn-totalOut,inventoryChangeGallons:inventoryChange,
   unresolvedOverflowGallons:overflow,totalUnresolvedOverflowGallons:V.slugOverflowEquivalentGallons12PV,
   balanceResidualGallons:residual,scope:M.qualification,
@@ -8447,11 +8479,70 @@ var SCHED_SEED={
  /* Per-employee/per-date schedule notes; starred in the exact D/N cell. */
  dayNotes:{}
 };
+/*12PZ: one additive, browser-local roster update. No plant or control writes.*/
+function cfScheduleRosterUpdate12PZ(S){
+ var result={build:'12PZ',changed:false,status:'unavailable',employeeId:null,message:''};
+ function fail(message){result.status='review-required';result.message=message;return result;}
+ function object(v){return !!v&&typeof v==='object'&&!Array.isArray(v);}
+ function name(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ');}
+ if(!object(S)||!Array.isArray(S.employees)||!object(S.shifts)||!object(S.rotations))return fail('Shane Dobbs was not added: the saved Schedule needs review. Existing records were left unchanged.');
+ if(S.rosterUpdates12PZ!=null&&!object(S.rosterUpdates12PZ))return fail('The saved roster-update record needs review; no employee was replaced.');
+ var done=S.rosterUpdates12PZ&&S.rosterUpdates12PZ.shaneDobbs;
+ if(done){result.status='already-applied';result.employeeId=done.employeeId||null;return result;}
+ var rows=S.employees,ids=Object.create(null);
+ for(var i=0;i<rows.length;i++){
+  var r=rows[i];if(!object(r)||typeof r.id!=='string'||!r.id||ids[r.id])return fail('The saved employee identifiers need review; no employee was replaced.');ids[r.id]=true;
+ }
+ var matches=rows.filter(function(e){return name(e.name)==='shane dobbs';});
+ if(matches.length>1)return fail('More than one Shane Dobbs record exists. Choose the correct record before assigning a rotation; no records were merged.');
+ var e=matches[0]||null,pattern=SCHED_SEED.rotations.e8.pattern.slice(),anchor='2026-11-13',oldSlot=null,slot=-1;
+ if(e&&e.active===false)return fail('Shane Dobbs is already archived in this browser. The archived record was not reactivated or duplicated.');
+ if(e&&S.rotations[e.id]){
+  var rot=S.rotations[e.id];
+  if(rot.cycleStart!==anchor||JSON.stringify(rot.pattern)!==JSON.stringify(pattern))return fail('Shane Dobbs already has a different saved rotation. It was preserved rather than overwritten.');
+ }
+ if(!e){
+  slot=rows.findIndex(function(x){var n=String(x.name||'').trim();return x.active!==false&&(!n||/^\(name missing in source spreadsheet -- Crew \d+, second slot\)$/i.test(n));});
+  if(slot>=0)oldSlot=rows[slot];
+  var base='shane_dobbs_12pz',id=base,suffix=2;
+  while(ids[id]||Object.prototype.hasOwnProperty.call(S.shifts,id)||Object.prototype.hasOwnProperty.call(S.rotations,id)||(S.dayNotes&&Object.prototype.hasOwnProperty.call(S.dayNotes,id)))id=base+'_'+suffix++;
+  e={id:id,name:'Shane Dobbs',crew:oldSlot?oldSlot.crew:3,active:true,addedBy12PZ:true};
+ }
+ // All conflict checks above complete before the first mutation. Never move the
+ // unnamed slot's historical shifts/notes to a newly identified employee.
+ if(!matches.length){
+  if(oldSlot){oldSlot.active=false;rows.splice(slot,0,e);}
+  else rows.push(e);
+  S.shifts[e.id]={};
+ }
+ if(!S.rotations[e.id])S.rotations[e.id]={cycleStart:anchor,effectiveFrom:anchor,pattern:pattern,source:'Operator request: Nov13-15 DAY; Nov16 OFF; Nov17-19 NIGHT; same 28-day cycle as Ryan Neely.'};
+ var conflicts=[];
+ ['D','D','D','','N','N','N'].forEach(function(code,i){var ds=cfSchedOffset12NB(anchor,i),manual=(S.shifts[e.id]||{})[ds];if(manual!=null&&manual!==code)conflicts.push(ds);});
+ if(!S.rosterUpdates12PZ)S.rosterUpdates12PZ={};
+ S.rosterUpdates12PZ.shaneDobbs={revision:'12PZ',employeeId:e.id,cycleStart:anchor,requestedOffDate:'2026-11-16',retainedUnnamedEmployeeId:oldSlot?oldSlot.id:null,placement:oldSlot?'unused-slot':matches.length?'existing-exact-name':'new-column-no-unused-slot',manualOverridesPreserved:true};
+ result.changed=true;result.employeeId=e.id;result.status='applied';
+ if(conflicts.length)result.message='Shane Dobbs rotation added, but existing manual entries on '+conflicts.join(', ')+' remain in place. Use Reset to pattern on those dates to use the requested rotation.';
+ else if(!oldSlot&&!matches.length)result.message='Shane Dobbs was added as a new column in the intended Crew 3 group because the former unused slot is occupied. No named employee was replaced.';
+ return result;
+}
+function cfApplyScheduleRoster12PZ(){
+ if(PLANT._schedLoadFailed12PP)return {changed:false,status:'read-failed'};
+ var result=cfScheduleRosterUpdate12PZ(PLANT.sched);
+ PLANT._schedRosterNotice12PZ=result.message||'';
+ if(result.changed)schedDbSave(PLANT.sched);
+ return result;
+}
+function cfScheduleRosterNotice12PZ(){
+ var message=PLANT._schedRosterNotice12PZ||'';
+ return message?'<p data-sched-roster12pz="true" role="status" style="margin:8px 0;padding:10px;border:1px solid #b79351;border-radius:6px;background:#fff3d3;color:#3e301b">'+schedEsc(message)+'</p>':'';
+}
+
 function schedShiftFor(S,empId,dateStr){
  var manual=(S.shifts[empId]||{})[dateStr];
  if(manual!=null)return manual; /* explicit entry (including a cover-day override) always wins */
  var rot=S.rotations&&S.rotations[empId];
  if(rot){
+  if(rot.effectiveFrom&&dateStr<rot.effectiveFrom)return ''; //12PZ: no invented pre-start shifts.
   var d0=new Date(rot.cycleStart+'T00:00:00'),d1=new Date(dateStr+'T00:00:00');
   var dayNum=Math.round((d1-d0)/86400000);
   var idx=((dayNum%rot.pattern.length)+rot.pattern.length)%rot.pattern.length;
@@ -8460,7 +8551,7 @@ function schedShiftFor(S,empId,dateStr){
  return '';
 }
 function schedSetShift(S,empId,dateStr,code){(S.shifts[empId]=S.shifts[empId]||{})[dateStr]=code;}
-function schedHasPattern(S,empId){return !!(S.rotations&&S.rotations[empId]);}
+function schedHasPattern(S,empId,dateStr){var r=S.rotations&&S.rotations[empId];return !!r&&(!dateStr||!r.effectiveFrom||dateStr>=r.effectiveFrom);}
 function schedIsOverride(S,empId,dateStr){return Object.prototype.hasOwnProperty.call(S.shifts[empId]||{},dateStr);}
 function schedCellNote(S,empId,dateStr){return (((S.dayNotes||{})[empId]||{})[dateStr]||'');}
 function schedSetCellNote(S,empId,dateStr,text){
@@ -8576,7 +8667,7 @@ function schedDbSave(data,cb){
  schedDbOpen(function(db){cfArchiveWrite12PP('schedule',db,'sched',[{id:'main',data:data,saved:Date.now()}],cb);});
 }
 function schedEnsureLoaded(cb){
- if(PLANT.sched){if(cb)cb();return;}
+ if(PLANT.sched){cfApplyScheduleRoster12PZ();if(cb)cb();return;}
  if(PLANT._schedWaiters12PP){if(cb)PLANT._schedWaiters12PP.push(cb);return;}
  PLANT._schedWaiters12PP=cb?[cb]:[];
  schedDbLoad(function(saved,ok){
@@ -8584,6 +8675,7 @@ function schedEnsureLoaded(cb){
   PLANT._schedLoadFailed12PP=ok===false||!!(saved&&!normalized);
   if(PLANT._schedLoadFailed12PP)cfArchiveStatus12PP('schedule','read-failed',saved?'Saved Schedule format could not be safely interpreted. The stored original is unchanged; this temporary view will not overwrite it.':'Saved Schedule is unavailable. This temporary session view is not the saved archive and cannot overwrite it.');
   PLANT.sched=normalized||JSON.parse(JSON.stringify(SCHED_SEED));
+  cfApplyScheduleRoster12PZ(); // Only after a successful archive read; original safety guard remains.
   var callbacks=PLANT._schedWaiters12PP||[];PLANT._schedWaiters12PP=null;callbacks.forEach(function(fn){fn();});
  });
 }
@@ -9033,10 +9125,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-10-12PX';
+var RYAN_BUILD_ID='RYAN-2026-11-11-12PZ';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-REBOILER-FLOW-RESTORE-12PX-20261110';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-SCHEDULE-12PZ-20261111';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -15959,8 +16051,8 @@ PLANT.tick=function(stepSeconds){
      through F-5015/5016.  Correlations below are bounded training physics, not an EOS flash. */
   (function(){
    var LF=L.FIC5010A, LP=L.PIC5010D, LT=L.TIC5000D, TC=L.TIC5000C, LM=L.LIC5010G, LW=L.LIC5010E, LO=L.LIC5010A;
-   if(!LF||!LP||!LM)return;
-   var _pathOpen=!!(PLANT.valves&&PLANT.valves.xv5000a>0)&&!!(PLANT.valves&&PLANT.valves.xv5010b>0)&&!PLANT.in.slugFilterBlocked;
+   if(!LF||!LP||!LM){cfSlugCommit12PV(_slugPrepared12PV,0);PLANT.in.stabFeedActive=false;return;}
+   var _pathOpen=cfSlugTransferGate12PY(PLANT).allowed;
    var _avgLvl=((L.LIC1020?L.LIC1020.pv:0)+(L.LIC1025?L.LIC1025.pv:0)+(L.LIC1030?L.LIC1030.pv:0))/3;
    var _supplyAvail=_slugPrepared12PV.valid?_slugPrepared12PV.supplyGpm:0;
    var _slugSvc=PLANT.filterHealth.slug.service||'f1050';
@@ -15969,7 +16061,7 @@ PLANT.tick=function(stepSeconds){
    var _upP=259.34+(flow-222)*0.035+((V.inletC2Mol||13.18)-13.18)*1.25;
    var _v5010P=(LP&&isFinite(LP.pv))?LP.pv:262.75;
    var _dpAvail=Math.max(0,_upP-_v5010P+18); /* Retained18-psi modeled head allowance; no fabricated minimum driving pressure. */
-   var _fv=clmp((LF.out||0)/100,0,1);
+   var _fv=Number.isFinite(LF.out)?clmp(LF.out/100,0,1):0;
    var _valveCap=90*_fv*Math.sqrt(_dpAvail/18)*_filterHyd;
    var _flowTarget=_pathOpen?Math.min(_supplyAvail,_valveCap):0;
    if(!_pathOpen||_fv<=0||_filterHyd<=0||_dpAvail<=0||_supplyAvail<=0)V.fit5000a=0;else cfLag(V,'fit5000a',_flowTarget,12,0,110);
@@ -18315,17 +18407,17 @@ function schedulePopup(){
  emps.forEach(function(e){if((e.name||'').toLowerCase().indexOf('ryan neely')>=0)ryan=e;});
  if(ryan)emps=[ryan].concat(emps.filter(function(e){return e.id!==ryan.id;}));
  function esc(x){return schedEsc(x);}function dateLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
- function shiftLabel(e,ds){var c=schedShiftFor(S,e.id,ds);return c==='D'?'Day shift':c==='N'?'Night shift':(schedHasPattern(S,e.id)||schedIsOverride(S,e.id,ds)?'Off':'No entry');}
+ function shiftLabel(e,ds){var c=schedShiftFor(S,e.id,ds);return c==='D'?'Day shift':c==='N'?'Night shift':(schedHasPattern(S,e.id,ds)||schedIsOverride(S,e.id,ds)?'Off':'No entry');}
  var s='<div class="pop cf-schedule12nb" id="cfSchedule12NB" role="dialog" aria-labelledby="cfSchedTitle12NB"><div class="poph"><div><span class="cf-sched-eyebrow12nb">CLEAR FORK / SHIFT PLANNER</span><strong id="cfSchedTitle12NB">Schedule</strong></div><button type="button" data-act="popclose" aria-label="Close schedule and return to control screen">Close</button></div><div class="popb">';
- s+=cfArchiveNotice12PP('schedule');
+ s+=cfArchiveNotice12PP('schedule')+cfScheduleRosterNotice12PZ();
  s+='<div class="cf-sched-summary12nb"><div><span>Today / '+esc(dateLabel(today))+'</span><strong>'+(ryan?esc(ryan.name)+' <b class="cf-sched-today-shift12nb">'+esc(shiftLabel(ryan,today))+'</b>':'Crew schedule')+'</strong></div><div><span>Viewing '+PLANT.schedViewDays+' days</span><strong>'+esc(dateLabel(start))+' <span aria-hidden="true">&#8594;</span> '+esc(dateLabel(end))+'</strong></div></div>';
  s+='<div class="cf-sched-toolbar12nb" aria-label="Schedule view controls"><div class="cf-sched-period12nb"><button data-act="schednbprev" aria-label="View previous 14 days">&#8592; 14 days</button><button data-act="schednbtoday" class="cf-sched-accent12nb">Today</button><button data-act="schednbnext" aria-label="View next 14 days">14 days &#8594;</button></div><button data-act="schedadddays">+7 days</button></div>';
  s+='<details id="cfSchedTools12NB" class="cf-sched-toolsdetails12nb"'+(window.innerWidth>650?' open':'')+'><summary>Edit tools / go to date</summary><div class="cf-sched-goto12nb"><label for="cfSchedGoto12NB">Go to date<input id="cfSchedGoto12NB" type="date" required value="'+esc(v.goto||today)+'"></label><button data-act="schednbgoto">Go</button></div>';
  s+='<div class="cf-sched-tools12nb" aria-label="Schedule editing tools"><button data-act="schedaddemp">+ Add employee</button><button data-act="schedbulktoggle">'+(PLANT.schedBulkOpen?'Close bulk edit':'Bulk edit dates')+'</button><button data-act="schedundo"'+((!PLANT.schedUndo||!PLANT.schedUndo.length)?' disabled':'')+'>&#8630; Undo shift edit</button><button data-act="schedsave">Save now</button><span>Saved on this browser only</span></div></details>';
- s+='<details id="cfSchedAbout12NB" class="cf-sched-about12nb"><summary>About rotations, notes, holidays and saving</summary><p>Schedule edits are stored locally in this browser (IndexedDB). They survive reopening on this browser but do not sync between devices. Clearing site data removes this local schedule. Do not clear site data when updating the simulator.</p><p>Ryan Neely\'s confirmed 28-day rotation repeats from August 7, 2026. Manual DAY, NIGHT or OFF overrides apply only to the chosen date. Reset to Pattern removes that override. A gold outline marks a rotation override; a gold star marks a saved note for the exact employee and date.</p><p>Other employees retain their actual imported June 2026 entries. Their current rotations were not supplied; empty future cells mean no entry, not a verified day off. Holidays use the retained US federal observed-date display. Payday repeats every other Wednesday from August 12, 2026. These calendar rules have not changed.</p></details>';
+ s+='<details id="cfSchedAbout12NB" class="cf-sched-about12nb"><summary>About rotations, notes, holidays and saving</summary><p>Schedule edits are stored locally in this browser (IndexedDB). They survive reopening on this browser but do not sync between devices. Clearing site data removes this local schedule. Do not clear site data when updating the simulator.</p><p>Ryan Neely\'s confirmed 28-day rotation repeats from August 7, 2026. Manual DAY, NIGHT or OFF overrides apply only to the chosen date. Reset to Pattern removes that override. A gold outline marks a rotation override; a gold star marks a saved note for the exact employee and date.</p><p>Shane Dobbs follows the same 28-day cycle, beginning November 13, 2026: November 13-15 DAY, November 16 OFF, November 17-19 NIGHT, then 3 OFF, 4 DAY, 7 OFF, 4 NIGHT, 3 OFF and repeat. Before his start, blank cells mean no entry. Old unnamed-slot history stays on its original archived record, not on Shane. Other employees retain their imported entries and any saved edits; no other future rotation is inferred. Holidays use the retained US federal observed-date display. Payday repeats every other Wednesday from August 12, 2026. These calendar rules have not changed.</p></details>';
  if(PLANT.schedPick){
   var pick=PLANT.schedPick,e=S.employees.find(function(x){return x.id===pick.emp;});
-  if(e){var code=schedShiftFor(S,e.id,pick.date),ov=schedIsOverride(S,e.id,pick.date),pattern=schedHasPattern(S,e.id),note=schedCellNote(S,e.id,pick.date);
+  if(e){var code=schedShiftFor(S,e.id,pick.date),ov=schedIsOverride(S,e.id,pick.date),pattern=schedHasPattern(S,e.id,pick.date),note=schedCellNote(S,e.id,pick.date);
    if(!PLANT.schedCellNoteDraft||PLANT.schedCellNoteDraft.emp!==e.id||PLANT.schedCellNoteDraft.date!==pick.date)PLANT.schedCellNoteDraft={emp:e.id,date:pick.date,text:note};
    s+='<section class="cf-sched-editor12nb" id="cfSchedEditor12NB" aria-labelledby="cfSchedEditing12NB"><h3 id="cfSchedEditing12NB" tabindex="-1">'+esc(e.name)+' / '+esc(dateLabel(pick.date))+'</h3><p>'+esc(shiftLabel(e,pick.date))+' <span class="cf-sched-muted12nb">'+(ov?'Manual entry / override':pattern?'From repeating rotation':'No entry on this date')+'</span></p><div class="cf-sched-choice12nb"><button data-act="schedpickday"'+(code==='D'?' aria-pressed="true"':' aria-pressed="false"')+'>Cover DAY</button><button data-act="schedpicknight"'+(code==='N'?' aria-pressed="true"':' aria-pressed="false"')+'>Cover NIGHT</button><button data-act="schedpickoff"'+(code===''&&ov?' aria-pressed="true"':' aria-pressed="false"')+'>Take day off</button>'+(pattern?'<button data-act="schedpickreset"'+(!ov?' disabled':'')+'>Reset to pattern</button>':'')+'</div>';
    s+='<label for="schedCellNote">Day note '+(note?'&#9733;':'')+'</label><textarea id="schedCellNote" rows="3" placeholder="Note for this employee and date...">'+esc(PLANT.schedCellNoteDraft.text)+'</textarea><div class="cf-sched-editor-actions12nb"><button data-act="schedsavecellnote" class="cf-sched-accent12nb">Save day note</button>'+(note?'<button data-act="schedclearcellnote">Clear note</button>':'')+'<button data-act="schedpickcancel">Done / back to calendar</button></div></section>';
@@ -18348,7 +18440,7 @@ function schedulePopup(){
  for(var i=0;i<PLANT.schedViewDays;i++){
   var ds=cfSchedOffset12NB(start,i),d=new Date(ds+'T12:00:00'),isToday=ds===today,holiday=schedHolidayInfo(ds),pay=schedIsPayday(ds),weekend=d.getDay()===0||d.getDay()===6;
   s+='<tr data-sched-date12nb="'+ds+'"'+(isToday?' data-sched-today12nb="true"':'')+' class="'+(weekend?'is-weekend ':'')+(isToday?'is-today':'')+'"><th scope="row" class="cf-sched-date12nb'+(holiday?' is-holiday':'')+(pay?' is-payday':'')+'"><span class="cf-sched-weekday12nb">'+d.toLocaleDateString(undefined,{weekday:'short'})+(isToday?' <b>Today</b>':'')+'</span><strong>'+esc(d.toLocaleDateString(undefined,{month:'short',day:'numeric'}))+'</strong>'+(holiday?'<small class="cf-sched-holiday12nb">'+esc(holiday)+'</small>':'')+(pay?'<small class="cf-sched-payday12nb">PAYDAY</small>':'')+'</th>';
-  emps.forEach(function(e){var code=schedShiftFor(S,e.id,ds),ov=schedHasPattern(S,e.id)&&schedIsOverride(S,e.id,ds),note=schedCellNote(S,e.id,ds),label=shiftLabel(e,ds),pick=PLANT.schedPick&&PLANT.schedPick.emp===e.id&&PLANT.schedPick.date===ds,isRyan=ryan&&e.id===ryan.id;
+  emps.forEach(function(e){var code=schedShiftFor(S,e.id,ds),ov=schedHasPattern(S,e.id,ds)&&schedIsOverride(S,e.id,ds),note=schedCellNote(S,e.id,ds),label=shiftLabel(e,ds),pick=PLANT.schedPick&&PLANT.schedPick.emp===e.id&&PLANT.schedPick.date===ds,isRyan=ryan&&e.id===ryan.id;
    s+='<td class="'+(isRyan?'cf-sched-ryan12nb':'')+'"><button type="button" data-act="schedcell" data-emp="'+esc(e.id)+'" data-date="'+ds+'" class="cf-sched-cell12nb '+(code==='D'?'is-day':code==='N'?'is-night':label==='Off'?'is-off':'is-empty')+(ov?' is-override':'')+(pick?' is-picked':'')+'" aria-label="'+esc(e.name+', '+dateLabel(ds)+', '+label+(ov?', manual override':'')+(note?', day note: '+note:''))+'" aria-pressed="'+!!pick+'" title="'+esc(label+(note?' / '+note:''))+'"><span>'+ (code==='D'?'D':code==='N'?'N':label==='Off'?'OFF':'&mdash;')+'</span>'+(note?'<span class="cf-sched-star12nb" aria-hidden="true">&#9733;</span>':'')+'</button></td>';
   });s+='</tr>';
  }
@@ -35797,7 +35889,7 @@ function cfRepairNgl12LL(S){
  function own(m,key,part,detail){m.userData=Object.assign(m.userData||{},{key:key,part12LL:part,sourceDefinition:'CF_SOURCE_12LL',schematicNotSurveyed:true,detail12LL:!!detail});add(m,key);created.push(m);if(detail)small.push(m);m.updateMatrix();return m;}
  function tube(key,a,b,r,mat,part,detail,r2){var d=v(b).sub(v(a));if(d.length()<1e-7)throw Error('12LL zero-length geometry '+key);var m=new THREE.Mesh(cfCylinderGeometry12JG(r2==null?r:r2,r,d.length(),16),mat);m.position.copy(v(a).add(v(b)).multiplyScalar(.5));m.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());return own(m,key,part,detail);}
  function runFor(k){return CF3D_PIPE_RUNS.find(function(r){return r.key===k;});}
- function redraw(q){var old=runFor(q.key),mat=old?old.mat:mCryo;if(old){eraseOwned(q.key);CF3D_PIPE_RUNS=CF3D_PIPE_RUNS.filter(function(r){return r.key!==q.key;});}var nr={key:q.key,points:q.points.map(v),r:q.radius,mat:mat,segments:[],elbows:[],routeId12HN:q.id,createdBuild12LL:true,diameterSections12HN:cp(q.diameterSections12LL||[])};CF3D_PIPE_RUNS.push(nr);
+ function redraw(q){var old=runFor(q.key),mat=q.serviceColor12PY==='NGL'?mNGL:(old?old.mat:mCryo);if(old){eraseOwned(q.key);CF3D_PIPE_RUNS=CF3D_PIPE_RUNS.filter(function(r){return r.key!==q.key;});}var nr={key:q.key,points:q.points.map(v),r:q.radius,mat:mat,segments:[],elbows:[],routeId12HN:q.id,createdBuild12LL:true,diameterSections12HN:cp(q.diameterSections12LL||[])};CF3D_PIPE_RUNS.push(nr);
   for(var i=1;i<q.points.length;i++){var a=q.points[i-1],b=q.points[i],sec=q.diameterSections12LL&&q.diameterSections12LL[i-1],rad=sec?sec.nps/24:q.radius,m=tube(q.key,a,b,rad,mat,'source-pipe',q.detail12LL);Object.assign(m.userData,{pipeRouteIds12HN:[q.id],sharedPipeKeys:[q.key],pipeRadius12LL:rad,sourceEndpoints12LL:[cp(a),cp(b)]});nr.segments.push(m);CF3D_ALL_SEGMENTS.push({a:v(a),b:v(b),r:rad,key:q.key,mesh:m,path:nr});}
   for(var i=1;i<q.points.length-1;i++){var d=v(q.points[i]).sub(v(q.points[i-1])).normalize(),e=v(q.points[i+1]).sub(v(q.points[i])).normalize();if(d.dot(e)>.999999)continue;var rad=q.diameterSections12LL?q.diameterSections12LL[i].nps/24:q.radius,m=new THREE.Mesh(cfSphereGeometry12JG(rad*1.01,12,8),mat);m.position.copy(v(q.points[i]));own(m,q.key,'source-elbow',q.detail12LL);m.userData.sharedPipeKeys=[q.key];m.userData.pipeRouteIds12HN=[q.id];nr.elbows.push(m);}
   var data=cp(q);delete data.oldPoints;var dst=reg.byId[q.id];if(dst){Object.assign(dst,data);out.routesUpdated.push(q.key);}else{dst=data;reg.records.push(dst);reg.byId[q.id]=dst;out.routesAdded.push(q.key);}reg.byKey[q.key]=[dst];ANCH[q.key]={top:v(q.points[0]),mid:v(q.points[Math.floor(q.points.length/2)])};return nr;
@@ -36672,8 +36764,9 @@ function cfCheckVisualIntegrity12LK(){
  window.CFMainScript12LJ.phase=report.ok?'complete':'completed with feature errors';
  if(window.CFStartup12LJ)window.CFStartup12LJ.paint();return report;
 }
-var CF_NGL_REPAIR_12LL=cfRepairNgl12LL(CF_SOURCE_12LL);
-if(!CF_NGL_REPAIR_12LL.status().errors.length)cfPatchNglTrace12LL(CF_TRACE_DATA_12IZ,CF_SOURCE_12LL);
+var CF_NGL_PLAN_12PY=cfNglPlan12PY(CF_SOURCE_12LL);
+var CF_NGL_REPAIR_12LL=cfRepairNgl12LL(CF_NGL_PLAN_12PY);
+if(!CF_NGL_REPAIR_12LL.status().errors.length)cfPatchNglTrace12LL(CF_TRACE_DATA_12IZ,CF_NGL_PLAN_12PY);
 cfInstallNglReference12LL(CF_SOURCE_12LL);
 cfInstallNglNavigation12LL();
 var CF_UTILITIES_REVIEW_12LM=cfBuildUtilities12LM(CF_SOURCE_12LM);
@@ -42185,6 +42278,53 @@ var cfSourcesBefore12PX=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function
 Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PW',reboilerPathsRevision:'12PX'});
 Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
 window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,reboilerPathsRevision:'12PX'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+function cfRegisterTransferClearance12PY(H){
+ var S=CF_SOURCE_12PY,N=H.info||H.referenceNotes||{},rs=H.records||H.components||{},rows=Array.isArray(rs)?rs:Object.values(rs),defs=H.sourceDefinitions||[],original=defs.find(function(d){return d.name==='CF_SOURCE_12LL';});
+ var plan=cfNglPlan12PY(original?original.value:CF_SOURCE_12LL),components=plan.components.filter(function(c){return S.geometry.componentKeys.indexOf(c.key)>=0;});
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(e){return e.title+': '+e.text;}).concat(S.policy),sourceReview12PY:{definition:'CF_SOURCE_12PY',scope:S.sourceClass}};
+ S.ownerKeys.forEach(function(k){var geom=k==='a1322'||S.geometry.componentKeys.indexOf(k)>=0,link={definition:'CF_SOURCE_12PY',owner:k,notebookKey:S.notebookKey,factIds:geom?['py.a1322','py.identity']:['py.series','py.closed']};
+  if(N[k])N[k].sourceReview12PY=link;rows.filter(function(r){return(r.assetId||r.key)===k;}).forEach(function(r){r.sourceReview12PY=link;});
+ });
+ components.forEach(function(c){rows.filter(function(r){return(r.assetId||r.key)===c.key;}).forEach(function(r){
+  r.point12LL=c.center.slice();r.host12LL={pipeKey:c.pipeKey,center:c.center.slice()};
+  r.modelPlacement12PY={point:c.center.slice(),pipeKey:c.pipeKey,ports:c.ports12LL.map(function(p){return p.slice();}),sourceDefinition:'CF_SOURCE_12PY',scope:S.geometry.scope};
+  r.location='On '+c.pipeKey+' outside the A-1322 casing; schematic center ['+c.center.join(', ')+']. Not a surveyed field location.';
+ });if(N[c.key])N[c.key].modelPlacement12PY={point:c.center.slice(),pipeKey:c.pipeKey,scope:S.geometry.scope};});
+ (H.pipes||[]).forEach(function(r){var q=plan.newRoutes.find(function(q){return S.geometry.routeKeys.indexOf(q.key)>=0&&q.key===r.key;});if(!q)return;
+  r.points=q.points.map(function(p){return p.slice();});r.presentationRevision12PY='12PY';r.geometryQualification12PY=S.geometry.scope;r.serviceColor12PY='NGL';
+ });
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12PY';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PY',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Display and navigation';});if(!c){c=['Software / Display and navigation',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterTransferClearance12PY({info:INFO,records:CF3D_DEVICE_RECORDS,categories:LIB_CATS});
+document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Transfer gate and A-1322 clearance';
+var cfHeading12PY=document.querySelector('header h1');if(cfHeading12PY)cfHeading12PY.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+var cfSourcesBefore12PY=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12PY.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PY';}))a.push({name:'CF_SOURCE_12PY',value:CF_SOURCE_12PY});return a;};
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PX',transferGateRevision:'12PY',a1322ClearanceRevision:'12PY'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,transferGateRevision:'12PY',a1322ClearanceRevision:'12PY'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(typeof CF3D_ASSOC!=='undefined')CF3D_ASSOC.dirty=true;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+
+/*12PZ: roster only; plant and display repairs retained.*/
+var CF_SOURCE_12PZ={"build":"12PZ","baseline":"12PY","date":"2026-11-11","id":"schedule_shane_dobbs_rotation_12pz","title":"Schedule / Shane Dobbs repeating rotation","notebookKey":"schedule_shane_dobbs_12pz","sourceClass":"USER_REQUEST_AND_EXISTING_RYAN_SCHEDULE_PATTERN","newEntries":[{"id":"pz.roster","title":"One employee in an unused slot","text":"Add Shane Dobbs in an available blank Schedule slot. In the supplied roster this is Crew 3 second slot. Retain historical unnamed entries on their original archived owner, not as Shane history. Existing named employees, their shifts, notes, and rotations remain unchanged. An already-used slot is not overwritten."},{"id":"pz.rotation","title":"Corrected start and same cycle","text":"User explicitly corrected the off date to November 16, 2026. Start November 13-15 DAY, November 16 OFF, November 17-19 NIGHT. Use the existing Ryan Neely 28-day pattern: 3 DAY, 1 OFF, 3 NIGHT, 3 OFF, 4 DAY, 7 OFF, 4 NIGHT, 3 OFF; repeat from December 11, 2026. Copy the rotation pattern, not Ryan's date-specific overrides or phase. No prior Shane shifts are invented."},{"id":"pz.storage","title":"Additive update to the current saved roster","text":"Apply once when Schedule loads successfully, using the existing IndexedDB transaction path. Keep manual overrides and notes; do not overwrite an unread archive, duplicate an existing exact-name Shane record, reactivate an archived record, or replace a conflicting saved rotation. The one-time marker prevents subsequent edits or employee archiving being undone on reload. This is local to each browser, not a shared server calendar."}],"policy":["Actual12PY is the baseline; no rollback or application rebuild.","No plant calculations, controls, protections, geometry, transmitters, trainers, walkthrough or histories changed.","No secret, authentication policy, storage key or database version changed.","No live deployment or private browser record is accessed; source and isolated tests are not live-site acceptance."]};
+function cfRegisterSchedule12PZ(H){
+ var S=CF_SOURCE_12PZ,N=H.info||H.referenceNotes||{};
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat(S.policy),sourceReview12PZ:{definition:'CF_SOURCE_12PZ',scope:S.sourceClass}};
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(x){return x.name==='CF_SOURCE_12PZ';}))H.sourceDefinitions.push({name:'CF_SOURCE_12PZ',value:S});
+ if(H.categories){var c=H.categories.find(function(x){return x[0]==='Software / Schedule';});if(!c){c=['Software / Schedule',[]];H.categories.push(c);}if(c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+cfRegisterSchedule12PZ({info:INFO,categories:LIB_CATS});
+var cfSourcesBefore12PZ=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12PZ.apply(this,arguments);if(!a.some(function(x){return x.name==='CF_SOURCE_12PZ';}))a.push({name:'CF_SOURCE_12PZ',value:CF_SOURCE_12PZ});return a;};
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12PY',scheduleRosterRevision:'12PZ'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,scheduleRosterRevision:'12PZ'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Schedule roster update';
 if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
 if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
 
