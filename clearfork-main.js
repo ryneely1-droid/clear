@@ -1,10 +1,12 @@
 
 (function(){
-const CF_APPLICATION_BUILD_12OA='12QB';
+const CF_APPLICATION_BUILD_12OA='12QE';
 var cfPayload12PJ=window.CFContent12PJ;
-if(!cfPayload12PJ||cfPayload12PJ.build!=='12QB'||typeof cfPayload12PJ.create!=='function'||typeof cfPayload12PJ.trainer!=='function'){
- if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail('clearfork-content.js (missing or not12QB)');
- throw new Error('Clear Fork12QB requires its matching clearfork-content.js beside index.html. Upload the complete seven-file package; no browser data was cleared.');
+var cfContentCheck12QC=window.CFContentCompatibility12QC?window.CFContentCompatibility12QC.inspect(cfPayload12PJ):{compatible:!!(cfPayload12PJ&&cfPayload12PJ.build===CF_APPLICATION_BUILD_12OA&&cfPayload12PJ.count===193&&typeof cfPayload12PJ.create==='function'&&typeof cfPayload12PJ.trainer==='function')};
+if(!cfContentCheck12QC.compatible){
+ var cfContentMessage12QC=window.CFContentCompatibility12QC?window.CFContentCompatibility12QC.message(cfContentCheck12QC):'clearfork-content.js is unavailable or incompatible with '+CF_APPLICATION_BUILD_12OA+'. Replace the matching index, main and content files together; no saved data was cleared.';
+ if(window.CFContentCompatibility12QC)window.CFContentCompatibility12QC.reportFailure(cfContentCheck12QC);else if(window.CF12KQDeploymentD1)window.CF12KQDeploymentD1.fail(cfContentMessage12QC);
+ throw new Error(cfContentMessage12QC);
 }
 var cfCompressorTrainerRuntime12MO=cfPayload12PJ.trainer;
 
@@ -154,11 +156,45 @@ function cfNglPlan12PY(source){
  * Fixed one-second production tick only. No clock, automatic valve command,
  * stored-level reset, report replay, field-volume certification or fake drain.
  */
+/*12QD: one-second, mass-conserving V-1422 response. Parameters below are
+ * explicitly provisional simulator scales, not a vessel calibration or field Cv.
+ * No valve is opened, controller mode changed, or stored level reset here. */
+var CF_LIQUID_RESPONSE_12QD=Object.freeze({
+ surgeGallonsPerLevelPoint:400,
+ slugTransferCapacityMultiplier:1.25,
+ slugTransferResponseSeconds:8,
+ qualification:'Operator-requested response adjustment. Effective 400 gal per indicated level point and 25-percent transfer-capacity uplift are candidate simulator assumptions, not installed volume/span, measured valve Cv or approved operating targets.'
+});
+function cfSurgeInventory12QD(P,cryoGpm,stabilizerGpm,exportGpm){
+ var V=P.v,L=P.L,c=L&&L.LIC1422,M=CF_LIQUID_RESPONSE_12QD;
+ if(!c||![c.pv,cryoGpm,stabilizerGpm,exportGpm].every(Number.isFinite)||[cryoGpm,stabilizerGpm,exportGpm].some(function(v){return v<0;})){
+  V.nglInventory12QD={valid:false,reason:'Missing or invalid liquid balance channel; level not fabricated.'};return false;
+ }
+ var oldRipple=Number.isFinite(V.v1422Ripple12GI)?V.v1422Ripple12GI:0;
+ var before=clmp(c.pv-oldRipple,0,100),gpp=M.surgeGallonsPerLevelPoint;
+ var qIn=cryoGpm+stabilizerGpm,net=qIn-exportGpm;
+ var raw=before*gpp+net/60,overflow=Math.max(0,raw-100*gpp),shortfall=Math.max(0,-raw);
+ var after=clmp(raw,0,100*gpp),level=after/gpp;
+ var ripple=level>.01&&level<99.99?cfProcWave('lic1422',0.002,89):0;
+ c.pv=level+ripple;V.v1422Ripple12GI=ripple;V.nglLevelRatePct=net/(60*gpp);
+ V.nglTankInflowGpm=qIn;V.nglTankExportGpm=exportGpm;V.nglTankNetGpm=net;
+ V.nglInventory12QD={valid:true,build:'12QD',simSeconds:P.simSeconds,
+  cryoInGpm:cryoGpm,stabilizerInGpm:stabilizerGpm,totalInGpm:qIn,exportGpm:exportGpm,
+  recycleGpm:Number.isFinite(V.nglRecycleGpm)?V.nglRecycleGpm:null,netGpm:net,
+  beforeGallons:before*gpp,afterGallons:after,inventoryChangeGallons:after-before*gpp,
+  levelBeforePct:before,levelAfterPct:level,levelRatePctPerMinute:net/gpp,
+  unresolvedOverflowGallons:overflow,unservedWithdrawalGallons:shortfall,
+  balanceResidualGallons:after-before*gpp+overflow-shortfall-net/60,
+  effectiveGallonsPerLevelPoint:gpp,qualification:M.qualification};
+ if(L.LIC1422A)L.LIC1422A.pv=c.pv;
+ return true;
+}
+
 var CF_SOURCE_12PV=cfPayload12PJ.create('p192');
 var CF_SLUG_MODEL_12PV=Object.freeze({
  effectiveGallonsPerLevelPoint:262.5,
  quietRisePctPerHour:[0.02*0.0323/0.0242,0.02*0.0193/0.0242,0.02],
- referenceInletMmscfd:210,branchFullOpenGpm:28,indicationRipplePct:0.0012,
+ referenceInletMmscfd:210,branchFullOpenGpm:28*CF_LIQUID_RESPONSE_12QD.slugTransferCapacityMultiplier,indicationRipplePct:0.0012,
  scenarioRisePctPerSecondPerUnit:0.012,
  qualification:'Equivalent storage scale and quiet-loading rate are declared simulation assumptions. Only LIT-1030 has exact-tag observations in the new reports. Not installed level spans, actual vessel volumes, valve Cv or measured liquid inflows.'
 });
@@ -181,7 +217,7 @@ function cfSlugPrepare12PV(flow,pigRise,scenarioSlug){
    quietInGpm:quietRise*gpp*60,eventInGpm:eventRise*gpp*60,inGpm:inflow,
    capacityGpm:Math.min(branch,Math.max(0,inventoryGpm))});
  });
- return {valid:rows.length===3,rows:rows,inletOpen:inletOpen,supplyGpm:Math.min(105,rows.reduce(function(a,r){return a+r.capacityGpm;},0)),scope:M.qualification};
+ return {valid:rows.length===3,rows:rows,inletOpen:inletOpen,supplyGpm:Math.min(105*CF_LIQUID_RESPONSE_12QD.slugTransferCapacityMultiplier,rows.reduce(function(a,r){return a+r.capacityGpm;},0)),scope:M.qualification};
 }
 function cfSlugCommit12PV(prepared,requestedGpm){
  var V=PLANT.v,L=PLANT.L,M=CF_SLUG_MODEL_12PV,gate=cfSlugTransferGate12PY(PLANT);
@@ -9238,10 +9274,10 @@ var RYAN_CACHE_LAST_REFRESH=0;
    file and the Netlify function are deployed on the SAME site, this just
    works once the function is deployed, with no URL or API key ever typed
    into this file. */
-var RYAN_BUILD_ID='RYAN-2026-11-11-12QB';
+var RYAN_BUILD_ID='RYAN-2026-11-18-12QE';
 var CLEAR_FORK_FRONTEND_BUILD='12ND'; /* Preserves 12FW library stability and Questions Asked. */
 /* 12BL: researched second-pass correlation fixes: Ryan client/backend build mismatch removed; C-5700 PIC-5700A restored to latest 176 psig / 0% direct-above-SP behavior; TE-1222D/K, PT/PDT-1521 and TE-1422 now share central process state across screens. */
-var RYAN_EXPECTED_SIGNATURE='CF-RYAN-A1322-CONNECTION-12QB-20261111';
+var RYAN_EXPECTED_SIGNATURE='CF-RYAN-UTILITY-INVENTORY-12QE-20261118';
 var RYAN_LEARN_FACT_CAP=5000;
 var RYANFN_URL='/.netlify/functions/ryan?v='+encodeURIComponent(RYAN_BUILD_ID);
 var RYAN_AI_HISTORY=[];
@@ -9351,7 +9387,7 @@ function ryanTeachPanelHtml(){
   (m.status==='provisional'?'<button data-memapprove="'+m.id+'" style="font-size:10px;">Approve memory</button>':'')+'<button data-memdelete="'+m.id+'" style="font-size:10px;">Delete</button></div></div>';}).join('');
  return '<div style="background:#161f2b;border:1px solid #36506a;border-radius:7px;padding:11px 12px;">'+
   '<div style="font-weight:700;color:#cfe6ff;">🧠 Teach Ryan — Persistent Brain</div><div style="font-size:11px;color:#8fa2b5;line-height:1.45;margin-top:4px;">Anything you type here is stored on this device and included in Ryan\'s future reasoning. It is labeled OPERATOR_PROVIDED — remembered, but not silently promoted to engineering-verified fact. Ryan can also self-learn provisional memories from conversations when enabled.</div>'+ 
-  '<textarea id="ryanTeachText" placeholder="Example: TK-8100 is normally pumped from about 50% down to about 10%, and the closed-drain truck typically comes about once a week. Confirm current level/trend before scheduling." style="width:100%;height:105px;box-sizing:border-box;margin-top:9px;background:#0a0e13;border:1px solid #34495e;border-radius:5px;color:#eef2f7;padding:8px;font:12px inherit;"></textarea>'+ 
+  '<textarea id="ryanTeachText" placeholder="Example: TK-8100 pump-out is normally needed about every two weeks; TK-9300 lube-oil delivery about monthly. Confirm current level/trend before scheduling; these are averages, not automatic dispatch rules." style="width:100%;height:105px;box-sizing:border-box;margin-top:9px;background:#0a0e13;border:1px solid #34495e;border-radius:5px;color:#eef2f7;padding:8px;font:12px inherit;"></textarea>'+ 
   '<div style="display:flex;gap:8px;align-items:center;margin-top:7px;flex-wrap:wrap;"><input id="ryanTeachTitle" placeholder="Optional title / system / tag" style="flex:1;min-width:220px;background:#0a0e13;border:1px solid #34495e;border-radius:4px;color:#dce6ee;padding:6px 8px;"><button id="ryanTeachSave" style="background:#204b35;border:1px solid #4a8a62;color:#d8ffe5;border-radius:4px;padding:7px 13px;font-weight:700;cursor:pointer;">Remember this</button></div>'+ 
   '<label style="display:block;font-size:10.5px;color:#90a2b2;margin-top:9px;"><input type="checkbox" id="ryanSelfLearnToggle" '+(localStorage.getItem('ryanSelfLearn')!=='off'?'checked':'')+'> Self-learning ON — after conversations, Ryan may extract useful plant-specific memory candidates and retain them as PROVISIONAL for review.</label>'+ 
   '<div style="font-size:10px;color:#66798b;margin-top:5px;">Brain status: '+active+' active memories · '+provisional+' provisional self-learned memories.</div></div>'+rows;
@@ -13076,7 +13112,7 @@ function cfStabilizerLiquid12PA(hcIn,waterIn,flashVapor){
  V.stabilizerLinkage12PA={valid:true,simSeconds:P.simSeconds,pumpsRunning:count,feedGpm:feed,flashHydrocarbonInGpm:hcIn,waterInGpm:waterIn,towerVaporGpmEquivalent:vapor,productGpm:product,to1422Gpm:exportFlow,to5010Gpm:returnFlow,towerReturnGpm:actualReturn,pumpGrossGpm:V.stabPumpGrossGpm12PA,
   flashNetGpm:hcIn+returnFlow-feed,kettleNetGpm:netFeed-product,flashLevelRatePct:flashDelta,kettleLevelRatePct:kettleDelta,
   inventoryBoundResidualGpm:flashBound+kettleBound,liquidBalanceResidualGpm:(hcIn+returnFlow-feed)+(netFeed-product)-(hcIn-vapor-exportFlow),blockers:blockers,
-  qualification:'Model-equivalent liquid balance only. 1394 final field nozzle, level-channel crosswalks, effective inventory volume, pump curves and split fractions remain qualified. Net surge level still equals all inflow minus NGL export.'};
+  qualification:'Model-equivalent liquid balance only. 1394 final field nozzle, level-channel crosswalks, effective inventory volume, pump curves and split fractions remain qualified. Net surge level equals combined inflow minus net NGL export using the provisional12QD inventory scale.'};
 }
 function cfStabilizerGas12PA(){
  var P=PLANT,V=P.v,L=P.L,C=P.cmp.c57,M=CF_STABILIZER_MODEL_12PA,vs=P.valves||{},flash=L.PIC5010D,tower=L.PIC5030A,header=L.PIC5700A;
@@ -13132,27 +13168,107 @@ function cfStabilizerLiveContext12PA(){
  * One process-clock owner. No valve auto-lineup, new trip or instant inventory reset.
  * Source: retained M2680/M2960 routes and existing Utilities planning guidance.
  */
+/*12QE: utility service averages are operator context, not timers or field limits.
+ * Only executed simulation seconds advance these inventories. The receiver ratio
+ * and normalized F-6800 drain capacity remain the retained uncalibrated model. */
+var CF_UTILITY_CADENCE_12QE=Object.freeze({
+ revision:'12QE',closedDrainDays:14,lubeDeliveryDays:30,
+ closedDrainReferenceLowPct:10,closedDrainReferenceCallPct:50,
+ lubeReferenceHighPct:80,lubeReferenceCallPct:25,
+ referenceRunningOilConsumers:5,referenceInletMmscfd:222.38,
+ referenceF6800LoadPctPerSecond:0.00054,secondSumpLoadRatio:0.88,
+ oilConsumerKeys:Object.freeze(['c41','c42','c61','c62','c63','c57']),
+ qualification:'Operator-observed averages: closed-drain pump-out about every two weeks and TK-9300 lube delivery about monthly. Reference spans 10-to-50% and 80-to-25%, a 30-day month and routine F-6800 collection are explicit simulator assumptions. Not tank capacities, measured GPM, automatic service, new alarms or a guaranteed interval.'
+});
+function cfUtilityLevelValid12QE(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100;}
+function cfUtilityRates12QE(P){
+ var M=CF_UTILITY_CADENCE_12QE,c=P.cmp||{},flow=P.in&&P.in.flow,t=Number.isFinite(P.simSeconds)?P.simSeconds:0;
+ var n=M.oilConsumerKeys.filter(function(k){return c[k]&&c[k].run;}).length;
+ var oilFactor=n?clmp((0.82+0.055*n+0.10*Math.sin(t/5400))/(0.82+0.055*M.referenceRunningOilConsumers),0,1.4):0;
+ var flowFrac=Number.isFinite(flow)?clmp(flow/M.referenceInletMmscfd,0,1.25):0;
+ var active=flowFrac>0||n>0;
+ var drainFactor=active?clmp((0.78+0.16*flowFrac+0.025*n+0.10*Math.sin(t/6600+1.2))/(0.78+0.16+0.025*M.referenceRunningOilConsumers),0,1.4):0;
+ var target=(M.closedDrainReferenceCallPct-M.closedDrainReferenceLowPct)/(M.closedDrainDays*86400);
+ // F-6800 is already credited at its actual source removal. Budget its nominal
+ // contribution separately; do not add that normal load a second time as background.
+ var f6800Ref=M.referenceF6800LoadPctPerSecond*(1+M.secondSumpLoadRatio)*CF_UTILITY_SERVICE_12PC.receiverPctPerSumpPct;
+ var background=Math.max(0,target-f6800Ref)*drainFactor;
+ var use=(M.lubeReferenceHighPct-M.lubeReferenceCallPct)/(M.lubeDeliveryDays*86400)*oilFactor;
+ return {runningOilConsumers:n,oilConsumptionPctPerSecond:use,closedDrainBackgroundPctPerSecond:background,
+  referenceClosedDrainTotalPctPerSecond:target,referenceF6800ReceiverPctPerSecond:f6800Ref,
+  oilActivityFactor:oilFactor,closedDrainActivityFactor:drainFactor};
+}
+function cfUtilityInventoryStep12QE(dt){
+ var P=PLANT,V=P.v;dt=Number(dt);
+ if(P.simLive===false||!Number.isFinite(dt)||dt<=0)return false;
+ // Preserve the old timestamp for diagnostics only. No wall-clock catch-up or
+ // second speed multiplier; PLANT.tick supplies the one fixed simulation second.
+ V._utilityInventoryLastSim=P.simSeconds;
+ var rates=cfUtilityRates12QE(P),before=V.lit8100,oilBefore=V.lit9300b;
+ var drainValid=cfUtilityLevelValid12QE(before),oilValid=cfUtilityLevelValid12QE(oilBefore);
+ var incoming=rates.closedDrainBackgroundPctPerSecond*dt,requestedOil=rates.oilConsumptionPctPerSecond*dt;
+ var accepted=drainValid?Math.min(incoming,100-before):0,overflow=drainValid?incoming-accepted:0;
+ var used=oilValid?Math.min(oilBefore,requestedOil):0,unserved=oilValid?requestedOil-used:0;
+ if(drainValid)V.lit8100=before+accepted;
+ if(oilValid)V.lit9300b=oilBefore-used;
+ var sums=V.utilityTotals12QE||(V.utilityTotals12QE={backgroundToReceiverPct:0,backgroundUnresolvedOverflowPct:0,oilConsumedPct:0,oilUnservedPct:0});
+ sums.backgroundToReceiverPct+=accepted;sums.backgroundUnresolvedOverflowPct+=overflow;sums.oilConsumedPct+=used;sums.oilUnservedPct+=unserved;
+ V.utilityInventory12QE={revision:'12QE',simulationSeconds:P.simSeconds,dt:dt,rates:rates,
+  closedDrain:{valid:drainValid,beforePct:drainValid?before:null,afterPct:drainValid?V.lit8100:null,
+   backgroundIncomingPct:incoming,acceptedBackgroundPct:accepted,unresolvedOverflowPct:overflow,
+   balanceResidualPct:drainValid?V.lit8100-before+overflow-incoming:null},
+  lubeOil:{valid:oilValid,beforePct:oilValid?oilBefore:null,afterPct:oilValid?V.lit9300b:null,
+   requestedConsumptionPct:requestedOil,consumedPct:used,unservedPct:unserved,
+   balanceResidualPct:oilValid?V.lit9300b-oilBefore+used:null},
+  qualification:CF_UTILITY_CADENCE_12QE.qualification};
+ return true;
+}
+function cfUtilityInventoryPanel12QE(){
+ var x=PLANT.v.utilityInventory12QE,e=cfReadoutEscape12NK;
+ var f=function(n){return Number.isFinite(n)?n.toFixed(3):'Unavailable';};
+ return '<details class="cf-drain12pc"><summary>Utility inventory / service averages</summary><p>Closed drain: about <b>two weeks</b> between routine pump-outs. Lube makeup: about <b>one month</b> between deliveries. These are average operating observations, not scheduled actions or new alarm settings.</p>'+
+  (x?'<p>Current background collection: '+f(x.rates.closedDrainBackgroundPctPerSecond*86400)+' receiver points/day, <b>plus actual F-6800 transfers</b>. Current lube consumption: '+f(x.rates.oilConsumptionPctPerSecond*86400)+' tank points/day. Rates follow the existing simulation clock and operating activity.</p>':'')+
+  '<p>'+e(CF_UTILITY_CADENCE_12QE.qualification)+'</p><p>Existing inventory is not reset. Actual starting level and draining activity change the remaining time. Closed valves, a full/unavailable receiver, and explicit truck service remain separate. No liquid is silently sent to another destination.</p></details>';
+}
+
 var CF_UTILITY_SERVICE_12PC={revision:'12PC',drainFullScalePctPerSecond:0.60,receiverPctPerSumpPct:0.02,truckPctPerSecond:0.20,closedDrainTargetPct:10,lubeOilTargetPct:80};
 function cfF6800DrainStep12PC(liquidLoad,dt){
  var V=PLANT.v,vs=PLANT.valves||{},cfg=CF_UTILITY_SERVICE_12PC;
  dt=Number(dt);if(PLANT.simLive===false||!Number.isFinite(dt)||dt<=0)return;
- var incoming=Number.isFinite(liquidLoad)?Math.max(0,liquidLoad):0;
- var receiver=Number(V.lit8100),validReceiver=V.lit8100!=null&&Number.isFinite(receiver)&&receiver>=0&&receiver<=100;
+ var loadValid=Number.isFinite(liquidLoad)&&liquidLoad>=0,incoming=loadValid?liquidLoad:0;
+ var receiver=V.lit8100,validReceiver=cfUtilityLevelValid12QE(receiver);
  var available=validReceiver?Math.max(0,100-receiver)/cfg.receiverPctPerSumpPct:0;
  var rows=['a','b'].map(function(s,i){
-  var key='lit6800'+s;if(!Number.isFinite(V[key]))V[key]=i?11.45:10.52;
-  var before=V[key],load=incoming*(i?0.88:1)*dt,wave=cfProcWave('lit6800'+s+'_phys',0.00005,i?91:83)*dt;
-  // Original accumulation and bounded small variation remain. Open command is binary.
-  var held=clmp(before+load+wave,0,100),open=Number(vs['xv6800'+s])>0;
-  var requested=open?Math.min(held,cfg.drainFullScalePctPerSecond*(0.25+0.75*Math.sqrt(held/100))*dt):0;
-  return {key:key,tag:'LIT-6800'+s.toUpperCase(),valve:'XV-6800'+s.toUpperCase(),open:open,before:before,held:held,requested:requested,removed:0};
+  var key='lit6800'+s,before=V[key],valid=cfUtilityLevelValid12QE(before),load=incoming*(i?0.88:1)*dt;
+  // Reading ripple is not integrated into liquid inventory. No seed or forced
+  // drain-down replaces a full/invalid reading; startup retains its original seeds.
+  var held=valid?before+load:0,open=Number(vs['xv6800'+s])>0;
+  var requested=open&&valid&&loadValid?Math.min(held,cfg.drainFullScalePctPerSecond*(0.25+0.75*Math.sqrt(Math.min(held,100)/100))*dt):0;
+  return {key:key,tag:'LIT-6800'+s.toUpperCase(),valve:'XV-6800'+s.toUpperCase(),open:open,valid:valid,
+   before:valid?before:null,incomingPct:valid&&loadValid?load:null,held:held,requested:requested,removed:0};
  });
  var demand=rows.reduce(function(a,r){return a+r.requested;},0),share=demand>0?Math.min(1,available/demand):1;
- rows.forEach(function(r){r.removed=r.requested*share;V[r.key]=clmp(r.held-r.removed,0,100);r.after=V[r.key];r.ratePctPerMin=r.removed/dt*60;r.state=!r.open?'CLOSED':!validReceiver?'RECEIVER UNAVAILABLE':available<=0?'RECEIVER FULL':r.held<=0?'EMPTY':share<1?'RECEIVER CAPACITY LIMITED':'DRAINING';});
- var transferred=rows.reduce(function(a,r){return a+r.removed;},0),receiverRise=transferred*cfg.receiverPctPerSumpPct;
- if(validReceiver)V.lit8100=clmp(receiver+receiverRise,0,100);
- V.f6800Drain12PC={revision:'12PC',simulationSeconds:PLANT.simSeconds,rows:rows,receiver:'TK-8100 / V-8100 retained DH receiver',receiverRisePct:receiverRise,receiverLevel:validReceiver?V.lit8100:null,route:'M2680 / 1212 DH -> M2960 closed drain',basis:'SIMULATOR ONLY: 0.60 maximum sump percentage points/s with low-level taper; 0.02 receiver percentage points per sump point. Not measured GPM, vessel capacity or valve Cv. Local pneumatic LC/LCV and RO restrictions are lumped into this response, not new operable controls. Receiver capacity bounding is numerical inventory conservation, not a field interlock.'};
+ var overflow=0;
+ rows.forEach(function(r){
+  r.removed=r.requested*share;r.unresolvedOverflowPct=r.valid&&loadValid?Math.max(0,r.held-r.removed-100):0;
+  if(r.valid&&loadValid)V[r.key]=clmp(r.held-r.removed,0,100);
+  r.after=r.valid?V[r.key]:null;r.ratePctPerMin=r.removed/dt*60;overflow+=r.unresolvedOverflowPct;
+  r.balanceResidualPct=r.valid&&loadValid?r.after-r.before+r.removed+r.unresolvedOverflowPct-r.incomingPct:null;
+  r.state=!r.valid?'LEVEL UNAVAILABLE':!loadValid?'LIQUID LOAD UNAVAILABLE':!r.open?'CLOSED':!validReceiver?'RECEIVER UNAVAILABLE':available<=0?'RECEIVER FULL':r.held<=0?'EMPTY':share<1?'RECEIVER CAPACITY LIMITED':'DRAINING';
+ });
+ var transferred=rows.reduce(function(a,r){return a+r.removed;},0),rise=transferred*cfg.receiverPctPerSumpPct;
+ if(validReceiver)V.lit8100=Math.min(100,receiver+rise);
+ var totals=V.f6800DrainTotals12QE||(V.f6800DrainTotals12QE={removedSumpPct:0,toReceiverPct:0,unresolvedOverflowSumpPct:0});
+ totals.removedSumpPct+=transferred;totals.toReceiverPct+=rise;totals.unresolvedOverflowSumpPct+=overflow;
+ V.f6800Drain12PC={revision:'12QE',simulationSeconds:PLANT.simSeconds,rows:rows,
+  receiver:'TK-8100 / V-8100 retained DH receiver',receiverRisePct:rise,
+  receiverBeforePct:validReceiver?receiver:null,receiverLevel:validReceiver?V.lit8100:null,
+  receiverBalanceResidualPct:validReceiver?V.lit8100-receiver-rise:null,
+  unresolvedOverflowSumpPct:overflow,totalUnresolvedOverflowSumpPct:totals.unresolvedOverflowSumpPct,
+  route:'M2680 / 1212 DH -> M2960 closed drain',
+  basis:'SIMULATOR ONLY: retained 0.60 maximum sump points/s with low-level taper and 0.02 receiver points per sump point. Not measured GPM, field tank capacity, valve Cv or a new field interlock. A/B withdrawal is independently commanded and credited once to the receiver. No hidden overflow destination, valve auto-opening or inventory reset.'};
 }
+
 function cfTruckKind12PC(kind){return kind==='closedDrain'||kind==='lubeOil';}
 function cfTruckName12PC(kind){return kind==='closedDrain'?'CLOSED DRAIN / TK-8100':'LUBE OIL / TK-9300';}
 function cfTruckRecord12PC(kind){
@@ -13220,23 +13336,29 @@ function cfTruckPopup12PC(kind){
  h+='<div class="cf-truck-actions12pc">'+button('call','1. Place simulated call',!!r&&!/^(COMPLETED|CANCELLED)$/.test(status))+button('arrive','2. Record arrival',status!=='CALLED')+button('start',drain?'3. Start pump-out':'3. Start oil delivery',! /^(ON_SITE|STOPPED)$/.test(status))+button('stop','Stop service',!busy)+button('cancel','Cancel request',!r||/^(COMPLETED|CANCELLED)$/.test(status))+'</div>';
  if(drain){h+='<div class="cf-truck-path12pc">Existing simulated path: <b>XV-8100 '+(PLANT.valves.xv8100?'OPEN':'CLOSED')+'</b> / <b>XXY-8100 '+(PLANT.valves.xxy8100?'ENABLED':'DISABLED')+'</b>. <button type="button" data-act="popclose">Return to Utilities controls</button></div>';}
  h+='<p>Target: <b>'+ (drain?'10%':'80%')+'</b>. '+(r?'Transferred during this call: '+Number(r.movedPct||0).toFixed(2)+' tank percentage points. ':'')+'Nominal simulated transfer: 0.20 percentage points per simulation second; pauses with the plant. Concurrent normal inflow/consumption remains active.</p>';
- h+='<details><summary>Planning basis and limits</summary><p>Retained operator planning pattern: closed-drain collection and lube-oil delivery roughly weekly; closed drain about 50% toward 10%, lube refill about 80%. These are planning observations, not automatic dispatch schedules or protection settings.</p><p>No real truck is contacted. Arrival is manually recorded, not a promised ETA. Rates are explicit training assumptions, not field GPM or tank capacities. This is not a field transfer/isolation procedure. Requests and detailed progress are session-only; existing alarm history retains logged events. No browser data is cleared.</p></details>';
+ h+='<details><summary>Planning basis and limits</summary><p>Current operator planning averages (18 November 2026): closed-drain pump-out about every two weeks; lube-oil delivery about once a month. The existing closed-drain target of 10% and oil delivery target of 80% are unchanged. The rate model uses reference spans 10-to-50% and 80-to-25%; actual starting level, operating activity and collected liquid change the interval. These are planning observations, not automatic dispatch schedules or protection settings.</p><p>No real truck is contacted. Arrival is manually recorded, not a promised ETA. Rates are explicit training assumptions, not field GPM or tank capacities. This is not a field transfer/isolation procedure. Requests and detailed progress are session-only; existing alarm history retains logged events. No browser data is cleared.</p></details>';
  if(r)h+='<details open><summary>Service event log</summary>'+r.events.slice(-12).reverse().map(function(x){return '<p><small>'+e(new Date(x.at).toLocaleTimeString())+' / '+Math.floor(x.sim)+' sim s</small><br>'+e(x.message)+'</p>';}).join('')+'</details>';
  return h+'</div></div>';
 }
 function cfF6800DrainPanel12PC(){
  var d=PLANT.v.f6800Drain12PC;if(!d)return '';var e=cfReadoutEscape12NK;
- return '<details class="cf-drain12pc" id="cfF6800Drain12PC"'+(window.CFUtilityService12PC&&window.CFUtilityService12PC.drainOpen?' open':'')+'><summary>F-6800 drain response / receiver</summary><div>'+d.rows.map(function(r){return '<p><b>'+r.valve+'</b>: '+r.state+' | '+r.tag+' '+r.after.toFixed(2)+'% | modeled withdrawal '+r.ratePctPerMin.toFixed(2)+' sump points/min</p>';}).join('')+'<p>'+e(d.route)+'. Receiver LIT-8100: '+(d.receiverLevel==null?'unavailable':d.receiverLevel.toFixed(2)+'%')+'. Draining liquid does not clean the filter or reset PDIT-6800A.</p><small>'+e(d.basis)+'</small></div></details>';
+ var f=function(n){return Number.isFinite(n)?n.toFixed(2):'Unavailable';};
+ var blocked=d.rows.some(function(r){return r.open&&['RECEIVER FULL','RECEIVER UNAVAILABLE','RECEIVER CAPACITY LIMITED','LEVEL UNAVAILABLE','LIQUID LOAD UNAVAILABLE'].indexOf(r.state)>=0;});
+ var h=blocked?'<div role="status" data-drain-block12qe="true" style="margin:8px 0;padding:9px 12px;border:1px solid #b18035;background:#fff3d5;color:#3e3016;font:13px/1.5 Segoe UI,Arial,sans-serif"><b>F-6800 drain transfer is blocked or limited.</b> '+e(d.rows.filter(function(r){return r.open;}).map(function(r){return r.valve+': '+r.state;}).join('; '))+'. LIT-8100: '+f(PLANT.v.lit8100)+'%. An open valve is not proof of flow. <button type="button" data-hmi-open12pu="util" style="height:auto;min-height:32px;padding:5px 10px">Review closed-drain receiver</button></div>':'';
+ return h+'<details class="cf-drain12pc" id="cfF6800Drain12PC"'+(window.CFUtilityService12PC&&window.CFUtilityService12PC.drainOpen?' open':'')+'><summary>F-6800 drain response / receiver</summary><div>'+d.rows.map(function(r){return '<p><b>'+r.valve+'</b>: '+e(r.state)+' | '+r.tag+' '+f(r.after)+'% | modeled withdrawal '+f(r.ratePctPerMin)+' sump points/min</p>';}).join('')+'<p>'+e(d.route)+'. Receiver LIT-8100: '+f(PLANT.v.lit8100)+'%. Draining liquid does not clean the filter or reset PDIT-6800A.</p>'+((d.totalUnresolvedOverflowSumpPct||0)>0?'<p>Accumulation beyond the displayed 100% boundary is recorded as <b>unresolved</b>; no receiving route or safe operating condition is implied.</p>':'')+'<small>'+e(d.basis)+'</small></div></details>';
 }
+
 function cfInstallUtilityService12PC(){
  if(window.CFUtilityService12PC)return window.CFUtilityService12PC;
+ [['lit8100',26.16],['lit9300b',58.42],['lit6800a',10.52],['lit6800b',11.45]].forEach(function(x){if(!Object.prototype.hasOwnProperty.call(PLANT.v,x[0]))PLANT.v[x[0]]=x[1];});
  cfTrendRegister12OQ('fit1460','FIT-1460','ACFH',function(){return Number.isFinite(PLANT.v.fit1460)?PLANT.v.fit1460:null;},'Existing fuel-gas actual-volume flow; no new measurement or backfilled history.','fuelgas');
  cfTrendRegister12OQ('fqi1460','FQI-1460','ACF',function(){return Number.isFinite(PLANT.v.fqi1460)?PLANT.v.fqi1460:null;},'Existing fuel-gas actual-volume totalizer; no new measurement or backfilled history.','fuelgas');
  // Restore explicit initial availability without needing to visit the residue board.
  ['xv6800a','xv6800b','xv1418','xv5755a'].forEach(function(k){if(PLANT.valves[k]==null)PLANT.valves[k]=0;});
- window.CFUtilityService12PC={revision:'12PC',drainOpen:false,status:function(){return {drains:PLANT.v.f6800Drain12PC||null,trucks:PLANT.truckCalls||{},scope:'Simulation only; no external dispatch'};}};
+ window.CFUtilityService12PC={revision:'12PC',drainOpen:false,status:function(){return {drains:PLANT.v.f6800Drain12PC||null,inventory:PLANT.v.utilityInventory12QE||null,trucks:PLANT.truckCalls||{},scope:'Simulation only; no external dispatch'};}};
  var host=document.getElementById('eqtscr');if(host)host.addEventListener('toggle',function(e){if(e.target&&e.target.id==='cfF6800Drain12PC'&&e.target.isConnected)window.CFUtilityService12PC.drainOpen=!!e.target.open;},true);
  var old=SCR.rescomp;SCR.rescomp=function(){return old.apply(this,arguments)+cfF6800DrainPanel12PC();};
+ var utility=SCR.util;SCR.util=function(){return utility.apply(this,arguments)+cfUtilityInventoryPanel12QE();};
  return window.CFUtilityService12PC;
 }
 
@@ -14957,34 +15079,10 @@ PLANT.tick=function(stepSeconds){
   V.fuelGasPrimaryAvailable=(_primaryFgP>20);
   V.fuelGasSupplementalActive=(_suppFgOpen&&V.fit1650>0.005);
  }
- /* FB utility inventory drift: operator-observed slow background behavior.
-    TK-9300 lube-oil makeup inventory gradually falls as compressor packages consume oil;
-    TK-8100 closed-drain inventory gradually rises as routine drains/condensate collect.
-    Use simulated elapsed time so 2x/5x/10x speed scales the inventory clock correctly,
-    and make the rates gently variable instead of jumping on a fixed three-hour timer. */
- (function(){
-  if(V._utilityInventoryLastSim==null){V._utilityInventoryLastSim=PLANT.simSeconds||0;return;}
-  var _invDt=clmp((PLANT.simSeconds||0)-V._utilityInventoryLastSim,0,5);
-  V._utilityInventoryLastSim=PLANT.simSeconds||0;
-  if(_invDt<=0)return;
-  if(!isFinite(V.lit9300b))V.lit9300b=58.42;
-  if(!isFinite(V.lit8100))V.lit8100=26.16;
-
-  /* TK-9300: nominally ~2.4 percentage points every 3 simulated hours.
-     Running compressor population adds a small realistic consumption bias. */
-  var _oilRun=0;
-  ['c41','c42','c61','c62','c63','c1140','c1141','c1142'].forEach(function(_k){if(C[_k]&&C[_k].run)_oilRun++;});
-  var _oilUseFactor=clmp(0.82+0.055*_oilRun+0.10*Math.sin((PLANT.simSeconds||0)/5400),0.72,1.30);
-  var _tk9300PctPerSec=(2.4/(3*3600))*_oilUseFactor;
-  V.lit9300b=clmp(V.lit9300b-_tk9300PctPerSec*_invDt,0,100);
-
-  /* TK-8100: nominally ~2.7 percentage points every 3.5 simulated hours.
-     Plant throughput and running equipment slightly increase routine drain generation. */
-  var _flowFrac=clmp((I.flow||220)/220,0.35,1.25);
-  var _drainGenFactor=clmp(0.78+0.16*_flowFrac+0.025*_oilRun+0.10*Math.sin((PLANT.simSeconds||0)/6600+1.2),0.68,1.35);
-  var _tk8100PctPerSec=(2.7/(3.5*3600))*_drainGenFactor;
-  V.lit8100=clmp(V.lit8100+_tk8100PctPerSec*_invDt,0,100);
- })();
+  /*12QE: normal closed-drain collection and makeup consumption use the
+     latest operator service averages. Actual F-6800 drains are already credited
+     separately; this helper adds OTHER background collection only. */
+  cfUtilityInventoryStep12QE(_stepSeconds);
  cfTruckServiceStep12PC(_stepSeconds);
  /* 12EB: Plant Inlet -> Stabilizer Inlet physics is single-owned later in tick(), after
     the three slug-catcher inventories are advanced.  Do not independently overwrite
@@ -16175,15 +16273,15 @@ PLANT.tick=function(stepSeconds){
    var _v5010P=(LP&&isFinite(LP.pv))?LP.pv:262.75;
    var _dpAvail=Math.max(0,_upP-_v5010P+18); /* Retained18-psi modeled head allowance; no fabricated minimum driving pressure. */
    var _fv=Number.isFinite(LF.out)?clmp(LF.out/100,0,1):0;
-   var _valveCap=90*_fv*Math.sqrt(_dpAvail/18)*_filterHyd;
+   var _valveCap=90*CF_LIQUID_RESPONSE_12QD.slugTransferCapacityMultiplier*_fv*Math.sqrt(_dpAvail/18)*_filterHyd;
    var _flowTarget=_pathOpen?Math.min(_supplyAvail,_valveCap):0;
-   if(!_pathOpen||_fv<=0||_filterHyd<=0||_dpAvail<=0||_supplyAvail<=0)V.fit5000a=0;else cfLag(V,'fit5000a',_flowTarget,12,0,110);
+   if(!_pathOpen||_fv<=0||_filterHyd<=0||_dpAvail<=0||_supplyAvail<=0)V.fit5000a=0;else cfLag(V,'fit5000a',_flowTarget,CF_LIQUID_RESPONSE_12QD.slugTransferResponseSeconds,0,110*CF_LIQUID_RESPONSE_12QD.slugTransferCapacityMultiplier);
    V.fit5000a=cfSlugCommit12PV(_slugPrepared12PV,Math.min(V.fit5000a,_supplyAvail,_valveCap));
    if(!LF.man){
     var _fe=LF.sp-V.fit5000a;
     LF.out=clmp(LF.out+_fe*0.20,0,100);
    }
-   cfLag(LF,'pv',V.fit5000a,4,0,120);
+   cfLag(LF,'pv',V.fit5000a,4,0,120*CF_LIQUID_RESPONSE_12QD.slugTransferCapacityMultiplier);
    PLANT.in.stabFeedActive=_pathOpen&&V.fit5000a>0.5;
    V.slugCondensateToStabGpm=V.fit5000a;
    if(V.fqi5000a==null)V.fqi5000a=33418;
@@ -16244,7 +16342,7 @@ PLANT.tick=function(stepSeconds){
   var nglTrainAvail=(nBoost>0&&nPipe>0)?1:0;
   var cryoProdGpm=(V.nglProductionGpm==null?335:V.nglProductionGpm);
   var stabProdGpm=Math.max(0,V.stabProductTo1422Gpm||0);
-  var rawProdGpm=clmp(cryoProdGpm+stabProdGpm,0,850);
+  var rawProdGpm=Math.max(0,cryoProdGpm)+stabProdGpm; /*12QD: preserve the sum of the actual incoming streams; do not discard liquid at an arbitrary combined-rate cap.*/
   /* Operator-verified LSHH-1422 shutdown is 80%. This trips the FACILITY and
      isolates new liquid production into V-1422, but it does NOT remove the NGL product
      pumps as a recovery tool. Operators can keep/run the booster + pipeline train to
@@ -16306,19 +16404,11 @@ PLANT.tick=function(stepSeconds){
   if(PLANT.esd&&!_hhDrainInventoryAllowed)exportGpm=0;
   /* Acceptance is applied once in the hydraulic solver, not again to inventory. */
   var netGpm=prodGpm-exportGpm;
-  /* V-1422 is a large surge volume. Recent operator shift history includes a real
-     zero-export interval where level moved only about one percentage point over roughly
-     two hours while the plant remained in rejection. Calibrate inventory movement to
-     that observed time scale instead of the earlier over-fast model. At ~300-350 GPM
-     sustained mismatch this is roughly 0.45-0.55 percentage point per hour. This is an
-     empirical training time constant, not a geometric vessel-volume claim. */
-  V.nglLevelRatePct=netGpm*0.00000042; /* retained empirical inventory time scale */
-  /* A bounded display ripple must not be integrated into liquid inventory. */
-  var _newRipple=cfProcWave('lic1422',0.002,89),_oldRipple=V.v1422Ripple12GI||0;
-  L.LIC1422.pv=clmp(L.LIC1422.pv+V.nglLevelRatePct+_newRipple-_oldRipple,0,100);
-  V.v1422Ripple12GI=_newRipple;
-  V.nglTankInflowGpm=prodGpm;V.nglTankExportGpm=exportGpm;V.nglTankNetGpm=netGpm;
-  if(L.LIC1422A)L.LIC1422A.pv=L.LIC1422.pv;
+  /*12QD: the old 0.00000042 pct/(GPM s) implied about 39,683 gallons
+     per indicated point and hid normal transfer disturbances. Use one declared
+     effective storage scale; net rate changes the shared level, not a forced
+     rise or random oscillation. Existing level/VFD/PCV/recycle control remains. */
+  cfSurgeInventory12QD(PLANT,V.v1422HHSD?0:Math.max(0,cryoProdGpm),V.v1422HHSD?0:stabProdGpm,exportGpm);
   if(window.__v1422Liq){var _f=L.LIC1422.pv/100;
    window.__v1422Liq.scale.y=Math.max(0.001,_f);
    window.__v1422Liq.position.y=2.5+0.9*_f;}
@@ -19655,7 +19745,7 @@ SCR.stab=function(){
  s+=mPipe('M195 427 H230');
  /* Feed split after FV-5020A: top-feed branch through FV-5020B; heated branch through E-5020 to tower mid-feed. */
  s+=mPipe('M230 427 V125 H'+tx); /* filtered feed enters horizontally at upper 1/8 of tower */
- s+=mPipe('M230 427 V483 H200');
+ s+='<g data-stab-tube-inlet12qd="true">'+mPipe('M230 427 H120 V483 H200')+mArr(120,483,'',false)+'</g>';
  s+=mPipe('M345 483 H355 V250 H'+tx);
  s+=pt(5,470,'FIT-5020A',j(L.FIC5020A?L.FIC5020A.pv:6.24,0.05),'GPM');
  s+='<rect x="232" y="462" width="220" height="16" fill="#c6ccd2" opacity="0.96" rx="2"/>'+'<text x="238" y="473" fill="#283038" font-size="6.5">40% / heated feed branch through E-5020</text>';
@@ -19664,7 +19754,7 @@ SCR.stab=function(){
  s+=pt(200,430,'TIT-5020A',j(V.tit5020a==null?81.20:V.tit5020a,0.2),'DEG F',['L','H']);
  s+=pt(200,500,'TIT-5020C',j(V.tit5020c==null?84.47:V.tit5020c,0.2),'DEG F');
  s+=pt(310,462,'TIT-5020D',j(V.tit5020d==null?182.56:V.tit5020d,0.3),'DEG F',['H']);
- s+=pt(310,500,'TIT-5020F',j(V.tit5020f==null?98.26:V.tit5020f,0.2),'DEG F');
+ s+=pt(390,512,'TIT-5020F',j(V.tit5020f==null?98.26:V.tit5020f,0.2),'DEG F');
  /* ─ RIGHT SIDE: E-5040 REBOILER, hot oil ─ */
  var rbx=635, rby=205;
  /* E-5040 box with its own contained liquid level. */
@@ -19683,22 +19773,23 @@ SCR.stab=function(){
  s+=mPipe('M'+rbx+' '+(rby+35)+' H'+(tx+tw)+' V'+(ty+th*0.47));
  s+='<text x="500" y="250" fill="#283038" font-size="6.5">E-5040 VAPOR RETURN → T-5030 MIDDLE</text>';
  s+=mPipe('M'+(rbx+145)+' '+(rby+92)+' H920 V495 H345');
- /* E-5020 shell-side process is represented by the exchanger core itself; do not draw a pipe across the exchanger face. */
- s+=mPipe('M200 495 H100');
- /* Flow leaves E-5020 toward AC-5055/P-5060-5065; arrow intentionally points left. */
- s+='<path d="M100 488 L80 495 L100 502 Z" fill="#1b1f24" stroke="#5a6671"/><text x="105" y="487" fill="#26303a" font-size="7" font-weight="700">TO AC-5055 CONDENSATE COOLER / P-5060-5065</text>';
- s+='<text x="540" y="497" fill="#283038" font-size="6.5" font-weight="700">STABILIZED LIQUID → E-5020 SHELL SIDE → AC-5055</text>';
+ /*12QD: separate shell-side lower outlet, following the operator's marked screen.
+    The small internal connection is a functional mimic, not a vendor bundle drawing. */
+ s+='<g data-stab-shell-outlet12qd="true">'+mPipe('M345 495 L337 500 H272.5 V540 H1120')+mArr(1120,540,'',false)+'</g>';
+ s+='<text x="520" y="531" fill="#26303a" font-size="7" font-weight="700">TO AC-5055 CONDENSATE COOLER / RUNNING P-5060 OR P-5065</text>';
+ s+='<text x="540" y="483" fill="#283038" font-size="6.5" font-weight="700">E-5040 LIQUID TO E-5020 SHELL INLET</text>';
+ s+='<text x="805" y="553" fill="#26303a" font-size="6.5">PUMP DISCHARGE: V-1422 PRODUCT OR V-5010 RETURN</text>';
  /* TIT-5040C, TIT-5040A around reboiler */
  s+=pt(rbx-98,205,'TIT-5040C',j(V.tit5040c==null?264.33:V.tit5040c,0.3),'DEG F',['H']);
  s+=pt(rbx-98,240,'TIT-5040A',j(L.TIC5040A?L.TIC5040A.pv:279.34,0.3),'DEG F',['H','HH']);
  /* TIC-5040A controller */
  s+=ctl(rbx+150,205,'TIC5040A',L.TIC5040A,'TIC-5040A','DEG F');
  /* TIT-5040E, TIT-5040D (hot oil temps) */
- s+=pt(rbx+150,280,'TIT-5040E',j(V.tit5040e==null?345.71:V.tit5040e,0.4),'DEG F',['H','HH']);
+ s+=pt(940,348,'TIT-5040E',j(V.tit5040e==null?345.71:V.tit5040e,0.4),'DEG F',['H','HH']);
  s+=pt(rbx+295,280,'TIT-5040D',j(V.tit5040d==null?317.03:V.tit5040d,0.35),'DEG F',['L','H','HH']);
  /* E-5040 HOT-OIL SIDE — clean, separate supply/return. Hot oil enters the reboiler
     bell-end/head, transfers heat across the exchanger, then exits back to the Hot Oil page. */
- s+='<rect x="805" y="370" width="220" height="18" fill="#c6ccd2" opacity="0.97" rx="2"/><text x="815" y="383" fill="#8a4c12" font-size="7.5" font-weight="700">FROM HOT OIL SUPPLY (H-7100)</text>';
+ s+='<g data-hmi-equipment12pw="hot-oil-supply-caption12qd"><rect x="800" y="420" width="112" height="28" fill="#c6ccd2" opacity="0.97" rx="2"/><text x="806" y="431" fill="#8a4c12" font-size="7.5" font-weight="700">HOT OIL SUPPLY</text><text x="806" y="442" fill="#8a4c12" font-size="7">FROM H-7100</text></g>';
  s+=mArr(1025,390,'',true)+mPipe('M1005 390 H910');
  s+=mValve(900,390,'xy5040a')+mPipe('M890 390 H855')+mTCV(845,390,'TV-5040A',L.TIC5040A?L.TIC5040A.out:0)+mPipe('M825 390 H780 V300');
  s+='<text x="900" y="410" fill="#283038" font-size="6.5" text-anchor="middle">XY-5040A</text><text x="845" y="410" fill="#283038" font-size="6.5" text-anchor="middle">TV-5040A '+((L.TIC5040A?L.TIC5040A.out:0).toFixed(0))+'% OPEN</text>';
@@ -22031,7 +22122,7 @@ SCR.util=function(){
  var L=PLANT.L,V=PLANT.v;
  var j=function(v,a){var n=Number(v);return isFinite(n)?n:Number(a||0);}; /* 12EY finite display guard */
  var _utilDefaults={fit1650:0.00,tit1650a:76.15,pit1650a:0.10,fit8100:1288.40,pit8100a:4.05,pit8100b:3.99,lit8100:26.16,fit9000a:3372.30,fit8110:1793.18,lit8110:0.0,lit9100a:0.0,fqi9110a:0.02,fit9110a:0.51,pit9110a:0.23,tit9110a:91.10,fit9111a:239.27,tit9300a:100.15,lit9300b:58.42};
- Object.keys(_utilDefaults).forEach(function(k){if(!isFinite(Number(V[k])))V[k]=_utilDefaults[k];});
+ Object.keys(_utilDefaults).forEach(function(k){var tank=k==='lit8100'||k==='lit9300b';if(tank?!Object.prototype.hasOwnProperty.call(V,k):!isFinite(Number(V[k])))V[k]=_utilDefaults[k];});
  if(!isFinite(Number(V.tit9210disch)))V.tit9210disch=182.2;
  if(!isFinite(Number(V.tit9220disch)))V.tit9220disch=85;
  if(!isFinite(Number(V.pit9241a)))V.pit9241a=126.6;
@@ -40634,7 +40725,7 @@ function cfStabilizerPanel12PA(){
  function row(k,v){return '<tr><th style="text-align:left;font-weight:500;padding:4px 9px">'+k+'</th><td style="padding:4px 9px;font:12px Consolas,monospace">'+v+'</td></tr>';}
  var html='<details id="cfStabilizerBalance12PA"'+(window.CFStabilizerLinkage12PA&&window.CFStabilizerLinkage12PA.detailsOpen?' open':'')+' class="cf-stabilizer-balance12pa" style="margin:12px 0;padding:10px 14px;border:1px solid #8299aa;border-radius:8px;background:#edf3f6;color:#182d3b;font:12px/1.5 Segoe UI,Arial,sans-serif"><summary style="cursor:pointer;font-weight:700">Stabilizer / liquid and vapor balance</summary><p>One shared process state. These are simulator calculations, not additional installed instruments.</p>';
  if(!s||!s.valid)return html+'<p>Waiting for a valid process step. Missing readings are not replaced with zero.</p></details>';
- html+='<div style="display:flex;flex-wrap:wrap;gap:18px"><table>'+row('Pumps running',String(s.pumpsRunning))+row('Flash liquid to tower',f(s.feedGpm,'GPM'))+row('Gross pump flow / FE-5060',f(s.pumpGrossGpm,'GPM'))+row('FV-5030A tower return',f(s.towerReturnGpm,'GPM'))+row('XV-5040B to V-1422',f(s.to1422Gpm,'GPM'))+row('XV-5040A to V-5010',f(s.to5010Gpm,'GPM'))+row('Flash / kettle accumulation',f(s.flashNetGpm)+' / '+f(s.kettleNetGpm,'GPM'))+'</table><table>'+row('Flash / tower pressure',f(L.PIC5010D.pv)+' / '+f(L.PIC5030A.pv,'PSIG'))+row('PIC-5700A SP / PV',f(L.PIC5700A.sp)+' / '+f(L.PIC5700A.pv,'PSIG'))+row('PV-5700A command',f(L.PIC5700A.out,'%')+(L.PIC5700A.man?' MANUAL':' AUTO'))+row('C-5700 suction / discharge',f(PLANT.cmp.c57.suc)+' / '+f(PLANT.cmp.c57.dis,'PSIG'))+row('FIT-5500 recovered vapor',f(V.fit5500,'MMSCFD'))+row('PIT-1010C (existing proxy)',f(V.pit1010a+.3,'PSIG'))+'</table></div>';
+ html+='<div style="display:flex;flex-wrap:wrap;gap:18px"><table>'+row('Pumps running',String(s.pumpsRunning))+row('Flash liquid to tower',f(s.feedGpm,'GPM'))+row('Gross pump flow / FE-5060',f(s.pumpGrossGpm,'GPM'))+row('FV-5030A tower return',f(s.towerReturnGpm,'GPM'))+row('XV-5040B to V-1422',f(s.to1422Gpm,'GPM'))+row('XV-5040A to V-5010',f(s.to5010Gpm,'GPM'))+row('Flash / kettle accumulation',f(s.flashNetGpm)+' / '+f(s.kettleNetGpm,'GPM'))+row('V-1422: cryo + stabilizer inflow',f(V.nglInventory12QD&&V.nglInventory12QD.cryoInGpm)+' + '+f(V.nglInventory12QD&&V.nglInventory12QD.stabilizerInGpm,'GPM'))+row('V-1422: net export / recycle',f(V.nglTankExportGpm)+' / '+f(V.nglRecycleGpm,'GPM'))+row('V-1422: level / net level rate',f(L.LIC1422.pv,'%')+' / '+f(V.nglInventory12QD&&V.nglInventory12QD.levelRatePctPerMinute,'%/min'))+'</table><table>'+row('Flash / tower pressure',f(L.PIC5010D.pv)+' / '+f(L.PIC5030A.pv,'PSIG'))+row('PIC-5700A SP / PV',f(L.PIC5700A.sp)+' / '+f(L.PIC5700A.pv,'PSIG'))+row('PV-5700A command',f(L.PIC5700A.out,'%')+(L.PIC5700A.man?' MANUAL':' AUTO'))+row('C-5700 suction / discharge',f(PLANT.cmp.c57.suc)+' / '+f(PLANT.cmp.c57.dis,'PSIG'))+row('FIT-5500 recovered vapor',f(V.fit5500,'MMSCFD'))+row('PIT-1010C (existing proxy)',f(V.pit1010a+.3,'PSIG'))+'</table></div>';
  if(s.blockers.length)html+='<p><b>Current flow constraints:</b> '+s.blockers.join(' / ')+'.</p>';
  if(Math.abs(s.inventoryBoundResidualGpm)>1e-6)html+='<p><b>Model range warning:</b> liquid inventory reached a numerical bound; unrestricted accumulation outside the modeled holdup is not resolved.</p>';
  if(g&&g.pressureNumericalGuard)html+='<p><b>Model range warning:</b> a pressure inventory reached a numerical guard. This state is not field validated.</p>';
@@ -42550,6 +42641,53 @@ Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{latestUpdate:'12QB',reference
 window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,a1322ConnectionRevision:'12QB'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
 document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - A-1322 connected product cooler';
 var cfHeading12QB=document.querySelector('header h1');if(cfHeading12QB)cfHeading12QB.textContent='Clear Fork / Cryogenic Unit #1 - '+CF_APPLICATION_BUILD_12OA;
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+/*12QC: startup repair metadata only; all process and model functions retained.*/
+var CF_SOURCE_12QC={"build":"12QC","baseline":"12QB","date":"2026-11-11","id":"content_companion_startup_compatibility_12qc","title":"Content companion startup compatibility and precise failure diagnosis","notebookKey":"startup_content_compatibility_12qc","sourceClass":"SUPPLIED_CODE_COMPARISON_AND_USER_STARTUP_SCREENSHOT","payloadId":"cf-content-sha256-38eb22f42874d122565f6b114b295e8e77d30ad7968c61f6657a454669025b26","factoryCount":193,"compatibleLegacyReleases":["12PV","12PW","12PX","12PY","12PZ","12QA","12QB"],"newEntries":[{"id":"qc.observed","title":"Observed failure and boundary","text":"The user screenshot shows12QB main rejecting clearfork-content.js as missing or not12QB. The shipped12QB content executes and registers all193 factories plus its trainer in isolated tests. The screenshot alone does not identify whether the served file is absent, stale, blocked, or incomplete. No production server response was inspected."},{"id":"qc.compatibility","title":"Separate content compatibility from application stamping","text":"Complete factory and trainer source is byte-identical in the retained12PV,12PW,12PX,12PY,12PZ,12QA and12QB companion files; only the export build and error text differ. These exact known legacy releases remain compatible when their API/count are intact. Current content declares its payload ID and complete factory list. Unknown legacy versions, conflicting payload IDs, missing factories and invalid APIs are rejected. The application index/main revision guard and trainer-runtime guard remain strict."},{"id":"qc.errors","title":"Validate execution rather than transport alone","text":"The content onload handler now checks the actual registered API before marking the required asset loaded. Missing requests, execution/API failures, incompatible content and incomplete factory lists have distinct diagnostics including the observed build and block count. The main still refuses to initialize with unavailable/incompatible content; no stub, fabricated data or older application is substituted."},{"id":"qc.delivery","title":"Exact filenames and data-safe replacement","text":"The cumulative update includes actual clearfork-content.js alongside index.html and clearfork-main.js. Use the files inside the ZIP at the existing root, not an index alone or a .txt filename. All15 original data files and three access/history/evidence helpers are retained; no storage clear, migration, new secret, live deployment or process change."}],"policy":["This is a compatibility contract, not cryptographic authentication of files served by a host. Build/payload identifiers are metadata.","Known legacy acceptance is limited to files whose factory/trainer bytes were actually compared; earlier192-block companions are incompatible.","The existing main/index, graphics, data-load, final-installer and native-frame checks remain; successful companion validation is not full-app acceptance.","Keep A-1322 repairs, control logic, protections, Schedule, live readings, walkthrough, trainers and source records intact."]};
+var cfSourcesBefore12QC=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12QC.apply(this,arguments);if(!a.some(function(d){return d.name==='CF_SOURCE_12QC';}))a.push({name:'CF_SOURCE_12QC',value:CF_SOURCE_12QC});return a;};
+INFO[CF_SOURCE_12QC.notebookKey]={t:CF_SOURCE_12QC.title,d:CF_SOURCE_12QC.newEntries.map(function(x){return x.title+': '+x.text;}).concat(CF_SOURCE_12QC.policy),sourceReview12QC:{definition:'CF_SOURCE_12QC',scope:'SOFTWARE_STARTUP_ONLY'}};
+var cfStartupCategory12QC=LIB_CATS.find(function(c){return c[0]==='Software / Startup and delivery';});if(!cfStartupCategory12QC){cfStartupCategory12QC=['Software / Startup and delivery',[]];LIB_CATS.push(cfStartupCategory12QC);}if(cfStartupCategory12QC[1].indexOf(CF_SOURCE_12QC.notebookKey)<0)cfStartupCategory12QC[1].push(CF_SOURCE_12QC.notebookKey);
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12QB',contentStartupRevision:'12QC'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{latestUpdate:'12QC',referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,contentStartupRevision:'12QC'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Content startup repair';
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+var CF_SOURCE_12QD={"build":"12QD","baseline":"12QC","date":"2026-11-18","id":"stabilizer_surge_response_and_shell_outlet_12qd","title":"Stabilizer product to surge: inventory response and shell-outlet drawing","notebookKey":"stabilizer_surge_response_12qd","sourceClass":"OPERATOR_CORRECTION_AND_EXISTING_PROCESS_CODE_REVIEW","ownerKeys":["v1020","v1025","v1030","v5010","e5020","e5040","p5060","p5065","v1422"],"newEntries":[{"id":"qd.balance","title":"One incoming transfer, one surge inventory","text":"The existing stabilizer product route already supplies stabProductTo1422Gpm when a running pump, positive LV-5040A demand and XV-5040B permit it. The12QC surge coefficient0.00000042 pct/(GPM second) implied39682.54 effective gallons per indicated point, masking normal disturbances.12QD uses400 effective gallons per indicated point as an explicitly provisional simulator response scale, with no stored-level reset. Both cryogenic and stabilizer inflows are counted once and actual net export subtracted once. Recycle back to V-1422 does not drain inventory. Excess beyond numerical bounds is reported, not hidden."},{"id":"qd.control","title":"Existing level and export controls remain authoritative","text":"Positive net inflow raises the common LIC-1422 PV; its existing AUTO level, VFD, pressure/level selectors and recycle logic respond to the changing inventory. MANUAL commands, pump availability, closed outlet, downstream blockage, low-low and high-high protection remain unchanged. Net negative flow still lowers level; no compulsory oscillation or fictitious positive increment is injected."},{"id":"qd.slug","title":"Moderately faster valid condensate transfer","text":"Operator requests somewhat faster draining. Existing branch and common FV flow capacities are multiplied by1.25 and the transfer response time is8 seconds rather than12. The three slug effective inventories and slow quiet incoming-liquid rates are unchanged. Actual requested flow remains limited by valve position, available head, filter condition and liquid. FV-5010A above0 AND XV-5010B open remains mandatory with upstream XV-5000A and ESD. Actual transfer is still shared by the meter, totalizer, vessel drain and flash feed. This uplift is a simulator assumption, not a field Cv or measured drain time."},{"id":"qd.draw","title":"Separate E-5020 shell outlet to condenser/cooler","text":"User-marked IMG_0805.jpeg establishes the missing lower continuation from the E-5020 shell outlet to AC-5055, with TIT-5020F on that line before cooling; after the cooler the operating P-5060/P-5065 transfers liquid toward V-1422 or the selected V-5010 return. The separate FV-5030A tower-circulation branch remains. The warm-feed arrow now points right into the separate tube-side inlet, not back out of it. No receiver nozzle is inferred."},{"id":"qd.oil","title":"TIT-5040E hot-oil supply indication","text":"The existing TIT-5040E indication is relocated beside the lower incoming hot-oil line. TIT-5040D remains at the return. Signal values, units, alarm badges, history and model-link bindings are unchanged."}],"qualification":"Not field commissioning, a calibrated vessel strapping chart, a pump performance curve, or permission to operate. Static arrows identify routes, not an open lineup.","pending":["Time-aligned V-1422 level, cryogenic/stabilizer inflows and net export plus installed level-to-volume calibration to replace the provisional inventory scale.","Measured FIT-5000A versus FV opening, individual slug levels and pressures to calibrate condensate-transfer gains."],"policy":["Continue actual12QC and preserve its content startup compatibility repair.","No default lineup, controller-mode change, new trip limit, invented field reading, or private-data reset.","No change to native3D equipment/piping, Schedule, introductory walkthrough, detailed trainers or server-access helpers."],"operatorScreenshots":[{"name":"image(20261118-131420).png","sha256":"994798f9f78f311198e5397215538a43df3b7d1b5f413d6a081ba2bbda34847b","sourceMediaRetained":false},{"name":"IMG_0805.jpeg","sha256":"ce0dc050cf35e6615ad7fdc4aaba01f7c9502c436257a00c67aba7b64d76a33f","sourceMediaRetained":false}]};
+function cfRegisterStabilizerResponse12QD(H){
+ var S=CF_SOURCE_12QD,N=H.info||H.referenceNotes||{},rs=H.records||H.components||{},rows=Array.isArray(rs)?rs:Object.values(rs);
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat([S.qualification]).concat(S.policy),sourceReview12QD:{definition:'CF_SOURCE_12QD',scope:S.sourceClass}};
+ S.ownerKeys.forEach(function(k){var link={definition:'CF_SOURCE_12QD',owner:k,notebookKey:S.notebookKey,qualification:S.qualification};if(N[k])N[k].sourceReview12QD=Object.assign({},link);rows.filter(function(r){return(r.assetId||r.key)===k;}).forEach(function(r){r.sourceReview12QD=Object.assign({},link);});});
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12QD';}))H.sourceDefinitions.push({name:'CF_SOURCE_12QD',value:S});
+ if(H.categories){var c=H.categories.find(function(c){return c[1].indexOf('stabilizer_linkage_12pa')>=0;});if(c&&c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+var cfSourcesBefore12QD=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12QD.apply(this,arguments);if(!a.some(function(d){return d.name==='CF_SOURCE_12QD';}))a.push({name:'CF_SOURCE_12QD',value:CF_SOURCE_12QD});return a;};
+cfRegisterStabilizerResponse12QD({info:INFO,records:CF3D_DEVICE_RECORDS,categories:LIB_CATS});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12QC',stabilizerResponseRevision:'12QD'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{latestUpdate:'12QD',referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,stabilizerResponseRevision:'12QD'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Stabilizer product response';
+if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
+if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
+
+var CF_SOURCE_12QE={"build":"12QE","baseline":"12QD","date":"2026-11-18","id":"f6800_receiver_and_utility_service_cadence_12qe","title":"F-6800 drain blockage and utility service averages","notebookKey":"utility_inventory_cadence_12qe","sourceClass":"USER_SERVICE_AVERAGES_AND_REPRODUCED_CURRENT_CODE_DEFECT","ownerKeys":["f6800","v8100","tk9300","ja_xv6800a","ja_xv6800b","ja_lit6800a","ja_lit6800b","jr_lit8100","ju_lit9300b"],"existingSourceRefs":["CF_SOURCE_12PC","CF_SOURCE_12JA","CF_SOURCE_12JR","CF_SOURCE_12JU"],"operatorObservations":{"closedDrainService":"Usually about once every two weeks, on average","lubeOilService":"About once a month, interpreted as delivery/refill of the retained TK-9300 makeup store, not a lubricant change interval or a new waste-oil tank","screenshot":"F-6800 A/B indications100%, both dump symbols open; receiver state not shown"},"calibration":{"closedDrainDays":14,"lubeDeliveryDays":30,"closedDrainReferenceLowPct":10,"closedDrainReferenceCallPct":50,"lubeReferenceHighPct":80,"lubeReferenceCallPct":25,"referenceRunningOilConsumers":5,"referenceInletMmscfd":222.38,"referenceF6800LoadPctPerSecond":0.00054,"receiverPctPerSumpPct":0.02,"f6800MaxDrainPctPerSecond":0.6,"qualification":"Periods are operator averages. Reference level spans, 30-day month, activity factors and normalized sump-to-receiver ratio are provisional numerical scales, not measured working volume, level calibration, valve Cv or field flow. Retained service targets and alarms are not changed."},"newEntries":[{"id":"qe.cause","title":"Open drains blocked by an artificially fast-filled receiver","text":"Baseline12QD reproduces F-6800 A/B100% with both XV commands open when LIT-8100 is100%. The drain helper correctly limits receiving space; the old routine receiver increment was2.7 points per3.5 simulated hours plus load factors, in addition to actual F-6800 credits. This fills the receiver on a days rather than two-week service scale. The screenshot alone does not prove the hidden receiver state; the cause was reproduced with the production functions."},{"id":"qe.cadence","title":"Latest operator average supersedes earlier fast/weekly assumptions","text":"Use approximately14days closed-drain service and30days lube delivery for normal reference-rate scaling. Other receiver background excludes the nominal already-counted F-6800 contribution; actual A/B removal is still credited exactly once. TK-9300 consumption references the six retained M2930/M2940 reciprocating-package oil recipients, not the Frick refrigerant oil circuit. Rates vary gently with existing runtime state. Actual time to service depends on current levels and operations, not a timer."},{"id":"qe.balance","title":"No missing liquid behind a100-percent display","text":"F-6800 A/B independently use their original XV commands and retained drain-capacity limit. Empty sumps do not supply fictitious liquid. Removed sump inventory equals the receiver credit under the retained normalized ratio. Noise is no longer integrated as liquid. Accumulation beyond finite indicated storage is recorded as unresolved overflow, not silently deleted or routed to an invented destination. Missing/nonfinite levels are not replaced during drain calculation."},{"id":"qe.recovery","title":"Visible blocked route and existing service controls","text":"A blocked/limited receiver shows an uncollapsed status beneath the residue board and a read-only Review closed-drain receiver link. Existing request/arrival/start/stop/cancel truck commands remain. A full receiver is not bypassed or reset; previously accumulated liquid is retained. Pump-out makes receiving capacity available, so independently open F-6800 drains resume through the original path. No valve auto-lineup, phantom pump-out, new trip or reset of filter DP/fouling."},{"id":"qe.storage","title":"Single simulation-clock ownership","text":"One executed process step advances background inventories and the existing truck service. Pause freezes these actions and speed scales only through the master clock. UI navigation and rendering do not consume/refill oil or add/drain collection liquid. Existing saved browser state, history formats, active requests and source identities are not migrated or cleared."}],"qualification":"Training simulator repair only. Does not verify installed hydraulic behavior or authorize field drainage, oil replacement, truck connection or operating limits.","pending":["Actual F-6800 A/B level fall and XV/local LC/LCV lineup with receiver/upstream pressure to calibrate the lumped drain response.","F-6800 sump and TK-8100 level-to-volume relationships; the existing normalized0.02 ratio remains unverified.","Time-aligned TK-8100 pump-out and TK-9300 delivery dates, before/after levels and delivered/removed volumes to replace provisional service-rate spans."],"policy":["Continue actual12QD with its stabilizer/surge response and shell-outlet repairs.","No new equipment, geometry, transmitter signal, valve command, controller tuning, protection threshold or automatic truck scheduling.","No resetting100% levels, suppressing high alarms, forced simultaneous equality, or accepting a full receiver as safe.","Keep earlier source records and weekly-rate context as historical; this dated operator correction controls current average-rate wording."],"screenshot":{"name":"image(20261118-160228).png","sha256":"d2d58ed61f7ceb6d8d3560e9d577e332ddd8e7271a0e0ac607b4f4088f976e42","sourceMediaRetained":false}};
+function cfRegisterUtilityCadence12QE(H){
+ var S=CF_SOURCE_12QE,N=H.info||H.referenceNotes||{},rs=H.records||H.components||{},rows=Array.isArray(rs)?rs:Object.values(rs);
+ N[S.notebookKey]={t:S.title,d:S.newEntries.map(function(x){return x.title+': '+x.text;}).concat([S.qualification]).concat(S.policy),sourceReview12QE:{definition:'CF_SOURCE_12QE',scope:S.sourceClass}};
+ S.ownerKeys.forEach(function(k){var link={definition:'CF_SOURCE_12QE',owner:k,notebookKey:S.notebookKey,qualification:S.qualification};if(N[k])N[k].sourceReview12QE=Object.assign({},link);rows.filter(function(r){return(r.assetId||r.key)===k;}).forEach(function(r){r.sourceReview12QE=Object.assign({},link);});});
+ if(N.utility_drain_truck_review_12pc){var n=N.utility_drain_truck_review_12pc,txt='CURRENT12QE: operator averages are closed drain about two weeks and lube delivery about monthly. Earlier weekly planning and fast hourly background rates are superseded; service targets and manual actions remain. See utility_inventory_cadence_12qe.';if(n.d.indexOf(txt)<0)n.d.unshift(txt);n.sourceReview12QE={definition:'CF_SOURCE_12QE',notebookKey:S.notebookKey};}
+ if(H.sourceDefinitions&&!H.sourceDefinitions.some(function(d){return d.name==='CF_SOURCE_12QE';}))H.sourceDefinitions.push({name:'CF_SOURCE_12QE',value:S});
+ if(H.categories){var c=H.categories.find(function(c){return c[1].indexOf('utility_drain_truck_review_12pc')>=0;});if(c&&c[1].indexOf(S.notebookKey)<0)c[1].push(S.notebookKey);}
+}
+var cfSourcesBefore12QE=cfSourceDefinitions12HO;cfSourceDefinitions12HO=function(){var a=cfSourcesBefore12QE.apply(this,arguments);if(!a.some(function(d){return d.name==='CF_SOURCE_12QE';}))a.push({name:'CF_SOURCE_12QE',value:CF_SOURCE_12QE});return a;};
+cfRegisterUtilityCadence12QE({info:INFO,records:CF3D_DEVICE_RECORDS,categories:LIB_CATS});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT,{build:CF_APPLICATION_BUILD_12OA,baseline:'12QD',utilityInventoryRevision:'12QE'});
+Object.assign(CF_RYAN_INDEX_MANIFEST_12JT.summary,{latestUpdate:'12QE',referenceNotes:Object.keys(INFO).length,sourceDefinitions:cfSourceDefinitions12HO().length,sourceDefinitionCount:cfSourceDefinitions12HO().length});
+window.CF_CURRENT_RELEASE_12JT=Object.freeze(Object.assign({},window.CF_CURRENT_RELEASE_12JT,{frontend:CF_APPLICATION_BUILD_12OA,backend:RYAN_BUILD_ID,signature:RYAN_EXPECTED_SIGNATURE,utilityInventoryRevision:'12QE'}));window.CF_CURRENT_RELEASE_12LJ=window.CF_CURRENT_RELEASE_12JT;
+document.title=CF_APPLICATION_BUILD_12OA+' | Clear Fork - Drain and utility inventory repair';
 if(typeof LIB_STATIC_SEARCH_CACHE!=='undefined')LIB_STATIC_SEARCH_CACHE=null;
 if(window.CFRyanIndexSync12JT)window.CFRyanIndexSync12JT.refresh();
 
